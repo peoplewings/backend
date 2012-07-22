@@ -1,10 +1,14 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from people.forms import *
+from registration.forms import RegistrationForm
 admin.autodiscover()
 
 
 urlpatterns = patterns('',
     url(r'^$', 'landing.views.welcome', name='home'),
+    # Registration patterns:
+    url(r'^register/$', 'registration.views.register',    {'form_class':RegistrationForm, 'backend':'registration.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^', include('registration.backends.default.urls')),
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),

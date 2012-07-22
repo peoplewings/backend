@@ -126,9 +126,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'landing',
     'registration',
-    'profiles',
     'people',
-    # Uncomment the next line to enable the admin:
     
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',

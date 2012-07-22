@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
-from registration.signals import user_activated
+from registration.signals import user_registered
 from django.utils import timezone
 from datetime import date, datetime
+from registration.forms import RegistrationForm
 from sets import Set
 
 class UserProfile(models.Model):
@@ -50,7 +51,6 @@ class UserProfile(models.Model):
     )
     
     user = models.ForeignKey(User, unique=True)
-
     birthday = models.DateField(null=True)
     age = models.IntegerField(null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
@@ -63,12 +63,6 @@ class UserProfile(models.Model):
     privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
-
-def createUserProfile(sender, user, request, **kwargs):
-	UserProfile.objects.create(user=user)
-
-user_activated.connect(createUserProfile)
-
 class Relationship(models.Model):
 
     RELATIONSHIP_CHOICES = (
@@ -80,3 +74,12 @@ class Relationship(models.Model):
     type = models.CharField(max_length=1, choices=RELATIONSHIP_CHOICES, null=True)
     user1 = models.ForeignKey('UserProfile', related_name='r1')
     user2 = models.ForeignKey('UserProfile', related_name='r2')
+
+def createUserProfile(sender, user, request, **kwargs):
+	form = RegistrationForm(request.POST)
+	data = UserProfile.objects.create(user=user)
+	data.gender = form.data["gender"]
+	data.birthday = form.data["birthday"]
+	data.save()
+
+user_registered.connect(createUserProfile)
