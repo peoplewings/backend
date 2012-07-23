@@ -175,3 +175,9 @@ LOGGING = {
     }
 }
 
+try:
+    from settings_ezequiel import *
+except ImportError:
+    pass
+
+
