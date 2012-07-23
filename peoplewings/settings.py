@@ -127,7 +127,7 @@ INSTALLED_APPS = (
     'landing',
     'registration',
     'people',
-    
+    'south',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
