@@ -9,3 +9,8 @@ class RegisterForm(ModelForm):
       exclude = ('user','age','interested_in','civil_state','languages', 'city', 'PW_state', 'privacy_settings', 'relationships')
 
 RegistrationForm.base_fields.update(RegisterForm.base_fields)
+
+class ProfileForm(ModelForm):
+  class Meta:
+      model = UserProfile
+      exclude = ('user','age', 'privacy_settings', 'relationships')

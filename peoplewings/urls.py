@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     # Registration patterns:
     url(r'^register/$', 'registration.views.register',    {'form_class':RegistrationForm, 'backend':'registration.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^', include('registration.backends.default.urls')),
+    # url(r'^profile/$', include('people.urls'))
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),
     # url(r'^peoplewings/', include('peoplewings.foo.urls')),
@@ -18,5 +19,5 @@ urlpatterns = patterns('',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
 )
