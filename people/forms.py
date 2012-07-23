@@ -1,16 +1,18 @@
+from django import forms
 from django.db import models
 from django.forms import ModelForm
-from registration.forms import RegistrationForm
+from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile
 
 class RegisterForm(ModelForm):
   class Meta:
       model = UserProfile
-      exclude = ('user','age','interested_in','civil_state','languages', 'city', 'PW_state', 'privacy_settings', 'relationships')
+      exclude = ('user','age','interested_in','civil_state','languages', 'city', 'PW_state', 'privacy_settings', 'relationships')  
 
-RegistrationForm.base_fields.update(RegisterForm.base_fields)
+class CustomRegisterForm(RegistrationForm):
+  	first_name = forms.CharField(label='First name', max_length=30,required=True)
+	last_name = forms.CharField(label='Last name', max_length=30, required=True)
 
-class ProfileForm(ModelForm):
-  class Meta:
-      model = UserProfile
-      exclude = ('user','age', 'privacy_settings', 'relationships')
+#CustomRegisterForm.base_fields['username'].widget = hidden_widget()
+CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
+
