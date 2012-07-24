@@ -1,0 +1,19 @@
+<form action="/people/editProfile" method="post">{% csrf_token %}
+
+	<p><label for="birthday">Birthday: </label>
+		<input id="id_birthday" type="text" name="birthday" maxlength="100" value={{user.birthday}} /></p>
+
+	<p><label for="gender">Gender: </label>
+		<input id="id_gender" type="text" name="gender" maxlength="100" value={{user.gender}} /></p>
+
+	<p><label for="civil_state">{{user.civil_state}}</label>
+		<input id="id_civil_state" type="text" name="civil_state" maxlength="100" value={{user.civil_state}} /></p>
+
+	<p><label for="languages">{{user.languages}}</label>
+
+	<p><label for="city">{{user.city}}</label>
+
+	<p><label for="PW_state">{{user.PW_state}}</label>
+
+	<p class="submit"><button type="submit">Submit</button></p>
+</form>

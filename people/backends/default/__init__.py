@@ -5,6 +5,10 @@ from django.contrib.sites.models import Site
 from registration import signals
 from registration.forms import RegistrationForm
 from registration.models import RegistrationProfile
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import User
+from django.core.validators import email_re
+
 
 import random
 
@@ -143,3 +147,19 @@ class DefaultBackend(object):
         
         """
         return ('registration_activation_complete', (), {})
+
+    
+class AuthMailBackend(ModelBackend):
+    def authenticate(self, username=None, password=None):
+        if email_re.search(username):
+            try:
+                user = User.objects.get(email=username)
+                if user.check_password(password):
+                    return user
+            except User.DoesNotExist:
+                return None
+        return None
+
+
+
+

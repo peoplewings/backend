@@ -146,6 +146,10 @@ LOGIN_REDIRECT_URL = '/profile' # url user is redirected after success login
 # User profiles module
 AUTH_PROFILE_MODULE = 'people.UserProfile'
 
+AUTHENTICATION_BACKENDS = ( 
+    'people.backends.default.AuthMailBackend',
+    'django.contrib.auth.backends.ModelBackend',)
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
