@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     # Registration patterns:
     url(r'^register/$', 'registration.views.register',    {'form_class':RegistrationForm, 'backend':'registration.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^', include('registration.backends.default.urls')),
+    url(r'^people/$', include('people.urls')),
     # url(r'^profile/$', include('people.urls'))
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),
