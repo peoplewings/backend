@@ -77,6 +77,10 @@ class Relationship(models.Model):
 
 def createUserProfile(sender, user, request, **kwargs):
 	form = RegistrationForm(request.POST)
+	registered_user = User.objects.get(username=user.username)
+	registered_user.last_name = kwargs['lastname']
+	registered_user.first_name = kwargs['firstname']
+	registered_user.save()
 	data = UserProfile.objects.create(user=user)
 	data.gender = form.data["gender"]
 	data.birthday = form.data["birthday"]
