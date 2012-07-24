@@ -13,6 +13,6 @@ class CustomRegisterForm(RegistrationForm):
   	first_name = forms.CharField(label='First name', max_length=30,required=True)
 	last_name = forms.CharField(label='Last name', max_length=30, required=True)
 
-#CustomRegisterForm.base_fields['username'].widget = hidden_widget()
+del CustomRegisterForm.base_fields['username']
 CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
 
