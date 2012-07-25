@@ -44,5 +44,5 @@ def delete(request):
   signals.user_deleted.send(sender=User, request=request)
   user = request.user
   user.delete()
-  return render_to_response('home.html')
+  return render_to_response('landing/home.html')
 
