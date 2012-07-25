@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from registration.signals import user_registered
+from people.signals import *
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
@@ -86,4 +87,9 @@ def createUserProfile(sender, user, request, **kwargs):
 	data.birthday = form.data["birthday"]
 	data.save()
 
+def deleteUserProfile(sender, request, **kwargs):
+    prof = request.user.get_profile()
+    prof.delete()
+
 user_registered.connect(createUserProfile)
+user_deleted.connect(deleteUserProfile)

@@ -8,6 +8,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpRequest
 from django.contrib.auth.decorators import login_required
+from people import signals
+
+def info(request):
+  user = request.user
+  up = user.get_profile()
+  if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up})
+  return render_to_response('people/login.html')
 
 def viewProfile(request, people_id):
   user = get_object_or_404(people, id=people_id)
@@ -17,17 +24,25 @@ def enterEditProfile(request, people_id):
   user = get_object_or_404(people, id=people_id)
   return render_to_response('people/profile.html', {'user': user})
 
-def login(request, **kwargs):
-        email, password = kwargs['email'], kwargs['password1']
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(request)
-        # username = kwargs['first_name'] + "." + kwargs['last_name'] 
-        new_user = get_object_or_404(RegistrationProfile, email=email)
-        user = authenticate(username=new_user.username, password=password)
-        if user is not None:
-            login(request, user)
-            request.session['user'] = user
-                                                    
-        return user
+def editProfile(request, people_id):
+  user = get_object_or_404(people, id=people_id)
+  return render_to_response('people/profile.html', {'user': user})
+
+def viewAccountSettings(request, people_id):
+  user = get_object_or_404(people, id=people_id)
+  return render_to_response('people/profile.html', {'user': user})
+
+def enterEditAccountSettings(request, people_id):
+  user = get_object_or_404(people, id=people_id)
+  return render_to_response('people/profile.html', {'user': user})
+
+def editAccountSettings(request, people_id):
+  user = get_object_or_404(people, id=people_id)
+  return render_to_response('people/profile.html', {'user': user})
+
+def delete(request):
+  signals.user_deleted.send(sender=User, request=request)
+  user = request.user
+  user.delete()
+  return render_to_response('home.html')
+

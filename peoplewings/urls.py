@@ -12,7 +12,7 @@ urlpatterns = patterns('',
     url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
     url(r'^', include('registration.backends.default.urls')),
 
-    #url(r'^people/$', include('people.urls')),
+    url(r'^people/', include('people.urls')),
     # url(r'^profile/$', include('people.urls'))
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),
