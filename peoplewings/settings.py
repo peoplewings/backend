@@ -74,7 +74,7 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     "/Users/sergio/Workspace/peoplewings/static/",
-    "/Users/sergio/Workspace/peoplewings/static/css",
+
 )
 
 # List of finder classes that know how to find static files in
