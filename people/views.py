@@ -9,40 +9,71 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpRequest
 from django.contrib.auth.decorators import login_required
 from people import signals
+from django.template import RequestContext
 
-def info(request):
+@login_required
+def viewProfile(request):
+  """
+    Outputs the following data from the profile passed as parameter: gender, date of birth
+    interested in, civil state, languages, city, pw state, all about you, main mission
+    occupation, education, pw experience, personal philosophy, other pages you like, 
+    people you like, favourite books, movies, series, etc, what you like teaching or sharing,
+    incredible things you have done or seen, opinion about peoplewings, political opinion, religion, 
+    quotes, people that inspired you.
+  """
   user = request.user
   up = user.get_profile()
   if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up})
   return render_to_response('people/login.html')
 
-def viewProfile(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+@login_required
+def enterEditProfile(request):
+  user = request.user
+  up = user.get_profile()
+  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'profile': up}, context_instance = RequestContext(request))
+  return render_to_response('people/login.html')
 
-def enterEditProfile(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+@login_required
+def editProfile(request):
+  city = request.POST['city']
+  user = request.user
+  up = user.get_profile()
 
-def editProfile(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+  if request.user.is_authenticated():
+  	up.city = city
+  	up.save()
+  	return HttpResponseRedirect('/users/profile/')
+  return render_to_response('people/login.html')
 
-def viewAccountSettings(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+@login_required
+def viewAccountSettings(request):
+  user = request.user
+  if request.user.is_authenticated(): return render_to_response('people/account.html', {'user': user})
+  return render_to_response('people/login.html')
 
-def enterEditAccountSettings(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+@login_required
+def enterEditAccountSettings(request):
+  user = request.user
+  if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'user': user}, context_instance = RequestContext(request))
+  return render_to_response('people/login.html')
 
-def editAccountSettings(request, people_id):
-  user = get_object_or_404(people, id=people_id)
-  return render_to_response('people/profile.html', {'user': user})
+@login_required
+def editAccountSettings(request):
+  p1 = request.POST['password']
+  p2 = request.POST['repassword']
+  user = request.user
+  if request.user.is_authenticated():
+  	if p1 == p2:
+  		user.set_password(p1)
+  		user.save()
+  	return HttpResponseRedirect('/users/account/')
+  return render_to_response('people/login.html')
 
+@login_required
 def delete(request):
   signals.user_deleted.send(sender=User, request=request)
   user = request.user
   user.delete()
-  return render_to_response('landing/home.html')
+  return HttpResponseRedirect('/login/')
+
 

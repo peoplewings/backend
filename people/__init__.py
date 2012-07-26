@@ -1,0 +1,3 @@
+"""
+Peoplewings User Management module
+"""

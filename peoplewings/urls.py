@@ -11,9 +11,10 @@ urlpatterns = patterns('',
     # Registration patterns:
     url(r'^register/$', 'registration.views.register',    {'form_class':CustomRegisterForm, 'backend':'people.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
+    #url(r'^logout/$','django.contrib.auth.views.logout',{'template_name':'registration/login.html'}),
     url(r'^', include('registration.backends.default.urls')),
 
-    url(r'^people/', include('people.urls')),
+    url(r'^users/', include('people.urls')),
     # url(r'^profile/$', include('people.urls'))
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),
