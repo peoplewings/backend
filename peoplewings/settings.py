@@ -141,7 +141,8 @@ EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-LOGIN_REDIRECT_URL = '/people/info' # url user is redirected after success login
+LOGIN_REDIRECT_URL = '/users/profile' # url user is redirected after success login
+LOGIN_URL = '/login'
 
 # User profiles module
 AUTH_PROFILE_MODULE = 'people.UserProfile'
