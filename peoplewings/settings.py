@@ -6,6 +6,8 @@ DATABASES = {'default': dj_database_url.config(default='postgres://localhost')}
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) #gets directory settings is in
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -62,19 +64,24 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = '/static_media/'
+
+# Static content is saved to here --
+STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_ROOT,'/../static-root/')) # this folder is used to collect static files in production. not used in development
+STATIC_URL =  "/static/"
+
+#STATIC_ROOT = '/static_media/'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+#STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    "/Users/sergio/Workspace/peoplewings/static/",
-
+    # "/Users/sergio/Workspace/peoplewings/static/",
+    os.path.normpath(os.path.join(PROJECT_ROOT,'..','static')),
 )
 
 # List of finder classes that know how to find static files in
@@ -183,9 +190,19 @@ LOGGING = {
     }
 }
 
-try:
-    from settings_ezequiel import *
-except ImportError:
-    pass
+if DEBUG:
+    try:
+	    from settings_ezequiel import *
+    except ImportError:
+	    pass
+else:
+	STATIC_URL =  "http://peoplewings.herokuapp.com/static/"
+		
 
+
+# A place for watchers
+print "PROJECT_ROOT: " + PROJECT_ROOT
+print "STATICFILES_DIRS: " + STATICFILES_DIRS[0]
+print "STATIC_ROOT: " + STATIC_ROOT
+print "STATIC_URL: " + STATIC_URL
 
