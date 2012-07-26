@@ -76,3 +76,4 @@ def delete(request):
   user.delete()
   return HttpResponseRedirect('/login/')
 
+
