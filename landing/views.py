@@ -5,6 +5,5 @@ import smtplib, random, string, md5, os, datetime
 from django.contrib.auth.models import User
 
 def welcome(request):
-    now = datetime.datetime.now()
-    # name = request.user.username if request.user.is_authenticated() else 'Guest'	
+    now = datetime.datetime.now()	
     return render_to_response('landing/home.html', {'user': request.user, 'time': now})
