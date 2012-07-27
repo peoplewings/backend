@@ -25,7 +25,7 @@ def viewProfile(request):
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(instance = up)
-  if request.user.is_authenticated(): return render_to_response('people/profile.html', {'form': form})
+  if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up, 'user': up.user})
   return render_to_response('people/login.html')
 
 @login_required

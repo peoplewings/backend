@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+
+{% block body %}
 <p><label for="email">Email: {{user.email}}</label> </p>
 
 <p><label for="first_name">First name: {{user.first_name}}</label> </p>
@@ -7,3 +10,4 @@
 <p> <a href="../account/edit/"> Edit your account settings </a></p>
 
 <p> <a href="../profile/"> Go back to your profile </a></p>
+{% endblock %}

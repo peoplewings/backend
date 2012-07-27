@@ -1,7 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
 <form action="/users/account/edit/completed/" method="post">
 	{% csrf_token %}
 
 	{{form.as_p}}
 
+	<br/>
+	New Password: <input type="password" name="password">
+	Re enter new Password: <input type="password" name="repassword">
+
 	<p class="submit"><button type="submit">Submit</button></p>
 </form>
+{% endblock %}
