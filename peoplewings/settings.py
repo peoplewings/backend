@@ -6,8 +6,8 @@ DATABASES = {'default': dj_database_url.config(default='postgres://localhost')}
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) # gets directory settings is in
-PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # gets project directory (not the django project)
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) # The Django project
+PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The genral project
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -196,8 +196,6 @@ if DEBUG:
 	    from settings_ezequiel import *
     except ImportError:
 	    pass
-#else:
-	# STATIC_URL =  "http://peoplewings.herokuapp.com/static/"
 		
 
 
