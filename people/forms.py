@@ -9,10 +9,13 @@ from django.contrib.auth.models import User
 class RegisterForm(ModelForm):
   class Meta:
       model = UserProfile
+      fields = ('birthday', 'gender')
+      """
       exclude = ('user','age','interested_in','civil_state','languages', 'city', 'pw_state', 'privacy_settings', 
       	'relationships', 'all_about_you', 'main_mission', 'occupation', 'education', 'pw_experience', 
       	'personal_philosophy', 'other_pages_you_like', 'people_you_like', 'favourite_movies_series_others',
-      	'what_you_like_sharing', 'incredible_done_seen', 'pw_opinion', 'religion', 'quotes', 'people_inspired_you')  
+      	'what_you_like_sharing', 'incredible_done_seen', 'pw_opinion', 'political_opinion', 'religion', 'quotes', 'people_inspired_you')  
+		"""
 
 class CustomRegisterForm(RegistrationForm):
   	first_name = forms.CharField(label='First name', max_length=30,required=True)
@@ -36,7 +39,7 @@ The form for EditAccountSettings must have, from User: email, first name, last n
 class CustomAccountSettingsForm(ModelForm):
   class Meta:
       model = User
-      fields = ('email', 'first_name', 'last_name', 'password')
+      fields = ('email', 'first_name', 'last_name')
 
 
 AuthenticationForm.base_fields['username'].label = 'E-mail'

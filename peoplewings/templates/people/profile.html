@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block body %}
-
-{% for field_name, value in form.data %}
-    {{field_name}}: {{value}}
-{% endfor %}
-
+Gender: {{profile.gender}}
+<br/>
+Birthday: {{profile.birthday}}
+<br/>
+Age: {{profile.age}}
+<br/>
+City: {{profile.city}}
+<br/>
+All about you: {{profile.all_about_you}}
 <br/>
 <br/>
 <p> <a href="../profile/edit/"> Edit your profile </a></p>
