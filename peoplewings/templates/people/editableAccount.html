@@ -1,11 +1,7 @@
 <form action="/users/account/edit/completed/" method="post">
 	{% csrf_token %}
 
-	<p><label for="password"> New password: </label>
-		<input id="id_password" type="password" name="password" maxlength="100" ></p>
-
-	<p><label for="repassword"> Re enter new password: </label>
-		<input id="id_repassword" type="password" name="repassword" maxlength="100" ></p>
+	{{form.as_p}}
 
 	<p class="submit"><button type="submit">Submit</button></p>
 </form>

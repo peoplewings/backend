@@ -10,6 +10,7 @@ from django.http import HttpResponseRedirect, HttpRequest
 from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
+from people.forms import *
 
 @login_required
 def viewProfile(request):
@@ -23,14 +24,16 @@ def viewProfile(request):
   """
   user = request.user
   up = user.get_profile()
-  if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up})
+  form = CustomProfileForm(instance = up)
+  if request.user.is_authenticated(): return render_to_response('people/profile.html', {'form': form})
   return render_to_response('people/login.html')
 
 @login_required
 def enterEditProfile(request):
   user = request.user
   up = user.get_profile()
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'profile': up}, context_instance = RequestContext(request))
+  form = CustomProfileForm(instance = up)
+  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required
@@ -54,7 +57,8 @@ def viewAccountSettings(request):
 @login_required
 def enterEditAccountSettings(request):
   user = request.user
-  if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'user': user}, context_instance = RequestContext(request))
+  form = CustomAccountSettingsForm(instance=user)
+  if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required

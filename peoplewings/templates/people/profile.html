@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
-<p><label for="gender">Gender: {{profile.gender}}</label> </p>
 
-<p><label for="birthday">Birthday: {{profile.birthday}}</label></p>
+{% for field_name, value in form.data %}
+    {{field_name}}: {{value}}
+{% endfor %}
 
-<p><label for="age">Age: {{profile.age}}</label></p>
-
-<p><label for="age">City: {{profile.city}}</label></p>
-
+<br/>
+<br/>
 <p> <a href="../profile/edit/"> Edit your profile </a></p>
 <p> <a href="../account/"> View your account settings </a></p>
 <p> <a href="../../logout/"> Logout </a></p>

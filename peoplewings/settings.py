@@ -196,13 +196,15 @@ if DEBUG:
     except ImportError:
 	    pass
 else:
-	STATIC_URL =  "http://peoplewings.herokuapp.com/static/"
+	STATIC_URL =  "http://peoplewings.herokuapp.com/static-root/"
 		
 
 
 # A place for watchers
+"""
 print "PROJECT_ROOT: " + PROJECT_ROOT
 print "STATICFILES_DIRS: " + STATICFILES_DIRS[0]
 print "STATIC_ROOT: " + STATIC_ROOT
 print "STATIC_URL: " + STATIC_URL
+"""
 

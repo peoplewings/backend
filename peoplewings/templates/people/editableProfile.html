@@ -1,8 +1,7 @@
 <form action="/users/profile/edit/completed/" method="post">
 	{% csrf_token %}
 
-	<p><label for="city">City: </label>
-		<input id="id_city" type="text" name="city" maxlength="100" value={{profile.city}} ></p>
+	{{form.as_p}}
 
 	<p class="submit"><button type="submit">Submit</button></p>
 </form>
