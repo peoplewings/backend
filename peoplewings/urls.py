@@ -3,6 +3,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
 from people.forms import *
 from django.contrib import *
+import settings
 admin.autodiscover()
 
 
@@ -27,5 +28,6 @@ urlpatterns = patterns('',
 	# Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 )
-# Static files patterns:
-urlpatterns += staticfiles_urlpatterns()
+# Static files patterns for development:
+if settings.DEBUG:
+    urlpatterns += staticfiles_urlpatterns()
