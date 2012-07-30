@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
 {% block body %}
-  <h2>Peoplewings landing page</h2>
-  <h3>Hello   {% if user.is_authenticated %} {{user.first_name}} {{user.last_name}} {% else %} Guest{% endif %}, its {{time}} </h3>
+  <h3>Hello   {% if user.is_authenticated %} {{user.first_name}} {{user.last_name}}{% else %} Guest{% endif %}, its {{time}} </h3>
 {% endblock %}

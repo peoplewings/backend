@@ -1,1 +1,1 @@
-# Static files tweaks for Heroku
+# Static files tweak for Heroku
