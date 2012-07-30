@@ -65,32 +65,31 @@ class UserProfile(models.Model):
     interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, null=True)
     civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, null=True)
     #languages = set(models.CharField(max_length=2, choices=LANGUAGES_CHOICES))
-    languages = set()
     city = models.CharField(max_length=20)
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, null=True)
     #privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
-    all_about_you = models.TextField(default='')
-    main_mission = models.TextField(default='')
-    occupation = models.CharField(max_length=20, default='')
-    education = models.CharField(max_length=20, default='')
+    all_about_you = models.TextField(blank=True)
+    main_mission = models.TextField(blank=True)
+    occupation = models.CharField(max_length=20, blank=True)
+    education = models.CharField(max_length=20, blank=True)
     # experiencia sobre pw
-    pw_experience = models.TextField(default='')
-    personal_philosophy = models.TextField(default='')
-    other_pages_you_like = models.TextField(default='')
-    people_you_like = models.TextField(default='')
+    pw_experience = models.TextField(blank=True)
+    personal_philosophy = models.TextField(blank=True)
+    other_pages_you_like = models.TextField(blank=True)
+    people_you_like = models.TextField(blank=True)
     # peliculas, libros, series, videojuegos, music, deportes, actividades favoritas
-    favourite_movies_series_others = models.TextField(default='')
+    favourite_movies_series_others = models.TextField(blank=True)
     # que te gusta compartir o ensenyar
-    what_you_like_sharing = models.TextField(default='')
+    what_you_like_sharing = models.TextField(blank=True)
     # cosas increibles que hayas hecho o visto
-    incredible_done_seen = models.TextField(default='')
+    incredible_done_seen = models.TextField(blank=True)
     # opinion sobre peoplewings
-    pw_opinion = models.TextField(default='')
-    political_opinion = models.CharField(max_length=20, default='')
-    religion = models.CharField(max_length=20, default='')
+    pw_opinion = models.TextField(blank=True)
+    political_opinion = models.CharField(max_length=20, blank=True)
+    religion = models.CharField(max_length=20, blank=True)
     # citas
-    quotes = models.TextField(default='')
-    people_inspired_you = models.TextField(default='')
+    quotes = models.TextField(blank=True)
+    people_inspired_you = models.TextField(blank=True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
 class Relationship(models.Model):

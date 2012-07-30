@@ -38,15 +38,14 @@ def enterEditProfile(request):
 
 @login_required
 def editProfile(request):
-  city = request.POST['city']
+  
   user = request.user
   up = user.get_profile()
-
+  form = CustomProfileForm(request.POST, instance=up)
   if request.user.is_authenticated():
-  	up.city = city
-  	up.save()
+  	if form.is_valid(): form.save()
   	return HttpResponseRedirect('/users/profile/')
-  return render_to_response('people/login.html')
+  return render_to_response('registration/login.html')
 
 @login_required
 def viewAccountSettings(request):
