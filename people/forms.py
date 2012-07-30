@@ -5,11 +5,13 @@ from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
 
 class RegisterForm(ModelForm):
   class Meta:
       model = UserProfile
       fields = ('birthday', 'gender')
+      
       """
       exclude = ('user','age','interested_in','civil_state','languages', 'city', 'pw_state', 'privacy_settings', 
       	'relationships', 'all_about_you', 'main_mission', 'occupation', 'education', 'pw_experience', 
@@ -17,9 +19,26 @@ class RegisterForm(ModelForm):
       	'what_you_like_sharing', 'incredible_done_seen', 'pw_opinion', 'political_opinion', 'religion', 'quotes', 'people_inspired_you')  
 		"""
 
-class CustomRegisterForm(RegistrationForm):
-  	first_name = forms.CharField(label='First name', max_length=30,required=True)
-	last_name = forms.CharField(label='Last name', max_length=30, required=True)
+class CustomRegisterForm(RegistrationFormUniqueEmail):
+  first_name = forms.CharField(label='First name', max_length=30,required=True)
+  last_name = forms.CharField(label='Last name', max_length=30, required=True)
+  email_2 = forms.EmailField(label='Repeat email')
+  def __init__(self, *args, **kwargs):
+        super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
+        self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
+
+  def clean(self):
+        """
+        Verifiy that the values entered into the two email fields
+        match. Note that an error here will end up in
+        ``non_field_errors()`` because it doesn't apply to a single
+        field.
+        
+        """
+        if 'email' in self.cleaned_data and 'email_2' in self.cleaned_data:
+            if self.cleaned_data['email'] != self.cleaned_data['email_2']:
+                raise forms.ValidationError(_("The two emails fields didn't match."))
+        return self.cleaned_data
 
 
 # the form for EditProfile must show:
@@ -43,5 +62,7 @@ class CustomAccountSettingsForm(ModelForm):
 
 
 AuthenticationForm.base_fields['username'].label = 'E-mail'
+RegisterForm.base_fields['birthday'].label = 'Date of birth'
 del CustomRegisterForm.base_fields['username']
+del CustomRegisterForm.base_fields['password2']
 CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
