@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block extra_styles %}
+	<style type="text/css">
+	  body { padding: 10px 0; }
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% load static from staticfiles %}
+	<center>
+		<div id="lga" style="height:231px; margin-top: 60px">
+			<a href="#">
+				<img id="pwlogo" alt="Peoplewings" border="0" height="203" src="{% static "img/pw-search-logo.png" %}" title="Peoplewings" width="394" style="padding-top:0px">
+				</a>
+		</div>
+		<div id="search">
+			<form class="form-search" style="width: 394px;">
+			  <input type="text" class="search-query" style="width: 100%;">
+			  <button type="submit" class="btn btn-large" style="margin-top: 10px">Search</button>
+			</form>
+		</div>
+	</center>
+{% endblock %}

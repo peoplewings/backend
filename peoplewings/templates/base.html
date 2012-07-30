@@ -10,10 +10,8 @@
 	{% load static from staticfiles %}
 	<link href="{% static "css/bootstrap-2.0.4.css" %}" rel="stylesheet">
     <link href="{% static "css/bootstrap-responsive-2.0.4.css" %}" rel="stylesheet">
-    <style type="text/css">
-      body { padding: 60px 0 40px 20px; }
-      .sidebar-nav { padding: 9px 0; }
-    </style>
+	{% block extra_styles %}
+	{% endblock %}
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -27,40 +25,6 @@
 
   <body id="{% block body_id %}{% endblock %}" class="{% block body_class %}{% endblock %}">
   {% block headbar %}	
-   <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">Peoplewings</a>
-        {% block dropdown %}
-		{% if user.is_authenticated %}
-		<div class="btn-group pull-right">
-		    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-		      <i class="icon-user"></i> {{user.first_name}}
-		      <span class="caret"></span>
-		    </a>
-		    <ul class="dropdown-menu">
-		      <li><a href="/users/profile/">Profile</a></li>
-		      <li class="divider"></li>
-		      <li><a href="/logout/">Log Out</a></li>
-		    </ul>
-		  </div>
-		{% endif %}
-		{% endblock %}
-          <div class="nav-collapse">
-            <ul class="nav">
-              <li class="active"><a href="/">Home</a></li>
-              <li><a href="/register/">Register</a></li>
-              <li><a href="/login/">Log in</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
   {% endblock %}
   <div id="body">
     {% block body %}
