@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}
+	<style type="text/css">
+	  body { padding: 60px 0 40px 0; }
+	</style>
+{% endblock %}
 
 {% block title %}Registration{% endblock %}
 {% block body_class %}{{ block.super }} registration{% endblock %}

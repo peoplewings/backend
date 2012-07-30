@@ -4,15 +4,24 @@
 {% block title %}Register for an account{% endblock %}
 {% block body_class %}{{ block.super }} registration_form{% endblock %}
 
-
-{% block content_title %}
-  <h2>Peoplewings register</h2>
-{% endblock %}
-
-
 {% block content %}
-  <form action="." method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <p class="submit"><button type="submit">Submit</button></p>
-  </form>
+
+<form class="well form-inline form-horizontal" style="width: 50%; margin: 0 auto">
+        <fieldset>
+			{% csrf_token %}
+			    {% for field in form %}
+				       <div class="control-group">
+							{{ field.errors }}
+				            <label class="control-label" for="textarea">{{field.label_tag}}</label>
+								            	<div class="controls">{{ field }}
+									            </div>
+				        </div>
+				    {% endfor %}
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <button class="btn">Cancel</button>
+          </div>
+        </fieldset>
+      </form>
+
 {% endblock %}
