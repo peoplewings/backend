@@ -51,11 +51,15 @@ def editProfile(request):
 
     if form.is_valid():
       form.save()
-      up.age = date.today().year - up.birthday.year
+      today = date.today()
+      b = up.birthday
+      age = today.year - b.year
+      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
+      up.age = age
       up.save()
       return HttpResponseRedirect('/users/profile/')
     else:
-      render_to_response('/users/editProfile.html')
+      render_to_response('people/editableProfile.html')
   return render_to_response('registration/login.html')
 
 @login_required

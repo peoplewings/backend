@@ -55,11 +55,11 @@ LANGUAGES_CHOICES = (
 
 
 class CustomProfileForm(ModelForm):
-  lang = forms.MultipleChoiceField(required=False, choices=LANGUAGES_CHOICES , widget=forms.CheckboxSelectMultiple)
+  #lang = forms.MultipleChoiceField(required=False, choices=LANGUAGES_CHOICES , widget=forms.CheckboxSelectMultiple)
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages')
-      field = ('lang')
+      #field = ('lang')
 
 """
 The form for EditAccountSettings must have, from User: email, first name, last name, password
