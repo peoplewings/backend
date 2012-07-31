@@ -1,7 +1,18 @@
 {% extends "people/base_people.html" %}
 
+
 {% block body %}
 
+{% block content_title %}
+<div class="well span2" style="padding: 8px 0;">
+        <ul class="nav nav-list">
+          <li class="active"><a href="#"><i class="icon-user icon-white"></i> Basic info</a></li>
+          <li><a href="#"><i class="icon-camera"></i> Profile pictures</a></li>
+          <li><a href="#"><i class="i"></i> Wings</a></li>
+		  <li><a href="#"><i class="i"></i> Privacy</a></li>
+        </ul>
+      </div>
+{% endblock %}
 
 {% include "general/custom_form.html" with next_action="/users/profile/edit/completed/" %}
 
