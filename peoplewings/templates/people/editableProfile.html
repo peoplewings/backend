@@ -1,11 +1,16 @@
-{% extends "base.html" %}
+{% extends "people/base_people.html" %}
 
 {% block body %}
-<form action="/users/profile/edit/completed/" method="post">
+
+
+{% include "general/custom_form.html" with next_action="/users/profile/edit/completed/" %}
+
+
+<!--<form action="/users/profile/edit/completed/" method="post">
 	{% csrf_token %}
 
 	{{form.as_p}}
 
 	<p class="submit"><button type="submit">Submit</button></p>
-</form>
+</form>-->
 {% endblock %}

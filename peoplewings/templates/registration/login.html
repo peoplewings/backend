@@ -9,7 +9,7 @@
 
 
 {% block content %}
-{% include "general/custom_form.html" %}
+{% include "general/custom_form.html" with next_action="." %}
 {% endblock %}
 <!--<form action="." method="post" class="login_form">{% csrf_token %}
   {{ form.as_p }}
