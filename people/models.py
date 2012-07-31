@@ -7,6 +7,9 @@ from datetime import date, datetime
 from registration.forms import RegistrationForm
 from sets import Set
 
+class Languages(models.Model):
+  name = models.CharField(max_length=30, unique=True)
+
 class UserProfile(models.Model):
 
     GENDER_CHOICES = (
@@ -33,16 +36,7 @@ class UserProfile(models.Model):
         ('SE', 'Separated'),
     )
     
-    LANGUAGES_CHOICES = (
-        ('EN', 'English'),
-        ('SP', 'Spanish'),
-        ('FR', 'French'),
-        ('IT', 'Italian'),
-        ('GE', 'German'),
-        ('CH', 'Chinese'),
-        ('JA', 'Japanese'),
-        ('AR', 'Arab'),
-    )
+
     
     PW_STATE_CHOICES = (
         ('Y', 'Yes'),
@@ -64,9 +58,10 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
     interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, null=True)
     civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, null=True)
-    #languages = set(models.CharField(max_length=2, choices=LANGUAGES_CHOICES))
     city = models.CharField(max_length=20)
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, null=True)
+    #pic=models.ImageField(upload_to='/uploads', blank=True)
+    languages = models.ManyToManyField(Languages)
     #privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
     all_about_you = models.TextField(blank=True)
     main_mission = models.TextField(blank=True)
@@ -92,6 +87,8 @@ class UserProfile(models.Model):
     people_inspired_you = models.TextField(blank=True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
+
+
 class Relationship(models.Model):
 
     RELATIONSHIP_CHOICES = (
@@ -113,6 +110,8 @@ def createUserProfile(sender, user, request, **kwargs):
 	data = UserProfile.objects.create(user=user)
 	data.gender = form.data["gender"]
 	data.birthday = form.data["birthday"]
+    # data.age = date.today() - form.data["birthday"]
+        data.age = date.today().year - form.data["birthday"].year
 	data.save()
 
 def deleteUserProfile(sender, request, **kwargs):

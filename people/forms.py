@@ -3,7 +3,7 @@ from django.db import models
 from django.forms import ModelForm
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile
+from people.models import UserProfile, Languages
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
@@ -47,10 +47,19 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 #					people you like, favourite movies series, what you like sharing, incredible things done or seen
 # 					pw opinion, political opinion, religion, quotes, people that inspired you
 
+LANGUAGES_CHOICES = (
+        ('E', 'English'),
+        ('G', 'German'),
+        ('S', 'Spanish'),
+    )
+
+
 class CustomProfileForm(ModelForm):
+  lang = forms.MultipleChoiceField(required=False, choices=LANGUAGES_CHOICES , widget=forms.CheckboxSelectMultiple)
   class Meta:
       model = UserProfile
-      exclude = ('user', 'age', 'relationships')
+      exclude = ('user', 'age', 'relationships', 'languages')
+      field = ('lang')
 
 """
 The form for EditAccountSettings must have, from User: email, first name, last name, password

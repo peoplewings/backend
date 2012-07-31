@@ -7,5 +7,6 @@ urlpatterns = patterns('people.views',
     url(r'^account/$', 'viewAccountSettings'),
     url(r'^account/edit/$', 'enterEditAccountSettings'),
     url(r'^account/edit/completed/$', 'editAccountSettings'),
+    url(r'^search/$', 'search'),
     url(r'^delete/$', 'delete'),
 )

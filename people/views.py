@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
 from people.forms import *
+from datetime import *
 
 @login_required
 def viewProfile(request):
@@ -42,9 +43,19 @@ def editProfile(request):
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(request.POST, instance=up)
+  
+
+  #for ins in form.lang: print ins
+
   if request.user.is_authenticated():
-  	if form.is_valid(): form.save()
-  	return HttpResponseRedirect('/users/profile/')
+
+    if form.is_valid():
+      form.save()
+      up.age = date.today().year - up.birthday.year
+      up.save()
+      return HttpResponseRedirect('/users/profile/')
+    else:
+      render_to_response('/users/editProfile.html')
   return render_to_response('registration/login.html')
 
 @login_required
@@ -71,6 +82,16 @@ def editAccountSettings(request):
   		user.save()
   	return HttpResponseRedirect('/users/account/')
   return render_to_response('people/login.html')
+
+def search(request):
+  #age_from = request.POST['age_from']
+  #age_up_to = request.POST['age_up_to']
+  # quitar esto
+  age_from=34
+  age_up_to=34
+  # gte = greater o equal than, gt = greater than
+  results = UserProfile.objects.all().filter(age__gte=age_from).exclude(age__gt=age_up_to)
+  return render_to_response('people/login.html', {'results':results})
 
 @login_required
 def delete(request):
