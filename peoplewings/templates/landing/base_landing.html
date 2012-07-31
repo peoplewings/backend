@@ -10,14 +10,18 @@
 	{% load static from staticfiles %}
 	<center>
 		<div id="lga" style="height:231px; margin-top: 60px">
-			<a href="#">
-				<img id="pwlogo" alt="Peoplewings" border="0" height="203" src="{% static "img/pw-search-logo.png" %}" title="Peoplewings" width="394" style="padding-top:0px">
-				</a>
+			<a href="#"><img id="pwlogo" alt="Peoplewings" border="0" height="203" src="{% static "img/pw-search-logo.png" %}" title="Peoplewings" width="394" style="padding-top:0px"></a>
 		</div>
 		<div id="search">
-			<form class="form-search" style="width: 394px;">
-			  <input type="text" class="search-query" style="width: 100%;">
-			  <button type="submit" class="btn btn-large" style="margin-top: 10px">Search</button>
+			<form class="form-horizontal" style="width: 394px;">
+				<fieldset>
+					<div class="control-group" style="width: 100%;">
+					            
+					              <div class="input-append">
+					                <input id="appendedInputButton" size="16" type="text"><button class="btn" type="button">Go!</button>
+					              </div>
+					            </div>
+					          
 			</form>
 		</div>
 	</center>

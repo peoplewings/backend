@@ -1,0 +1,17 @@
+<form action="." method="post" class="well form-inline form-horizontal" style="width: 50%; margin: 0 auto">
+	<fieldset>
+		{% csrf_token %}
+	    {% for field in form %}
+		       <div class="control-group">
+					<label class="control-label" for="textarea">{{field.label_tag}}</label>
+						<div class="controls">
+							{{ field }}
+							<span class="help-inline">{{ field.errors }}</span>
+						</div>
+		        </div>
+		{% endfor %}
+		<div class="form-actions">
+			<button type="submit" class="btn btn-primary">Submit</button>
+		</div>
+	</fieldset>
+</form>
