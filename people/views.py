@@ -43,9 +43,6 @@ def editProfile(request):
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(request.POST, instance=up)
-  
-
-  #for ins in form.lang: print ins
 
   if request.user.is_authenticated():
 
