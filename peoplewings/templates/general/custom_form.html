@@ -1,4 +1,4 @@
-<form action="{{next_action}}" method="post" class="well form-inline form-horizontal" style="width: 50%; margin: 0 auto">
+<form action="{{next_action}}" method="post" class="well form-inline form-horizontal span8">
 	<fieldset>
 		{% csrf_token %}
 	    {% for field in form %}
@@ -11,7 +11,7 @@
 		        </div>
 		{% endfor %}
 		<div class="form-actions">
-			<button type="submit" class="btn btn-primary">Submit</button>
+			<button type="submit" class="btn btn-primary" style="margin-left: 160px">Submit</button>
 		</div>
 	</fieldset>
 </form>
