@@ -10,6 +10,9 @@ from sets import Set
 class Languages(models.Model):
   name = models.CharField(max_length=30, unique=True)
 
+class University(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
 class UserProfile(models.Model):
 
     GENDER_CHOICES = (
@@ -62,8 +65,14 @@ class UserProfile(models.Model):
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, null=True)
     #pic=models.ImageField(upload_to='/uploads', blank=True)
     languages = models.ManyToManyField(Languages)
+    """
+    lista de universidades en la que ha estudiado, separadas por comas. Por ejemplo:
+    universidad de Granada, Universidad Complutense de Madrid, Universidad Autonoma de Barcelona
+    """
+    universities = models.ManyToManyField(University) 
     #privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
     all_about_you = models.TextField(blank=True)
+    """
     main_mission = models.TextField(blank=True)
     occupation = models.CharField(max_length=20, blank=True)
     education = models.CharField(max_length=20, blank=True)
@@ -85,6 +94,7 @@ class UserProfile(models.Model):
     # citas
     quotes = models.TextField(blank=True)
     people_inspired_you = models.TextField(blank=True)
+    """
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
 

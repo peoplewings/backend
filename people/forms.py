@@ -81,6 +81,7 @@ class CustomAccountSettingsForm(ModelForm):
 
 AuthenticationForm.base_fields['username'].label = 'E-mail'
 RegisterForm.base_fields['birthday'].label = 'Date of birth'
+CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
 del CustomRegisterForm.base_fields['username']
 del CustomRegisterForm.base_fields['password2']
 CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
