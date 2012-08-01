@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'^', include('registration.backends.default.urls')),
 
     url(r'^users/', include('people.urls')),
+    url(r'^ajax/', include('ajax.urls')),
     # url(r'^profile/$', include('people.urls'))
     # Examples:
     # url(r'^$', 'peoplewings.views.home', name='home'),
