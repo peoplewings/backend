@@ -61,6 +61,15 @@ class CustomProfileForm(ModelForm):
       exclude = ('user', 'age', 'relationships', 'languages')
       #field = ('lang')
 
+  def clean_all_about_you(self):
+        """
+        Verifiy the length of this field
+        """
+        if 'all_about_you' in self.cleaned_data:
+            if len(self.cleaned_data['all_about_you']) > 2:
+                raise forms.ValidationError(_("This length must be under 250 characters."))
+        return self.cleaned_data['all_about_you']
+
 """
 The form for EditAccountSettings must have, from User: email, first name, last name, password
 """

@@ -57,9 +57,7 @@ def editProfile(request):
       if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
       up.age = age
       up.save()
-      return HttpResponseRedirect('/users/profile/')
-    else:
-      render_to_response('people/editableProfile.html')
+    return HttpResponseRedirect('/users/profile/')
   return render_to_response('registration/login.html')
 
 @login_required
