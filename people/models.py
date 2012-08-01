@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from registration.signals import user_registered
-from people.signals import *
+from people.signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm

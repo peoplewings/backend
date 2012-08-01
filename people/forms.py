@@ -59,6 +59,7 @@ class CustomProfileForm(ModelForm):
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages')
+
       #field = ('lang')
 
   def clean_all_about_you(self):
@@ -79,9 +80,13 @@ class CustomAccountSettingsForm(ModelForm):
       fields = ('email', 'first_name', 'last_name')
 
 
-AuthenticationForm.base_fields['username'].label = 'E-mail'
-RegisterForm.base_fields['birthday'].label = 'Date of birth'
-CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
-del CustomRegisterForm.base_fields['username']
-del CustomRegisterForm.base_fields['password2']
-CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
+def customize_register_form():
+    AuthenticationForm.base_fields['username'].label = 'E-mail'
+    RegisterForm.base_fields['birthday'].label = 'Date of birth'
+    CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
+    del CustomRegisterForm.base_fields['username']
+    del CustomRegisterForm.base_fields['password2']
+    CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
+	
+
+customize_register_form()
