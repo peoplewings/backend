@@ -12,5 +12,10 @@
 
 ## Backend API
 
+## Fixtures
+- Create a JSON file inside the app folder, for example people/people.json
+- Load data:
+	`$ python manage.py loaddata people/people.json`
+
 - url1
 - url2
