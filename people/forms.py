@@ -64,6 +64,9 @@ class CustomProfileForm(ModelForm):
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages', 'universities')
+      widgets = {
+          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+      }
       """
       widgets = {
           'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
