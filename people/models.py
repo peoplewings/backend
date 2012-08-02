@@ -5,13 +5,12 @@ from people.signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
-from sets import Set
 
 class Languages(models.Model):
   name = models.CharField(max_length=30, unique=True)
 
 class University(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+  name = models.CharField(max_length=50, unique=True)
 
 class UserProfile(models.Model):
 

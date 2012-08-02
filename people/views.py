@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile
+from people.models import UserProfile, University
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -53,7 +53,16 @@ def editProfile(request):
       age = today.year - b.year
       if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
       up.age = age
+      
+      universities = request.POST['uni'].split(',')
+      for uni in universities:
+        if University.objects.filter(name=uni): # si ya existe la uni en la base de datos...
+          u = University.objects.get(name=uni)
+        else:                                   # el usuario ha insertado una uni nueva => la insertamos en la BD
+          u = University.objects.create(name=uni)
+        up.universities.add(u)
       up.save()
+    else: print "form is NOT valid"
     return HttpResponseRedirect('/users/profile/')
   return render_to_response('registration/login.html')
 
