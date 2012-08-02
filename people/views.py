@@ -12,6 +12,7 @@ from people import signals
 from django.template import RequestContext
 from people.forms import *
 from datetime import *
+import re
 
 @login_required
 def viewProfile(request):
@@ -48,19 +49,23 @@ def editProfile(request):
 
     if form.is_valid():
       form.save()
+
+      
       today = date.today()
       b = up.birthday
       age = today.year - b.year
       if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
       up.age = age
-      
+      """
       universities = request.POST['uni'].split(',')
       for uni in universities:
-        if University.objects.filter(name=uni): # si ya existe la uni en la base de datos...
-          u = University.objects.get(name=uni)
-        else:                                   # el usuario ha insertado una uni nueva => la insertamos en la BD
-          u = University.objects.create(name=uni)
-        up.universities.add(u)
+        if len(uni.replace(" ", "")) != 0:
+          if University.objects.filter(name=uni): # si ya existe la uni en la base de datos...
+            u = University.objects.get(name=uni)
+          else:                                   # el usuario ha insertado una uni nueva => la insertamos en la BD
+            u = University.objects.create(name=uni)
+          up.universities.add(u)
+      """
       up.save()
     else: print "form is NOT valid"
     return HttpResponseRedirect('/users/profile/')

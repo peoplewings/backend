@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from django.forms import ModelForm, Textarea
+from django.forms import ModelForm
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Languages
@@ -48,7 +48,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 # 					pw opinion, political opinion, religion, quotes, people that inspired you
 
 class CustomProfileForm(ModelForm):
-  uni = forms.CharField(max_length=50)
+  uni = forms.CharField(max_length=50, required=False)
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages', 'universities')

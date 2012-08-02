@@ -71,10 +71,8 @@ class UserProfile(models.Model):
     universities = models.ManyToManyField(University) 
     #privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
     all_about_you = models.TextField(blank=True)
-    """
     main_mission = models.TextField(blank=True)
     occupation = models.CharField(max_length=20, blank=True)
-    education = models.CharField(max_length=20, blank=True)
     # experiencia sobre pw
     pw_experience = models.TextField(blank=True)
     personal_philosophy = models.TextField(blank=True)
@@ -93,10 +91,19 @@ class UserProfile(models.Model):
     # citas
     quotes = models.TextField(blank=True)
     people_inspired_you = models.TextField(blank=True)
-    """
+    places_lived_in = models.TextField(blank=True)
+    places_wanna_go = models.TextField(blank=True)
+    places_gonna_go = models.TextField(blank=True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
+"""
+anyadir atributo through='Studies' al campo UserProfile.universities
 
+class Studies(models.Model):
+    degree = models.CharField(max_length=30)
+    user_profile = models.ForeignKey('UserProfile')
+    university = models.ForeignKey('University')
+"""
 
 class Relationship(models.Model):
 
@@ -106,22 +113,27 @@ class Relationship(models.Model):
         ('B', 'Blocked'),
         ('R', 'Rejected'),
     )
-    type = models.CharField(max_length=1, choices=RELATIONSHIP_CHOICES, null=True)
+    relationship_type = models.CharField(max_length=1, choices=RELATIONSHIP_CHOICES, null=True)
     user1 = models.ForeignKey('UserProfile', related_name='r1')
     user2 = models.ForeignKey('UserProfile', related_name='r2')
 
 def createUserProfile(sender, user, request, **kwargs):
-	form = RegistrationForm(request.POST)
-	registered_user = User.objects.get(username=user.username)
-	registered_user.last_name = kwargs['lastname']
-	registered_user.first_name = kwargs['firstname']
-	registered_user.save()
-	data = UserProfile.objects.create(user=user)
-	data.gender = form.data["gender"]
-	data.birthday = form.data["birthday"]
-    # data.age = date.today() - form.data["birthday"]
-        data.age = date.today().year - form.data["birthday"].year
-	data.save()
+    form = RegistrationForm(request.POST)
+    registered_user = User.objects.get(username=user.username)
+    registered_user.last_name = kwargs['lastname']
+    registered_user.first_name = kwargs['firstname']
+    registered_user.save()
+    data = UserProfile.objects.create(user=user)
+    data.gender = form.data["gender"]
+    data.birthday = form.data["birthday"]
+    """
+    today = date.today()
+    age = today.year - form.data["birthday"].year
+    if today.month < form.data["birthday"].month or (today.month == form.data["birthday"].month and today.day < form.data["birthday"].day): age -= 1
+    data.age = age
+    """
+    data.age = 0
+    data.save()
 
 def deleteUserProfile(sender, request, **kwargs):
     prof = request.user.get_profile()
