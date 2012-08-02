@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from django.forms import ModelForm
+from django.forms import ModelForm, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Languages
@@ -27,7 +27,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
         super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
         self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
 
-  def clean(self):
+  def clean_email_2(self):
         """
         Verifiy that the values entered into the two email fields
         match. Note that an error here will end up in
@@ -47,27 +47,27 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 #					people you like, favourite movies series, what you like sharing, incredible things done or seen
 # 					pw opinion, political opinion, religion, quotes, people that inspired you
 
-LANGUAGES_CHOICES = (
-        ('E', 'English'),
-        ('G', 'German'),
-        ('S', 'Spanish'),
-    )
-
-
 class CustomProfileForm(ModelForm):
-  #lang = forms.MultipleChoiceField(required=False, choices=LANGUAGES_CHOICES , widget=forms.CheckboxSelectMultiple)
+  uni = forms.CharField(max_length=50)
   class Meta:
       model = UserProfile
-      exclude = ('user', 'age', 'relationships', 'languages')
+      exclude = ('user', 'age', 'relationships', 'languages', 'universities')
+      """
+      widgets = {
+          'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
+      }
+      """
 
-      #field = ('lang')
+
+  def clean_uni(self):
+    return self.cleaned_data['uni']
 
   def clean_all_about_you(self):
         """
         Verifiy the length of this field
         """
         if 'all_about_you' in self.cleaned_data:
-            if len(self.cleaned_data['all_about_you']) > 2:
+            if len(self.cleaned_data['all_about_you']) > 250:
                 raise forms.ValidationError(_("This length must be under 250 characters."))
         return self.cleaned_data['all_about_you']
 
@@ -83,7 +83,7 @@ class CustomAccountSettingsForm(ModelForm):
 def customize_register_form():
     AuthenticationForm.base_fields['username'].label = 'E-mail'
     RegisterForm.base_fields['birthday'].label = 'Date of birth'
-    CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
+    #CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
     del CustomRegisterForm.base_fields['username']
     del CustomRegisterForm.base_fields['password2']
     CustomRegisterForm.base_fields.update(RegisterForm.base_fields)

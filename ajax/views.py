@@ -11,10 +11,8 @@ def searchUniversity(request):
 	response_data['details'] = {}
 	response_data['details']['Message'] = 'Learning AJAX'
 
-
 	qset = Q()
-	for word in query.split('+'):
-		qset |= Q(name__istartswith=query) | Q(name__icontains=' '+query)
+	qset = Q(name__istartswith=query) | Q(name__icontains=' '+query)
 	result = University.objects.filter(qset)[:3]
 
 	#result = University.objects.filter(name__icontains=query)[:3]
