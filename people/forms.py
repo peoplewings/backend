@@ -11,18 +11,23 @@ class RegisterForm(ModelForm):
   class Meta:
       model = UserProfile
       fields = ('birthday', 'gender')
-      
       """
       exclude = ('user','age','interested_in','civil_state','languages', 'city', 'pw_state', 'privacy_settings', 
       	'relationships', 'all_about_you', 'main_mission', 'occupation', 'education', 'pw_experience', 
       	'personal_philosophy', 'other_pages_you_like', 'people_you_like', 'favourite_movies_series_others',
       	'what_you_like_sharing', 'incredible_done_seen', 'pw_opinion', 'political_opinion', 'religion', 'quotes', 'people_inspired_you')  
 		"""
+  def __init__(self, *args, **kwargs):
+      super(RegisterForm, self).__init__(*args, **kwargs)
+      self.fields['gender'].empty_label = "Select a gender"
+      # following line needed to refresh widget copy of choice list
+      self.fields['gender'].widget.choices = self.fields['gender'].choices
 
 class CustomRegisterForm(RegistrationFormUniqueEmail):
   first_name = forms.CharField(label='First name', max_length=30,required=True)
   last_name = forms.CharField(label='Last name', max_length=30, required=True)
   email_2 = forms.EmailField(label='Repeat email')
+
   def __init__(self, *args, **kwargs):
         super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
         self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
@@ -83,10 +88,12 @@ class CustomAccountSettingsForm(ModelForm):
 def customize_register_form():
     AuthenticationForm.base_fields['username'].label = 'E-mail'
     RegisterForm.base_fields['birthday'].label = 'Date of birth'
-    CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
     del CustomRegisterForm.base_fields['username']
     del CustomRegisterForm.base_fields['password2']
     CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
-	
+
+def customize_profile_form():
+	CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
+		
 
 customize_register_form()
