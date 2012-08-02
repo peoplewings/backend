@@ -1,31 +1,43 @@
 from django import forms
 from django.db import models
-from django.forms import ModelForm
+from django.forms import ModelForm, extras
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Languages
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
+import datetime
+
+# Prepare birthdate year choices
+now = datetime.datetime.now()
+BIRTH_YEAR_CHOICES = []
+
+for i in range(1900, now.year+1, 1):
+    BIRTH_YEAR_CHOICES.append(i)
+
+BIRTH_YEAR_CHOICES.reverse()
+
+
 class RegisterForm(ModelForm):
   class Meta:
       model = UserProfile
       fields = ('birthday', 'gender')
-      
-      """
-      exclude = ('user','age','interested_in','civil_state','languages', 'city', 'pw_state', 'privacy_settings', 
-      	'relationships', 'all_about_you', 'main_mission', 'occupation', 'education', 'pw_experience', 
-      	'personal_philosophy', 'other_pages_you_like', 'people_you_like', 'favourite_movies_series_others',
-      	'what_you_like_sharing', 'incredible_done_seen', 'pw_opinion', 'political_opinion', 'religion', 'quotes', 'people_inspired_you')  
-		"""
+      widgets = {
+          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+      }
 
 class CustomRegisterForm(RegistrationFormUniqueEmail):
   first_name = forms.CharField(label='First name', max_length=30,required=True)
   last_name = forms.CharField(label='Last name', max_length=30, required=True)
   email_2 = forms.EmailField(label='Repeat email')
+  exclude = ('username', 'password2')
   def __init__(self, *args, **kwargs):
         super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
         self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
+        # Trying to fix default values. Doesnt work
+        #self.fields['gender'].empty_label = None
+        #self.fields['gender'].widget.choices = self.fields['gender'].choices
 
   def clean_email_2(self):
         """
@@ -57,8 +69,6 @@ class CustomProfileForm(ModelForm):
           'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
       }
       """
-
-
   def clean_uni(self):
     return self.cleaned_data['uni']
 
@@ -71,22 +81,25 @@ class CustomProfileForm(ModelForm):
                 raise forms.ValidationError(_("This length must be under 250 characters."))
         return self.cleaned_data['all_about_you']
 
-"""
-The form for EditAccountSettings must have, from User: email, first name, last name, password
-"""
+
 class CustomAccountSettingsForm(ModelForm):
+  """
+  The form for EditAccountSettings must have, from User: email, first name, last name, password
+  """
   class Meta:
       model = User
       fields = ('email', 'first_name', 'last_name')
 
 
-def customize_register_form():
-    AuthenticationForm.base_fields['username'].label = 'E-mail'
-    RegisterForm.base_fields['birthday'].label = 'Date of birth'
-    #CustomProfileForm.base_fields['universities'].widget = forms.TextInput()
-    del CustomRegisterForm.base_fields['username']
-    del CustomRegisterForm.base_fields['password2']
-    CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
+ 
 	
+def customize_register_form():
+    """
+    Change username label to tweak Auth based on email not username
+    Embrace RegisterForm and CustomRegisterForm
+    """
+    AuthenticationForm.base_fields['username'].label = 'E-mail'
+    CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
+		
 
 customize_register_form()

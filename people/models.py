@@ -55,7 +55,7 @@ class UserProfile(models.Model):
     )
     
     user = models.ForeignKey(User, unique=True)
-    birthday = models.DateField(null=True)
+    birthday = models.DateField(null=True, verbose_name='Date of birth')
     age = models.IntegerField(null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
     interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, null=True)
@@ -125,14 +125,17 @@ def createUserProfile(sender, user, request, **kwargs):
     registered_user.save()
     data = UserProfile.objects.create(user=user)
     data.gender = form.data["gender"]
-    data.birthday = form.data["birthday"]
+    data.birthday = datetime(year=int(form.data["birthday_year"]), month=int(form.data["birthday_month"]), day=int(form.data["birthday_day"]))
     """
     today = date.today()
     age = today.year - form.data["birthday"].year
     if today.month < form.data["birthday"].month or (today.month == form.data["birthday"].month and today.day < form.data["birthday"].day): age -= 1
     data.age = age
     """
-    data.age = 0
+    today = date.today()
+    age = today.year - data.birthday.year
+    if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1
+    data.age = age
     data.save()
 
 def deleteUserProfile(sender, request, **kwargs):
