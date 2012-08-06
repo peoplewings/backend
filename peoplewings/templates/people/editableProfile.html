@@ -1,6 +1,5 @@
 {% extends "people/base_people.html" %}
 
-
 {% block body %}
 
 {% block content_title %}
@@ -16,12 +15,36 @@
 
 {% include "general/custom_form.html" with next_action="/users/profile/edit/completed/" %}
 
+{% endblock %}
 
-<!--<form action="/users/profile/edit/completed/" method="post">
-	{% csrf_token %}
-
-	{{form.as_p}}
-
-	<p class="submit"><button type="submit">Submit</button></p>
-</form>-->
+{% block page_scripting %}
+<script>
+  	$(document).ready(function(){
+	    console.log('Hello JS again')
+	    $('.foo').typeahead({
+			ajax: {
+			        url: "/ajax/search/university/",
+			        timeout: 500,
+			        //displayField: "name",
+			        triggerLength: 1,
+			        method: "get",
+			        //loadingClass: "loading-circle",
+			        preDispatch: function (query) {
+			            //showLoadingMask(true);
+			            return {
+			                q: query,
+			                otherParam: 123
+			            }
+			        },
+			        preProcess: function (data) {
+			            //showLoadingMask(false);
+			            if (data.code !== 1) {
+			                return false;
+			            }
+			            return data.data;
+						
+			        }
+			    }})
+	  });
+</script>
 {% endblock %}
