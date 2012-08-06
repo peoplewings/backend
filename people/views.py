@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, University
+from people.models import UserProfile, University, Language
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -35,7 +35,15 @@ def enterEditProfile(request):
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(instance = up)
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form}, context_instance = RequestContext(request))
+  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/profile/edit/completed/"}, context_instance = RequestContext(request))
+  return render_to_response('people/login.html')
+
+@login_required
+def enterEditBasicInformation(request):
+  user = request.user
+  up = user.get_profile()
+  form = BasicInformationForm(instance = up)
+  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/basic/edit/completed/"}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required
@@ -46,11 +54,9 @@ def editProfile(request):
   form = CustomProfileForm(request.POST, instance=up)
 
   if request.user.is_authenticated():
-
     if form.is_valid():
       form.save()
 
-      
       today = date.today()
       b = up.birthday
       age = today.year - b.year
@@ -68,6 +74,31 @@ def editProfile(request):
       """
       up.save()
     else: print "form is NOT valid"
+    return HttpResponseRedirect('/users/profile/')
+  return render_to_response('registration/login.html')
+
+@login_required
+def editBasicInformation(request):
+  
+  user = request.user
+  up = user.get_profile()
+  form = BasicInformationForm(request.POST, instance=up)
+
+  if request.user.is_authenticated():
+    if form.is_valid():
+      form.save()
+
+      today = date.today()
+      b = up.birthday
+      age = today.year - b.year
+      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
+      up.age = age
+      lang = request.POST['lang']
+      print lang
+      #l = Language.objects.get(name=l)
+      #up.languages.add(l)
+      up.save()
+    else: print "[ERROR] Edit Basic Info: form is NOT valid"
     return HttpResponseRedirect('/users/profile/')
   return render_to_response('registration/login.html')
 

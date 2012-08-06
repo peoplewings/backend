@@ -6,11 +6,42 @@ from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
 
-class Languages(models.Model):
-  name = models.CharField(max_length=30, unique=True)
+max_long_len = 250
+max_short_len = 20
 
+# LANGUAGE
+class Language(models.Model):
+
+    LANGUAGES_CHOICES = (
+        ('E', 'English'),
+        ('S', 'Spanish'),
+        ('G', 'German'),
+        ('F', 'French'),
+        ('C', 'Chinese'),
+        ('P', 'Portuguese'),
+    )
+    name = models.CharField(max_length=1, choices=LANGUAGES_CHOICES)  
+
+class UserProfileKnowsLanguage(models.Model):
+
+    LANGUAGES_LEVEL_CHOICES = (
+        ('B', 'Beginner'),
+        ('I', 'Intermediate'),
+        ('E', 'Expert'),
+    )
+    user_profile = models.ForeignKey('UserProfile')
+    language = models.ForeignKey('Language')
+    level = models.CharField(max_length=1, choices=LANGUAGES_LEVEL_CHOICES)
+
+# UNIVERSITY
 class University(models.Model):
   name = models.CharField(max_length=50, unique=True)
+
+class UserProfileStudiedUniversity(models.Model):
+    user_profile = models.ForeignKey('UserProfile')
+    university = models.ForeignKey('University')
+    degree = models.CharField(max_length=max_short_len, blank=True)
+
 
 class UserProfile(models.Model):
 
@@ -38,8 +69,6 @@ class UserProfile(models.Model):
         ('SE', 'Separated'),
     )
     
-
-    
     PW_STATE_CHOICES = (
         ('Y', 'Yes'),
         ('N', 'No'),
@@ -53,58 +82,86 @@ class UserProfile(models.Model):
         ('F', 'Friends'),
         ('E', 'Everybody'),
     )
+
+    BIRTHDAY_CHOICES = (
+        ('P', 'Show month and day'),
+        ('F', 'Show full'),
+        ('N', 'Dont show'),
+    )
+
+    """
+    Atributes of fields:
+    - blank=True allows empty values for that field
+    - Null=True stores these empty values as Null
+    Campos requeridos: birthday, gender, pw state (default = No)
+    Campos opcionales: interested in, civil state, city, all about you, main mission, occupation
+    defaults: pw state = No, 
+    max length: 250 => all about you, main mission, 
+                20 => occupation, city
+    """
     
     user = models.ForeignKey(User, unique=True)
-    birthday = models.DateField(null=True, verbose_name='Date of birth')
-    age = models.IntegerField(null=True)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
-    interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, null=True)
-    civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, null=True)
-    city = models.CharField(max_length=20)
-    pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, null=True)
-    #pic=models.ImageField(upload_to='/uploads', blank=True)
-    languages = models.ManyToManyField(Languages)
-    """
-    lista de universidades en la que ha estudiado, separadas por comas. Por ejemplo:
-    universidad de Granada, Universidad Complutense de Madrid, Universidad Autonoma de Barcelona
-    """
-    universities = models.ManyToManyField(University) 
-    #privacy_settings = models.CharField(max_length=1, choices=PRIVACY_CHOICES, default='M')
-    all_about_you = models.TextField(blank=True)
-    main_mission = models.TextField(blank=True)
-    occupation = models.CharField(max_length=20, blank=True)
-    # experiencia sobre pw
-    pw_experience = models.TextField(blank=True)
-    personal_philosophy = models.TextField(blank=True)
-    other_pages_you_like = models.TextField(blank=True)
-    people_you_like = models.TextField(blank=True)
-    # peliculas, libros, series, videojuegos, music, deportes, actividades favoritas
-    favourite_movies_series_others = models.TextField(blank=True)
+    age = models.IntegerField(default=0)
+    name_to_show = models.CharField(max_length=max_short_len)
+    pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='N')
+
+    # In Basic Information
+
+    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1990, month=1, day=1))
+    show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
+    interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, blank=True, null=True)
+    civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
+    languages = models.ManyToManyField(Language, through='UserProfileKnowsLanguage')
+
+    # Locations
+    city = models.CharField(max_length=max_short_len, blank=True)
+    hometown = models.CharField(max_length=max_short_len, blank=True)
+    #other_locations = models.ManyToManyField(Location)
+
+    # Contact info
+    emails = models.TextField()
+    phone = models.TextField()
+    social_networks = models.TextField(max_length=max_long_len, blank=True) # contains {social1, social2, ...}
+
+    # About me
+    all_about_you = models.TextField(max_length=max_long_len, blank=True)
+    main_mission = models.TextField(max_length=max_long_len, blank=True)
+    occupation = models.CharField(max_length=max_short_len, blank=True)
+    company = models.CharField(max_length=max_short_len, blank=True)
+    universities = models.ManyToManyField(University, through='UserProfileStudiedUniversity')
+    personal_philosophy = models.TextField(max_length=max_long_len, blank=True)
+    political_opinion = models.CharField(max_length=max_short_len, blank=True)
+    religion = models.CharField(max_length=max_short_len, blank=True)
+
+    # Likes
+    people_you_like = models.TextField(max_length=max_long_len, blank=True)
+    # peliculas, libros, series, videojuegos, musica
+    favourite_movies_series_others = models.TextField(max_length=max_long_len, blank=True)
+    # deportes y actividades favoritas
+    favourite_sports_activities = models.TextField(max_length=max_long_len, blank=True)
+    other_pages_you_like = models.TextField(max_length=max_long_len, blank=True)    
     # que te gusta compartir o ensenyar
-    what_you_like_sharing = models.TextField(blank=True)
+    what_you_like_sharing = models.TextField(max_length=max_long_len, blank=True)
     # cosas increibles que hayas hecho o visto
-    incredible_done_seen = models.TextField(blank=True)
-    # opinion sobre peoplewings
-    pw_opinion = models.TextField(blank=True)
-    political_opinion = models.CharField(max_length=20, blank=True)
-    religion = models.CharField(max_length=20, blank=True)
+    incredible_done_seen = models.TextField(max_length=max_long_len, blank=True)
+    people_inspired_you = models.TextField(max_length=max_long_len, blank=True)
     # citas
-    quotes = models.TextField(blank=True)
-    people_inspired_you = models.TextField(blank=True)
-    places_lived_in = models.TextField(blank=True)
-    places_wanna_go = models.TextField(blank=True)
-    places_gonna_go = models.TextField(blank=True)
-    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
+    quotes = models.TextField(max_length=max_long_len, blank=True)
+    # opinion sobre peoplewings
+    pw_opinion = models.TextField(max_length=max_long_len, blank=True) 
+
+    # Trips
+    places_lived_in = models.TextField(max_length=max_long_len, blank=True)
+    places_visited = models.TextField(max_length=max_long_len, blank=True)    
+    places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
+    places_wanna_go = models.TextField(max_length=max_long_len, blank=True)    
+
+    # a anyadir en el futuro
+    #relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
+    #pic=models.ImageField(upload_to='/uploads', blank=True)
 
 """
-anyadir atributo through='Studies' al campo UserProfile.universities
-
-class Studies(models.Model):
-    degree = models.CharField(max_length=30)
-    user_profile = models.ForeignKey('UserProfile')
-    university = models.ForeignKey('University')
-"""
-
 class Relationship(models.Model):
 
     RELATIONSHIP_CHOICES = (
@@ -116,6 +173,7 @@ class Relationship(models.Model):
     relationship_type = models.CharField(max_length=1, choices=RELATIONSHIP_CHOICES, null=True)
     user1 = models.ForeignKey('UserProfile', related_name='r1')
     user2 = models.ForeignKey('UserProfile', related_name='r2')
+"""
 
 def createUserProfile(sender, user, request, **kwargs):
     form = RegistrationForm(request.POST)
@@ -123,15 +181,9 @@ def createUserProfile(sender, user, request, **kwargs):
     registered_user.last_name = kwargs['lastname']
     registered_user.first_name = kwargs['firstname']
     registered_user.save()
-    data = UserProfile.objects.create(user=user)
+    data = UserProfile.objects.create(user=user, name_to_show=kwargs['firstname'])
     data.gender = form.data["gender"]
     data.birthday = datetime(year=int(form.data["birthday_year"]), month=int(form.data["birthday_month"]), day=int(form.data["birthday_day"]))
-    """
-    today = date.today()
-    age = today.year - form.data["birthday"].year
-    if today.month < form.data["birthday"].month or (today.month == form.data["birthday"].month and today.day < form.data["birthday"].day): age -= 1
-    data.age = age
-    """
     today = date.today()
     age = today.year - data.birthday.year
     if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1
