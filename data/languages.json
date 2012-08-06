@@ -12,5 +12,19 @@
 	"fields": {
 		"name": "Spanish"
 	}
+},
+{
+	"pk": 3,
+	"model": "people.language",
+	"fields": {
+		"name": "German"
+	}
+},
+{
+	"pk": 4,
+	"model": "people.language",
+	"fields": {
+		"name": "French"
+	}
 }
 ]

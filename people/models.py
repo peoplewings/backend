@@ -11,7 +11,7 @@ max_short_len = 20
 
 # LANGUAGE
 class Language(models.Model):
-
+    """
     LANGUAGES_CHOICES = (
         ('E', 'English'),
         ('S', 'Spanish'),
@@ -20,7 +20,8 @@ class Language(models.Model):
         ('C', 'Chinese'),
         ('P', 'Portuguese'),
     )
-    name = models.CharField(max_length=1, choices=LANGUAGES_CHOICES)  
+    """
+    name = models.CharField(max_length=max_short_len)  
 
 class UserProfileKnowsLanguage(models.Model):
 

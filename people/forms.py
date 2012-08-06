@@ -53,15 +53,8 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
         return self.cleaned_data
 
 class BasicInformationForm(ModelForm):
-  LANGUAGES_CHOICES = (
-        ('E', 'English'),
-        ('S', 'Spanish'),
-        ('G', 'German'),
-        ('F', 'French'),
-        ('C', 'Chinese'),
-        ('P', 'Portuguese'),
-    )
-  lang = forms.CharField(max_length=3, widget=forms.Select(choices=LANGUAGES_CHOICES))
+
+  lang = forms.CharField(max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
