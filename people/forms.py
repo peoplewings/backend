@@ -61,17 +61,15 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50)
+  uni.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'foo'})
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages', 'universities')
       widgets = {
-          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+          #'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
       }
-      """
-      widgets = {
-          'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
-      }
-      """
+
   def clean_uni(self):
     return self.cleaned_data['uni']
 
