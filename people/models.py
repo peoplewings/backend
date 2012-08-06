@@ -21,7 +21,7 @@ class Language(models.Model):
         ('P', 'Portuguese'),
     )
     """
-    name = models.CharField(max_length=max_short_len)  
+    name = models.CharField(max_length=max_short_len, unique=True)  
 
 class UserProfileKnowsLanguage(models.Model):
 
