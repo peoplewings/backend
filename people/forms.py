@@ -18,6 +18,12 @@ for i in range(1900, now.year+1, 1):
 
 BIRTH_YEAR_CHOICES.reverse()
 
+INTERESTED_IN_CHOICES = (
+      ('M', 'Male'),
+	  ('F', 'Female'),
+  )
+
+
 
 class RegisterForm(ModelForm):
   class Meta:
@@ -66,7 +72,8 @@ class BasicInformationForm(ModelForm):
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
     widgets = {
-      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+      'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
     }
 
     def clean_lang(self):

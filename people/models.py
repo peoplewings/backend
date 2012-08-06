@@ -50,13 +50,6 @@ class UserProfile(models.Model):
         ('F', 'Female'),
     )
 
-    INTERESTED_IN_GENDER_CHOICES = (
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('B', 'Both'),
-        ('N', 'None'),
-    )
-
     CIVIL_STATE_CHOICES = (
         ('SI', 'Single'),
         ('EN', 'Engaged'),
@@ -81,19 +74,7 @@ class UserProfile(models.Model):
         ('M', 'Only me'),
         ('F', 'Friends'),
         ('E', 'Everybody'),
-    )
-    
-    user = models.ForeignKey(User, unique=True)
-    birthday = models.DateField(null=True, verbose_name='Date of birth')
-    age = models.IntegerField(null=True)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
-    interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, blank=True)
-    civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, null=True, blank=True)
-    city = models.CharField(max_length=20)
-    pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, null=True)
-    #pic=models.ImageField(upload_to='/uploads', blank=True)
-    languages = models.ManyToManyField(Language)
-    
+    )    
 
     BIRTHDAY_CHOICES = (
         ('P', 'Show month and day'),
@@ -120,10 +101,10 @@ class UserProfile(models.Model):
 
     # In Basic Information
 
-    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1990, month=1, day=1))
+    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1930, month=1, day=1))
     show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, blank=True, null=True)
+    interested_in = models.CharField(max_length=1, blank=True, null=True)
     civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
     languages = models.ManyToManyField(Language, through='UserProfileKnowsLanguage')
 
