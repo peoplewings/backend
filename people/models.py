@@ -51,13 +51,6 @@ class UserProfile(models.Model):
         ('F', 'Female'),
     )
 
-    INTERESTED_IN_GENDER_CHOICES = (
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('B', 'Both'),
-        ('N', 'None'),
-    )
-
     CIVIL_STATE_CHOICES = (
         ('SI', 'Single'),
         ('EN', 'Engaged'),
@@ -82,13 +75,14 @@ class UserProfile(models.Model):
         ('M', 'Only me'),
         ('F', 'Friends'),
         ('E', 'Everybody'),
-    )
+    )    
 
     BIRTHDAY_CHOICES = (
         ('P', 'Show month and day'),
         ('F', 'Show full'),
         ('N', 'Dont show'),
     )
+
 
     """
     Atributes of fields:
@@ -103,15 +97,15 @@ class UserProfile(models.Model):
     
     user = models.ForeignKey(User, unique=True)
     age = models.IntegerField(default=0)
-    name_to_show = models.CharField(max_length=max_short_len)
+    name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='N')
 
     # In Basic Information
 
-    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1990, month=1, day=1))
+    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1930, month=1, day=1))
     show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    interested_in = models.CharField(max_length=1, choices=INTERESTED_IN_GENDER_CHOICES, blank=True, null=True)
+    interested_in = models.CharField(max_length=1, blank=True, null=True)
     civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
     languages = models.ManyToManyField(Language, through='UserProfileKnowsLanguage')
 
@@ -121,8 +115,8 @@ class UserProfile(models.Model):
     #other_locations = models.ManyToManyField(Location)
 
     # Contact info
-    emails = models.TextField()
-    phone = models.TextField()
+    emails = models.TextField(blank=True)
+    phone = models.TextField(blank=True)
     social_networks = models.TextField(max_length=max_long_len, blank=True) # contains {social1, social2, ...}
 
     # About me

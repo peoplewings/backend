@@ -18,6 +18,12 @@ for i in range(1900, now.year+1, 1):
 
 BIRTH_YEAR_CHOICES.reverse()
 
+INTERESTED_IN_CHOICES = (
+      ('M', 'Male'),
+	  ('F', 'Female'),
+  )
+
+
 
 class RegisterForm(ModelForm):
   class Meta:
@@ -59,7 +65,8 @@ class BasicInformationForm(ModelForm):
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
     widgets = {
-      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+      'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
     }
 
     def clean_lang(self):
@@ -68,17 +75,15 @@ class BasicInformationForm(ModelForm):
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)
+  uni.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'foo'})
   class Meta:
       model = UserProfile
       exclude = ('user', 'age', 'relationships', 'languages', 'universities')
       widgets = {
-          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+          'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+          #'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
       }
-      """
-      widgets = {
-          'universities': Textarea(attrs={'cols': 80, 'rows': 20}),
-      }
-      """
+
   def clean_uni(self):
     return self.cleaned_data['uni']
 

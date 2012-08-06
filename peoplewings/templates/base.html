@@ -39,6 +39,12 @@
 	<!-- Le javascript
   ================================================== -->
   <!-- Placed at the end of the document so the pages load faster -->
+  
+  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if offline -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="{% static "js/jquery-1.7.2.js" %}"><\/script>')</script>
+
+ 
   <script src="{% static "js/jquery-1.7.2.js" %}"></script>
   <script src="{% static "js/bootstrap-transition.js" %}"></script>
   <script src="{% static "js/bootstrap-alert.js" %}"></script>
@@ -51,6 +57,15 @@
   <script src="{% static "js/bootstrap-button.js" %}"></script>
   <script src="{% static "js/bootstrap-collapse.js" %}"></script>
   <script src="{% static "js/bootstrap-carousel.js" %}"></script>
-  <script src="{% static "js/bootstrap-typeahead.js" %}"></script>
+ <!-- Extended plugin from https://github.com/pwarelis/Ajax-Typeahead -->
+  <script src="{% static "js/bootstrap-typeahead-ajax.js" %}"></script>
+ <!-- jQuery Validation plugin from http://bassistance.de/jquery-plugins/jquery-plugin-validation/ -->
+  <script src="{% static "js/jquery.validate.js" %}"></script>
+
+
+  <!-- scripts concatenated and minified via build script -->
+  {% block page_scripting %}
+  {% endblock %}
+  <!-- end scripts -->
 </body>
 </html>
