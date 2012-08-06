@@ -1,0 +1,16 @@
+[
+{
+	"pk": 1,
+	"model": "people.language",
+	"fields": {
+		"name": "English"
+	}
+},
+{
+	"pk": 2,
+	"model": "people.language",
+	"fields": {
+		"name": "Spanish"
+	}
+}
+]

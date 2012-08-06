@@ -1,9 +1,9 @@
 from django import forms
 from django.db import models
-from django.forms import ModelForm, Textarea, extras
+from django.forms import ModelForm, extras, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile, Languages
+from people.models import UserProfile, Language, University, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
@@ -52,15 +52,29 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
                 raise forms.ValidationError(_("The two emails fields didn't match."))
         return self.cleaned_data
 
+class BasicInformationForm(ModelForm):
+  LANGUAGES_CHOICES = (
+        ('E', 'English'),
+        ('S', 'Spanish'),
+        ('G', 'German'),
+        ('F', 'French'),
+        ('C', 'Chinese'),
+        ('P', 'Portuguese'),
+    )
+  lang = forms.CharField(max_length=3, widget=forms.Select(choices=LANGUAGES_CHOICES))
+  class Meta:
+    model = UserProfile
+    fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
+    widgets = {
+      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
+    }
 
-# the form for EditProfile must show:
-# from UserProfile: birthday, gender, interested in, civil state, languages, city, pw state, all about you,
-# 					main mission, occupation, education, pw experience, personal philosophy, other pages you like,
-#					people you like, favourite movies series, what you like sharing, incredible things done or seen
-# 					pw opinion, political opinion, religion, quotes, people that inspired you
+    def clean_lang(self):
+      return self.cleaned_data['lang']
+
 
 class CustomProfileForm(ModelForm):
-  uni = forms.CharField(max_length=50)
+  uni = forms.CharField(max_length=50, required=False)
   uni.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'foo'})
   class Meta:
       model = UserProfile
@@ -80,6 +94,15 @@ class CustomProfileForm(ModelForm):
         if 'all_about_you' in self.cleaned_data:
             if len(self.cleaned_data['all_about_you']) > 250:
                 raise forms.ValidationError(_("This length must be under 250 characters."))
+        return self.cleaned_data['all_about_you']
+
+  def clean_gender(self):
+        """
+        Verifiy that gender is either Male or Female
+        """
+        if 'gender' in self.cleaned_data:
+            if self.cleaned_data['gender'] not in ('M', 'F'):
+                raise forms.ValidationError(_("Please select a gender."))
         return self.cleaned_data['all_about_you']
 
 

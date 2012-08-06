@@ -10,7 +10,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) # The Django project
 PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The genral project
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    #('Your Name', 'your_email@example.com'),
 )
 
 MANAGERS = ADMINS
@@ -138,7 +138,7 @@ INSTALLED_APPS = (
     'landing',
     'registration',
     'people',
-    'south',
+    #'south',
     'ajax',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',

@@ -8,92 +8,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Language'
-        db.create_table('people_language', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=1)),
-        ))
-        db.send_create_signal('people', ['Language'])
-
-        # Adding model 'UserProfileKnowsLanguage'
-        db.create_table('people_userprofileknowslanguage', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user_profile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['people.UserProfile'])),
-            ('language', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['people.Language'])),
-            ('level', self.gf('django.db.models.fields.CharField')(max_length=1)),
-        ))
-        db.send_create_signal('people', ['UserProfileKnowsLanguage'])
-
-        # Adding model 'University'
-        db.create_table('people_university', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
-        ))
-        db.send_create_signal('people', ['University'])
-
-        # Adding model 'UserProfileStudiedUniversity'
-        db.create_table('people_userprofilestudieduniversity', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user_profile', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['people.UserProfile'])),
-            ('university', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['people.University'])),
-            ('degree', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-        ))
-        db.send_create_signal('people', ['UserProfileStudiedUniversity'])
-
-        # Adding model 'UserProfile'
-        db.create_table('people_userprofile', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], unique=True)),
-            ('age', self.gf('django.db.models.fields.IntegerField')()),
-            ('name_to_show', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('pw_state', self.gf('django.db.models.fields.CharField')(default='N', max_length=1)),
-            ('show_birthday', self.gf('django.db.models.fields.CharField')(default='N', max_length=1)),
-            ('gender', self.gf('django.db.models.fields.CharField')(default='M', max_length=1)),
-            ('interested_in', self.gf('django.db.models.fields.CharField')(max_length=1, null=True, blank=True)),
-            ('civil_state', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, blank=True)),
-            ('city', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('hometown', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('emails', self.gf('django.db.models.fields.TextField')()),
-            ('phone', self.gf('django.db.models.fields.TextField')()),
-            ('social_networks', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('all_about_you', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('main_mission', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('occupation', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('company', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('personal_philosophy', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('political_opinion', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('religion', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('people_you_like', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('favourite_movies_series_others', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('favourite_sports_activities', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('other_pages_you_like', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('what_you_like_sharing', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('incredible_done_seen', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('people_inspired_you', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('quotes', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('places_lived_in', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('places_visited', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('places_gonna_go', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-            ('places_wanna_go', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
-        ))
-        db.send_create_signal('people', ['UserProfile'])
+        # Adding field 'UserProfile.birthday'
+        db.add_column('people_userprofile', 'birthday',
+                      self.gf('django.db.models.fields.DateField')(default=datetime.datetime(1990, 1, 1, 0, 0)),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'Language'
-        db.delete_table('people_language')
-
-        # Deleting model 'UserProfileKnowsLanguage'
-        db.delete_table('people_userprofileknowslanguage')
-
-        # Deleting model 'University'
-        db.delete_table('people_university')
-
-        # Deleting model 'UserProfileStudiedUniversity'
-        db.delete_table('people_userprofilestudieduniversity')
-
-        # Deleting model 'UserProfile'
-        db.delete_table('people_userprofile')
+        # Deleting field 'UserProfile.birthday'
+        db.delete_column('people_userprofile', 'birthday')
 
 
     models = {
@@ -147,6 +70,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'UserProfile'},
             'age': ('django.db.models.fields.IntegerField', [], {}),
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
+            'birthday': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(1990, 1, 1, 0, 0)'}),
             'city': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'civil_state': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
             'company': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
