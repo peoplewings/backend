@@ -17,15 +17,9 @@ urlpatterns = patterns('',
 
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
-    # url(r'^profile/$', include('people.urls'))
-    # Examples:
-    # url(r'^$', 'peoplewings.views.home', name='home'),
-    # url(r'^peoplewings/', include('peoplewings.foo.urls')),
-
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-	
 	# Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 )
