@@ -23,7 +23,7 @@ class Language(models.Model):
     """
     name = models.CharField(max_length=max_short_len, unique=True)  
 
-class UserProfileKnowsLanguage(models.Model):
+class UserLanguage(models.Model):
 
     LANGUAGES_LEVEL_CHOICES = (
         ('B', 'Beginner'),
@@ -102,12 +102,12 @@ class UserProfile(models.Model):
 
     # In Basic Information
 
-    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1930, month=1, day=1))
+    birthday = models.DateField(verbose_name='Date of birth', null=True) #Don't know why!
     show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    interested_in = models.CharField(max_length=1, blank=True, null=True)
-    civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
-    languages = models.ManyToManyField(Language, through='UserProfileKnowsLanguage')
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    interested_in = models.CharField(max_length=1, blank=True) # he tret el null=True
+    civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
+    languages = models.ManyToManyField(Language, through='UserLanguage')
 
     # Locations
     city = models.CharField(max_length=max_short_len, blank=True)

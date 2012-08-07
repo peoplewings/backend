@@ -32,6 +32,8 @@ class RegisterForm(ModelForm):
       widgets = {
           'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
       }
+  def clean_birthday(self):
+    print self.cleaned_data['birthday']
 
 class CustomRegisterForm(RegistrationFormUniqueEmail):
   first_name = forms.CharField(label='First name', max_length=30,required=True)
@@ -56,21 +58,23 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
         if 'email' in self.cleaned_data and 'email_2' in self.cleaned_data:
             if self.cleaned_data['email'] != self.cleaned_data['email_2']:
                 raise forms.ValidationError(_("The two emails fields didn't match."))
-        return self.cleaned_data
+        return self.cleaned_data['email_2']
 
 class BasicInformationForm(ModelForm):
-
-  lang = forms.CharField(max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
+  lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
+  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
   class Meta:
     model = UserProfile
-    fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
+    fields = ('birthday', 'show_birthday', 'gender', 'civil_state')  #'interested_in',
     widgets = {
       'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
-      'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
     }
-
     def clean_lang(self):
       return self.cleaned_data['lang']
+  def __init__(self, *args, **kwargs):
+      super(BasicInformationForm, self).__init__(*args, **kwargs)
+      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'lang']
+      self.base_fields['show_birthday'].label = ""
 
 
 class CustomProfileForm(ModelForm):

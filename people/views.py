@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
 from people.forms import *
-from datetime import *
+from datetime import date
 import re
 
 @login_required
@@ -79,28 +79,32 @@ def editProfile(request):
 
 @login_required
 def editBasicInformation(request):
-  
-  user = request.user
-  up = user.get_profile()
-  form = BasicInformationForm(request.POST, instance=up)
-
-  if request.user.is_authenticated():
+    form = BasicInformationForm(request.POST or None)
     if form.is_valid():
-      form.save()
+	  save_basic_info(form.cleaned_data, request.user)
+	  return HttpResponseRedirect('/users/profile/')
+    return render_to_response('registration/login.html')
 
-      today = date.today()
-      b = up.birthday
-      age = today.year - b.year
-      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
-      up.age = age
-      lang = request.POST['lang']
-      print lang
-      #l = Language.objects.get(name=l)
-      #up.languages.add(l)
-      up.save()
-    else: print "[ERROR] Edit Basic Info: form is NOT valid"
-    return HttpResponseRedirect('/users/profile/')
-  return render_to_response('registration/login.html')
+def save_basic_info(data, user):
+    profile = user.get_profile()
+    interested_len = len(data['interested_in'])
+    if interested_len > 0 :
+        if interested_len == 1 : 
+            profile.interested_in = data['interested_in'][0] 
+        else: profile.interested_in = 'B'
+    else:
+        profile.interested_in = 'N'
+    profile.gender = data['gender']
+    profile.show_birthday = data['show_birthday']
+    profile.civil_state = data['civil_state']
+    profile.birthday = data['birthday']
+    today = date.today()
+    age = today.year - profile.birthday.year
+    if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
+    profile.age = age
+    profile.save()
+    print "Is valid"
+	
 
 @login_required
 def viewAccountSettings(request):
