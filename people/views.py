@@ -15,7 +15,7 @@ from datetime import date
 import re
 
 @login_required
-def viewProfile(request):
+def view_profile(request):
   """
     Outputs the following data from the profile passed as parameter: gender, date of birth
     interested in, civil state, languages, city, pw state, all about you, main mission
@@ -31,7 +31,7 @@ def viewProfile(request):
   return render_to_response('people/login.html')
 
 @login_required
-def enterEditProfile(request):
+def enter_edit_profile(request):
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(instance = up)
@@ -39,17 +39,18 @@ def enterEditProfile(request):
   return render_to_response('people/login.html')
 
 @login_required
-def enterEditBasicInformation(request):
+def enter_edit_basic_information(request):
   user = request.user
   up = user.get_profile()
   initial = up.interested_in
   if initial == 'B': initial = ['M','F'] 
-  form = BasicInformationForm(instance = up, initial={'interested_in': initial})
+  form1 = BasicInformationForm(instance = up, initial={'interested_in': initial})
+  form2 = LanguageForm()
   if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/basic/edit/completed/"}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required
-def editProfile(request):
+def edit_profile(request):
   
   user = request.user
   up = user.get_profile()
@@ -80,9 +81,8 @@ def editProfile(request):
   return render_to_response('registration/login.html')
 
 @login_required
-def editBasicInformation(request):
+def edit_basic_information(request):
     form = BasicInformationForm(request.POST or None)
-    print request.POST
     if form.is_valid():
 	  save_basic_info(form.cleaned_data, request.user)
 	  return HttpResponseRedirect('/users/profile/')
@@ -112,20 +112,20 @@ def save_basic_info(data, user):
     profile.save()
 
 @login_required
-def viewAccountSettings(request):
+def view_account_settings(request):
   user = request.user
   if request.user.is_authenticated(): return render_to_response('people/account.html', {'user': user})
   return render_to_response('people/login.html')
 
 @login_required
-def enterEditAccountSettings(request):
+def enter_edit_account_settings(request):
   user = request.user
   form = CustomAccountSettingsForm(instance=user)
   if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required
-def editAccountSettings(request):
+def edit_account_settings(request):
   p1 = request.POST['password']
   p2 = request.POST['repassword']
   user = request.user
