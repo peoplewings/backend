@@ -107,8 +107,8 @@ def save_basic_info(data, user):
     age = today.year - profile.birthday.year
     if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
     profile.age = age
-    user_lan = UserLanguage(user_profile_id=profile.id, language_id=data['lang'], level=data['level'])
-    user_lan.save()
+    user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=data['lang'], level=data['level'])
+    #user_lan.save()
     profile.save()
 
 @login_required
