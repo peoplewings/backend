@@ -42,7 +42,9 @@ def enterEditProfile(request):
 def enterEditBasicInformation(request):
   user = request.user
   up = user.get_profile()
-  form = BasicInformationForm(instance = up)
+  initial = up.interested_in
+  if initial == 'B': initial = ['M','F'] 
+  form = BasicInformationForm(instance = up, initial={'interested_in': initial})
   if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/basic/edit/completed/"}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
