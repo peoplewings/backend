@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, University, Language
+from people.models import UserProfile, University, Language, UserLanguage
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -82,12 +82,15 @@ def editProfile(request):
 @login_required
 def editBasicInformation(request):
     form = BasicInformationForm(request.POST or None)
+    print request.POST
     if form.is_valid():
 	  save_basic_info(form.cleaned_data, request.user)
 	  return HttpResponseRedirect('/users/profile/')
+    print "ERROR: form not valid"
     return render_to_response('registration/login.html')
 
 def save_basic_info(data, user):
+    print data
     profile = user.get_profile()
     interested_len = len(data['interested_in'])
     if interested_len > 0 :
@@ -104,9 +107,9 @@ def save_basic_info(data, user):
     age = today.year - profile.birthday.year
     if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
     profile.age = age
+    user_lan = UserLanguage(user_profile_id=profile.id, language_id=data['lang'], level=data['level'])
+    user_lan.save()
     profile.save()
-    print "Is valid"
-	
 
 @login_required
 def viewAccountSettings(request):

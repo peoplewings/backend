@@ -179,6 +179,7 @@ def createUserProfile(sender, user, request, **kwargs):
     data = UserProfile.objects.create(user=user, name_to_show=kwargs['firstname'])
     data.gender = form.data["gender"]
     data.birthday = datetime(year=int(form.data["birthday_year"]), month=int(form.data["birthday_month"]), day=int(form.data["birthday_day"]))
+    # data.birthday = form.data['birthday'] #this should work try it!
     today = date.today()
     age = today.year - data.birthday.year
     if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1

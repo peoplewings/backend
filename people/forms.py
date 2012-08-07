@@ -23,6 +23,11 @@ INTERESTED_IN_CHOICES = (
 	  ('F', 'Female'),
   )
 
+LANG_LEVEL_CHOICES = (
+      ('E', 'Expert'),
+	  ('I', 'Intermediate'),
+	  ('B', 'Beginner'),
+  )
 
 
 class RegisterForm(ModelForm):
@@ -61,7 +66,8 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
         return self.cleaned_data['email_2']
 
 class BasicInformationForm(ModelForm):
-  lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
+  lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
+  level = forms.ChoiceField(label="Level", choices=LANG_LEVEL_CHOICES)
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
   class Meta:
     model = UserProfile
@@ -73,7 +79,7 @@ class BasicInformationForm(ModelForm):
       return self.cleaned_data['lang']
   def __init__(self, *args, **kwargs):
       super(BasicInformationForm, self).__init__(*args, **kwargs)
-      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'lang']
+      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'lang', 'level']
       self.base_fields['show_birthday'].label = ""
 
 
