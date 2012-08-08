@@ -1,0 +1,27 @@
+{% extends "people/base_people.html" %}
+
+{% block body %}
+<div>
+    <div class="entry">
+        <form id="my-form" method="post" action="" class="well form-horizontal span12">
+            {% csrf_token %}
+			{% for form in formset %}
+
+				{% include "general/custom_fieldset.html" %}
+            
+            {% endfor %}            
+            {{ formset.management_form }}
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripting %}
+	<script type="text/javascript">
+           $(function() {
+               $('#my-form > fieldset > .control-group:last').formset();
+
+           })
+    </script>
+{% endblock %}
