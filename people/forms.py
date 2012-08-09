@@ -6,6 +6,7 @@ from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Language, University, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from people.widgets import DoubleSelectWidget
 
 import datetime
 
@@ -65,10 +66,13 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
                 raise forms.ValidationError(_("The two emails fields didn't match."))
         return self.cleaned_data['email_2']
 
+
+
 class BasicInformationForm(ModelForm):
-  lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
-  level = forms.ChoiceField(label="Level", choices=LANG_LEVEL_CHOICES)
+  #lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
+  #level = forms.ChoiceField(label="Level", choices=LANG_LEVEL_CHOICES)
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
+  languages = forms.MultiValueField(label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'civil_state')  #'interested_in',
@@ -79,8 +83,11 @@ class BasicInformationForm(ModelForm):
       return self.cleaned_data['lang']
   def __init__(self, *args, **kwargs):
       super(BasicInformationForm, self).__init__(*args, **kwargs)
-      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'lang', 'level']
-      self.base_fields['show_birthday'].label = ""
+      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'languages']
+	
+
+class LanguageForm(forms.Form):
+  languages = forms.MultiValueField(label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
 
 
 class CustomProfileForm(ModelForm):
@@ -124,8 +131,6 @@ class CustomAccountSettingsForm(ModelForm):
       model = User
       fields = ('email', 'first_name', 'last_name')
 
-
- 
 	
 def customize_register_form():
     """

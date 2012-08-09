@@ -11,8 +11,10 @@ from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
 from people.forms import *
+from django.forms.formsets import formset_factory
 from datetime import date
 import re
+from pprint import pprint
 
 @login_required
 def view_profile(request):
@@ -38,16 +40,6 @@ def enter_edit_profile(request):
   if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/profile/edit/completed/"}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
-@login_required
-def enter_edit_basic_information(request):
-  user = request.user
-  up = user.get_profile()
-  initial = up.interested_in
-  if initial == 'B': initial = ['M','F'] 
-  form1 = BasicInformationForm(instance = up, initial={'interested_in': initial})
-  form2 = LanguageForm()
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/basic/edit/completed/"}, context_instance = RequestContext(request))
-  return render_to_response('people/login.html')
 
 @login_required
 def edit_profile(request):
@@ -79,6 +71,58 @@ def edit_profile(request):
     else: print "form is NOT valid"
     return HttpResponseRedirect('/users/profile/')
   return render_to_response('registration/login.html')
+
+"""
+ArticleFormSet = formset_factory(ArticleForm)
+    if request.method == 'POST':
+        formset = ArticleFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            # do something with the formset.cleaned_data
+            pass
+    else:
+        formset = ArticleFormSet()
+    return render_to_response('manage_articles.html', {'formset': formset})
+"""
+
+@login_required
+def manage_basic_information(request):
+    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
+    if request.method == 'POST':
+        formset = BasicInfoFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            save_basic_info(formset.cleaned_data, request.user)
+    else:
+        initial = load_basic_data(request.user)
+        formset = BasicInfoFormSet(initial=initial)
+    if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset},
+        context_instance=RequestContext(request))
+    return render_to_response('people/login.html')
+
+@login_required
+def enter_edit_basic_information(request):
+  user = request.user
+  up = user.get_profile()
+  initial = up.interested_in
+  if initial == 'B': initial = ['M','F'] 
+  #form = BasicInformationForm(instance = up, initial={'interested_in': initial})
+  BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
+
+  lang = UserLanguage.objects.filter(user_profile_id=up.id)[1]
+  
+  data = [{ 'gender': up.gender, 
+            'show_birthday': up.show_birthday, 
+            'birthday' :up.birthday,
+            'interested_in': initial,
+            'civil_state': up.civil_state,
+			'languages': lang
+
+  }]
+  formset1 = BasicInfoFormSet(initial=data)
+  #formset2 = LanguageFormSet()
+  
+  if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset1},
+        context_instance=RequestContext(request))
+  return render_to_response('people/login.html')
 
 @login_required
 def edit_basic_information(request):
@@ -153,4 +197,19 @@ def delete(request):
   user.delete()
   return HttpResponseRedirect('/login/')
 
+@login_required
+def enter_edit_account_settings(request):
+  user = request.user
+  form = CustomAccountSettingsForm(instance=user)
+  if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
+  return render_to_response('people/login.html')
 
+
+@login_required
+def formset_play(request):
+    LanguageFormSet = formset_factory(LanguageForm)
+
+    formset1 = LanguageFormSet()
+    if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset1},
+        context_instance=RequestContext(request))
+    return render_to_response('people/login.html')
