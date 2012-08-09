@@ -20,7 +20,7 @@ class DoubleSelectWidget(MultiWidget):
 
     def decompress(self, value):
         if value:
-            return [value.choice1, value.choice2]
+            return [value.language_id, value.level]
         return [None, None]
 
     def format_output(self, rendered_widgets):
