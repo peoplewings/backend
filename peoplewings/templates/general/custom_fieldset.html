@@ -1,4 +1,4 @@
-<fieldset>
+<fieldset id="{{form.prefix}}">
 	    {% for field in form %}
 		       <div id="{{ field.id|lower }}" class="control-group">
 					<label class="control-label" for="textarea">{{field.label_tag}}</label>
@@ -9,7 +9,4 @@
 						</div>
 		        </div>
 		{% endfor %}
-		<div class="form-actions">
-			<button type="submit" class="btn btn-primary" style="margin-left: 160px">Submit</button>
-		</div>
 </fieldset>
