@@ -1,9 +1,9 @@
 """
 Custom Widget classes
 """
-
 from django.forms.widgets import Widget, Select, MultiWidget
-
+from django import forms        
+    
 
 class DoubleSelectWidget(MultiWidget):
     """
@@ -25,3 +25,20 @@ class DoubleSelectWidget(MultiWidget):
 
     def format_output(self, rendered_widgets):
         return u''.join(rendered_widgets)
+
+class MyMultiValueField(forms.MultiValueField):
+    """
+    Compress method must be implemented
+    """
+    def __init__(self, *args, **kwargs):
+        fields = (
+            forms.CharField(required=True),
+            forms.CharField(required=True),
+        )
+        #self.widget = MyMultiValueField(widgets=[fields[0].widget, fields[1].widget])
+        super(MyMultiValueField, self).__init__(fields, *args, **kwargs)
+
+    def compress(self, data_list):
+        print "data_list"
+        print data_list
+        if data_list: return '|'.join(data_list)
