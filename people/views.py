@@ -72,31 +72,7 @@ def edit_profile(request):
     return HttpResponseRedirect('/users/profile/')
   return render_to_response('registration/login.html')
 
-"""
-ArticleFormSet = formset_factory(ArticleForm)
-    if request.method == 'POST':
-        formset = ArticleFormSet(request.POST, request.FILES)
-        if formset.is_valid():
-            # do something with the formset.cleaned_data
-            pass
-    else:
-        formset = ArticleFormSet()
-    return render_to_response('manage_articles.html', {'formset': formset})
-"""
 
-@login_required
-def manage_basic_information(request):
-    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
-    if request.method == 'POST':
-        formset = BasicInfoFormSet(request.POST, request.FILES)
-        if formset.is_valid():
-            save_basic_info(formset.cleaned_data, request.user)
-    else:
-        initial = load_basic_data(request.user)
-        formset = BasicInfoFormSet(initial=initial)
-    if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset},
-        context_instance=RequestContext(request))
-    return render_to_response('people/login.html')
 
 @login_required
 def enter_edit_basic_information(request):
@@ -133,8 +109,51 @@ def edit_basic_information(request):
     print "ERROR: form not valid"
     return render_to_response('registration/login.html')
 
-def save_basic_info(data, user):
-    print data
+@login_required
+def manage_basic_information(request):
+    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
+    LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
+    if request.method == 'POST':
+        formset = BasicInfoFormSet(request.POST, request.FILES)
+        langset = LangFormSet(request.POST,  prefix='lang')
+        if formset.is_valid() and langset.is_valid():
+            print "Valid"
+            print formset.cleaned_data
+            print langset.cleaned_data
+            save_basic_info(formset.cleaned_data, langset.cleaned_data, request.user)
+        else: 
+	        print "Invalid"
+	        print formset.errors
+	        print langset.non_form_errors
+	        print langset.errors
+    else:
+        initial = load_basic_data(request.user)
+        formset = BasicInfoFormSet(initial=initial)
+        uid = request.user.get_profile().id
+        data = []
+        for lang in UserLanguage.objects.filter(user_profile_id=uid):
+            data.append({'language': lang.language_id, 'level': lang.level})
+        if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
+        langset = LangFormSet(initial=data, prefix='lang')
+    if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset}, context_instance=RequestContext(request))
+    return render_to_response('people/login.html')
+
+def load_basic_data(user):
+    up = user.get_profile()
+    initial = up.interested_in
+    if initial == 'B': initial = ['M','F']
+    #lang = UserLanguage.objects.filter(user_profile_id=up.id)[1]
+    data = [{ 'gender': up.gender, 
+            'show_birthday': up.show_birthday, 
+            'birthday' :up.birthday,
+            'interested_in': initial,
+            'civil_state': up.civil_state,
+			#'languages': lang
+    }]
+    return data
+
+def save_basic_info(info, langs, user):
+    data=info[0]
     profile = user.get_profile()
     interested_len = len(data['interested_in'])
     if interested_len > 0 :
@@ -151,8 +170,8 @@ def save_basic_info(data, user):
     age = today.year - profile.birthday.year
     if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
     profile.age = age
-    user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=data['lang'], level=data['level'])
-    #user_lan.save()
+    for lang in langs:
+        user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=lang['language'], level=lang['level'])
     profile.save()
 
 @login_required
