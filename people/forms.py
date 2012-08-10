@@ -1,12 +1,13 @@
 from django import forms
 from django.db import models
 from django.forms import ModelForm, extras, Textarea
+from django.forms.formsets import BaseFormSet
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Language, University, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from people.widgets import DoubleSelectWidget
+from people.widgets import DoubleSelectWidget, MyMultiValueField
 
 import datetime
 
@@ -14,7 +15,7 @@ import datetime
 now = datetime.datetime.now()
 BIRTH_YEAR_CHOICES = []
 
-for i in range(1900, now.year+1, 1):
+for i in range(1900, now.year-5, 1):
     BIRTH_YEAR_CHOICES.append(i)
 
 BIRTH_YEAR_CHOICES.reverse()
@@ -38,8 +39,6 @@ class RegisterForm(ModelForm):
       widgets = {
           'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'})
       }
-  def clean_birthday(self):
-    print self.cleaned_data['birthday']
 
 class CustomRegisterForm(RegistrationFormUniqueEmail):
   first_name = forms.CharField(label='First name', max_length=30,required=True)
@@ -49,17 +48,12 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
   def __init__(self, *args, **kwargs):
         super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
         self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
-        # Trying to fix default values. Doesnt work
-        #self.fields['gender'].empty_label = None
-        #self.fields['gender'].widget.choices = self.fields['gender'].choices
 
   def clean_email_2(self):
         """
-        Verifiy that the values entered into the two email fields
-        match. Note that an error here will end up in
+        Verifiy that the values entered into the two email fields match. Note that an error here will end up in
         ``non_field_errors()`` because it doesn't apply to a single
         field.
-        
         """
         if 'email' in self.cleaned_data and 'email_2' in self.cleaned_data:
             if self.cleaned_data['email'] != self.cleaned_data['email_2']:
@@ -69,26 +63,41 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 
 
 class BasicInformationForm(ModelForm):
-  #lang = forms.CharField(label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
-  #level = forms.ChoiceField(label="Level", choices=LANG_LEVEL_CHOICES)
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
-  languages = forms.MultiValueField(label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'civil_state')  #'interested_in',
     widgets = {
       'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
     }
-    def clean_lang(self):
-      return self.cleaned_data['lang']
   def __init__(self, *args, **kwargs):
       super(BasicInformationForm, self).__init__(*args, **kwargs)
-      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state', 'languages']
+      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state']
 	
 
 class LanguageForm(forms.Form):
-  languages = forms.MultiValueField(label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
+  language = forms.CharField(required=False, label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
+  level = forms.ChoiceField(required=False, label="Level", choices=LANG_LEVEL_CHOICES)
+  #languages = MyMultiValueField(required=False, label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
+  def clean_language(self):
+      if 'language' in self.cleaned_data:
+          return self.cleaned_data['language']
+      
+  def clean_level(self):
+      if 'level' in self.cleaned_data:
+          return self.cleaned_data['level']
 
+class LanguageFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        languages = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            lang = form.cleaned_data['language']
+            if lang in languages:
+                raise forms.ValidationError("Define a single level per language")
+            languages.append(lang)
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)
@@ -134,8 +143,7 @@ class CustomAccountSettingsForm(ModelForm):
 	
 def customize_register_form():
     """
-    Change username label to tweak Auth based on email not username
-    Embrace RegisterForm and CustomRegisterForm
+    Change username label to tweak Auth based on email not username. Embrace RegisterForm and CustomRegisterForm
     """
     AuthenticationForm.base_fields['username'].label = 'E-mail'
     CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
