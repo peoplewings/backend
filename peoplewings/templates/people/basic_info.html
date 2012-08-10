@@ -5,12 +5,21 @@
     <div class="entry">
         <form id="my-form" method="post" action="" class="well form-horizontal span12">
             {% csrf_token %}
+			{{ formset.management_form }}
 			{% for form in formset %}
 
-				{% include "general/custom_fieldset.html" %}
+					{% include "general/custom_fieldset.html" %}
             
-            {% endfor %}            
-            {{ formset.management_form }}
+	        {% endfor %}
+			{{ langset.management_form }}
+			{% for form in langset %}
+
+					{% include "general/custom_fieldset.html" %}
+            
+	        {% endfor %}
+		<div class="form-actions">
+			<button type="submit" class="btn btn-primary" style="margin-left: 160px">Submit</button>
+		</div>
         </form>
     </div>
 </div>
@@ -20,7 +29,7 @@
 {% block page_scripting %}
 	<script type="text/javascript">
            $(function() {
-               $('#my-form > fieldset > .control-group:last').formset();
+               $('#my-form > fieldset[id^=lang]:last').formset({'prefix': '{{ langset.prefix }}'});
 
            })
     </script>
