@@ -29,7 +29,7 @@
 {% block page_scripting %}
 	<script type="text/javascript">
            $(function() {
-               $('#my-form > fieldset[id^=lang]:last').formset({'prefix': '{{ langset.prefix }}'});
+               $('#my-form > fieldset[id^=lang]').formset({'prefix': '{{ langset.prefix }}'});
 
            })
     </script>

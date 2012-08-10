@@ -96,7 +96,7 @@ class LanguageFormSet(BaseFormSet):
             form = self.forms[i]
             lang = form.cleaned_data['language']
             if lang in languages:
-                raise forms.ValidationError("Define a single level per language")
+                raise forms.ValidationError(_("You entered a repeated language"))
             languages.append(lang)
 
 class CustomProfileForm(ModelForm):
