@@ -14,7 +14,7 @@
 			{{ langset.management_form }}
 			{% for form in langset %}
 
-					{% include "general/custom_fieldset.html" %}
+					{% include "general/custom_fieldset.html" with errors=langset.non_form_errors %}
             
 	        {% endfor %}
 		<div class="form-actions">
