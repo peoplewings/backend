@@ -14,7 +14,6 @@ from people.forms import *
 from django.forms.formsets import formset_factory
 from datetime import date
 import re
-from pprint import pprint
 
 @login_required
 def view_profile(request):
@@ -33,83 +32,6 @@ def view_profile(request):
   return render_to_response('people/login.html')
 
 @login_required
-def enter_edit_profile(request):
-  user = request.user
-  up = user.get_profile()
-  form = CustomProfileForm(instance = up)
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/profile/edit/completed/"}, context_instance = RequestContext(request))
-  return render_to_response('people/login.html')
-
-
-@login_required
-def edit_profile(request):
-  
-  user = request.user
-  up = user.get_profile()
-  form = CustomProfileForm(request.POST, instance=up)
-
-  if request.user.is_authenticated():
-    if form.is_valid():
-      form.save()
-
-      today = date.today()
-      b = up.birthday
-      age = today.year - b.year
-      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
-      up.age = age
-      """
-      universities = request.POST['uni'].split(',')
-      for uni in universities:
-        if len(uni.replace(" ", "")) != 0:
-          if University.objects.filter(name=uni): # si ya existe la uni en la base de datos...
-            u = University.objects.get(name=uni)
-          else:                                   # el usuario ha insertado una uni nueva => la insertamos en la BD
-            u = University.objects.create(name=uni)
-          up.universities.add(u)
-      """
-      up.save()
-    else: print "form is NOT valid"
-    return HttpResponseRedirect('/users/profile/')
-  return render_to_response('registration/login.html')
-
-
-
-@login_required
-def enter_edit_basic_information(request):
-  user = request.user
-  up = user.get_profile()
-  initial = up.interested_in
-  if initial == 'B': initial = ['M','F'] 
-  #form = BasicInformationForm(instance = up, initial={'interested_in': initial})
-  BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
-
-  lang = UserLanguage.objects.filter(user_profile_id=up.id)[1]
-  
-  data = [{ 'gender': up.gender, 
-            'show_birthday': up.show_birthday, 
-            'birthday' :up.birthday,
-            'interested_in': initial,
-            'civil_state': up.civil_state,
-			'languages': lang
-
-  }]
-  formset1 = BasicInfoFormSet(initial=data)
-  #formset2 = LanguageFormSet()
-  
-  if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset1},
-        context_instance=RequestContext(request))
-  return render_to_response('people/login.html')
-
-@login_required
-def edit_basic_information(request):
-    form = BasicInformationForm(request.POST or None)
-    if form.is_valid():
-	  save_basic_info(form.cleaned_data, request.user)
-	  return HttpResponseRedirect('/users/profile/')
-    print "ERROR: form not valid"
-    return render_to_response('registration/login.html')
-
-@login_required
 def manage_basic_information(request):
     BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
     LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
@@ -117,15 +39,8 @@ def manage_basic_information(request):
         formset = BasicInfoFormSet(request.POST, request.FILES)
         langset = LangFormSet(request.POST,  prefix='lang')
         if formset.is_valid() and langset.is_valid():
-            print "Valid"
-            print formset.cleaned_data
-            print langset.cleaned_data
             save_basic_info(formset.cleaned_data, langset.cleaned_data, request.user)
-        else: 
-	        print "Invalid"
-	        print formset.errors
-	        print langset.non_form_errors
-	        print langset.errors
+            return HttpResponseRedirect('/users/profile/')
     else:
         initial = load_basic_data(request.user)
         formset = BasicInfoFormSet(initial=initial)
@@ -142,13 +57,11 @@ def load_basic_data(user):
     up = user.get_profile()
     initial = up.interested_in
     if initial == 'B': initial = ['M','F']
-    #lang = UserLanguage.objects.filter(user_profile_id=up.id)[1]
     data = [{ 'gender': up.gender, 
             'show_birthday': up.show_birthday, 
             'birthday' :up.birthday,
             'interested_in': initial,
-            'civil_state': up.civil_state,
-			#'languages': lang
+            'civil_state': up.civil_state
     }]
     return data
 
@@ -222,13 +135,3 @@ def enter_edit_account_settings(request):
   form = CustomAccountSettingsForm(instance=user)
   if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
-
-
-@login_required
-def formset_play(request):
-    LanguageFormSet = formset_factory(LanguageForm)
-
-    formset1 = LanguageFormSet()
-    if request.user.is_authenticated(): return render_to_response('people/basic_info.html', {'formset': formset1},
-        context_instance=RequestContext(request))
-    return render_to_response('people/login.html')
