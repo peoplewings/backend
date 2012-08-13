@@ -1,6 +1,7 @@
 from django import forms
 from django.db import models
 from django.forms import ModelForm, extras, Textarea
+from django.forms.widgets import TextInput
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
@@ -29,8 +30,7 @@ LANG_LEVEL_CHOICES = [
       ('E', 'Expert'),
     ('I', 'Intermediate'),
     ('B', 'Beginner'),
-  )
-]
+  ]
 
 
 class RegisterForm(ModelForm):
@@ -61,9 +61,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
                 raise forms.ValidationError(_("The two emails fields didn't match."))
         return self.cleaned_data['email_2']
 
-
-# BASIC INFORMATION FORM
-
+# BASIC INFORMATION
 class BasicInformationForm(ModelForm):
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
   class Meta:
@@ -96,26 +94,25 @@ class LanguageFormSet(BaseFormSet):
             else: raise forms.ValidationError(_("This field is required, by Sergio"))
 
 # CONTACT INFORMATION FORM
-
 class ContactInformationForm(ModelForm):
   
   class Meta:
     model = UserProfile
-    fields = ('email', 'phone')
-  def __init__(self, *args, **kwargs):
-      super(ContactInformationForm, self).__init__(*args, **kwargs)
-      self.fields.keyOrder = ['email', 'phone']  
+    fields = ('emails', 'phone')
+
+  def clean_phone(self):
+    if 'phone' in self.cleaned_data:
+      value = self.cleaned_data['phone']
+      try:
+        v = int(value)
+      except:
+        raise forms.ValidationError(_("This field must be an integer"))
+      return v
+      
 
 class SocialNetworkForm(forms.Form):
   social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
   social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len)
-  def clean_social_network(self):
-      if 'social_network' in self.cleaned_data:
-          return self.cleaned_data['social_network']
-      
-  def clean_social_network_username(self):
-      if 'social_network_username' in self.cleaned_data:
-          return self.cleaned_data['social_network_username']
 
 class SocialNetworkFormSet(BaseFormSet):
     def clean(self):
@@ -132,13 +129,6 @@ class SocialNetworkFormSet(BaseFormSet):
 class InstantMessageForm(forms.Form):
   instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
   instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len)
-  def clean_instant_message(self):
-      if 'instant_message' in self.cleaned_data:
-          return self.cleaned_data['instant_message']
-      
-  def clean_instant_message_username(self):
-      if 'instant_message_username' in self.cleaned_data:
-          return self.cleaned_data['instant_message_username']
 
 class InstantMessageFormSet(BaseFormSet):
     def clean(self):

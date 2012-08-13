@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, University, Language, UserLanguage
+from people.models import UserProfile, University, Language, UserLanguage, UserSocialNetwork, UserInstantMessage
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -95,12 +95,12 @@ def save_basic_info(info, langs, user):
 @login_required
 def manage_contact_information(request):
     ContactInfoFormSet = formset_factory(ContactInformationForm, extra=0)
-    SocialNetworkFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
-    InstantMessageFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
+    SNFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
+    IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
     if request.method == 'POST':
         formset = ContactInfoFormSet(request.POST, request.FILES)
-        snset = SocialNetworkFormSet(request.POST,  prefix='sn')
-        imset = InstantMessageFormSet(request.POST, prefix='im')
+        snset = SNFormSet(request.POST,  prefix='sn')
+        imset = IMFormSet(request.POST, prefix='im')
         if formset.is_valid() and snset.is_valid() and imset.is_valid():
             save_contact_info(formset.cleaned_data, snset.cleaned_data, imset.cleaned_data, request.user)
             return HttpResponseRedirect('/users/profile/')
@@ -111,16 +111,36 @@ def manage_contact_information(request):
         sns = []
         ims = []
         for sn in UserSocialNetwork.objects.filter(user_profile_id=uid):
-            sns.append({'social_network': sn.social_network_id, 'sn_username': sn.social_network_username})
+            sns.append({'social_network': sn.social_network, 'social_network_username': sn.social_network_username})
         for im in UserInstantMessage.objects.filter(user_profile_id=uid):
-            ims.append({'instant_message': im.instant_message_id, 'im_username': im.instant_message_username})
-        if len(sns) == 0: SocialNetworkFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=1)
-        if len(ims) == 0: InstantMessageFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=1)
-        snset = SocialNetworkFormSet(initial=sns, prefix='sn')
-        imset = InstantMessageFormSet(initial=ims, prefix='im')
+            ims.append({'instant_message': im.instant_message, 'instant_message_username': im.instant_message_username})
+        if len(sns) == 0: SNFormSet = formset_factory(SocialNetworkForm,  extra=1)
+        if len(ims) == 0: IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=1)
+        snset = SNFormSet(initial=sns, prefix='sn')
+        imset = IMFormSet(initial=ims, prefix='im')
     return render_to_response('people/contact_info.html', {'formset1': formset, 'formset2': snset, 'formset3': imset}, context_instance=RequestContext(request))
 
+def load_contact_data(user):
+    up = user.get_profile()
+    data = [{ 'phone': up.phone, 
+            'emails': up.emails
+    }]
+    return data
 
+def save_contact_info(info, snset, imset, user):
+    data=info[0]
+    profile = user.get_profile()
+    profile.phone = data['phone']
+    profile.emails = data['emails']
+    # borramos todas las asociaciones que tenia este profile con sus redes sociales y sus mensajes instantaneos...
+    UserSocialNetwork.objects.filter(user_profile_id=profile.id).delete()
+    UserInstantMessage.objects.filter(user_profile_id=profile.id).delete()
+    # ... e insertamos las nuevas pasadas por POST
+    for sn in snset:
+      UserSocialNetwork.objects.create(user_profile_id=profile.id, social_network_id=sn['social_network'], social_network_username=sn['social_network_username'])
+    for im in imset:
+      UserInstantMessage.objects.create(user_profile_id=profile.id, instant_message_id=im['instant_message'], instant_message_username=im['instant_message_username'])
+    profile.save()
 
 
 

@@ -135,8 +135,8 @@ class UserProfile(models.Model):
     #other_locations = models.ManyToManyField(Location)
 
     # Contact info
-    emails = models.TextField(blank=True)
-    phone = models.TextField(blank=True)
+    emails = models.EmailField(blank=True)
+    phone = models.CharField(max_length=max_short_len, blank=True)
     social_networks = models.ManyToManyField(SocialNetwork, through='UserSocialNetwork')
     instant_messages = models.ManyToManyField(InstantMessage, through='UserInstantMessage')
 
