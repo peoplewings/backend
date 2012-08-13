@@ -1,0 +1,12 @@
+<fieldset id="{{form.prefix}}">
+	    {% for field in form %}
+		       <div id="{{ field.id|lower }}" class="control-group">
+					<label class="control-label" for="textarea">{{field.label_tag}}</label>
+						<div class="controls">
+							{{ field }}
+							<span class="help-block">{{errors}}</span>
+							<span class="help-inline">{{ field.errors }}</span>
+						</div>
+		        </div>
+		{% endfor %}
+</fieldset>

@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, University, Language
+from people.models import UserProfile, University, Language, UserLanguage
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -11,11 +11,12 @@ from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
 from people.forms import *
-from datetime import *
+from django.forms.formsets import formset_factory
+from datetime import date
 import re
 
 @login_required
-def viewProfile(request):
+def view_profile(request):
   """
     Outputs the following data from the profile passed as parameter: gender, date of birth
     interested in, civil state, languages, city, pw state, all about you, main mission
@@ -31,93 +32,112 @@ def viewProfile(request):
   return render_to_response('people/login.html')
 
 @login_required
-def enterEditProfile(request):
-  user = request.user
-  up = user.get_profile()
-  form = CustomProfileForm(instance = up)
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/profile/edit/completed/"}, context_instance = RequestContext(request))
-  return render_to_response('people/login.html')
+def manage_basic_information(request):
+    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
+    LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
+    if request.method == 'POST':
+        formset = BasicInfoFormSet(request.POST, request.FILES)
+        langset = LangFormSet(request.POST,  prefix='lang')
+        if formset.is_valid() and langset.is_valid():
+            save_basic_info(formset.cleaned_data, langset.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/profile/')
+    else:
+        initial = load_basic_data(request.user)
+        formset = BasicInfoFormSet(initial=initial)
+        uid = request.user.get_profile().id
+        data = []
+        for lang in UserLanguage.objects.filter(user_profile_id=uid):
+            data.append({'language': lang.language_id, 'level': lang.level})
+        if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
+        langset = LangFormSet(initial=data, prefix='lang')
+    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset}, context_instance=RequestContext(request))
+
+
+def load_basic_data(user):
+    up = user.get_profile()
+    initial = up.interested_in
+    if initial == 'B': initial = ['M','F']
+    data = [{ 'gender': up.gender, 
+            'show_birthday': up.show_birthday, 
+            'birthday' :up.birthday,
+            'interested_in': initial,
+            'civil_state': up.civil_state
+    }]
+    return data
+
+def save_basic_info(info, langs, user):
+    data=info[0]
+    profile = user.get_profile()
+    interested_len = len(data['interested_in'])
+    if interested_len > 0 :
+        if interested_len == 1 : 
+            profile.interested_in = data['interested_in'][0] 
+        else: profile.interested_in = 'B'
+    else:
+        profile.interested_in = 'N'
+    profile.gender = data['gender']
+    profile.show_birthday = data['show_birthday']
+    profile.civil_state = data['civil_state']
+    profile.birthday = data['birthday']
+    today = date.today()
+    age = today.year - profile.birthday.year
+    if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
+    profile.age = age
+    for lang in langs:
+        user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=lang['language'], level=lang['level'])
+    profile.save()
+
+
+
+# CONTACT INFORMATION VIEW (LOAD/SAVE)
+@login_required
+def manage_contact_information(request):
+    ContactInfoFormSet = formset_factory(ContactInformationForm, extra=0)
+    SocialNetworkFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
+    InstantMessageFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
+    if request.method == 'POST':
+        formset = ContactInfoFormSet(request.POST, request.FILES)
+        snset = SocialNetworkFormSet(request.POST,  prefix='sn')
+        imset = InstantMessageFormSet(request.POST, prefix='im')
+        if formset.is_valid() and snset.is_valid() and imset.is_valid():
+            save_contact_info(formset.cleaned_data, snset.cleaned_data, imset.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/profile/')
+    else:
+        initial = load_contact_data(request.user)
+        formset = ContactInfoFormSet(initial=initial)
+        uid = request.user.get_profile().id
+        sns = []
+        ims = []
+        for sn in UserSocialNetwork.objects.filter(user_profile_id=uid):
+            sns.append({'social_network': sn.social_network_id, 'sn_username': sn.social_network_username})
+        for im in UserInstantMessage.objects.filter(user_profile_id=uid):
+            ims.append({'instant_message': im.instant_message_id, 'im_username': im.instant_message_username})
+        if len(sns) == 0: SocialNetworkFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=1)
+        if len(ims) == 0: InstantMessageFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=1)
+        snset = SocialNetworkFormSet(initial=sns, prefix='sn')
+        imset = InstantMessageFormSet(initial=ims, prefix='im')
+    return render_to_response('people/contact_info.html', {'formset1': formset, 'formset2': snset, 'formset3': imset}, context_instance=RequestContext(request))
+
+
+
+
+
 
 @login_required
-def enterEditBasicInformation(request):
-  user = request.user
-  up = user.get_profile()
-  form = BasicInformationForm(instance = up)
-  if request.user.is_authenticated(): return render_to_response('people/editableProfile.html', {'form': form, 'nextAction':"/users/basic/edit/completed/"}, context_instance = RequestContext(request))
-  return render_to_response('people/login.html')
-
-@login_required
-def editProfile(request):
-  
-  user = request.user
-  up = user.get_profile()
-  form = CustomProfileForm(request.POST, instance=up)
-
-  if request.user.is_authenticated():
-    if form.is_valid():
-      form.save()
-
-      today = date.today()
-      b = up.birthday
-      age = today.year - b.year
-      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
-      up.age = age
-      """
-      universities = request.POST['uni'].split(',')
-      for uni in universities:
-        if len(uni.replace(" ", "")) != 0:
-          if University.objects.filter(name=uni): # si ya existe la uni en la base de datos...
-            u = University.objects.get(name=uni)
-          else:                                   # el usuario ha insertado una uni nueva => la insertamos en la BD
-            u = University.objects.create(name=uni)
-          up.universities.add(u)
-      """
-      up.save()
-    else: print "form is NOT valid"
-    return HttpResponseRedirect('/users/profile/')
-  return render_to_response('registration/login.html')
-
-@login_required
-def editBasicInformation(request):
-  
-  user = request.user
-  up = user.get_profile()
-  form = BasicInformationForm(request.POST, instance=up)
-
-  if request.user.is_authenticated():
-    if form.is_valid():
-      form.save()
-
-      today = date.today()
-      b = up.birthday
-      age = today.year - b.year
-      if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
-      up.age = age
-      lang = request.POST['lang']
-      #l = Language.objects.get(name=lang)
-      #up.languages.add(l)
-      #int_in = request.POST['int_in']
-      #up.interested_in = int_in
-      up.save()
-    else: print "[ERROR] Edit Basic Info: form is NOT valid"
-    return HttpResponseRedirect('/users/profile/')
-  return render_to_response('registration/login.html')
-
-@login_required
-def viewAccountSettings(request):
+def view_account_settings(request):
   user = request.user
   if request.user.is_authenticated(): return render_to_response('people/account.html', {'user': user})
   return render_to_response('people/login.html')
 
 @login_required
-def enterEditAccountSettings(request):
+def enter_edit_account_settings(request):
   user = request.user
   form = CustomAccountSettingsForm(instance=user)
   if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
   return render_to_response('people/login.html')
 
 @login_required
-def editAccountSettings(request):
+def edit_account_settings(request):
   p1 = request.POST['password']
   p2 = request.POST['repassword']
   user = request.user
@@ -145,4 +165,9 @@ def delete(request):
   user.delete()
   return HttpResponseRedirect('/login/')
 
-
+@login_required
+def enter_edit_account_settings(request):
+  user = request.user
+  form = CustomAccountSettingsForm(instance=user)
+  if request.user.is_authenticated(): return render_to_response('people/editableAccount.html', {'form': form}, context_instance = RequestContext(request))
+  return render_to_response('people/login.html')

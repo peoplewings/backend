@@ -6,8 +6,28 @@ from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
 
-max_long_len = 250
+
 max_short_len = 20
+max_medium_len = 50
+max_long_len = 250
+
+# SOCIAL NETWORK
+class SocialNetwork(models.Model):
+    name = models.CharField(max_length=max_short_len, unique=True)  
+
+class UserSocialNetwork(models.Model):
+    user_profile = models.ForeignKey('UserProfile')
+    social_network = models.ForeignKey('SocialNetwork')
+    social_network_username = models.CharField(max_length=max_short_len)
+
+# INSTANT MESSAGE
+class InstantMessage(models.Model):
+    name = models.CharField(max_length=max_short_len, unique=True)  
+
+class UserInstantMessage(models.Model):
+    user_profile = models.ForeignKey('UserProfile')
+    instant_message = models.ForeignKey('InstantMessage')
+    instant_message_username = models.CharField(max_length=max_short_len)
 
 # LANGUAGE
 class Language(models.Model):
@@ -23,7 +43,7 @@ class Language(models.Model):
     """
     name = models.CharField(max_length=max_short_len, unique=True)  
 
-class UserProfileKnowsLanguage(models.Model):
+class UserLanguage(models.Model):
 
     LANGUAGES_LEVEL_CHOICES = (
         ('B', 'Beginner'),
@@ -36,7 +56,7 @@ class UserProfileKnowsLanguage(models.Model):
 
 # UNIVERSITY
 class University(models.Model):
-  name = models.CharField(max_length=50, unique=True)
+  name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserProfileStudiedUniversity(models.Model):
     user_profile = models.ForeignKey('UserProfile')
@@ -102,12 +122,12 @@ class UserProfile(models.Model):
 
     # In Basic Information
 
-    birthday = models.DateField(verbose_name='Date of birth', default=datetime(year=1930, month=1, day=1))
+    birthday = models.DateField(verbose_name='Date of birth', null=True) #Don't know why!
     show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    interested_in = models.CharField(max_length=1, blank=True, null=True)
-    civil_state = models.CharField(max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
-    languages = models.ManyToManyField(Language, through='UserProfileKnowsLanguage')
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    interested_in = models.CharField(max_length=1, blank=True) # he tret el null=True
+    civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
+    languages = models.ManyToManyField(Language, through='UserLanguage')
 
     # Locations
     city = models.CharField(max_length=max_short_len, blank=True)
@@ -117,7 +137,8 @@ class UserProfile(models.Model):
     # Contact info
     emails = models.TextField(blank=True)
     phone = models.TextField(blank=True)
-    social_networks = models.TextField(max_length=max_long_len, blank=True) # contains {social1, social2, ...}
+    social_networks = models.ManyToManyField(SocialNetwork, through='UserSocialNetwork')
+    instant_messages = models.ManyToManyField(InstantMessage, through='UserInstantMessage')
 
     # About me
     all_about_you = models.TextField(max_length=max_long_len, blank=True)
@@ -179,6 +200,7 @@ def createUserProfile(sender, user, request, **kwargs):
     data = UserProfile.objects.create(user=user, name_to_show=kwargs['firstname'])
     data.gender = form.data["gender"]
     data.birthday = datetime(year=int(form.data["birthday_year"]), month=int(form.data["birthday_month"]), day=int(form.data["birthday_day"]))
+    # data.birthday = form.data['birthday'] #this should work try it!
     today = date.today()
     age = today.year - data.birthday.year
     if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1

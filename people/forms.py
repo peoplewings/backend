@@ -1,12 +1,13 @@
 from django import forms
 from django.db import models
 from django.forms import ModelForm, extras, Textarea
+from django.forms.formsets import BaseFormSet
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile, Language, University, max_long_len, max_short_len
+from people.models import UserProfile, Language, University, SocialNetwork, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
+from people.widgets import DoubleSelectWidget, MyMultiValueField
 
 import datetime
 
@@ -14,16 +15,21 @@ import datetime
 now = datetime.datetime.now()
 BIRTH_YEAR_CHOICES = []
 
-for i in range(1900, now.year+1, 1):
+for i in range(1900, now.year-5, 1):
     BIRTH_YEAR_CHOICES.append(i)
 
 BIRTH_YEAR_CHOICES.reverse()
 
 INTERESTED_IN_CHOICES = (
-  ('M', 'Male'),
-  ('F', 'Female'),
-)
+      ('M', 'Male'),
+      ('F', 'Female'),
+  )
 
+LANG_LEVEL_CHOICES = (
+      ('E', 'Expert'),
+    ('I', 'Intermediate'),
+    ('B', 'Beginner'),
+  )
 
 
 class RegisterForm(ModelForm):
@@ -42,63 +48,116 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
   def __init__(self, *args, **kwargs):
         super(RegistrationFormUniqueEmail, self).__init__(*args, **kwargs)
         self.fields.keyOrder = ['first_name', 'last_name', 'email', 'email_2', 'password1', 'gender', 'birthday']
-        # Trying to fix default values. Doesnt work
-        #self.fields['gender'].empty_label = None
-        #self.fields['gender'].widget.choices = self.fields['gender'].choices
 
   def clean_email_2(self):
         """
-        Verifiy that the values entered into the two email fields
-        match. Note that an error here will end up in
+        Verifiy that the values entered into the two email fields match. Note that an error here will end up in
         ``non_field_errors()`` because it doesn't apply to a single
         field.
-        
         """
         if 'email' in self.cleaned_data and 'email_2' in self.cleaned_data:
             if self.cleaned_data['email'] != self.cleaned_data['email_2']:
                 raise forms.ValidationError(_("The two emails fields didn't match."))
-        return self.cleaned_data
+        return self.cleaned_data['email_2']
+
+
+# BASIC INFORMATION FORM
 
 class BasicInformationForm(ModelForm):
+  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
+  class Meta:
+    model = UserProfile
+    fields = ('birthday', 'show_birthday', 'gender', 'civil_state')  #'interested_in',
+    widgets = {
+      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+    }
+  def __init__(self, *args, **kwargs):
+      super(BasicInformationForm, self).__init__(*args, **kwargs)
+      self.fields.keyOrder = ['gender', 'birthday', 'show_birthday', 'interested_in', 'civil_state']
+  
 
-  lang = forms.CharField(max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
+class LanguageForm(forms.Form):
+  language = forms.CharField(required=False, label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
+  level = forms.ChoiceField(required=False, label="Level", choices=LANG_LEVEL_CHOICES)
+  #languages = MyMultiValueField(required=False, label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
+  def clean_language(self):
+      if 'language' in self.cleaned_data:
+          return self.cleaned_data['language']
+      
+  def clean_level(self):
+      if 'level' in self.cleaned_data:
+          return self.cleaned_data['level']
+
+class LanguageFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        languages = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            lang = form.cleaned_data['language']
+            if lang in languages:
+                raise forms.ValidationError(_("You entered a repeated language"))
+            languages.append(lang)
+
+# CONTACT INFORMATION FORM
+
+class ContactInformationForm(ModelForm):
   
   class Meta:
     model = UserProfile
-    fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
-    widgets = {
-      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
-      #'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
-    }
+    fields = ('email', 'phone')
   def __init__(self, *args, **kwargs):
-        super(BasicInformationForm, self).__init__(*args, **kwargs)
-        self.fields['interested_in'].widget = forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
+      super(ContactInformationForm, self).__init__(*args, **kwargs)
+      self.fields.keyOrder = ['email', 'phone']  
 
-  def clean_lang(self):
-    return self.cleaned_data['lang']
+class SocialNetworkForm(forms.Form):
+  social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
+  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len)
+  def clean_social_network(self):
+      if 'social_network' in self.cleaned_data:
+          return self.cleaned_data['social_network']
+      
+  def clean_social_network_username(self):
+      if 'social_network_username' in self.cleaned_data:
+          return self.cleaned_data['social_network_username']
 
-  def clean_int_in(self):
-    if len(self.cleaned_data['int_in']) == 0: res ='N'
-    elif len(self.cleaned_data['int_in']) == 1: 
-      aux = self.cleaned_data['int_in']
-      res = aux[0]
-    else: res = 'B'
-    print res
-    return res
+class SocialNetworkFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        social_networks = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            social = form.cleaned_data['social_network']
+            if social in social_networks:
+                raise forms.ValidationError(_("You entered a repeated social network"))
+            social_networks.append(social)
 
-  def clean(self):
-    cleaned_data = super(BasicInformationForm, self).clean()
-    int_i = cleaned_data.get("interested_in")
-    print int_i
-    """
-    if len(int_i) == 0: res ='N'
-    elif len(int_i) == 1: 
-      aux = int_i
-      res = aux[0]
-    else: res = 'B'
-    print res
-    """
-    return res
+class InstantMessageForm(forms.Form):
+  instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
+  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len)
+  def clean_instant_message(self):
+      if 'instant_message' in self.cleaned_data:
+          return self.cleaned_data['instant_message']
+      
+  def clean_instant_message_username(self):
+      if 'instant_message_username' in self.cleaned_data:
+          return self.cleaned_data['instant_message_username']
+
+class InstantMessageFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        ims = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            im = form.cleaned_data['instant_message']
+            if im in ims:
+                raise forms.ValidationError(_("You entered a repeated instant message"))
+            ims.append(im)
+
+
 
 
 class CustomProfileForm(ModelForm):
@@ -142,16 +201,13 @@ class CustomAccountSettingsForm(ModelForm):
       model = User
       fields = ('email', 'first_name', 'last_name')
 
-
- 
-	
+  
 def customize_register_form():
     """
-    Change username label to tweak Auth based on email not username
-    Embrace RegisterForm and CustomRegisterForm
+    Change username label to tweak Auth based on email not username. Embrace RegisterForm and CustomRegisterForm
     """
     AuthenticationForm.base_fields['username'].label = 'E-mail'
     CustomRegisterForm.base_fields.update(RegisterForm.base_fields)
-		
+    
 
 customize_register_form()

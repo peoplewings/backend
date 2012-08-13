@@ -1,0 +1,36 @@
+{% extends "people/base_people.html" %}
+
+{% block body %}
+<div>
+    <div class="entry">
+        <form id="my-form" method="post" action="" class="well form-horizontal span12">
+            {% csrf_token %}
+			{{ formset.management_form }}
+			{% for form in formset %}
+
+					{% include "general/custom_fieldset.html" %}
+            
+	        {% endfor %}
+			{{ langset.management_form }}
+			{% for form in langset %}
+
+					{% include "general/custom_fieldset.html" with errors=langset.non_form_errors %}
+            
+	        {% endfor %}
+		<div class="form-actions">
+			<button type="submit" class="btn btn-primary" style="margin-left: 160px">Submit</button>
+		</div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripting %}
+	<script type="text/javascript">
+           $(function() {
+               $('#my-form > fieldset[id^=lang]').formset({'prefix': '{{ langset.prefix }}'});
+
+           })
+    </script>
+{% endblock %}

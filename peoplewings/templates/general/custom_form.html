@@ -1,6 +1,6 @@
-<form id="{{id}}" action="{{next_action}}" method="post" class="well form-inline form-horizontal span12">
+<form id="{{id}}" action="{{next_action}}" method="post" class="well form-horizontal span12">
+	{% csrf_token %}
 	<fieldset>
-		{% csrf_token %}
 	    {% for field in form %}
 		       <div class="control-group">
 					<label class="control-label" for="textarea">{{field.label_tag}}</label>
