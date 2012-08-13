@@ -1,7 +1,8 @@
 from django import forms
 from django.db import models
-from django.forms import ModelForm, extras, Textarea
+from django.forms import ModelForm, extras
 from django.forms.formsets import BaseFormSet
+from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Language, UserLanguage, University, max_long_len, max_short_len
@@ -92,6 +93,23 @@ class LanguageFormSet(BaseFormSet):
                     raise forms.ValidationError(_("You entered a repeated language"))
                 languages.append(lang)
             else: raise forms.ValidationError(_("This field is required, by Sergio"))
+
+class LikesForm(ModelForm):
+  class Meta:
+    model = UserProfile
+    fields = ('enjoy_people', 'movies',  'sports', 'other_pages', 'sharing',  'incredible', 
+        'inspired_by', 'quotes', 'pw_opinion' )
+    widgets = {
+          'enjoy_people' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What kind of people you like to know and learn from them'}),
+          'inspired_by' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
+          'movies' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Movies, series, books, games...'}),
+          'sports' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
+          'other_pages' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Other webpages and applications you like'}),
+          'sharing' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What do you like to teach, learn or share?'}),
+          'incredible' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Any amazing thing you\'ve seen or done in your life'}),
+          'quotes' : Textarea(attrs={'size': max_long_len, 'class' : 'span8', 'rows' : 4}),
+          'pw_opinion' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Your opinion about PEOPLEWINGS'}),
+      }
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)
