@@ -111,13 +111,15 @@ def manage_contact_information(request):
         sns = []
         ims = []
         for sn in UserSocialNetwork.objects.filter(user_profile_id=uid):
-            sns.append({'social_network': sn.social_network, 'social_network_username': sn.social_network_username})
+            sns.append({'social_network': sn.social_network.id, 'social_network_username': sn.social_network_username})
         for im in UserInstantMessage.objects.filter(user_profile_id=uid):
-            ims.append({'instant_message': im.instant_message, 'instant_message_username': im.instant_message_username})
+            ims.append({'instant_message': im.instant_message.id, 'instant_message_username': im.instant_message_username})
         if len(sns) == 0: SNFormSet = formset_factory(SocialNetworkForm,  extra=1)
         if len(ims) == 0: IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=1)
         snset = SNFormSet(initial=sns, prefix='sn')
         imset = IMFormSet(initial=ims, prefix='im')
+        print ims
+        print imset
     return render_to_response('people/contact_info.html', {'formset1': formset, 'formset2': snset, 'formset3': imset}, context_instance=RequestContext(request))
 
 def load_contact_data(user):
