@@ -4,7 +4,7 @@ from django.forms import ModelForm, extras, Textarea
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile, Language, University, SocialNetwork, max_long_len, max_short_len
+from people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from people.widgets import DoubleSelectWidget, MyMultiValueField
@@ -25,11 +25,12 @@ INTERESTED_IN_CHOICES = (
       ('F', 'Female'),
   )
 
-LANG_LEVEL_CHOICES = (
+LANG_LEVEL_CHOICES = [
       ('E', 'Expert'),
     ('I', 'Intermediate'),
     ('B', 'Beginner'),
   )
+]
 
 
 class RegisterForm(ModelForm):
@@ -67,7 +68,7 @@ class BasicInformationForm(ModelForm):
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
   class Meta:
     model = UserProfile
-    fields = ('birthday', 'show_birthday', 'gender', 'civil_state')  #'interested_in',
+    fields = ('birthday', 'show_birthday', 'gender', 'civil_state')
     widgets = {
       'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
     }
@@ -77,16 +78,8 @@ class BasicInformationForm(ModelForm):
   
 
 class LanguageForm(forms.Form):
-  language = forms.CharField(required=False, label="Languages", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in Language.objects.all()]))
-  level = forms.ChoiceField(required=False, label="Level", choices=LANG_LEVEL_CHOICES)
-  #languages = MyMultiValueField(required=False, label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
-  def clean_language(self):
-      if 'language' in self.cleaned_data:
-          return self.cleaned_data['language']
-      
-  def clean_level(self):
-      if 'level' in self.cleaned_data:
-          return self.cleaned_data['level']
+  language = forms.CharField(required=True, label="Language", max_length=max_short_len, widget=forms.Select(choices=[('','Select language')] + [(l.id, unicode(l.name)) for l in Language.objects.all()]))
+  level = forms.ChoiceField(required=True, label="Level", choices=[('','Select level')] + LANG_LEVEL_CHOICES)
 
 class LanguageFormSet(BaseFormSet):
     def clean(self):
@@ -95,10 +88,12 @@ class LanguageFormSet(BaseFormSet):
         languages = []
         for i in range(0, self.total_form_count()):
             form = self.forms[i]
-            lang = form.cleaned_data['language']
-            if lang in languages:
-                raise forms.ValidationError(_("You entered a repeated language"))
-            languages.append(lang)
+            if len(form.cleaned_data) > 0:
+                lang = form.cleaned_data['language']
+                if lang in languages:
+                    raise forms.ValidationError(_("You entered a repeated language"))
+                languages.append(lang)
+            else: raise forms.ValidationError(_("This field is required, by Sergio"))
 
 # CONTACT INFORMATION FORM
 

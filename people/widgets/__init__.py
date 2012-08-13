@@ -1,5 +1,6 @@
 """
 Custom Widget classes
+#languages = MyMultiValueField(required=False, label="Languages", widget=DoubleSelectWidget(attrs2={'style' : 'margin-left: 20px'}, choices1=[(l.id, unicode(l.name)) for l in Language.objects.all()], choices2=LANG_LEVEL_CHOICES))
 """
 from django.forms.widgets import Widget, Select, MultiWidget
 from django import forms        

@@ -122,9 +122,9 @@ class UserProfile(models.Model):
 
     # In Basic Information
 
-    birthday = models.DateField(verbose_name='Date of birth', null=True) #Don't know why!
-    show_birthday = models.CharField(max_length=1, choices=BIRTHDAY_CHOICES, default='N')
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    birthday = models.DateField(verbose_name='birthday', null=True) #Don't know why!
+    show_birthday = models.CharField(verbose_name='', max_length=1, choices=BIRTHDAY_CHOICES, default='N')
+    gender = models.CharField(verbose_name='I am', max_length=1, choices=GENDER_CHOICES)
     interested_in = models.CharField(max_length=1, blank=True) # he tret el null=True
     civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
     languages = models.ManyToManyField(Language, through='UserLanguage')

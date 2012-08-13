@@ -83,8 +83,10 @@ def save_basic_info(info, langs, user):
     age = today.year - profile.birthday.year
     if today.month < profile.birthday.month or (today.month == profile.birthday.month and today.day < profile.birthday.day): age -= 1
     profile.age = age
+    UserLanguage.objects.filter(user_profile_id=profile.id).delete()
     for lang in langs:
-        user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=lang['language'], level=lang['level'])
+        if len(lang) > 1:
+            user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=lang['language'], level=lang['level'])
     profile.save()
 
 
