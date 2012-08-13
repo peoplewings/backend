@@ -94,9 +94,10 @@ def editBasicInformation(request):
       if today.month < b.month or (today.month == b.month and today.day < b.day): age -= 1
       up.age = age
       lang = request.POST['lang']
-      print lang
-      #l = Language.objects.get(name=l)
+      #l = Language.objects.get(name=lang)
       #up.languages.add(l)
+      #int_in = request.POST['int_in']
+      #up.interested_in = int_in
       up.save()
     else: print "[ERROR] Edit Basic Info: form is NOT valid"
     return HttpResponseRedirect('/users/profile/')

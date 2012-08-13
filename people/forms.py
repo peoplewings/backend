@@ -6,6 +6,7 @@ from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Language, University, max_long_len, max_short_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
 
 import datetime
 
@@ -19,9 +20,9 @@ for i in range(1900, now.year+1, 1):
 BIRTH_YEAR_CHOICES.reverse()
 
 INTERESTED_IN_CHOICES = (
-      ('M', 'Male'),
-	  ('F', 'Female'),
-  )
+  ('M', 'Male'),
+  ('F', 'Female'),
+)
 
 
 
@@ -61,16 +62,43 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 class BasicInformationForm(ModelForm):
 
   lang = forms.CharField(max_length=max_short_len, widget=forms.Select(choices=[(l.name, unicode(l.name)) for l in Language.objects.all()]))
+  
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'interested_in', 'civil_state')
     widgets = {
       'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
-      'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
+      #'interested_in' : forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
     }
+  def __init__(self, *args, **kwargs):
+        super(BasicInformationForm, self).__init__(*args, **kwargs)
+        self.fields['interested_in'].widget = forms.CheckboxSelectMultiple(choices=INTERESTED_IN_CHOICES)
 
-    def clean_lang(self):
-      return self.cleaned_data['lang']
+  def clean_lang(self):
+    return self.cleaned_data['lang']
+
+  def clean_int_in(self):
+    if len(self.cleaned_data['int_in']) == 0: res ='N'
+    elif len(self.cleaned_data['int_in']) == 1: 
+      aux = self.cleaned_data['int_in']
+      res = aux[0]
+    else: res = 'B'
+    print res
+    return res
+
+  def clean(self):
+    cleaned_data = super(BasicInformationForm, self).clean()
+    int_i = cleaned_data.get("interested_in")
+    print int_i
+    """
+    if len(int_i) == 0: res ='N'
+    elif len(int_i) == 1: 
+      aux = int_i
+      res = aux[0]
+    else: res = 'B'
+    print res
+    """
+    return res
 
 
 class CustomProfileForm(ModelForm):
