@@ -130,21 +130,21 @@ class UserProfile(models.Model):
     religion = models.CharField(max_length=max_short_len, blank=True)
 
     # Likes
-    people_you_like = models.TextField(max_length=max_long_len, blank=True)
+    enjoy_people = models.TextField(verbose_name="People I enjoy", max_length=max_long_len, blank=True)
     # peliculas, libros, series, videojuegos, musica
-    favourite_movies_series_others = models.TextField(max_length=max_long_len, blank=True)
+    movies = models.TextField(verbose_name="Likes", max_length=max_long_len, blank=True)
     # deportes y actividades favoritas
-    favourite_sports_activities = models.TextField(max_length=max_long_len, blank=True)
-    other_pages_you_like = models.TextField(max_length=max_long_len, blank=True)    
+    sports = models.TextField(max_length=max_long_len, blank=True)
+    other_pages = models.TextField(verbose_name="Likes", max_length=max_long_len, blank=True)    
     # que te gusta compartir o ensenyar
-    what_you_like_sharing = models.TextField(max_length=max_long_len, blank=True)
+    sharing = models.TextField(verbose_name="Show, learn, share...", max_length=max_long_len, blank=True)
     # cosas increibles que hayas hecho o visto
-    incredible_done_seen = models.TextField(max_length=max_long_len, blank=True)
-    people_inspired_you = models.TextField(max_length=max_long_len, blank=True)
+    incredible = models.TextField(verbose_name="Amazing things done/seen", max_length=max_long_len, blank=True)
+    inspired_by = models.TextField(verbose_name="People who inspires you", max_length=max_long_len, blank=True)
     # citas
-    quotes = models.TextField(max_length=max_long_len, blank=True)
+    quotes = models.TextField(verbose_name="Favorite quotations", max_length=max_long_len, blank=True)
     # opinion sobre peoplewings
-    pw_opinion = models.TextField(max_length=max_long_len, blank=True) 
+    pw_opinion = models.TextField(verbose_name="Your opinion please", max_length=max_long_len, blank=True) 
 
     # Trips
     places_lived_in = models.TextField(max_length=max_long_len, blank=True)
