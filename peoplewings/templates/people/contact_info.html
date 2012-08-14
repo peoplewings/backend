@@ -20,19 +20,19 @@
 			{{ formset1.management_form }}
 			{% for form in formset1 %}
 
-					{% include "general/custom_fieldset.html" %}
+					{% include "general/custom_fieldset.html" with errors=formset1.non_form_errors %}
             
 	        {% endfor %}
 	        {{ formset2.management_form }}
 	        {% for form in formset2 %}
 
-					{% include "general/custom_fieldset.html" %}
+					{% include "general/custom_fieldset.html" with errors=formset2.non_form_errors %}
             
 	        {% endfor %}
 	        {{ formset3.management_form }}
 	        {% for form in formset3 %}
 
-					{% include "general/custom_fieldset.html" %}
+					{% include "general/custom_fieldset.html" with errors=formset3.non_form_errors %}
             
 	        {% endfor %}
 		<div class="form-actions">
@@ -42,4 +42,13 @@
     </div>
 </div>
 
+{% endblock %}
+{% block page_scripting %}
+	<script type="text/javascript">
+           $(function() {
+               $('#my-form > fieldset[id^=sn-]').formset({'prefix': '{{ formset2.prefix }}'});
+			   $('#my-form > fieldset[id^=im-]').formset({'prefix': '{{ formset3.prefix }}'});
+
+           })
+    </script>
 {% endblock %}

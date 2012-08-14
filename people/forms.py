@@ -137,7 +137,7 @@ class InstantMessageFormSet(BaseFormSet):
             return
         ims = []
         for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+            form = self.forms[i] 
             im = form.cleaned_data['instant_message']
             if im in ims:
                 raise forms.ValidationError(_("You entered a repeated instant message"))
