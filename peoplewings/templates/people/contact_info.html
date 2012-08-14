@@ -1,5 +1,16 @@
 {% extends "people/base_people.html" %}
-
+{% block content_title %}
+<div class="subnav span12">
+    <ul class="nav nav-pills">
+      <li><a href="../basic">Basic info</a></li>
+	  <li><a href="../location">Location</a></li>
+      <li><a href="../about">About me</a></li>
+      <li><a href="../likes">Likes</a></li>
+      <li class="active"><a href="#">Contact info</a></li>
+      <li><a href="../travels">Travels</a></li>
+    </ul>
+  </div>
+{% endblock %}
 {% block content %}
 
 <div>

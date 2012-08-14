@@ -91,6 +91,7 @@ def save_basic_info(info, langs, user):
 
 
 
+
 # CONTACT INFORMATION VIEW (LOAD/SAVE)
 @login_required
 def manage_contact_information(request):
@@ -143,6 +144,34 @@ def save_contact_info(info, snset, imset, user):
     profile.save()
 
 
+
+
+
+@login_required
+def manage_likes_information(request):
+    if request.method == 'POST':
+        form = LikesForm(request.POST or None)
+        if form.is_valid():
+            save_likes_info(form.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/profile/')
+    else:
+        form = LikesForm(instance=request.user.get_profile())
+    return render_to_response('people/likes_info.html', {'form': form}, context_instance=RequestContext(request))
+
+    
+def save_likes_info(data, user):
+    print data
+    profile = user.get_profile()
+    profile.movies=data['movies']
+    profile.inspired_by=data['inspired_by']
+    profile.other_pages=data['other_pages']
+    profile.quotes=data['quotes']
+    profile.sharing=data['sharing']
+    profile.sports=data['sports']
+    profile.enjoy_people=data['enjoy_people']
+    profile.incredible=data['incredible']
+    profile.pw_opinion=data['pw_opinion']
+    profile.save()
 
 
 @login_required
