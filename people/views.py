@@ -118,8 +118,6 @@ def manage_contact_information(request):
         if len(ims) == 0: IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=1)
         snset = SNFormSet(initial=sns, prefix='sn')
         imset = IMFormSet(initial=ims, prefix='im')
-        print ims
-        print imset
     return render_to_response('people/contact_info.html', {'formset1': formset, 'formset2': snset, 'formset3': imset}, context_instance=RequestContext(request))
 
 def load_contact_data(user):
