@@ -113,7 +113,7 @@ class ContactInformationForm(ModelForm):
 
 class SocialNetworkForm(forms.Form):
   social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
-  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len)
+  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username or public profile link'}))
 
 class SocialNetworkFormSet(BaseFormSet):
     def clean(self):
@@ -129,7 +129,8 @@ class SocialNetworkFormSet(BaseFormSet):
 
 class InstantMessageForm(forms.Form):
   instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
-  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len)
+  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
+
 
 class InstantMessageFormSet(BaseFormSet):
     def clean(self):
