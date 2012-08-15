@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, University, Language, UserLanguage, UserSocialNetwork, UserInstantMessage
+from people.models import UserProfile, UserLanguage, UserProfileStudiedUniversity, UserSocialNetwork, UserInstantMessage
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -144,9 +144,6 @@ def save_contact_info(info, snset, imset, user):
     profile.save()
 
 
-
-
-
 @login_required
 def manage_likes_information(request):
     if request.method == 'POST':
@@ -173,6 +170,71 @@ def save_likes_info(data, user):
     profile.pw_opinion=data['pw_opinion']
     profile.save()
 
+
+# ABOUT ME VIEW (LOAD/SAVE)
+@login_required
+def manage_about_information(request):
+    AboutMeFormSet1 = formset_factory(AboutMeForm1, extra=0)
+    EduFormSet = formset_factory(EducationForm, formset=EducationFormSet, extra=0)
+    AboutMeFormSet2 = formset_factory(AboutMeForm2, extra=0)
+    if request.method == 'POST':
+        formset1 = AboutMeFormSet1(request.POST, request.FILES)
+        formset2 = AboutMeFormSet2(request.POST, request.FILES, prefix='f2')
+        eduset = EduFormSet(request.POST,  prefix='edu')
+        if formset1.is_valid() and eduset.is_valid() and formset2.is_valid():
+            save_about_info(formset1.cleaned_data, eduset.cleaned_data, formset2.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/profile/')
+    else:
+        initial1 = load_about_data1(request.user)
+        initial2 = load_about_data2(request.user)
+        formset1 = AboutMeFormSet1(initial=initial1)
+        formset2 = AboutMeFormSet2(initial=initial2, prefix='f2')
+        uid = request.user.get_profile().id
+        edus = []
+        for edu in UserProfileStudiedUniversity.objects.filter(user_profile_id=uid):
+            edus.append({'institution': edu.university.name, 'degree': edu.degree})
+        if len(edus) == 0: EduFormSet = formset_factory(EducationForm, formset=EducationFormSet, extra=1)
+        eduset = EduFormSet(initial=edus, prefix='edu')
+    return render_to_response('people/about_info.html', {'formset1': formset1, 'formset2': eduset, 'formset3': formset2}, context_instance=RequestContext(request))
+
+def load_about_data1(user):
+    up = user.get_profile()
+    data = [{ 'all_about_you': up.all_about_you, 
+            'main_mission': up.main_mission,
+            'occupation': up.occupation,
+            'company': up.company
+    }]
+    return data
+
+def load_about_data2(user):
+    up = user.get_profile()
+    data = [{
+            'personal_philosophy': up.personal_philosophy,
+            'political_opinion': up.political_opinion,
+            'religion': up.religion
+    }]
+    return data
+"""
+info y info2: dos formsets que contienen solo 1 form AboutMeForm1 y AboutMeForm2
+eduset: formset que contiene n forms EducationForm, cada uno con institution y degree
+"""
+def save_about_info(info, eduset, info2, user):
+    data=info[0] # un form AboutMeForm1
+    data2=info2[0] # un form AboutMeForm2
+    profile = user.get_profile()
+    profile.all_about_you = data['all_about_you']
+    profile.main_mission = data['main_mission']
+    profile.occupation = data['occupation']
+    profile.company = data['company']
+    profile.personal_philosophy = data2['personal_philosophy']
+    profile.political_opinion = data2['political_opinion']
+    profile.religion = data2['religion']
+    UserProfileStudiedUniversity.objects.filter(user_profile_id=profile.id).delete()
+    for edu in eduset:
+      # edu es un form EducationForm
+      u = University.objects.get_or_create(name=edu['institution'])
+      UserProfileStudiedUniversity.objects.create(user_profile_id=profile.id, university_id=u[0].id, degree=edu['degree'])
+    profile.save()
 
 @login_required
 def view_account_settings(request):

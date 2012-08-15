@@ -47,7 +47,32 @@
 {% block page_scripting %}
 	<script type="text/javascript">
            $(function() {
+           	console.log('Hello JS again')
                $('#my-form > fieldset[id^=edu-]').formset({'prefix': '{{ formset2.prefix }}'});
+			    $('.foo').typeahead({
+					ajax: {
+					        url: "/ajax/search/university/",
+					        timeout: 500,
+					        //displayField: "name",
+					        triggerLength: 1,
+					        method: "get",
+					        //loadingClass: "loading-circle",
+					        preDispatch: function (query) {
+					            //showLoadingMask(true);
+					            return {
+					                q: query,
+					                otherParam: 123
+					            }
+					        },
+					        preProcess: function (data) {
+					            //showLoadingMask(false);
+					            if (data.code !== 200) {
+					                return false;
+					            }
+					            return data.data;
+								
+					        }
+					    }})
 
            })
     </script>
