@@ -166,9 +166,9 @@ class LikesForm(ModelForm):
 
 class UserLocationForm(forms.Form):
   hometown = forms.CharField(max_length=50, required=False)
-  hometown.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown'})
+  hometown.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
   current_city = forms.CharField(max_length=50, required=False)
-  current_city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'current'})
+  current_city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'current span6'})
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)
