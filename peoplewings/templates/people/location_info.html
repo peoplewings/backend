@@ -35,10 +35,10 @@
 {% block page_scripting %}
 <script>
   	$(document).ready(function(){
-	    console.log('Hello JS again')
-	    $('.foo').typeahead({
+	    console.log('Hello JS again you')
+	    $('.hometown').typeahead({
 			ajax: {
-			        url: "/ajax/search/university/",
+			        url: "https://maps.googleapis.com/maps/api/place/autocomplete/json",
 			        timeout: 500,
 			        //displayField: "name",
 			        triggerLength: 1,
@@ -47,16 +47,23 @@
 			        preDispatch: function (query) {
 			            //showLoadingMask(true);
 			            return {
-			                q: query,
-			                otherParam: 123
+			                input: query,
+							sensor: false,
+			                key: 'AIzaSyBxlkFQf3242XZqwsWYyUSxIfzDxHsk8Oo'
 			            }
 			        },
 			        preProcess: function (data) {
 			            //showLoadingMask(false);
-			            if (data.code !== 200) {
+						console.dir(data)
+			            if (data.status !== "OK") {
 			                return false;
 			            }
-			            return data.data;
+						preds = []
+						for (prediction in data.predictions){
+							preds.push(prediction.description)
+						}
+						console.dir(preds)
+			            return preds;
 						
 			        }
 			    }})

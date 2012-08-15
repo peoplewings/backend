@@ -29,6 +29,14 @@ class UserInstantMessage(models.Model):
     instant_message = models.ForeignKey('InstantMessage')
     instant_message_username = models.CharField(max_length=max_short_len)
 
+# CITY
+class City(models.Model):
+    latitude = models.DecimalField(max_digits=11, decimal_places=9)
+    longitude = models.DecimalField(max_digits=12, decimal_places=9)
+    country = models.CharField(max_length=max_medium_len)
+    state = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+
 # LANGUAGE
 class Language(models.Model):
     """
@@ -130,9 +138,9 @@ class UserProfile(models.Model):
     languages = models.ManyToManyField(Language, through='UserLanguage')
 
     # Locations
-    city = models.CharField(max_length=max_short_len, blank=True)
-    hometown = models.CharField(max_length=max_short_len, blank=True)
-    #other_locations = models.ManyToManyField(Location)
+    current_city = models.ForeignKey(City, related_name='cc+', null=True)
+    hometown = models.ForeignKey(City, related_name='ht+', null=True)
+    other_locations = models.ManyToManyField(City, related_name='ol+', null=True)
 
     # Contact info
     emails = models.EmailField(blank=True)
@@ -213,3 +221,7 @@ def deleteUserProfile(sender, request, **kwargs):
 
 user_registered.connect(createUserProfile)
 user_deleted.connect(deleteUserProfile)
+
+from django.core.management import setup_environ
+from peoplewings import settings
+setup_environ(settings)

@@ -173,6 +173,19 @@ def save_likes_info(data, user):
     profile.pw_opinion=data['pw_opinion']
     profile.save()
 
+@login_required
+def manage_locations_information(request):
+    CitiesFormset = formset_factory(UserLocationForm, extra=0)
+    if request.method == 'POST':
+        formset1 = CitiesFormset(request.POST or None)
+        if formset1.is_valid():
+            #save_locations_info(formset1.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/yoho/')
+    else:
+        #initial = load_location_data(request.user)
+        CitiesFormset = formset_factory(UserLocationForm, extra=1)
+        formset1 = CitiesFormset()
+    return render_to_response('people/location_info.html', {'formset1': formset1}, context_instance=RequestContext(request))
 
 @login_required
 def view_account_settings(request):
