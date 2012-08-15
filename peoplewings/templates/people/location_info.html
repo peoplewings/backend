@@ -2,8 +2,8 @@
 {% block content_title %}
 <div class="subnav span12">
     <ul class="nav nav-pills">
-      <li class="active"><a href="#">Basic info</a></li>
-	  <li><a href="../location">Location</a></li>
+      <li><a href="../basic">Basic info</a></li>
+	  <li class="active"><a href="#">Location</a></li>
       <li><a href="../about">About me</a></li>
       <li><a href="../likes">Likes</a></li>
       <li><a href="../contact">Contact info</a></li>
@@ -24,6 +24,7 @@
             
 	        {% endfor %}
 		<div class="form-actions">
+			<button type="reset" class="btn" style="margin-left: 160px">Cancel</button>
 			<button type="submit" class="btn btn-primary" style="margin-left: 160px">Submit</button>
 		</div>
         </form>
@@ -33,9 +34,111 @@
 {% endblock %}
 
 {% block page_scripting %}
+{% load static from staticfiles %}
 <script>
   	$(document).ready(function(){
-	    console.log('Hello JS again you')
+		console.log('Hello JS again Location Info')
+		
+		function codeAddress(address, map) {
+			geocoder = new google.maps.Geocoder();
+        	geocoder.geocode( { 'address': address}, function(results, status) {
+	          if (status == google.maps.GeocoderStatus.OK) {
+		        var image = '{% static "img/marker-blue.png" %}';
+	            map.setCenter(results[0].geometry.location);
+	            var marker = new google.maps.Marker({
+	                map: map,
+	                position: results[0].geometry.location,
+					icon: image
+					
+	            });
+	          } else {
+	            alert('Geocode was not successful for the following reason: ' + status);
+	          }
+	        });
+		}
+
+		if (navigator.geolocation) {
+  			navigator.geolocation.getCurrentPosition(success, error);
+		} else {
+  			error('not supported');
+		}
+		
+		function success(position) {
+ 
+			 var mapcanvas = document.createElement('div');
+			 mapcanvas.id = 'mapcanvas';
+			 mapcanvas.style.height = '300px';
+			 mapcanvas.style.margin = '0 0 0 160px';
+   
+			 document.querySelector('fieldset').appendChild(mapcanvas);
+ 			 $('#mapcanvas').addClass('span6')
+			 var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+			 var myOptions = {
+			   zoom: 4,
+			   center: latlng,
+			   mapTypeControl: false,
+               streetViewControl: false,
+			   navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL},
+			   mapTypeId: google.maps.MapTypeId.ROADMAP
+			 };
+			 var map = new google.maps.Map(document.getElementById("mapcanvas"), myOptions);
+ 
+			/* 
+			var marker = new google.maps.Marker({
+			     position: latlng, 
+			     map: map, 
+			     title:"You are here! (at least within a "+position.coords.accuracy+" meter radius)"
+			 });*/
+			var options = {
+       			types: ['(cities)']
+       			//componentRestrictions: {country: "us"}
+    		};
+			var home = document.getElementById("id_form-0-hometown");
+			var auto_home = new google.maps.places.Autocomplete(home, options);
+			var current = document.getElementById("id_form-0-current_city");
+			var auto_current = new google.maps.places.Autocomplete(current, options);
+		    /*
+			google.maps.event.addListener(auto_home, 'place_changed', 	function() {
+          		console.log('place_changed')
+				var place = auto_home.getPlace();
+		          if (place.geometry.viewport) {
+		            map.fitBounds(place.geometry.viewport);
+		          } else {
+		            map.setCenter(place.geometry.location);
+		            map.setZoom(17);  // Why 17? Because it looks good.
+		          }
+			});
+			/*
+			google.maps.event.addListener(auto_current, 'place_changed', 	function() {
+				console.dir(auto_current)
+          		var place = auto_current.getPlace();
+		          if (place.geometry.viewport) {
+		            map.fitBounds(place.geometry.viewport);
+		          } else {
+		            map.setCenter(place.geometry.location);
+		            //map.setZoom(17);  // Why 17? Because it looks good.
+		          }
+			});*/
+			$("#id_form-0-hometown").keypress(function(event) {
+				if ( event.which == 13 ) {
+     				event.preventDefault();
+					codeAddress($(this).val(), map)
+   				}
+			})
+			$("#id_form-0-current_city").keypress(function(event) {
+  				if ( event.which == 13 ) {
+     				event.preventDefault();
+					codeAddress($(this).val(), map)
+   				}
+			})
+		}
+		function error(msg) {
+		  var s = typeof msg == 'string' ? msg : "failed";
+		  console.err(s);
+		}
+		
+
+/*
 	    $('.hometown').typeahead({
 			ajax: {
 			        url: "https://maps.googleapis.com/maps/api/place/autocomplete/json",
@@ -66,7 +169,7 @@
 			            return preds;
 						
 			        }
-			    }})
+			    }})*/
 	  });
 </script>
 {% endblock %}
