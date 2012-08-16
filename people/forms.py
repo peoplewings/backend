@@ -104,6 +104,7 @@ class ContactInformationForm(ModelForm):
   def clean_phone(self):
     if 'phone' in self.cleaned_data:
       value = self.cleaned_data['phone']
+      if value == '': return ''
       try:
         v = int(value)
       except:

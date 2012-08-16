@@ -25,6 +25,7 @@ def view_profile(request):
     incredible things you have done or seen, opinion about peoplewings, political opinion, religion, 
     quotes, people that inspired you.
   """
+  #request.session.set_expiry(5)
   user = request.user
   up = user.get_profile()
   form = CustomProfileForm(instance = up)
@@ -157,7 +158,7 @@ def manage_likes_information(request):
 
     
 def save_likes_info(data, user):
-    print data
+    #print data
     profile = user.get_profile()
     profile.movies=data['movies']
     profile.inspired_by=data['inspired_by']

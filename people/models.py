@@ -128,6 +128,8 @@ class UserProfile(models.Model):
     name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='N')
 
+    #profile_pic = models.ImageField()
+
     # In Basic Information
 
     birthday = models.DateField(verbose_name='birthday', null=True) #Don't know why!
