@@ -1,5 +1,8 @@
 <fieldset id="{{form.prefix}}">
-	    {% for field in form %}
+	    {% for hidden in form.hidden_fields %}
+    		{{ hidden }}
+    	{% endfor %}
+	    {% for field in form.visible_fields %}
 		       <div id="{{ field.id|lower }}" class="control-group">
 					<label class="control-label" for="textarea">{{field.label_tag}}</label>
 						<div class="controls">

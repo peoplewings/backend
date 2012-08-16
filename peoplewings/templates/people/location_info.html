@@ -37,12 +37,29 @@
 {% load static from staticfiles %}
 <script>
   	$(document).ready(function(){
+		
 		console.log('Hello JS again Location Info')
-		$.markers = []		
-		var mapcanvas = $( document.createElement('div') ); 
-		mapcanvas.attr({ id: 'mapcanvas', style: 'height:300px;margin-left:160px;'}).addClass('span6');
-		$('fieldset:last').append(mapcanvas)
+		
+		var options = {
+       		types: ['(cities)'], 
+			//componentRestrictions: {country: "es"}
+		};
+		
+		var home = document.getElementById("id_form-0-hometown");
+		var auto_home = new google.maps.places.Autocomplete(home, options);
+		var current = document.getElementById("id_form-0-current_city");
+		var auto_current = new google.maps.places.Autocomplete(current, options);
+		
+		var image = '{% static "img/marker-blue.png" %}';	
+		var mapcanvas = $( document.createElement('div') );
 		var latlng = new google.maps.LatLng(0,0);
+		
+		$.markers = []	 
+		
+		mapcanvas.attr({ id: 'mapcanvas', style: 'height:300px;margin-left:160px;'}).addClass('span6');
+		
+		$('fieldset:last').append(mapcanvas)
+		
 		var myOptions = {
 		   zoom: 1,
 		   center: latlng,
@@ -51,56 +68,77 @@
 		   navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL},
 		   mapTypeId: google.maps.MapTypeId.ROADMAP
 		 };
-		 var map = new google.maps.Map(document.getElementById("mapcanvas"), myOptions);
 		
-		var options = {
-       		types: ['(cities)'],
-       		//componentRestrictions: {country: "es"}
-		};
-		
-		var home = document.getElementById("id_form-0-hometown");
-		var auto_home = new google.maps.places.Autocomplete(home, options);
-		var current = document.getElementById("id_form-0-current_city");
-		var auto_current = new google.maps.places.Autocomplete(current, options);
+		var map = new google.maps.Map(document.getElementById("mapcanvas"), myOptions);
 		
 		google.maps.event.addListener(auto_home, 'place_changed', 	function() {
-          		console.log('place_changed hometown')
-				var place = auto_home.getPlace();
-				var image = '{% static "img/marker-blue.png" %}';
-	            map.setCenter(place.geometry.location);
-				if (!$.homeMarker){
-					$.homeMarker = new google.maps.Marker({
-                	map: map,
-                	position: place.geometry.location,
+			var place = auto_home.getPlace();
+			var cc = getCityAndCountry(place.address_components)
+			console.dir(cc)
+			setHiddenInputs('hometown', cc.city, cc.country, place.id)
+            map.setCenter(place.geometry.location);
+			if (!$.homeMarker){
+				$.homeMarker = new google.maps.Marker({
+               		map: map,
+               		position: place.geometry.location,
 					icon: image
-            		});
-				} else $.homeMarker.setPosition(place.geometry.location)			
-			});
+           		});
+			} else $.homeMarker.setPosition(place.geometry.location)			
+		});
 			
-			google.maps.event.addListener(auto_current, 'place_changed', 	function() {
-          		console.log('place_changed current')
-				var place = auto_current.getPlace();
-				var image = '{% static "img/marker-blue.png" %}';
-	            map.setCenter(place.geometry.location);
-				if (!$.currentMarker){
-					$.currentMarker = new google.maps.Marker({
-                	map: map,
-                	position: place.geometry.location,
+		google.maps.event.addListener(auto_current, 'place_changed', 	function() {
+			var place = auto_current.getPlace();
+			var cc = getCityAndCountry(place.address_components)
+			setHiddenInputs('current', cc.city, cc.country, place.id)
+            map.setCenter(place.geometry.location);
+			if (!$.currentMarker){
+				$.currentMarker = new google.maps.Marker({
+               		map: map,
+               		position: place.geometry.location,
 					icon: image
-            		});
-				} else $.currentMarker.setPosition(place.geometry.location)			
-			});
-			
-			$("#id_form-0-hometown").keypress(function(event) {
-				if ( event.which == 13 ) {
-     				event.preventDefault();
-   				}
-			})
-			$("#id_form-0-current_city").keypress(function(event) {
-  				if ( event.which == 13 ) {
-     				event.preventDefault();
-   				}
-			})
+           		});
+			} else $.currentMarker.setPosition(place.geometry.location)			
+		});
+		
+		$("#id_form-0-hometown").keypress(function(event) {
+			if ( event.which == 13 ) {
+    				event.preventDefault();
+  				}
+		})
+		$("#id_form-0-current_city").keypress(function(event) {
+ 				if ( event.which == 13 ) {
+    				event.preventDefault();
+  				}
+		})
+		function getCityAndCountry(address_components){
+			console.dir(address_components)
+			var data = { id: address_components.id }
+			var l = address_components.length
+			//console.log("Length of components is " + l)
+			for (var i = 0; i < l; i++){
+				if (address_components[i].types[0] === 'locality') {
+					//console.log("City: " + address_components[i].long_name + ", " + address_components[i].short_name )
+					data.city = address_components[i].long_name
+				}
+				else if (address_components[i].types[0] === 'country') {
+					//console.log("Country: " + address_components[i].long_name + ", " + address_components[i].short_name )
+					data.country = address_components[i].long_name
+				}
+			}
+			return data
+		}
+		function setHiddenInputs(field, city, country, id){
+			console.log('Data: ' + city + ', ' + country + ', ' + id)
+			if (field === 'hometown'){
+				$('#id_form-0-home_city').val(city)
+				$('#id_form-0-home_country').val(country)
+				$('#id_form-0-home_place_id').val(id)
+			} else if (field === 'current'){
+				$('#id_form-0-current_city_city').val(city)
+				$('#id_form-0-current_city_country').val(country)
+				$('#id_form-0-current_city_place_id').val(id)
+			}
+		}
 	  });
 </script>
 {% endblock %}
