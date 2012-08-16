@@ -1,5 +1,5 @@
 # Create your views here.
-from people.models import UserProfile, UserLanguage, UserProfileStudiedUniversity, UserSocialNetwork, UserInstantMessage
+from people.models import UserProfile, UserLanguage, UserProfileStudiedUniversity, UserSocialNetwork, UserInstantMessage, City
 from django.shortcuts import render_to_response, get_object_or_404, render
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -150,7 +150,8 @@ def manage_likes_information(request):
     if request.method == 'POST':
         form = LikesForm(request.POST or None)
         if form.is_valid():
-            save_likes_info(form.cleaned_data, request.user)
+            form.save()
+            #save_likes_info(form.cleaned_data, request.user)
             return HttpResponseRedirect('/users/profile/')
     else:
         form = LikesForm(instance=request.user.get_profile())
@@ -175,15 +176,48 @@ def save_likes_info(data, user):
 def manage_locations_information(request):
     CitiesFormset = formset_factory(UserLocationForm, extra=0)
     if request.method == 'POST':
-        formset1 = CitiesFormset(request.POST or None)
-        if formset1.is_valid():
-            #save_locations_info(formset1.cleaned_data, request.user)
+        formset = CitiesFormset(request.POST or None)
+        if formset.is_valid():
+            #print formset1.cleaned_data
+            save_locations_info(formset.cleaned_data, request.user)
             return HttpResponseRedirect('/users/yoho/')
+        else: print formset1.errors
     else:
-        #initial = load_location_data(request.user)
-        CitiesFormset = formset_factory(UserLocationForm, extra=1)
-        formset1 = CitiesFormset()
-    return render_to_response('people/location_info.html', {'formset1': formset1}, context_instance=RequestContext(request))
+        initial = load_location_data(request.user)
+        if (len(initial) > 0):
+            CitiesFormset = formset_factory(UserLocationForm, extra=0)
+            formset = CitiesFormset(initial=initial)
+        else:
+            CitiesFormset = formset_factory(UserLocationForm, extra=1)
+            formset = CitiesFormset()
+    return render_to_response('people/location_info.html', {'formset1': formset}, context_instance=RequestContext(request))
+
+def save_locations_info(data, user):
+    profile = user.get_profile()
+    data=data[0]
+    hometown = City.objects.get_or_create(cid=data['home_place_id'], name=data['home_city'], country=data['home_country'])
+    current = City.objects.get_or_create(cid=data['current_city_place_id'], name=data['current_city_city'], country=data['current_city_country'])
+    profile.hometown = hometown[0]
+    profile.current_city = current[0]
+    profile.save()
+
+def load_location_data(user):
+    profile = user.get_profile()
+    verbose_home = profile.hometown.name + ", " + profile.hometown.country
+    verbose_current = profile.current_city.name + ", " + profile.current_city.country 
+    data = [{
+            'hometown': verbose_home,
+            'home_city': profile.hometown.name, 
+            'home_country': profile.hometown.country, 
+            'home_place_id': profile.hometown.cid,  
+            'current_city': verbose_current,
+            'current_city_city': profile.current_city.name, 
+            'current_city_country': profile.current_city.country,
+            'current_city_place_id': profile.current_city.cid 
+    }]
+    return data
+
+    
 
 # ABOUT ME VIEW (LOAD/SAVE)
 @login_required
