@@ -245,9 +245,9 @@ def save_about_info(info, eduset, info2, user):
     profile.religion = data2['religion']
     UserProfileStudiedUniversity.objects.filter(user_profile_id=profile.id).delete()
     for edu in eduset:
-      # edu es un form EducationForm
-      u = University.objects.get_or_create(name=edu['institution'])
-      UserProfileStudiedUniversity.objects.create(user_profile_id=profile.id, university_id=u[0].id, degree=edu['degree'])
+        if len(edu) > 1:
+            u = University.objects.get_or_create(name=edu['institution'])
+            UserProfileStudiedUniversity.objects.create(user_profile_id=profile.id, university_id=u[0].id, degree=edu['degree'])
     profile.save()
 
 @login_required
