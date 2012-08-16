@@ -5,7 +5,7 @@ from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len
+from people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from people.widgets import DoubleSelectWidget, MyMultiValueField
@@ -113,7 +113,7 @@ class ContactInformationForm(ModelForm):
 
 class SocialNetworkForm(forms.Form):
   social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
-  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len)
+  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username or public profile link'}))
 
 class SocialNetworkFormSet(BaseFormSet):
     def clean(self):
@@ -129,7 +129,8 @@ class SocialNetworkFormSet(BaseFormSet):
 
 class InstantMessageForm(forms.Form):
   instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
-  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len)
+  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
+
 
 class InstantMessageFormSet(BaseFormSet):
     def clean(self):
@@ -144,7 +145,7 @@ class InstantMessageFormSet(BaseFormSet):
             ims.append(im)
 
 
-
+# LIKES FORM
 
 class LikesForm(ModelForm):
   class Meta:
@@ -164,11 +165,56 @@ class LikesForm(ModelForm):
       }
 
 
+
 class UserLocationForm(forms.Form):
   hometown = forms.CharField(max_length=50, required=False)
   hometown.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
   current_city = forms.CharField(max_length=50, required=False)
   current_city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'current span6'})
+
+# ABOUT ME FORM
+class AboutMeForm1(ModelForm):
+  class Meta:
+    model = UserProfile
+    fields = ('all_about_you', 'main_mission', 'occupation', 'company')
+    """
+    all_about_you = models.TextField(max_length=max_long_len, blank=True)
+    main_mission = models.TextField(max_length=max_long_len, blank=True)
+    occupation = models.CharField(max_length=max_short_len, blank=True)
+    company = models.CharField(max_length=max_short_len, blank=True)    
+    """
+    widgets = {
+          'all_about_you' : Textarea(attrs={'size': max_long_len, 'placeholder': 'A description about you, can be anything'}),
+          'main_mission' : Textarea(attrs={'size': max_long_len, 'placeholder' : 'What is your current mission objective. Be creative, imaginative, wacky if you need to be'}),
+          'occupation' : TextInput(attrs={'size': max_short_len, 'placeholder': 'What do you do?'}),
+          'company' : TextInput(attrs={'size': max_short_len, 'placeholder' : 'Where have you worked?'}),
+      }
+
+class AboutMeForm2(ModelForm):
+  class Meta:
+    model = UserProfile
+    fields = ('personal_philosophy', 'political_opinion', 'religion')
+    """
+    personal_philosophy = models.TextField(max_length=max_long_len, blank=True)
+    political_opinion = models.CharField(max_length=max_short_len, blank=True)
+    religion = models.CharField(max_length=max_short_len, blank=True)
+    """
+    widgets = {
+          'personal_philosophy' : Textarea(attrs={'size': max_long_len, 'placeholder': 'What is your personal phylosophy? Why live your life? Feelings? Thoughts?'}),
+          'political_opinion' : TextInput(attrs={'size': max_short_len, 'placeholder': 'What are your politics?'}),
+          'religion' : TextInput(attrs={'size': max_short_len, 'placeholder': 'What are your religious beliefs'}),
+      }
+
+class EducationForm(forms.Form):
+  institution = forms.CharField(required=False, label="Education", max_length=max_medium_len, widget=forms.TextInput(attrs={'placeholder': 'Where have you studied?'}))
+  degree = forms.CharField(required=False, label="Degree", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'What have you studied?'}))
+  institution.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'foo'})  
+
+class EducationFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
 
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)

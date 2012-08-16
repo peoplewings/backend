@@ -150,12 +150,12 @@ class UserProfile(models.Model):
 
     # About me
     all_about_you = models.TextField(max_length=max_long_len, blank=True)
-    main_mission = models.TextField(max_length=max_long_len, blank=True)
+    main_mission = models.TextField(max_length=max_long_len, blank=True, verbose_name='Current mission')
     occupation = models.CharField(max_length=max_short_len, blank=True)
-    company = models.CharField(max_length=max_short_len, blank=True)
+    company = models.CharField(max_length=max_short_len, blank=True, verbose_name='Companies')
     universities = models.ManyToManyField(University, through='UserProfileStudiedUniversity')
     personal_philosophy = models.TextField(max_length=max_long_len, blank=True)
-    political_opinion = models.CharField(max_length=max_short_len, blank=True)
+    political_opinion = models.CharField(max_length=max_short_len, blank=True, verbose_name='Political views')
     religion = models.CharField(max_length=max_short_len, blank=True)
 
     # Likes
