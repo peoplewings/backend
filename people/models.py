@@ -44,11 +44,12 @@ class UserInstantMessage(models.Model):
 
 # CITY
 class City(models.Model):
-    latitude = models.DecimalField(max_digits=11, decimal_places=9)
-    longitude = models.DecimalField(max_digits=12, decimal_places=9)
+    #latitude = models.DecimalField(max_digits=11, decimal_places=9)
+    #longitude = models.DecimalField(max_digits=12, decimal_places=9)
     country = models.CharField(max_length=max_medium_len)
     state = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
+    cid = models.CharField(max_length=40, unique=True)
 
 # LANGUAGE
 class Language(models.Model):

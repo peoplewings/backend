@@ -170,8 +170,18 @@ class LikesForm(ModelForm):
 class UserLocationForm(forms.Form):
   hometown = forms.CharField(max_length=50, required=False)
   hometown.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
+  home_city = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  home_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  home_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
+  
   current_city = forms.CharField(max_length=50, required=False)
   current_city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'current span6'})
+
+  current_city_city = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  current_city_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  current_city_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
+
+  
 
 # ABOUT ME FORM
 class AboutMeForm1(ModelForm):
