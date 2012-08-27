@@ -11,6 +11,19 @@ max_short_len = 20
 max_medium_len = 50
 max_long_len = 250
 
+PW_STATE_CHOICES = (
+    ('Y', 'Yes'),
+    ('N', 'No'),
+    ('M', 'Maybe'),
+    ('T', 'Traveling'),
+    ('C', 'Coffee or Drink'),
+)
+
+GENDER_CHOICES = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+)
+
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
     name = models.CharField(max_length=max_short_len, unique=True)  
@@ -74,11 +87,6 @@ class UserProfileStudiedUniversity(models.Model):
 
 class UserProfile(models.Model):
 
-    GENDER_CHOICES = (
-        ('M', 'Male'),
-        ('F', 'Female'),
-    )
-
     CIVIL_STATE_CHOICES = (
         ('SI', 'Single'),
         ('EN', 'Engaged'),
@@ -89,14 +97,6 @@ class UserProfile(models.Model):
         ('IC', 'Its complicated'),
         ('DI', 'Divorced'),
         ('SE', 'Separated'),
-    )
-    
-    PW_STATE_CHOICES = (
-        ('Y', 'Yes'),
-        ('N', 'No'),
-        ('M', 'Maybe'),
-        ('T', 'Traveling'),
-        ('C', 'Coffee or Drink'),
     )
     
     PRIVACY_CHOICES = (
