@@ -19,6 +19,8 @@ urlpatterns = patterns('',
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
 
+    url('^cropper/', include('cropper.urls')),
+
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
 	# Uncomment the admin/doc line below to enable admin documentation:
