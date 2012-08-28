@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 import smtplib, random, string, md5, os
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
-from django.http import HttpResponseRedirect, HttpRequest
+from django.http import HttpResponseRedirect, HttpRequest, HttpResponse
 from django.contrib.auth.decorators import login_required
 from people import signals
 from django.template import RequestContext
@@ -14,6 +14,7 @@ from people.forms import *
 from django.forms.formsets import formset_factory
 from datetime import date
 import re
+from django.utils import simplejson
 
 @login_required
 def view_profile(request):
@@ -31,9 +32,14 @@ def view_profile(request):
   form = CustomProfileForm(instance = up)
   if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up, 'user': up.user})
   return render_to_response('people/login.html')
+    
 
 @login_required
 def manage_basic_information(request):
+  BasicInfoFormSet = formset_factory(BasicInformationForm, extra=1)
+  formset = BasicInfoFormSet()
+  return render_to_response('people/basic_info.html',  {'formset': formset}, context_instance=RequestContext(request))
+  """
     BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
     LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
     if request.method == 'POST':
@@ -52,7 +58,7 @@ def manage_basic_information(request):
         if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
         langset = LangFormSet(initial=data, prefix='lang')
     return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset}, context_instance=RequestContext(request))
-
+  """
 
 def load_basic_data(user):
     up = user.get_profile()
@@ -100,6 +106,7 @@ def manage_contact_information(request):
     SNFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
     IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
     if request.method == 'POST':
+        print request.POST
         formset = ContactInfoFormSet(request.POST, request.FILES)
         snset = SNFormSet(request.POST,  prefix='sn')
         imset = IMFormSet(request.POST, prefix='im')
@@ -175,6 +182,7 @@ def save_likes_info(data, user):
 @login_required
 def manage_locations_information(request):
     CitiesFormset = formset_factory(UserLocationForm, extra=0)
+    LocationFormset = formset_factory(AnotherLocationForm, extra=0)
     if request.method == 'POST':
         formset = CitiesFormset(request.POST or None)
         if formset.is_valid():
@@ -185,11 +193,15 @@ def manage_locations_information(request):
     else:
         initial = load_location_data(request.user)
         if (len(initial) > 0):
-            CitiesFormset = formset_factory(UserLocationForm, extra=0)
+            #CitiesFormset = formset_factory(UserLocationForm, extra=0)
             formset = CitiesFormset(initial=initial)
+            LocationFormset = formset_factory(AnotherLocationForm, extra=1)
+            locationset = LocationFormset()
         else:
             CitiesFormset = formset_factory(UserLocationForm, extra=1)
+            locationset = LocationFormset()
             formset = CitiesFormset()
+    #'formset2': locationset
     return render_to_response('people/location_info.html', {'formset1': formset}, context_instance=RequestContext(request))
 
 def save_locations_info(data, user):

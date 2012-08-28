@@ -68,7 +68,7 @@ class BasicInformationForm(ModelForm):
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'civil_state')
     widgets = {
-      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special'}),
+      'birthday' : extras.SelectDateWidget(years=BIRTH_YEAR_CHOICES, attrs={'class':'special', 'style': 'width:120px'}),
     }
   def __init__(self, *args, **kwargs):
       super(BasicInformationForm, self).__init__(*args, **kwargs)
@@ -181,6 +181,12 @@ class UserLocationForm(forms.Form):
   current_city_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
   current_city_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
 
+class AnotherLocationForm(forms.Form):
+  location = forms.CharField(max_length=50, required=False)
+  location.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
+  location_city = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  location_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
+  location_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
   
 
 # ABOUT ME FORM

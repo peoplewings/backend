@@ -4,6 +4,7 @@ from django.contrib import admin
 from people.forms import CustomRegisterForm
 from django.contrib import *
 import settings
+from django.conf.urls.static import static
 admin.autodiscover()
 
 
@@ -23,7 +24,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 	# Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-)
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 # Static files patterns for development:
 if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
