@@ -1,10 +1,13 @@
 # Create your views here.
 from people.models import University
 import json
-from django.http import HttpResponse
+import datetime
+from peoplewings.settings import MEDIA_ROOT
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
-def searchUniversity(request):
+def search_university(request):
 	query=request.GET.get('q')
 	response_data = {}
 	#response_data['code'] = 1
@@ -29,3 +32,23 @@ def searchUniversity(request):
 	response_data['code'] = HttpResponse.status_code
 	    
 	return HttpResponse(json.dumps(response_data), mimetype="application/json")
+
+@login_required
+def upload_image(request):
+    response = {'success':False}
+    if request.method == 'POST':
+        #, path=str(request.user.pk) + "/"
+        save_file(request.FILES['fileToUpload'])
+    js = json.dumps(response)
+    return HttpResponse(js, mimetype='application/json')
+
+def save_file(file, path=''):
+    ''' Little helper to save a file
+    '''
+    #filename = file._get_name()
+    filename = "avatar.jpg"
+    fd = open('%s/%s' % (MEDIA_ROOT, str(path) + str(filename)), 'wb')
+    for chunk in file.chunks():
+        fd.write(chunk)
+    fd.close()
+
