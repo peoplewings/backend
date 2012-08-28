@@ -1,0 +1,29 @@
+{% extends "people/base_people.html" %}
+{% block page_scripting %}
+
+<script>
+function myFunction(id_wing)
+{
+var r=confirm("Are you sure you want to delete the wing?");
+if (r==true)
+  {
+  window.location = "../delete/"+id_wing
+  }
+}
+</script>
+{% endblock %}
+
+
+{% block content %}
+	<p>	<a href="../info/"> Add wing </a> </p>
+	{% for w in wings %}
+		<p>	<a href="../info/?id={{w.id}}"> {{w.name}} </a> 
+			<!--
+			<a href="../delete/{{w.id}}"> Delete </a> 
+			-->
+			<button onclick="myFunction({{w.id}})">Delete</button>
+		</p>
+            
+	{% endfor %}
+{% endblock %}
+

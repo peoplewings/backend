@@ -17,6 +17,7 @@ PW_STATE_CHOICES = (
     ('M', 'Maybe'),
     ('T', 'Traveling'),
     ('C', 'Coffee or Drink'),
+    ('W', 'By wing'),
 )
 
 GENDER_CHOICES = (
