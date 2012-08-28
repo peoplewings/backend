@@ -24,6 +24,7 @@ urlpatterns = patterns('',
 	# Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 # Static files patterns for development:
 if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
