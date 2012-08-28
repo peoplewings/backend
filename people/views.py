@@ -33,13 +33,13 @@ def view_profile(request):
   if request.user.is_authenticated(): return render_to_response('people/profile.html', {'profile': up, 'user': up.user})
   return render_to_response('people/login.html')
     
-
+"""
+BasicInfoFormSet = formset_factory(BasicInformationForm, extra=1)
+formset = BasicInfoFormSet()
+return render_to_response('people/basic_info.html',  {'formset': formset}, context_instance=RequestContext(request))
+"""
 @login_required
 def manage_basic_information(request):
-  BasicInfoFormSet = formset_factory(BasicInformationForm, extra=1)
-  formset = BasicInfoFormSet()
-  return render_to_response('people/basic_info.html',  {'formset': formset}, context_instance=RequestContext(request))
-  """
     BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
     LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
     if request.method == 'POST':
@@ -58,7 +58,7 @@ def manage_basic_information(request):
         if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
         langset = LangFormSet(initial=data, prefix='lang')
     return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset}, context_instance=RequestContext(request))
-  """
+
 
 def load_basic_data(user):
     up = user.get_profile()
