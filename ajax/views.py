@@ -38,7 +38,7 @@ def upload_image(request):
     response = {'success':False}
     if request.method == 'POST':
         #, path=str(request.user.pk) + "/"
-        save_file(request.FILES['fileToUpload'])
+        if save_file(request.FILES['fileToUpload']):  response = {'success':True}
     js = json.dumps(response)
     return HttpResponse(js, mimetype='application/json')
 
@@ -51,4 +51,5 @@ def save_file(file, path=''):
     for chunk in file.chunks():
         fd.write(chunk)
     fd.close()
+    return True
 
