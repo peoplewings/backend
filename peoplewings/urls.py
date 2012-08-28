@@ -18,6 +18,7 @@ urlpatterns = patterns('',
 
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
+    url(r'^wings/', include('wings.urls')),
 
     url('^cropper/', include('cropper.urls')),
 

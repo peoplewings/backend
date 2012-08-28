@@ -5,13 +5,14 @@
 {% endblock %}
 
 {% block page_scripting %}
-{% load static from staticfiles %}
 <script>
   	$(document).ready(function(){
+  		console.log('Hey wings')
 		var options = {
-       		types: ['(geocode)'], 
+       		types: ['(cities)'], 
 		};
-		var addr = document.getElementById("id_city");
+		var addr = document.getElementById("id_hometown");
 		var auto_addr = new google.maps.places.Autocomplete(addr, options);
 })
+  	</script>
 {% endblock %}
