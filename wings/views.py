@@ -62,10 +62,10 @@ def load_wing_info(w):
 		'address' : w.address,
 		'number' : w.number,
 		'additional_information' : w.additional_information,
-		'hometown' : verbose_city,
+		'city' : verbose_city,
 		'city_name' : w.city.name,
-		'country' : w.city.country,
-		'place_id' : w.city.cid,
+		'city_country' : w.city.country,
+		'city_place_id' : w.city.cid,
 		'postal_code' : w.postal_code
 	}
 	return data
@@ -104,7 +104,7 @@ def save_wing_info(data, profile, wing_id):
     w.address = data['address']
     w.number = data['number']
     w.additional_information = data['additional_information']
-    w.city, b = City.objects.get_or_create(cid=data['place_id'], name=data['city_name'], country=data['country'])
+    w.city, b = City.objects.get_or_create(cid=data['city_place_id'], name=data['city_name'], country=data['city_country'])
     #w.city, b = City.objects.get_or_create(name=city_name, country=country)
     w.postal_code = data['postal_code']
     w.save()
