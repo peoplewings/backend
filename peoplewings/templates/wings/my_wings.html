@@ -2,21 +2,23 @@
 
 {% block page_scripting %}
 <script>
-	function myFunction(id_wing){
+	function confirmation_on_delete(id_wing){
 		if (confirm("Are you sure you want to delete the wing?")) window.location = "../delete/"+id_wing
 	}
 </script>
 {% endblock %}
             
 {% block content %}
-	<div class="span4">
+{% include "general/custom_form.html" with next_action="/users/status/update/" %}
+	<div class="span3">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
+            	
 			{% for w in wings %}
 				<li>
 					<div style="margin: 5px 0">
 						<a href="../info/?id={{w.id}}">{{w.name}}</a>
-						<button class="btn-mini" style="float:right" onclick="myFunction({{w.id}})">Delete</button>
+						<button class="btn-mini" style="float:right" onclick="confirmation_on_delete({{w.id}})">Delete</button>
 					</div>
 				</li>    
 			{% endfor %}

@@ -222,6 +222,7 @@ def createUserProfile(sender, user, request, **kwargs):
 def deleteUserProfile(sender, request, **kwargs):
     prof = request.user.get_profile()
     prof.delete()
+  
 
 user_registered.connect(createUserProfile)
 user_deleted.connect(deleteUserProfile)

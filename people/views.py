@@ -15,6 +15,7 @@ from django.forms.formsets import formset_factory
 from datetime import date
 import re
 from django.utils import simplejson
+from wings.models import Wing
 
 @login_required
 def view_profile(request):
@@ -337,6 +338,18 @@ def delete(request):
   user = request.user
   user.delete()
   return HttpResponseRedirect('/login/')
+
+@login_required
+def update_status(request):
+  if request.method == 'POST':
+        form = StatusForm(request.POST or None)
+        if form.is_valid():
+          up = request.user.get_profile()
+          up.pw_state = form.cleaned_data['pw_state']
+          up.save()
+          if up.pw_state != 'W': wings = Wing.objects.filter(author=up).update(status=up.pw_state)
+          return HttpResponseRedirect('/wings/list/')
+
 
 @login_required
 def enter_edit_account_settings(request):
