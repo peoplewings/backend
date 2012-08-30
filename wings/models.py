@@ -20,17 +20,20 @@ SMOKING_CHOICES = (
     ('N', 'No smoking allowed'),
 )
 
+CAPACITY_OPTIONS=[(str(i), str(i)) for i in range(1, 10)]
+CAPACITY_OPTIONS.append(('+', 'more than 9'))
+
 # Create your models here.
 class Wing(models.Model):
 	author = models.ForeignKey(UserProfile)
 	name = models.CharField(max_length=max_medium_len, verbose_name='Wing name')
 	status = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='Y', verbose_name='Wing status')
 	sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
-	from_date = models.DateField(verbose_name='From', null=True, blank=True)
-	to_date = models.DateField(verbose_name='To', null=True, blank=True)
+	from_date = models.DateField(verbose_name='Start Date', null=True, blank=True)
+	to_date = models.DateField(verbose_name='End Date', null=True, blank=True)
 	better_days = models.CharField(max_length=1, choices=BETTER_DAYS_CHOICES, default='A', verbose_name='Better days to host')
 
-	capacity = models.CharField(max_length=1, choices=[(str(i), str(i)) for i in range(1, 10)], default=0)
+	capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=0)
 
 	preferred_gender = models.CharField(max_length=1)
 	wheelchair = models.BooleanField(default=False, verbose_name='Wheelchair accessible')
@@ -48,7 +51,7 @@ class Wing(models.Model):
 	about = models.CharField(max_length=max_long_len, null=True, blank=True, verbose_name='About your Accomodation')	
 	#where_sleeping_description = models.CharField(max_length=max_long_len, null=True, blank=True)	
 	address = models.CharField(max_length=max_medium_len, null=True, blank=True, verbose_name='Street address')
-	number = models.PositiveIntegerField(default=0)
+	number = models.CharField(max_length=max_short_len, null=True, blank=True)
 	additional_information = models.CharField(max_length=max_long_len, null=True, blank=True)
 	city = models.ForeignKey(City, null=True)	
 	postal_code = models.CharField(max_length=max_short_len, null=True, blank=True, verbose_name='ZIP / Postal code')

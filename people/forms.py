@@ -265,6 +265,11 @@ class CustomProfileForm(ModelForm):
                 raise forms.ValidationError(_("Please select a gender."))
         return self.cleaned_data['all_about_you']
 
+class StatusForm(ModelForm):
+  class Meta:
+    model=UserProfile
+    fields = ('pw_state', )
+
 
 class CustomAccountSettingsForm(ModelForm):
   """
