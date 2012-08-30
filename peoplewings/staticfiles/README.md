@@ -1,1 +1,0 @@
-# Static files tweak for Heroku

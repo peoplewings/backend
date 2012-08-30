@@ -1,4 +1,5 @@
 *.pyc
+/peoplewings/staticfiles/*
 /media/*
 !/media/*.jpeg
 !/media/*.gif
