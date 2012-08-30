@@ -1,6 +1,7 @@
 *.pyc
-/media/*.jpg
-/media/*.jpeg
-/media/*.gif
-/media/*.png
+/media/*
+!/media/*.jpeg
+!/media/*.gif
+!/media/*.jpg
+!/media/*.png
 peoplewings/settings_ezequiel.py
