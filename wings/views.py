@@ -160,5 +160,5 @@ def delete_wing(request, wing_id):
 		w = Wing.objects.get(pk=int(wing_id))
 		w.delete()
 	except: pass
-	return HttpResponseRedirect('/users/profile/')
+	return HttpResponseRedirect('/wings/list/')
 

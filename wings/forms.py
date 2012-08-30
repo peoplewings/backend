@@ -1,12 +1,17 @@
 #forms
-from wings.models import Wing
+from wings.models import Wing, max_500_char
 from django.forms import ModelForm
 from django.forms.widgets import TextInput, Textarea
-from people.models import GENDER_CHOICES, max_long_len, PW_STATE_CHOICES
+from people.models import max_long_len, PW_STATE_CHOICES
 from django import forms
 
 WINGS_STATUS = list(PW_STATE_CHOICES)
 WINGS_STATUS.pop()
+
+GENDER_CHOICES = (
+    ('W', 'Woman'),
+    ('M', 'Man'),
+)
 
 PETS_CHOICES = (
 (0, 'I have pet'),
@@ -26,7 +31,7 @@ class WingForm(ModelForm):
   pref_gender = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False, label='Preferred gender')
   
   pets = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=PETS_CHOICES, required=False)
-  transp = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False)
+  transp = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False, label='Public transport')
   stat = forms.ChoiceField(required=False, choices=WINGS_STATUS, label='Wings status', widget=forms.Select())
 
   city = forms.CharField(max_length=50, required=True, label='City')
@@ -40,8 +45,8 @@ class WingForm(ModelForm):
       'bus', 'tram', 'train', 'others')
     widgets = {
     	#'city' : TextInput(attrs={'data-provide': 'typeahead', 'class' : 'hometown span6'}),
-      'about' : Textarea(attrs={'size': max_long_len, 'placeholder': 'Describe your accomodation'}),
-      'additional_information' : Textarea(attrs={'size': max_long_len, 'placeholder': 'Add more information about your host'}),
+      'about' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Describe your accomodation (max ' + str(max_500_char) + ' characs.)'}),
+      'additional_information' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Add more information about your host (max ' + str(max_500_char) + ' characs.)'}),
   	}
 
   def __init__(self, bloquear, *args, **kwargs):

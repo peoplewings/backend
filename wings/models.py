@@ -1,6 +1,8 @@
 from django.db import models
 from people.models import PW_STATE_CHOICES, max_long_len, max_medium_len, max_short_len, City, UserProfile
 
+max_500_char = 500
+
 BETTER_DAYS_CHOICES = (
     ('F', 'From Monday to Friday'),
     ('T', 'From Monday to Thursday'),
@@ -16,12 +18,12 @@ WHERE_SLEEPING_CHOICES = (
 
 SMOKING_CHOICES = (
     ('S', 'I smoke'),
-    ('D', 'I don\'t smoke'),
+    ('D', 'I don\'t smoke, but I guests can smoke here'),
     ('N', 'No smoking allowed'),
 )
 
 CAPACITY_OPTIONS=[(str(i), str(i)) for i in range(1, 10)]
-CAPACITY_OPTIONS.append(('+', 'more than 9'))
+CAPACITY_OPTIONS.append(('+', '+9'))
 
 # Create your models here.
 class Wing(models.Model):
@@ -48,11 +50,11 @@ class Wing(models.Model):
 	tram = models.BooleanField(default=False)
 	train = models.BooleanField(default=False)
 	others = models.BooleanField(default=False)
-	about = models.CharField(max_length=max_long_len, null=True, blank=True, verbose_name='About your Accomodation')	
+	about = models.CharField(max_length=max_500_char, null=True, blank=True, verbose_name='About your Accomodation')	
 	#where_sleeping_description = models.CharField(max_length=max_long_len, null=True, blank=True)	
 	address = models.CharField(max_length=max_medium_len, null=True, blank=True, verbose_name='Street address')
 	number = models.CharField(max_length=max_short_len, null=True, blank=True)
-	additional_information = models.CharField(max_length=max_long_len, null=True, blank=True)
+	additional_information = models.CharField(max_length=max_500_char, null=True, blank=True)
 	city = models.ForeignKey(City, null=True)	
 	postal_code = models.CharField(max_length=max_short_len, null=True, blank=True, verbose_name='ZIP / Postal code')
 
