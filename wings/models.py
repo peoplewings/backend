@@ -18,7 +18,7 @@ WHERE_SLEEPING_CHOICES = (
 
 SMOKING_CHOICES = (
     ('S', 'I smoke'),
-    ('D', 'I don\'t smoke, but I guests can smoke here'),
+    ('D', 'I don\'t smoke, but guests can smoke here'),
     ('N', 'No smoking allowed'),
 )
 
