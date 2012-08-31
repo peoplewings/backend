@@ -8,7 +8,7 @@ from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from people.widgets import DoubleSelectWidget, MyMultiValueField
+#from people.widgets import DoubleSelectWidget, MyMultiValueField
 
 import datetime
 
