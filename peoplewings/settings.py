@@ -140,7 +140,6 @@ INSTALLED_APPS = (
     'people',
     #'south',
     'ajax',
-    #'cropper',
     'wings',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
