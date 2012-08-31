@@ -4,7 +4,6 @@ from django.conf.urls.static import static
 from django.contrib import admin, auth
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from people.forms import CustomRegisterForm
-from peoplewings.utils import my_upload_success_handler, my_crop_success_handler
 
 admin.autodiscover()
 
