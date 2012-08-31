@@ -4,6 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin, auth
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from people.forms import CustomRegisterForm
+from peoplewings.utils import my_upload_success_handler, my_crop_success_handler
 
 admin.autodiscover()
 
@@ -19,9 +20,6 @@ urlpatterns = patterns('',
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
     url(r'^wings/', include('wings.urls')),
-
-    # url(r'^cropper/$', view='cropper.views.upload', name='cropper_upload'),
-    # url(r'^cropper/(?P<original_id>\d+)/$', view='cropper.views.crop', name='cropper_crop'),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
