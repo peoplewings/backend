@@ -3,7 +3,6 @@ PIL==1.1.7
 South==0.7.5
 distribute==0.6.27
 dj-database-url==0.2.1
-django-image-cropper==0.1.2
 django-registration==0.8
 gunicorn==0.14.2
 psycopg2==2.4.5
