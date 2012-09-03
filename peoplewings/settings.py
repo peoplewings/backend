@@ -140,14 +140,11 @@ INSTALLED_APPS = (
     'people',
     #'south',
     'ajax',
-    'cropper',
     'wings',
     'search',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-
-CROPPER_ALLOWED_DIMENSIONS = ( 1025, 769)
 
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window;
 

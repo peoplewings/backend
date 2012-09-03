@@ -38,7 +38,7 @@
 		<ul class="thumbnails">
             <li class="span4">
               <a href="#" class="thumbnail">
-                <img id="avatar" src="/media/avatar.jpg" alt="">
+                <img id="avatar" src="/media/{{ profile_id }}/avatar.jpg" onerror='this.onerror = null; this.src="/media/blank_avatar.gif"' alt="">
 			    <div class="progress progress-striped"  style="margin-top:10px;display:none;">
   					<div class="bar" style="width: 0%;"></div>
 			  	</div>
@@ -46,7 +46,7 @@
             </li>
             <li class="span4">
 				<form id="file-form" method="post" action="" enctype="multipart/form-data">
-				<input class="span4" type="file" id="files" name="files[]" />
+				<input class="span4" type="file" id="upload" name="files[]" />
 				<output id="list"></output>
 				</form>
 			</li>
@@ -63,6 +63,36 @@
           </ul>
     </div>
 </div>
+<!-- Button to trigger modal -->
+<a href="#myModal" role="button" class="btn" data-toggle="modal" data-target="#myModal">Launch demo modal</a>
+ 
+<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Crop image</h3>
+  </div>
+  <div class="modal-body">
+    <p>Crop the image you uploaded for your avatar</p>
+   
+	<img id="cropbox" style="width:560px; height:430px" src="" alt="">
+	
+<form id="coords" class="coords" onsubmit="return false;" action="http://example.com/post.php">
+
+      <div>
+      <label>X1 <input type="text" size="4" id="x1" name="x1"></label>
+      <label>Y1 <input type="text" size="4" id="y1" name="y1"></label>
+      <label>X2 <input type="text" size="4" id="x2" name="x2"></label>
+      <label>Y2 <input type="text" size="4" id="y2" name="y2"></label>
+      <label>W <input type="text" size="4" id="w" name="w"></label>
+      <label>H <input type="text" size="4" id="h" name="h"></label>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary">Save changes</button>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -70,11 +100,23 @@
 	<script type="text/javascript">
            $(function() {
                $('#my-form > fieldset[id^=lang]').formset({'prefix': '{{ langset.prefix }}'});
+
+			   $('#upload').css("visibility", "hidden");
+			   $('a.thumbnail').click(function(e){
+   					e.preventDefault();
+    				$('#upload').trigger('click');  
+				});
+		
 				if (window.File && window.FileReader && window.FileList && window.Blob) {
   					function handleFileSelect(evt) {
     					var files = evt.target.files; // FileList object
 					    // files is a FileList of File objects. List some properties.
 					    var output = [];
+					    /*if (files[0].size > 500000){
+							alert('Maximum image size allowed is 0.5 Mb')
+							return
+						} */
+						console.dir(files[0])
 					    for (var i = 0, f; f = files[i]; i++) {
 					      output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
 					                  f.size, ' bytes, last modified: ',
@@ -85,7 +127,7 @@
 					    uploadFile(evt.target.files[0])
 					  }
 
-					  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+					  document.getElementById('upload').addEventListener('change', handleFileSelect, false);
 				} else {
   					alert('The File APIs are not fully supported in this browser.');
 				}
@@ -93,13 +135,16 @@
 					
 	       			var fd = new FormData();
 				    fd.append("fileToUpload", file);
-					fd.append("csrfmiddlewaretoken", $("input[name=csrfmiddlewaretoken]").attr('value'))
+					//fd.append("csrfmiddlewaretoken", $("input[name=csrfmiddlewaretoken]").attr('value'))
+					fd.append("uid", '{{ profile_id }}')
+					fd.append("is_avatar", false)
 				    var xhr = new XMLHttpRequest();
 				    xhr.upload.addEventListener("progress", uploadProgress, false);
 				    xhr.addEventListener("load", uploadComplete, false);
 				    xhr.addEventListener("error", uploadFailed, false);
 				    xhr.addEventListener("abort", uploadCanceled, false);
 				    xhr.open("POST", "/ajax/upload/image/");
+					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
 					$('.progress').show()
 				    xhr.send(fd);
 			    }
@@ -113,14 +158,21 @@
 			          document.getElementById('progressNumber').innerHTML = 'unable to compute';
 			        }
 			      }
-
+				  //PW.cookies.getCookie()
 			      function uploadComplete(evt) {
 			        /* This event is raised when the server send back a response */
 			         //$(document).innerHTML = evt.target.responseText
-					console.dir(evt)
+			        var data = $.parseJSON(evt.target.response)
+					console.dir(data)
 					$('.progress').hide()
-					$('#avatar').attr("src", "/media/avatar.jpg")
-			         console.log(evt.target.responseText);
+					$('.modal-body img').attr("src", "/media/{{ profile_id }}/" + data.avatar + '.' + data.extension)
+					
+					$('#myModal').modal('show')
+					$('#cropbox').Jcrop({
+        				onChange:   showCoords,
+				        onSelect:   showCoords,
+				        onRelease:  clearCoords
+				    });	
 			      }
 
 			      function uploadFailed(evt) {
@@ -130,6 +182,35 @@
 			      function uploadCanceled(evt) {
 			        alert("The upload has been canceled by the user or the browser dropped the connection.");
 			      }
+				function getCookie(name) {
+			        var cookieValue = null;
+			        if (document.cookie && document.cookie != '') {
+			            var cookies = document.cookie.split(';');
+			            for (var i = 0; i < cookies.length; i++) {
+			                var cookie = $.trim(cookies[i]);
+			                // Does this cookie string begin with the name we want?
+			                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+			                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+			                    break;
+			                }
+			            }
+			        }
+			        return cookieValue;
+			    }
+			  function showCoords(c)
+			    {
+			      $('#x1').val(c.x);
+			      $('#y1').val(c.y);
+			      $('#x2').val(c.x2);
+			      $('#y2').val(c.y2);
+			      $('#w').val(c.w);
+			      $('#h').val(c.h);
+			    };
+
+			    function clearCoords()
+			    {
+			      $('#coords input').val('');
+			    };
            })
     </script>
 {% endblock %}
