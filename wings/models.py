@@ -23,7 +23,7 @@ SMOKING_CHOICES = (
 )
 
 CAPACITY_OPTIONS=[(str(i), str(i)) for i in range(1, 10)]
-CAPACITY_OPTIONS.append(('+', '+9'))
+CAPACITY_OPTIONS.append(('m', '+9'))
 
 # Create your models here.
 class Wing(models.Model):

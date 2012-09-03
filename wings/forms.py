@@ -1,15 +1,22 @@
 #forms
 from wings.models import Wing, max_500_char
-from django.forms import ModelForm
+from django.forms import ModelForm, extras
 from django.forms.widgets import TextInput, Textarea
 from people.models import max_long_len, PW_STATE_CHOICES
 from django import forms
+import datetime
+
+now = datetime.datetime.now()
+
+FUTURE_DATES = []
+for i in range(now.year, now.year+5, 1):
+    FUTURE_DATES.append(i)
 
 WINGS_STATUS = list(PW_STATE_CHOICES)
 WINGS_STATUS.pop()
 
 GENDER_CHOICES = (
-    ('W', 'Woman'),
+    ('F', 'Woman'),
     ('M', 'Man'),
 )
 
@@ -47,7 +54,11 @@ class WingForm(ModelForm):
     	#'city' : TextInput(attrs={'data-provide': 'typeahead', 'class' : 'hometown span6'}),
       'about' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Describe your accomodation (max ' + str(max_500_char) + ' characs.)'}),
       'additional_information' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Add more information about your host (max ' + str(max_500_char) + ' characs.)'}),
-  	}
+      'from_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+      'to_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+
+    }
+
 
   def __init__(self, bloquear, *args, **kwargs):
       super(WingForm, self).__init__(*args, **kwargs)

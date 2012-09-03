@@ -142,6 +142,7 @@ INSTALLED_APPS = (
     'ajax',
     'cropper',
     'wings',
+    'search',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )

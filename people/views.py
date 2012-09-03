@@ -189,7 +189,7 @@ def manage_locations_information(request):
         if formset.is_valid():
             #print formset1.cleaned_data
             save_locations_info(formset.cleaned_data, request.user)
-            return HttpResponseRedirect('/users/yoho/')
+            return HttpResponseRedirect('/users/profile/')
         else: print formset1.errors
     else:
         initial = load_location_data(request.user)
