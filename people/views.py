@@ -52,13 +52,12 @@ def manage_basic_information(request):
     else:
         initial = load_basic_data(request.user)
         formset = BasicInfoFormSet(initial=initial)
-        uid = request.user.get_profile().id
         data = []
         for lang in UserLanguage.objects.filter(user_profile_id=uid):
             data.append({'language': lang.language_id, 'level': lang.level})
         if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
         langset = LangFormSet(initial=data, prefix='lang')
-    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': uid}, context_instance=RequestContext(request))
+    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': request.user.get_profile().id}, context_instance=RequestContext(request))
 
 
 def load_basic_data(user):
