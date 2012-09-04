@@ -355,7 +355,7 @@ def delete(request):
   signals.user_deleted.send(sender=User, request=request)
   user = request.user
   user.delete()
-  return HttpResponseRedirect('/login/')
+  return HttpResponseRedirect('/')
 
 @login_required
 def update_status(request):

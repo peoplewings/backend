@@ -12,9 +12,10 @@ def manage_search(request):
         form = SearchForm(request.POST or None)
         if form.is_valid():
             results = get_results(form.cleaned_data, request)
-            return render_to_response('search/list_results.html', {'results':results})
+            return render_to_response('search/list_results.html', {'results':results}, context_instance=RequestContext(request))
     else:
-        form = SearchForm()
+        data = {'gender':['M', 'F']}
+        form = SearchForm(initial=data)
     return render_to_response('search/search.html', {'form': form}, context_instance=RequestContext(request))
 
 def get_results(data, request):
@@ -39,7 +40,7 @@ def get_results(data, request):
     wings_ids= []
     for w in wings: 
         wings_ids.append(w.id)
-        print w.name
+        #print w.name
     #print wings_ids
     results = UserProfile.objects.filter(wing__id__in=wings_ids)
     if data['start_age'] != None: results = results.exclude(age__lt=data['start_age'])

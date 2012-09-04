@@ -13,6 +13,8 @@ urlpatterns = patterns('',
     # Authentication patterns:
     url(r'^register/$', 'registration.views.register',    {'form_class':CustomRegisterForm, 'backend':'people.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    url(r'^activate/complete/$', 'landing.views.welcome', name='home'),
     url(r'^', include('registration.backends.default.urls')),
 
     # Apps patterns
