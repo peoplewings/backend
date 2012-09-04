@@ -4,10 +4,10 @@ from people.models import PW_STATE_CHOICES, max_long_len, max_medium_len, max_sh
 max_500_char = 500
 
 BETTER_DAYS_CHOICES = (
+    ('A', 'Any'),
+    ('W', 'Weekend'),
     ('F', 'From Monday to Friday'),
     ('T', 'From Monday to Thursday'),
-    ('W', 'Weekend'),
-    ('A', 'Any'),
 )
 
 WHERE_SLEEPING_CHOICES = (

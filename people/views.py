@@ -216,17 +216,35 @@ def save_locations_info(data, user):
 
 def load_location_data(user):
     profile = user.get_profile()
-    verbose_home = profile.hometown.name + ", " + profile.hometown.country
-    verbose_current = profile.current_city.name + ", " + profile.current_city.country 
+    if profile.hometown != None: 
+        verbose_home = profile.hometown.name + ", " + profile.hometown.country
+        home_city = profile.hometown.name
+        home_country = profile.hometown.country
+        home_place_id = profile.hometown.cid
+    else: 
+        verbose_home = ''
+        home_city = ''
+        home_country = ''
+        home_place_id = ''
+    if profile.current_city != None: 
+        verbose_current = profile.current_city.name + ", " + profile.current_city.country
+        current_city_city = profile.current_city.name
+        current_city_country = profile.current_city.country
+        current_city_place_id = profile.current_city.cid
+    else: 
+        verbose_current = ''
+        current_city_city = ''
+        current_city_country = ''
+        current_city_place_id = ''
     data = [{
             'hometown': verbose_home,
-            'home_city': profile.hometown.name, 
-            'home_country': profile.hometown.country, 
-            'home_place_id': profile.hometown.cid,  
+            'home_city': home_city, 
+            'home_country': home_country, 
+            'home_place_id': home_place_id,  
             'current_city': verbose_current,
-            'current_city_city': profile.current_city.name, 
-            'current_city_country': profile.current_city.country,
-            'current_city_place_id': profile.current_city.cid 
+            'current_city_city': current_city_city, 
+            'current_city_country': current_city_country,
+            'current_city_place_id': current_city_place_id
     }]
     return data
 

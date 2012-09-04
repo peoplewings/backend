@@ -17,5 +17,5 @@ class SearchForm(forms.Form):
   end_age = forms.IntegerField(label="", required=False, widget=forms.Select(choices=AGE_OPTIONS))
   language = forms.CharField(required=False, max_length=max_short_len, widget=forms.Select(choices=[('','Select language')] + [(l.id, unicode(l.name)) for l in Language.objects.all()]))
   gender  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False)
-  applicant_host = forms.ChoiceField(widget=forms.RadioSelect, choices=APPLICANT_HOST_CHOICES, label='', initial='H')
+  applicant_host = forms.ChoiceField(widget=forms.RadioSelect, choices=APPLICANT_HOST_CHOICES, label='Looking for:', initial='H')
   city_name = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput(), label='')

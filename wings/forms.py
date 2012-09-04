@@ -16,8 +16,9 @@ WINGS_STATUS = list(PW_STATE_CHOICES)
 WINGS_STATUS.pop()
 
 GENDER_CHOICES = (
-    ('F', 'Woman'),
-    ('M', 'Man'),
+    ('F', 'Only women'),
+    ('M', 'Only men'),
+    ('B', 'Both')
 )
 
 PETS_CHOICES = (
@@ -35,11 +36,11 @@ TRANSPORT_CHOICES = (
 
 # WINGS FORM
 class WingForm(ModelForm):
-  pref_gender = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False, label='Preferred gender')
+  pref_gender = forms.ChoiceField(required=False, widget=forms.Select(), choices=GENDER_CHOICES, label='Preferred gender')
   
   pets = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=PETS_CHOICES, required=False)
   transp = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False, label='Public transport')
-  stat = forms.ChoiceField(required=False, choices=WINGS_STATUS, label='Wings status', widget=forms.Select())
+  stat = forms.ChoiceField(required=False, widget=forms.Select(), choices=WINGS_STATUS, label='Wings status')
 
   city = forms.CharField(max_length=50, required=True, label='City')
   city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
