@@ -30,6 +30,7 @@ def manage_wing_information(request):
         if form.is_valid():
             pets = request.POST.getlist( 'pets' )
             transp = request.POST.getlist( 'transp' )
+            print form.cleaned_data['pref_gender']
             save_wing_info(form.cleaned_data, request.user.get_profile(), request.GET.get('id', ''), pets, transp)
             return HttpResponseRedirect('/wings/list/')
     else:
@@ -52,7 +53,7 @@ def manage_wing_information(request):
     return render_to_response('wings/wing_accomodation.html', {'form': form}, context_instance=RequestContext(request))
 
 def load_wing_info(w):
-    initial = w.preferred_gender
+    #initial = w.preferred_gender
     #if initial == 'B': initial = ['M','F']
     verbose_city = w.city.name + ", " + w.city.country
     pets =[]
@@ -66,10 +67,14 @@ def load_wing_info(w):
     if w.train: transp.append('3')
     if w.others: transp.append('4')
 
-    data={'name' : w.name,
+    pref_gender = []
+    if w.preferred_gender == 'B': pref_gender = ['M', 'F']
+    elif w.preferred_gender == 'M' or w.preferred_gender=='F': pref_gender.append(w.preferred_gender)
+
+    data={'wing_name' : w.name,
 		'stat' : w.status,
 		'sharing_once' : w.sharing_once,
-		'pref_gender' : initial,
+		'pref_gender' : pref_gender,
 		'from_date' : w.from_date,
 		'to_date' : w.to_date,
 		'better_days' : w.better_days,
@@ -109,10 +114,11 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     elif len(g) == 1: res = data['pref_gender'][0]
     else: res = 'B'
 
-    if wing_id == '': w = Wing.objects.create(host=profile)
-    else: w = Wing.objects.get(pk=int(wing_id))
+    if data['wing_name'].replace(' ', '') == '': wing_name = 'Accommodation ' + data['city_name']
+    else: wing_name = data['city_name']
 
-    w.name = data['name']
+    if wing_id == '': w = Wing.objects.create(host=profile, name=wing_name)
+    else: w = Wing.objects.get(pk=int(wing_id))
 
     if data['stat']: w.status = data['stat']
     else: w.status = profile.pw_state

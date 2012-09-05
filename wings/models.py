@@ -22,6 +22,7 @@ SMOKING_CHOICES = (
     ('N', 'No smoking allowed'),
 )
 
+
 CAPACITY_OPTIONS=[(str(i), str(i)) for i in range(1, 10)]
 CAPACITY_OPTIONS.append(('m', '+9'))
 

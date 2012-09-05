@@ -3,16 +3,13 @@ from django.forms import extras
 from people.models import max_short_len, Language
 from people.forms import LANG_LEVEL_CHOICES
 from wings.models import CAPACITY_OPTIONS, BETTER_DAYS_CHOICES
-from wings.forms import WINGS_STATUS, TRANSPORT_CHOICES
+from wings.forms import WINGS_STATUS, TRANSPORT_CHOICES, PREFERRED_GENDER_CHOICES
 from django.forms.widgets import TextInput
 from wings.forms import FUTURE_DATES
 
 AGE_OPTIONS=[(str(i), str(i)) for i in range(18, 91)]
 APPLICANT_HOST_CHOICES = [('H', 'Host'), ('A', 'Applicant')]
-GENDER_CHOICES = (
-    ('M', 'Man'),
-    ('F', 'Woman'),
-)
+
 
 SEARCH_SMOKING_CHOICES = (
     ('A', 'Smoking allowed'),
@@ -39,7 +36,7 @@ class SearchForm(forms.Form):
   start_age = forms.IntegerField(label="Age", required=False, widget=forms.Select(choices=AGE_OPTIONS))
   end_age = forms.IntegerField(label="", required=False, widget=forms.Select(choices=AGE_OPTIONS), initial='90')
   language = forms.CharField(required=False, max_length=max_short_len, widget=forms.Select(choices=[('','All')] + [(l.id, unicode(l.name)) for l in Language.objects.all()]))
-  gender  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False, label='')
+  gender  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=PREFERRED_GENDER_CHOICES, required=False, label='')
   applicant_host = forms.ChoiceField(widget=forms.RadioSelect, choices=APPLICANT_HOST_CHOICES, label='', initial='H')
   city_name = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput(), label='')
 
