@@ -49,14 +49,14 @@ class WingForm(ModelForm):
   city_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput(), label='')
   class Meta:
     model = Wing
-    exclude = ('author', 'preferred_gender', 'city', 'i_have_pet', 'pets_allowed', 'status', 'underground',
+    exclude = ('host', 'applicant', 'preferred_gender', 'city', 'i_have_pet', 'pets_allowed', 'status', 'underground',
       'bus', 'tram', 'train', 'others')
     widgets = {
     	#'city' : TextInput(attrs={'data-provide': 'typeahead', 'class' : 'hometown span6'}),
       'about' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Describe your accomodation (max ' + str(max_500_char) + ' characs.)'}),
       'additional_information' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Add more information about your host (max ' + str(max_500_char) + ' characs.)'}),
-      'from_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
-      'to_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+      #'from_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+      #'to_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
 
     }
 

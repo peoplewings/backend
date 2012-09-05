@@ -14,7 +14,7 @@ for i in PW_STATE_CHOICES: STATUS_CHOICES.append(i[1])
 
 @login_required
 def list_wings(request):
-	wings = Wing.objects.filter(author=request.user.get_profile())
+	wings = Wing.objects.filter(host=request.user.get_profile())
   	up = request.user.get_profile()
 	current_state=up.pw_state
 	data = {'pw_state':current_state}
@@ -109,7 +109,7 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     elif len(g) == 1: res = data['pref_gender'][0]
     else: res = 'B'
 
-    if wing_id == '': w = Wing.objects.create(author=profile)
+    if wing_id == '': w = Wing.objects.create(host=profile)
     else: w = Wing.objects.get(pk=int(wing_id))
 
     w.name = data['name']
