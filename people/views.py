@@ -365,7 +365,7 @@ def update_status(request):
           up = request.user.get_profile()
           up.pw_state = form.cleaned_data['pw_state']
           up.save()
-          if up.pw_state != 'W': wings = Wing.objects.filter(author=up).update(status=up.pw_state)
+          if up.pw_state != 'W': wings = Wing.objects.filter(host=up).update(status=up.pw_state)
           return HttpResponseRedirect('/wings/list/')
 
 
