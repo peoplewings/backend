@@ -30,7 +30,6 @@ def manage_wing_information(request):
         if form.is_valid():
             pets = request.POST.getlist( 'pets' )
             transp = request.POST.getlist( 'transp' )
-            print form.cleaned_data['pref_gender']
             save_wing_info(form.cleaned_data, request.user.get_profile(), request.GET.get('id', ''), pets, transp)
             return HttpResponseRedirect('/wings/list/')
     else:
@@ -155,7 +154,11 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     w.address = data['address']
     w.number = data['number']
     w.additional_information = data['additional_information']
-    w.city, b = City.objects.get_or_create(cid=data['city_place_id'], name=data['city_name'], country=data['city_country'])
+    c, b = City.objects.get_or_create(cid=data['city_place_id'])
+    c.name = data['city_name']
+    c.country = data['city_country']
+    c.save()
+    w.city = c
     #w.city, b = City.objects.get_or_create(name=city_name, country=country)
     w.postal_code = data['postal_code']
     w.save()

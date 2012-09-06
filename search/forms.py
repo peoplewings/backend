@@ -60,7 +60,7 @@ class WingAdvancedForm(forms.Form):
   wings_status = forms.CharField(required=False, widget=forms.Select(choices=WINGS_STATUS))
   better_days = forms.CharField(required=False, widget=forms.Select(choices=BETTER_DAYS_CHOICES), label='Better days to host')
   public_transport = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False)
-  smoking = forms.CharField(required=False, widget=forms.Select(choices=SEARCH_SMOKING_CHOICES))
+  smoking = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple(choices=SEARCH_SMOKING_CHOICES))
   pets  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=SEARCH_PETS_CHOICES, required=False, label='')
   live_center = forms.ChoiceField(initial=False)
   wheelchair_accessible = forms.ChoiceField(initial=False)
