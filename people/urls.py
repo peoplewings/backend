@@ -10,7 +10,7 @@ urlpatterns = patterns('people.views',
     url(r'^account/$', 'view_account_settings'),
     url(r'^account/edit/$', 'enter_edit_account_settings'),
     url(r'^account/edit/completed/$', 'edit_account_settings'),
-    url(r'^search/$', 'search'),
+    #url(r'^search/$', 'search'),
     url(r'^delete/$', 'delete'),
     url(r'^status/update/$', 'update_status'),
 )

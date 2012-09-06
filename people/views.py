@@ -340,16 +340,6 @@ def edit_account_settings(request):
   	return HttpResponseRedirect('/users/account/')
   return render_to_response('people/login.html')
 
-def search(request):
-  #age_from = request.POST['age_from']
-  #age_up_to = request.POST['age_up_to']
-  # quitar esto
-  age_from=34
-  age_up_to=34
-  # gte = greater o equal than, gt = greater than
-  results = UserProfile.objects.all().filter(age__gte=age_from).exclude(age__gt=age_up_to)
-  return render_to_response('people/login.html', {'results':results})
-
 @login_required
 def delete(request):
   signals.user_deleted.send(sender=User, request=request)

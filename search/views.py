@@ -49,6 +49,7 @@ def get_results(data, request):
     #print wings_ids
     if data['applicant_host'] == 'H': results = UserProfile.objects.filter(host__id__in=wings_ids)
     else: results = UserProfile.objects.filter(applicant__id__in=wings_ids)
+    print results
     if data['start_age'] != None: results = results.exclude(age__lt=data['start_age'])
     if data['end_age'] != None: results = results.exclude(age__gt=data['end_age'])
     if data['language'] != '': results = results.filter(languages__name=data['language'])
