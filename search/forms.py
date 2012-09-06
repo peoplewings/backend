@@ -51,7 +51,7 @@ class PeopleBasicForm(forms.Form):
   start_age = forms.IntegerField(label="Age", required=False, widget=forms.Select(choices=AGE_OPTIONS))
   end_age = forms.IntegerField(label="", required=False, widget=forms.Select(choices=AGE_OPTIONS), initial='90')
   language = forms.CharField(initial=['M', 'F'], required=False, max_length=max_short_len, widget=forms.Select(choices=[('','All')] + [(l.id, unicode(l.name)) for l in Language.objects.all()]))
-  gender  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False, label='')
+  gender  = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=PREFERRED_GENDER_CHOICES, required=False, label='')
   applicant_host = forms.ChoiceField(widget=forms.RadioSelect, choices=APPLICANT_HOST_CHOICES, label='', initial='H')
   city_name = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput(), label='')
 

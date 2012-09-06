@@ -12,13 +12,16 @@ def manage_search(request):
         form = SearchForm(request.POST or None)
         if form.is_valid():
             results = get_results(form.cleaned_data, request)
+            wing_basic_form = WingBasicForm(request.POST)
+            people_basic_form = PeopleBasicForm(request.POST)
             #return render_to_response('search/list_results.html', {'results':results}, context_instance=RequestContext(request))
     else:
-        #data = {'gender':['M', 'F']}
+        data = {'gender':['M', 'F']}
         #form = SearchForm(initial=data)
         wing_basic_form = WingBasicForm()
-        people_basic_form = PeopleBasicForm()
-    return render_to_response('search/search.html', {'wbf': wing_basic_form, 'pbf': people_basic_form, 'results': results}, context_instance=RequestContext(request))
+        people_basic_form = PeopleBasicForm(initial=data)
+        results = []
+    return render_to_response('search/search.html', {'forms': [wing_basic_form, people_basic_form], 'results': results}, context_instance=RequestContext(request))
 
 def get_results(data, request):
     #print data
@@ -36,7 +39,7 @@ def get_results(data, request):
     if data['end_date'] != None: wings = wings.exclude(from_date__isnull=False, from_date__gt=data['end_date'])
     # al final de las alas que cumplen nuestros criterios de busqueda, hay que quitar aquellas 
     # en las que se prefiera a gente de sexo diferente al nuestro:
-    wings = wings.filter(Q(preferred_gender='B') | Q(preferred_gender=request.user.get_profile().gender))
+    wings = wings.filter(Q(preferred_gender='B') | Q(preferred_gender='N') | Q(preferred_gender=request.user.get_profile().gender))
 
     # PEOPLE CRITERIA
     wings_ids= []
