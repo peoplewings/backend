@@ -107,7 +107,7 @@ def manage_contact_information(request):
     SNFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
     IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
     if request.method == 'POST':
-        print request.POST
+        #print request.POST
         formset = ContactInfoFormSet(request.POST, request.FILES)
         snset = SNFormSet(request.POST,  prefix='sn')
         imset = IMFormSet(request.POST, prefix='im')
