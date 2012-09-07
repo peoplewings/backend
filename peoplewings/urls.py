@@ -21,6 +21,8 @@ urlpatterns = patterns('',
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
     url(r'^wings/', include('wings.urls')),
+
+    url('^cropper/', include('cropper.urls')),
     url(r'^search/', include('search.urls')),
 
     # Uncomment the next line to enable the admin:

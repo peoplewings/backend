@@ -141,10 +141,14 @@ INSTALLED_APPS = (
     #'south',
     'ajax',
     'wings',
+    'cropper',
+    #'imagekit',
     'search',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+#CROPPER_ROOT = MEDIA_ROOT
 
 ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window;
 
