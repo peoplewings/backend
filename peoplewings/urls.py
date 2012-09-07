@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
     url(r'^wings/', include('wings.urls')),
+    url('^cropper/', include('cropper.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
