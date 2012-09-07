@@ -107,7 +107,7 @@ def manage_contact_information(request):
     SNFormSet = formset_factory(SocialNetworkForm, formset=SocialNetworkFormSet, extra=0)
     IMFormSet = formset_factory(InstantMessageForm, formset=InstantMessageFormSet, extra=0)
     if request.method == 'POST':
-        print request.POST
+        #print request.POST
         formset = ContactInfoFormSet(request.POST, request.FILES)
         snset = SNFormSet(request.POST,  prefix='sn')
         imset = IMFormSet(request.POST, prefix='im')
@@ -340,16 +340,6 @@ def edit_account_settings(request):
   	return HttpResponseRedirect('/users/account/')
   return render_to_response('people/login.html')
 
-def search(request):
-  #age_from = request.POST['age_from']
-  #age_up_to = request.POST['age_up_to']
-  # quitar esto
-  age_from=34
-  age_up_to=34
-  # gte = greater o equal than, gt = greater than
-  results = UserProfile.objects.all().filter(age__gte=age_from).exclude(age__gt=age_up_to)
-  return render_to_response('people/login.html', {'results':results})
-
 @login_required
 def delete(request):
   signals.user_deleted.send(sender=User, request=request)
@@ -365,7 +355,7 @@ def update_status(request):
           up = request.user.get_profile()
           up.pw_state = form.cleaned_data['pw_state']
           up.save()
-          if up.pw_state != 'W': wings = Wing.objects.filter(author=up).update(status=up.pw_state)
+          if up.pw_state != 'W': wings = Wing.objects.filter(host=up).update(status=up.pw_state)
           return HttpResponseRedirect('/wings/list/')
 
 

@@ -2,8 +2,20 @@
 
             
 {% block content %}
-{% include "general/custom_form.html" with next_action=. %}
 
+{% include "general/custom_search.html" with next_action=. %}
+
+{% if results %}
+<div class="well span12">
+{% for p in results %}
+                
+                    <p class="span8">
+                        {{p.name_to_show}}, {{p.age}}, {{p.gender}}
+                    </p>
+                
+            {% endfor %}
+            </div>
+            {% endif %}
 {% endblock %}
 
 {% block page_scripting %}

@@ -14,7 +14,7 @@ for i in PW_STATE_CHOICES: STATUS_CHOICES.append(i[1])
 
 @login_required
 def list_wings(request):
-	wings = Wing.objects.filter(author=request.user.get_profile())
+	wings = Wing.objects.filter(host=request.user.get_profile())
   	up = request.user.get_profile()
 	current_state=up.pw_state
 	data = {'pw_state':current_state}
@@ -52,7 +52,7 @@ def manage_wing_information(request):
     return render_to_response('wings/wing_accomodation.html', {'form': form}, context_instance=RequestContext(request))
 
 def load_wing_info(w):
-    initial = w.preferred_gender
+    #initial = w.preferred_gender
     #if initial == 'B': initial = ['M','F']
     verbose_city = w.city.name + ", " + w.city.country
     pets =[]
@@ -66,10 +66,14 @@ def load_wing_info(w):
     if w.train: transp.append('3')
     if w.others: transp.append('4')
 
-    data={'name' : w.name,
+    pref_gender = []
+    if w.preferred_gender == 'B': pref_gender = ['M', 'F']
+    elif w.preferred_gender == 'M' or w.preferred_gender=='F': pref_gender.append(w.preferred_gender)
+
+    data={'wing_name' : w.name,
 		'stat' : w.status,
 		'sharing_once' : w.sharing_once,
-		'pref_gender' : initial,
+		'pref_gender' : pref_gender,
 		'from_date' : w.from_date,
 		'to_date' : w.to_date,
 		'better_days' : w.better_days,
@@ -109,10 +113,11 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     elif len(g) == 1: res = data['pref_gender'][0]
     else: res = 'B'
 
-    if wing_id == '': w = Wing.objects.create(author=profile)
-    else: w = Wing.objects.get(pk=int(wing_id))
+    if data['wing_name'].replace(' ', '') == '': wing_name = 'Accommodation ' + data['city_name']
+    else: wing_name = data['city_name']
 
-    w.name = data['name']
+    if wing_id == '': w = Wing.objects.create(host=profile, name=wing_name)
+    else: w = Wing.objects.get(pk=int(wing_id))
 
     if data['stat']: w.status = data['stat']
     else: w.status = profile.pw_state
@@ -149,7 +154,11 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     w.address = data['address']
     w.number = data['number']
     w.additional_information = data['additional_information']
-    w.city, b = City.objects.get_or_create(cid=data['city_place_id'], name=data['city_name'], country=data['city_country'])
+    c, b = City.objects.get_or_create(cid=data['city_place_id'])
+    c.name = data['city_name']
+    c.country = data['city_country']
+    c.save()
+    w.city = c
     #w.city, b = City.objects.get_or_create(name=city_name, country=country)
     w.postal_code = data['postal_code']
     w.save()
