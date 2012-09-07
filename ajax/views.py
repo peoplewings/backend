@@ -1,15 +1,8 @@
 # Create your views here.
 from django.views.decorators.csrf import csrf_protect
-from people.models import University, Photo
-from people.forms import ImageForm, CropForm
-import json
+from people.models import University
+from django.utils import simplejson
 from datetime import datetime
-import os
-import errno
-import random
-import Image
-from imagekit.models.fields import ProcessedImageField
-from peoplewings.settings import MEDIA_ROOT
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
@@ -38,8 +31,11 @@ def search_university(request):
 
 	response_data['code'] = HttpResponse.status_code
 	    
-	return HttpResponse(json.dumps(response_data), mimetype="application/json")
+	return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
 
+
+
+"""
 @csrf_protect
 def upload_image(request):
     response = {'success':False}
@@ -87,8 +83,7 @@ def crop_image(uid, image_id, x1, y1, x2, y2, w, h):
     form = ImageForm(data)
     form.save()
     #cropped = Photo.objects.create(owner_id=uid, processed_image=crop)
-    #original.delete()
-"""
+
 def save_user_image(file, profile_id, avatar=False):
     ext = file._get_name().split('.')[1]
     filename = datetime.now().strftime("%Y-%m-%d-%H-%M-%s") + '.' + ext
