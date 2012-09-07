@@ -1,11 +1,14 @@
 # Create your views here.
 from django.views.decorators.csrf import csrf_protect
-from people.models import University
+from people.models import University, Photo
+from people.forms import ImageForm, CropForm
 import json
 from datetime import datetime
 import os
 import errno
 import random
+import Image
+from imagekit.models.fields import ProcessedImageField
 from peoplewings.settings import MEDIA_ROOT
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
@@ -41,12 +44,51 @@ def search_university(request):
 def upload_image(request):
     response = {'success':False}
     if request.method == 'POST':
-        #, path=str(request.user.pk) + "/"
-        b, f, e = save_user_image(request.FILES['fileToUpload'], request.POST['uid'], request.POST['is_avatar'])
-        response = {'success':b, 'avatar':f, 'extension':e}
+        request.POST['owner'] = request.user.get_profile().id
+        print request.POST, request.FILES
+        form = ImageForm(request.POST, request.FILES)
+        #b, f, e = save_user_image(request.FILES['processed_image'], request.POST['uid'], request.POST['is_avatar'])
+        if form.is_valid():     
+             photo = form.save()
+             response = {'success': True, 'filename': request.FILES['processed_image']._name, 'fid': photo.pk}
     js = json.dumps(response)
     return HttpResponse(js, mimetype='application/json')
 
+@csrf_protect
+def crop_avatar(request):
+    response = {'success':False}
+    if request.method == 'POST':
+        form = CropForm(request.POST, request.FILES)
+        if form.is_valid():
+             crop_image(request.user.get_profile().id, form.cleaned_data['fid'], form.cleaned_data['x1'], form.cleaned_data['y1'], form.cleaned_data['x2'], form.cleaned_data['y2'], form.cleaned_data['w'], form.cleaned_data['h'])
+             #Photo.objects.get(owner=request.POST['owner'], )
+             #form.save()
+             #response = {'success': True, 'filename': request.FILES['processed_image']._name}
+        else: print form.errors
+    js = json.dumps(response)
+    return HttpResponse(js, mimetype='application/json')
+
+
+def crop_image(uid, image_id, x1, y1, x2, y2, w, h):
+    original = Photo.objects.get(pk=image_id)
+    im = Image.open(original.processed_image)
+    boxcrop = (int(x1),int(y1),int(x2),int(y2))
+    kay = im.crop(box=boxcrop)
+    #print im.size, im.info
+    #print kay.load()
+    #filename = original.processed_image.name.split('/')[-1]
+    filename = "avatar.gif"
+    path = os.path.join(MEDIA_ROOT, str(uid), filename)
+    kay.save(path)
+    data = {
+        'owner': uid,
+        'processed_image': kay
+    }
+    form = ImageForm(data)
+    form.save()
+    #cropped = Photo.objects.create(owner_id=uid, processed_image=crop)
+    #original.delete()
+"""
 def save_user_image(file, profile_id, avatar=False):
     ext = file._get_name().split('.')[1]
     filename = datetime.now().strftime("%Y-%m-%d-%H-%M-%s") + '.' + ext
@@ -73,7 +115,7 @@ def make_sure_path_exists(path):
             raise
 
 
-"""
+
 def check_file_exists(path, filename):
     try:
         f = os.path.normpath(os.path.join(path, filename))

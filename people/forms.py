@@ -5,7 +5,7 @@ from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
+from people.models import Photo, UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 #from people.widgets import DoubleSelectWidget, MyMultiValueField
@@ -264,6 +264,22 @@ class CustomProfileForm(ModelForm):
             if self.cleaned_data['gender'] not in ('M', 'F'):
                 raise forms.ValidationError(_("Please select a gender."))
         return self.cleaned_data['all_about_you']
+
+class ImageForm(ModelForm):
+  class Meta:
+      model=Photo
+      widgets = {
+          'owner' : forms.HiddenInput()
+      }
+
+class CropForm(forms.Form):
+    fid = forms.IntegerField(required=True)
+    x1 = forms.CharField(required=True, max_length=5)
+    y1 = forms.CharField(required=True, max_length=5)
+    x2 = forms.CharField(required=True, max_length=5)
+    y2 = forms.CharField(required=True, max_length=5)
+    w = forms.CharField(required=True, max_length=5)
+    h = forms.CharField(required=True, max_length=5)
 
 class StatusForm(ModelForm):
   class Meta:

@@ -303,14 +303,14 @@
         // Obtain dimensions from contained img element.
         $origimg.width($origimg[0].width);
         $origimg.height($origimg[0].height);
-		console.log('Original size: W=' + $origimg[0].width + ' H=' + $origimg[0].height)
+		//console.log('Original size: W=' + $origimg[0].width + ' H=' + $origimg[0].height)
       } else {
         // Obtain dimensions from temporary image in case the original is not loaded yet (e.g. IE 7.0). 
         var tempImage = new Image();
         tempImage.src = $origimg[0].src;
         $origimg.width(tempImage.width);
         $origimg.height(tempImage.height);
-		console.log('Temporary size: W=' + $origimg[0].width + ' H=' + $origimg[0].height)
+		//console.log('Temporary size: W=' + $origimg[0].width + ' H=' + $origimg[0].height)
       } 
 
       var $img = $origimg.clone().removeAttr('id').css(img_css).show();
