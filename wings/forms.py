@@ -1,12 +1,25 @@
 #forms
-from wings.models import Wing
-from django.forms import ModelForm
+from wings.models import Wing, max_500_char
+from django.forms import ModelForm, extras
 from django.forms.widgets import TextInput, Textarea
-from people.models import GENDER_CHOICES, max_long_len, PW_STATE_CHOICES
+from people.models import max_long_len, PW_STATE_CHOICES
 from django import forms
+import datetime
+
+now = datetime.datetime.now()
+
+FUTURE_DATES = []
+for i in range(now.year, now.year+5, 1):
+    FUTURE_DATES.append(i)
 
 WINGS_STATUS = list(PW_STATE_CHOICES)
 WINGS_STATUS.pop()
+
+GENDER_CHOICES = (
+    ('F', 'Only women'),
+    ('M', 'Only men'),
+    ('B', 'Both')
+)
 
 PETS_CHOICES = (
 (0, 'I have pet'),
@@ -23,11 +36,11 @@ TRANSPORT_CHOICES = (
 
 # WINGS FORM
 class WingForm(ModelForm):
-  pref_gender = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False, label='Preferred gender')
+  pref_gender = forms.ChoiceField(required=False, widget=forms.Select(), choices=GENDER_CHOICES, label='Preferred gender')
   
   pets = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=PETS_CHOICES, required=False)
-  transp = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False)
-  stat = forms.ChoiceField(required=False, choices=WINGS_STATUS, label='Wings status', widget=forms.Select())
+  transp = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=TRANSPORT_CHOICES, required=False, label='Public transport')
+  stat = forms.ChoiceField(required=False, widget=forms.Select(), choices=WINGS_STATUS, label='Wings status')
 
   city = forms.CharField(max_length=50, required=True, label='City')
   city.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'hometown span6'})
@@ -40,9 +53,13 @@ class WingForm(ModelForm):
       'bus', 'tram', 'train', 'others')
     widgets = {
     	#'city' : TextInput(attrs={'data-provide': 'typeahead', 'class' : 'hometown span6'}),
-      'about' : Textarea(attrs={'size': max_long_len, 'placeholder': 'Describe your accomodation'}),
-      'additional_information' : Textarea(attrs={'size': max_long_len, 'placeholder': 'Add more information about your host'}),
-  	}
+      'about' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Describe your accomodation (max ' + str(max_500_char) + ' characs.)'}),
+      'additional_information' : Textarea(attrs={'maxlength':max_500_char, 'size': max_500_char, 'placeholder': 'Add more information about your host (max ' + str(max_500_char) + ' characs.)'}),
+      'from_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+      'to_date' : extras.SelectDateWidget(years=FUTURE_DATES, attrs={'class':'special', 'style': 'width:120px'}),
+
+    }
+
 
   def __init__(self, bloquear, *args, **kwargs):
       super(WingForm, self).__init__(*args, **kwargs)

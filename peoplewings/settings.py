@@ -143,6 +143,7 @@ INSTALLED_APPS = (
     'wings',
     'cropper',
     #'imagekit',
+    'search',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )

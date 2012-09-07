@@ -53,7 +53,7 @@ def manage_wing_information(request):
 
 def load_wing_info(w):
     initial = w.preferred_gender
-    if initial == 'B': initial = ['M','F']
+    #if initial == 'B': initial = ['M','F']
     verbose_city = w.city.name + ", " + w.city.country
     pets =[]
     if w.i_have_pet: pets.append('0')
@@ -160,5 +160,5 @@ def delete_wing(request, wing_id):
 		w = Wing.objects.get(pk=int(wing_id))
 		w.delete()
 	except: pass
-	return HttpResponseRedirect('/users/profile/')
+	return HttpResponseRedirect('/wings/list/')
 

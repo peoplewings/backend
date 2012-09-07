@@ -13,13 +13,17 @@ urlpatterns = patterns('',
     # Authentication patterns:
     url(r'^register/$', 'registration.views.register',    {'form_class':CustomRegisterForm, 'backend':'people.backends.default.DefaultBackend'}, name='registration_register'),
     url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    url(r'^activate/complete/$', 'landing.views.welcome', name='home'),
     url(r'^', include('registration.backends.default.urls')),
 
     # Apps patterns
     url(r'^users/', include('people.urls')),
     url(r'^ajax/', include('ajax.urls')),
     url(r'^wings/', include('wings.urls')),
+
     url('^cropper/', include('cropper.urls')),
+    url(r'^search/', include('search.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
