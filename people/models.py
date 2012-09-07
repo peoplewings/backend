@@ -5,6 +5,9 @@ from people.signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
+from imagekit.models.fields import ProcessedImageField
+import os
+from peoplewings.settings import MEDIA_ROOT
 
 
 max_short_len = 20
@@ -85,6 +88,14 @@ class UserProfileStudiedUniversity(models.Model):
     user_profile = models.ForeignKey('UserProfile')
     university = models.ForeignKey('University')
     degree = models.CharField(max_length=max_short_len, blank=True)
+
+def get_upload_path(instance, filename):
+    return os.path.normpath(os.path.join(MEDIA_ROOT, str(instance.owner_id), filename))
+
+class Photo(models.Model):
+    owner = models.ForeignKey('UserProfile')
+    processed_image = ProcessedImageField(upload_to=get_upload_path, format='GIF', options={'quality': 90})
+
 
 
 class UserProfile(models.Model):
@@ -183,7 +194,10 @@ class UserProfile(models.Model):
     places_lived_in = models.TextField(max_length=max_long_len, blank=True)
     places_visited = models.TextField(max_length=max_long_len, blank=True)    
     places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
-    places_wanna_go = models.TextField(max_length=max_long_len, blank=True)    
+    places_wanna_go = models.TextField(max_length=max_long_len, blank=True) 
+
+    # User images
+    # avatar = models.ForeignKey('Photo')
 
     # a anyadir en el futuro
     #relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
