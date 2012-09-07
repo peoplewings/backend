@@ -51,6 +51,7 @@ def manage_wing_information(request):
     			#form.fields['status'].widget.attrs['disabled'] = True
     return render_to_response('wings/wing_accomodation.html', {'form': form}, context_instance=RequestContext(request))
 
+
 def load_wing_info(w):
     #initial = w.preferred_gender
     #if initial == 'B': initial = ['M','F']
