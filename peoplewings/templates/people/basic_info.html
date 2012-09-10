@@ -37,60 +37,63 @@
         </form>
 		<ul class="thumbnails">
             <li class="span4">
-              <a href="#" class="thumbnail">
-                <img id="avatar" src="/media/{{ profile_id }}/avatar.jpg" onerror='this.onerror = null; this.src="/media/blank_avatar.gif"' alt="">
+              <a href="#" class="thumbnail" style="width:246px; height: 284px">
+                <img id="avatar" src="/media/{{ profile_id }}/avatar.jpg" onerror='this.onerror = null; this.src="{% static "img/blank_avatar.jpg" %}"' alt="">
 			    <div class="progress progress-striped"  style="margin-top:10px;display:none;">
   					<div class="bar" style="width: 0%;"></div>
 			  	</div>
               </a>
             </li>
-            <li class="span4">
+            <li>
 				<form id="file-form" method="post" action="" enctype="multipart/form-data">
 				<input class="span4" type="file" id="upload" name="files[]" />
-				<output id="list"></output>
+				<!--<output id="list"></output>-->
 				</form>
 			</li>
-			<li class="span2">
-              <a href="#" class="thumbnail">
-                <img src="http://placehold.it/160x120" alt="">
-              </a>
-            </li>
-			<li class="span2">
-              <a href="#" class="thumbnail">
-                <img src="http://placehold.it/160x120" alt="">
-              </a>
-            </li>
           </ul>
     </div>
 </div>
-<!-- Button to trigger modal -->
-<a href="#myModal" role="button" class="btn" data-toggle="modal" data-target="#myModal">Launch demo modal</a>
+<!-- Button to trigger modal 
+<a href="#myModal" role="button" class="btn" data-toggle="modal" data-target="#myModal">Launch demo modal</a>-->
  
-<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none; width:840px; margin: -340px 0 0 -400px;">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
     <h3 id="myModalLabel">Crop image</h3>
   </div>
-  <div class="modal-body">
+  <div class="modal-body" style="max-height: 500px">
     <p>Crop the image you uploaded for your avatar</p>
    
-	<img id="cropbox" style="width:560px; height:430px" src="" alt="">
-	
-<form id="coords" class="coords" onsubmit="return false;" action="http://example.com/post.php">
+	<center style="margin: 10px 0">
+	<img id="cropbox" style="margin: 0 30px" src="" alt="">
+	</center>
+<form id="coords" class="coords" onsubmit="return false;" style="display: block">
 
       <div>
-      <label>X1 <input type="text" size="4" id="x1" name="x1"></label>
-      <label>Y1 <input type="text" size="4" id="y1" name="y1"></label>
-      <label>X2 <input type="text" size="4" id="x2" name="x2"></label>
-      <label>Y2 <input type="text" size="4" id="y2" name="y2"></label>
-      <label>W <input type="text" size="4" id="w" name="w"></label>
-      <label>H <input type="text" size="4" id="h" name="h"></label>
+      <label>X1 <input type="text" size="4" id="id_x" name="x1"></label>
+      <label>Y1 <input type="text" size="4" id="id_y" name="y1"></label>
+      <label>W <input type="text" size="4" id="id_w" name="w"></label>
+      <label>H <input type="text" size="4" id="id_h" name="h"></label>
       </div>
     </form>
   </div>
   <div class="modal-footer">
+    <button id="cancel-crop" class="btn" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    <button id="submit-avatar" class="btn btn-primary">Crop it</button>
+  </div>
+</div>
+
+<div class="modal" id="errors-modal" tabindex="-1" role="dialog" aria-labelledby="errorsModalLabel" aria-hidden="true" style="display: none">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Something went wrong...</h3>
+  </div>
+  <div class="modal-body">
+	<ul style="list-decoration:none">
+	</ul>
+  </div>
+  <div class="modal-footer">
     <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-    <button class="btn btn-primary">Save changes</button>
   </div>
 </div>
 
@@ -110,23 +113,28 @@
 				if (window.File && window.FileReader && window.FileList && window.Blob) {
   					function handleFileSelect(evt) {
     					var files = evt.target.files; // FileList object
+						console.dir(files)
 					    // files is a FileList of File objects. List some properties.
-					    var output = [];
-					    /*if (files[0].size > 500000){
+					    //var output = [];
+					    /*
+						   Protect uploading big files
+						if (files[0].size > 500000){
 							alert('Maximum image size allowed is 0.5 Mb')
 							return
-						} */
-						console.dir(files[0])
-					    for (var i = 0, f; f = files[i]; i++) {
+						} 
+						*/
+					    /*
+						Shows a list of files selected
+						for (var i = 0, f; f = files[i]; i++) {
 					      output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
 					                  f.size, ' bytes, last modified: ',
 					                  f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
 					                  '</li>');
 					    }
 					    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
-					    uploadFile(evt.target.files[0])
+						*/
+						if (files.length > 0) uploadFile(files[0])
 					  }
-
 					  document.getElementById('upload').addEventListener('change', handleFileSelect, false);
 				} else {
   					alert('The File APIs are not fully supported in this browser.');
@@ -134,16 +142,14 @@
 				function uploadFile(file) {
 					
 	       			var fd = new FormData();
-				    fd.append("fileToUpload", file);
-					//fd.append("csrfmiddlewaretoken", $("input[name=csrfmiddlewaretoken]").attr('value'))
-					fd.append("uid", '{{ profile_id }}')
-					fd.append("is_avatar", false)
+				    fd.append("image", file);
+				    fd.append("owner", "{{ profile_id }}");
 				    var xhr = new XMLHttpRequest();
 				    xhr.upload.addEventListener("progress", uploadProgress, false);
 				    xhr.addEventListener("load", uploadComplete, false);
 				    xhr.addEventListener("error", uploadFailed, false);
 				    xhr.addEventListener("abort", uploadCanceled, false);
-				    xhr.open("POST", "/ajax/upload/image/");
+				    xhr.open("POST", "/cropper/");
 					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
 					$('.progress').show()
 				    xhr.send(fd);
@@ -163,18 +169,49 @@
 			        /* This event is raised when the server send back a response */
 			         //$(document).innerHTML = evt.target.responseText
 			        var data = $.parseJSON(evt.target.response)
-					console.dir(data)
-					$('.progress').hide()
-					$('.modal-body img').attr("src", "/media/{{ profile_id }}/" + data.avatar + '.' + data.extension)
+					if (data.success){
+						console.log(data)
+						$('.progress').hide()
+						$('.modal-body img').attr("src", "/media/{{ profile_id }}/" + data.data.image)
+						console.log("WxH: " + data.data.width + "x" + data.data.height)
+						$('.modal-body img').css({"width": data.data.width, "height": data.data.height })
+						$('.modal-body div.jcrop-holder').css({"width": data.data.width, "height": data.data.height })
+						$('.modal-body div.jcrop-tracker').css({"width": data.data.width, "height": data.data.height })
+						$('#cropbox').Jcrop({
+	        				onChange:   showCoords,
+					        onSelect:   showCoords,
+					        onRelease:  clearCoords,
+							aspectRatio: 8 / 10,
+							setSelect:   [ data.data.width-246, 50, 346, 384],
+							minSize: [123, 142]
+					    });
+						
+						$('#myModal').modal('show')
+						$('#cancel-crop').click(function(evt){
+							alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
+						})
+						$('#submit-avatar').click(function(evt){
+							var fd = new FormData();
+						    fd.append("x", $('#id_x').val());
+							fd.append("y", $('#id_y').val());
+							fd.append("w", $('#id_w').val());
+							fd.append("h", $('#id_h').val());
+							fd.append("original", data.data.id);
+							//fd.append("filename", data.data.image);
+						    var xhr = new XMLHttpRequest();
+							xhr.addEventListener("load", avatarUploaded, false);
+						    xhr.open("POST", "/cropper/"+ data.data.id +"/");
+							xhr.setRequestHeader("X_REQUESTED_WITH", 'XMLHttpRequest');
+							xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+						    xhr.send(fd);
+						})
 					
-					$('#myModal').modal('show')
-					$('#cropbox').Jcrop({
-        				onChange:   showCoords,
-				        onSelect:   showCoords,
-				        onRelease:  clearCoords
-				    });	
-			      }
-
+							
+					}else {
+						$('#errors-modal .modal-body ul').html("<li><h5>"+ data.errors.image[0] +"</h5></li>")
+						$('#errors-modal').modal('show')
+					}
+				  }
 			      function uploadFailed(evt) {
 			        alert("There was an error attempting to upload the file.");
 			      }
@@ -199,18 +236,29 @@
 			    }
 			  function showCoords(c)
 			    {
-			      $('#x1').val(c.x);
-			      $('#y1').val(c.y);
-			      $('#x2').val(c.x2);
-			      $('#y2').val(c.y2);
-			      $('#w').val(c.w);
-			      $('#h').val(c.h);
+			      $('#id_x').val(Math.floor(c.x));
+			      $('#id_y').val(Math.floor(c.y));
+			      $('#id_w').val(Math.floor(c.w));
+			      $('#id_h').val(Math.floor(c.h));
 			    };
-
+				$.foo = function(){
+					console.log("Width: " + $('.modal-body img').width() + " Height: " + $('.modal-body img').height())
+					
+				}
 			    function clearCoords()
 			    {
 			      $('#coords input').val('');
 			    };
+			    function avatarUploaded(evt)
+				{
+					var data = $.parseJSON(evt.target.response)
+					console.dir(data)
+					$('#avatar').attr("src", data.image.url)
+					$('#avatar').width(246)
+					$('#avatar').height(284)
+					$('#myModal').modal('hide')
+					
+				}
            })
     </script>
 {% endblock %}
