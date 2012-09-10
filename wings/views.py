@@ -115,14 +115,17 @@ def save_wing_info(data, profile, wing_id, pets, transp):
     else: res = 'B'
 
     if data['wing_name'].replace(' ', '') == '': wing_name = 'Accommodation ' + data['city_name']
-    else: wing_name = data['city_name']
+    else: wing_name = data['wing_name']
 
-    if wing_id == '': w = Wing.objects.create(host=profile, name=wing_name)
+    print data['wing_name']
+
+    if wing_id == '': w = Wing.objects.create(host=profile)
     else: w = Wing.objects.get(pk=int(wing_id))
 
     if data['stat']: w.status = data['stat']
     else: w.status = profile.pw_state
 
+    w.name = wing_name
     w.sharing_once = data['sharing_once']
     w.preferred_gender=res
     w.from_date = data['from_date']
