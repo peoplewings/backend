@@ -5,10 +5,6 @@ from people.signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
-from imagekit.models.fields import ProcessedImageField
-import os
-from peoplewings.settings import MEDIA_ROOT
-
 
 max_short_len = 20
 max_medium_len = 50
@@ -88,13 +84,6 @@ class UserProfileStudiedUniversity(models.Model):
     user_profile = models.ForeignKey('UserProfile')
     university = models.ForeignKey('University')
     degree = models.CharField(max_length=max_short_len, blank=True)
-
-def get_upload_path(instance, filename):
-    return os.path.normpath(os.path.join(MEDIA_ROOT, str(instance.owner_id), filename))
-
-class Photo(models.Model):
-    owner = models.ForeignKey('UserProfile')
-    processed_image = ProcessedImageField(upload_to=get_upload_path, format='GIF', options={'quality': 90})
 
 
 
