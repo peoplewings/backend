@@ -164,7 +164,6 @@
 			          document.getElementById('progressNumber').innerHTML = 'unable to compute';
 			        }
 			      }
-				  //PW.cookies.getCookie()
 			      function uploadComplete(evt) {
 			        /* This event is raised when the server send back a response */
 			         //$(document).innerHTML = evt.target.responseText
@@ -174,36 +173,55 @@
 						$('.progress').hide()
 						$('.modal-body img').attr("src", "/media/{{ profile_id }}/" + data.data.image)
 						console.log("WxH: " + data.data.width + "x" + data.data.height)
-						$('.modal-body img').css({"width": data.data.width, "height": data.data.height })
-						$('.modal-body div.jcrop-holder').css({"width": data.data.width, "height": data.data.height })
-						$('.modal-body div.jcrop-tracker').css({"width": data.data.width, "height": data.data.height })
+						
 						$('#cropbox').Jcrop({
 	        				onChange:   showCoords,
 					        onSelect:   showCoords,
 					        onRelease:  clearCoords,
 							aspectRatio: 8 / 10,
-							setSelect:   [ data.data.width-246, 50, 346, 384],
-							minSize: [123, 142]
+							setSelect:   [ 50, 50, 296, 334],
+							minSize: [123, 142],
+							//boxWidth: 600, 
+							//boxHeight: 400
 					    });
-						
+
 						$('#myModal').modal('show')
-						$('#cancel-crop').click(function(evt){
-							alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
+						/*$('#cancel-crop').click(function(evt){
+							//alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
+							deleteImage(data.data.id)
+							
+						})*/
+						$('#myModal').on('hide', function(evt){
+							//alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
+							console.log('Hide..............')
+							deleteImage(data.data.id)
+							
 						})
+						
+						
+						
+						
 						$('#submit-avatar').click(function(evt){
-							var fd = new FormData();
-						    fd.append("x", $('#id_x').val());
-							fd.append("y", $('#id_y').val());
-							fd.append("w", $('#id_w').val());
-							fd.append("h", $('#id_h').val());
-							fd.append("original", data.data.id);
-							//fd.append("filename", data.data.image);
-						    var xhr = new XMLHttpRequest();
-							xhr.addEventListener("load", avatarUploaded, false);
-						    xhr.open("POST", "/cropper/"+ data.data.id +"/");
-							xhr.setRequestHeader("X_REQUESTED_WITH", 'XMLHttpRequest');
-							xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-						    xhr.send(fd);
+						
+						//console.log('Jcrop resized to...' + $('div.jcrop-holder img').width() + "x" + $('div.jcrop-holder img').height())
+						//var real_w = data.data.width;
+						//var resized_w = $('div.jcrop-holder img').width()
+						//var scale = real_w / resized_w
+						//console.log("Scale factor is: " + scale)
+						var scale = 1;
+						var fd = new FormData();
+					    fd.append("x", $('#id_x').val()*scale);
+						fd.append("y", $('#id_y').val()*scale);
+						fd.append("w", $('#id_w').val()*scale);
+						fd.append("h", $('#id_h').val()*scale);
+						fd.append("original", data.data.id);
+						//fd.append("filename", data.data.image);
+					    var xhr = new XMLHttpRequest();
+						xhr.addEventListener("load", avatarUploaded, false);
+					    xhr.open("POST", "/cropper/"+ data.data.id +"/");
+						xhr.setRequestHeader("X_REQUESTED_WITH", 'XMLHttpRequest');
+						xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+					    xhr.send(fd);
 						})
 					
 							
@@ -253,11 +271,24 @@
 				{
 					var data = $.parseJSON(evt.target.response)
 					console.dir(data)
-					$('#avatar').attr("src", data.image.url)
+					$('#avatar').attr("src", data.data.image.url)
 					$('#avatar').width(246)
 					$('#avatar').height(284)
 					$('#myModal').modal('hide')
 					
+					
+				};
+				function deleteImage(id_image){
+					console.log('DeleteImage...')
+				    var xhr = new XMLHttpRequest();
+					xhr.addEventListener("load", deleteSuccess, false);
+				    xhr.open("POST", "/ajax/image/delete/"+ id_image +"/");
+					xhr.setRequestHeader("X_REQUESTED_WITH", 'XMLHttpRequest');
+					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+				    xhr.send();
+				}
+				function deleteSuccess(evt){
+					console.log('DeleteSuccess')
 				}
            })
     </script>
