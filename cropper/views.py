@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.utils import simplejson
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, BaseDetailView
 from django.conf import settings
 from cropper.models import Original
 from cropper.forms import CroppedForm, OriginalForm
+from ajax.utils import json_response, json_success_response
 import Image
 import os
 
@@ -23,7 +23,7 @@ class UploadView(FormView):
 
     def form_valid(self, form):
         original = form.save()
-        if original.image_width > 800: 
+        if original.image_width > 600: 
             original.image_width, original.image_height = resize_image(original.image.name, (600, 600))
             original.save()
         return self.success(self.request, form, original)
@@ -67,9 +67,8 @@ class CropView(FormView):
 
     def form_valid(self, form):
         cropped = form.save(commit=False)
-        #resize_image(original.image.name, (600, 600))
         cropped.save()
-
+        #print "Cropped", cropped.__dict__
         return self.success(request  = self.request,
                             form     = form,
                             original = self.get_object(),
@@ -79,7 +78,7 @@ class CropView(FormView):
         """
         Default success crop handler
         """
-        return HttpResponse(simplejson.dumps({'image': {
+        return HttpResponse(json_success_response({'image': {
                 'url'    : cropped.image.url,
                 'width'  : cropped.w,
                 'height' : cropped.h,
@@ -97,13 +96,3 @@ def resize_image(filename, size):
         im.thumbnail(size, Image.ANTIALIAS)
         im.save(path, ext)
         return im.size
-
-def json_success_response(dic):
-	return json_response({
-                'success': True,
-                'data': dic,
-                })
-def json_response(x):
-    from django.utils import simplejson
-    return HttpResponse(simplejson.dumps(x, sort_keys=True, indent=2),
-                        content_type='application/json; charset=UTF-8')
