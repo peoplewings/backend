@@ -1,11 +1,15 @@
 # Create your views here.
 from django.views.decorators.csrf import csrf_protect
+from django.conf import settings
+from pprint import pprint
 from people.models import University
 from django.utils import simplejson
 from datetime import datetime
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from cropper.models import Original
+import os
 
 def search_university(request):
 	query=request.GET.get('q')
@@ -33,6 +37,19 @@ def search_university(request):
 	    
 	return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
 
+
+
+@csrf_protect
+def delete_image(request, original_id):
+    response = {'success':False}
+    if request.method == 'POST':
+        original = Original.objects.get(pk=int(original_id))
+        os.remove(os.path.join(settings.MEDIA_ROOT, original.image.name))
+        #original.delete()
+    # Poner respuesta bonita
+    #response = {'success': True, 'filename': request.FILES['processed_image']._name, 'fid': photo.pk}
+    js = simplejson.dumps(response)
+    return HttpResponse(js, mimetype='application/json')
 
 
 """
