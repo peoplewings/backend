@@ -5,6 +5,7 @@ from people.signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
+from cropper.models import Cropped
 
 max_short_len = 20
 max_medium_len = 50
@@ -130,7 +131,7 @@ class UserProfile(models.Model):
     name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='N')
 
-    #profile_pic = models.ImageField()
+    avatar = models.CharField(max_length=max_long_len, default='name_to_show')
 
     # In Basic Information
 
