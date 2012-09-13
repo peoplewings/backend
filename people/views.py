@@ -43,7 +43,9 @@ return render_to_response('people/basic_info.html',  {'formset': formset}, conte
 def manage_basic_information(request):
     BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
     LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
-    uid = request.user.get_profile().id
+    profile = request.user.get_profile()
+    uid = profile.id
+    avatar = profile.avatar
     if request.method == 'POST':
         formset = BasicInfoFormSet(request.POST, request.FILES)
         langset = LangFormSet(request.POST,  prefix='lang')
@@ -58,7 +60,7 @@ def manage_basic_information(request):
             data.append({'language': lang.language_id, 'level': lang.level})
         if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
         langset = LangFormSet(initial=data, prefix='lang')
-    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': uid}, context_instance=RequestContext(request))
+    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': uid, 'avatar':avatar}, context_instance=RequestContext(request))
 
 
 def load_basic_data(user):
