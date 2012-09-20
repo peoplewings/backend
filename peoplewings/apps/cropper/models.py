@@ -74,7 +74,9 @@ class Cropped(models.Model):
 
     original = models.ForeignKey(Original,
         related_name = 'cropped',
-        verbose_name = _('Original image'))
+        verbose_name = _('Original image'),
+		on_delete = models.SET_NULL,
+		null=True)
     image = models.ImageField(_('Image'),
         upload_to = upload_image,
         editable  = False)

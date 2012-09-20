@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
 from cropper.models import Cropped
+from locations.models import City
 
 max_short_len = 20
 max_medium_len = 50
@@ -42,8 +43,8 @@ class UserInstantMessage(models.Model):
     user_profile = models.ForeignKey('UserProfile')
     instant_message = models.ForeignKey('InstantMessage')
     instant_message_username = models.CharField(max_length=max_short_len)
-
-# CITY
+"""
+# CITY (old version)
 class City(models.Model):
     #latitude = models.DecimalField(max_digits=11, decimal_places=9)
     #longitude = models.DecimalField(max_digits=12, decimal_places=9)
@@ -51,6 +52,7 @@ class City(models.Model):
     state = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     cid = models.CharField(max_length=40, unique=True)
+"""
 
 # LANGUAGE
 class Language(models.Model):
@@ -91,13 +93,14 @@ class UserProfileStudiedUniversity(models.Model):
 class UserProfile(models.Model):
 
     CIVIL_STATE_CHOICES = (
+        ('','Empty'),
         ('SI', 'Single'),
         ('EN', 'Engaged'),
         ('MA', 'Married'),
         ('WI', 'Widowed'),
         ('IR', 'In a relationship'),
         ('IO', 'In an open relationship'),
-        ('IC', 'Its complicated'),
+        ('IC', 'It\'s complicated'),
         ('DI', 'Divorced'),
         ('SE', 'Separated'),
     )
@@ -109,9 +112,9 @@ class UserProfile(models.Model):
     )    
 
     BIRTHDAY_CHOICES = (
-        ('P', 'Show month and day'),
-        ('F', 'Show full'),
-        ('N', 'Dont show'),
+        ('F', 'My full birthday'),
+        ('P', 'Only month & day'),
+        ('N', 'Don\'t show'),
     )
 
 
@@ -129,18 +132,18 @@ class UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True)
     age = models.IntegerField(default=0)
     name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
-    pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='N')
+    pw_state = models.CharField(max_length=1, choices=PW_STATE_CHOICES, default='W')
 
-    avatar = models.CharField(max_length=max_long_len, default='name_to_show')
+    avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
 
     # In Basic Information
 
     birthday = models.DateField(verbose_name='birthday', null=True) #Don't know why!
-    show_birthday = models.CharField(verbose_name='', max_length=1, choices=BIRTHDAY_CHOICES, default='N')
-    gender = models.CharField(verbose_name='I am', max_length=1, choices=GENDER_CHOICES)
+    show_birthday = models.CharField(verbose_name='', max_length=1, choices=BIRTHDAY_CHOICES, default='F')
+    gender = models.CharField(verbose_name='I am', max_length=1, choices=GENDER_CHOICES, default='M')
     interested_in = models.CharField(max_length=1, blank=True) # he tret el null=True
-    civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, blank=True, null=True)
-    languages = models.ManyToManyField(Language, through='UserLanguage')
+    civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, default='', blank=True, null=True)
+    languages = models.ManyToManyField(Language, through='UserLanguage', null=True)
 
     # Locations
     current_city = models.ForeignKey(City, related_name='cc+', null=True)

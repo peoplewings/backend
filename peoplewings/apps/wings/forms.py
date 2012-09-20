@@ -1,11 +1,13 @@
 #forms
-from wings.models import Wing, max_500_char
+from wings.models import Wing, Accomodation
 from django.forms import ModelForm, extras
 from django.forms.widgets import TextInput, Textarea
 from people.models import max_long_len, PW_STATE_CHOICES
 from django import forms
 import datetime
 from django.utils.translation import ugettext_lazy as _
+
+from peoplewings.global_vars import max_500_char
 
 now = datetime.datetime.now()
 
@@ -14,6 +16,8 @@ for i in range(now.year, now.year+5, 1):
     FUTURE_DATES.append(i)
 
 WINGS_STATUS = list(PW_STATE_CHOICES)
+WINGS_STATUS.pop()
+WINGS_STATUS.pop()
 WINGS_STATUS.pop()
 
 
@@ -50,8 +54,8 @@ class WingForm(ModelForm):
   city_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput(), label='')
   city_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput(), label='')
   class Meta:
-    model = Wing
-    exclude = ('name', 'host', 'applicant', 'preferred_gender', 'city', 'i_have_pet', 'pets_allowed', 'status', 'underground',
+    model = Accomodation
+    exclude = ('name', 'author', 'preferred_gender', 'city', 'i_have_pet', 'pets_allowed', 'status', 'underground',
       'bus', 'tram', 'train', 'others')
     widgets = {
     	#'city' : TextInput(attrs={'data-provide': 'typeahead', 'class' : 'hometown span6'}),
@@ -67,7 +71,7 @@ class WingForm(ModelForm):
       super(WingForm, self).__init__(*args, **kwargs)
 
       #self.fields['city'] = forms.CharField(max_length=50, required=False)
-      self.fields.keyOrder = ['wing_name', 'stat', 'sharing_once', 'from_date', 'to_date', 'better_days', 'capacity', 'pref_gender',
+      self.fields.keyOrder = ['wing_name', 'stat', 'sharing_once', 'date_start', 'date_end', 'best_days', 'capacity', 'pref_gender',
       'wheelchair', 'where_sleeping_type', 'smoking', 'pets', 'blankets', 'live_center', 
       'transp', 'about', 'address', 'number', 'additional_information',
       'city', 'postal_code', 'city_name', 'city_country', 'city_place_id']

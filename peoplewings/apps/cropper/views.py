@@ -4,6 +4,7 @@ from django.views.generic.edit import FormView, BaseDetailView
 from django.conf import settings
 from cropper.models import Original
 from cropper.forms import CroppedForm, OriginalForm
+from people.models import UserProfile
 from ajax.utils import json_response, json_success_response
 import Image
 import os
@@ -68,7 +69,9 @@ class CropView(FormView):
     def form_valid(self, form):
         cropped = form.save(commit=False)
         cropped.save()
-        #print "Cropped", cropped.__dict__
+        up = UserProfile.objects.get(pk=self.request.user.get_profile().id)
+        up.avatar = settings.MEDIA_URL + cropped.image.name
+        up.save()
         return self.success(request  = self.request,
                             form     = form,
                             original = self.get_object(),

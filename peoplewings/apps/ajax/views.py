@@ -45,7 +45,7 @@ def delete_image(request, original_id):
     if request.method == 'POST':
         original = Original.objects.get(pk=int(original_id))
         os.remove(os.path.join(settings.MEDIA_ROOT, original.image.name))
-        #original.delete()
+        original.delete()
     # Poner respuesta bonita
     #response = {'success': True, 'filename': request.FILES['processed_image']._name, 'fid': photo.pk}
     js = simplejson.dumps(response)

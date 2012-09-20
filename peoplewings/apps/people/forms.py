@@ -59,7 +59,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
                 raise forms.ValidationError(_("The two emails fields didn't match."))
         return self.cleaned_data['email_2']
 
-# BASIC INFORMATION
+# 1. BASIC INFORMATION
 class BasicInformationForm(ModelForm):
   interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
   class Meta:
@@ -87,83 +87,12 @@ class LanguageFormSet(BaseFormSet):
             if len(form.cleaned_data) > 0:
                 lang = form.cleaned_data['language']
                 if lang in languages:
-                    raise forms.ValidationError(_("You entered a repeated language"))
-                languages.append(lang)
-            else: raise forms.ValidationError(_("This field is required, by Sergio"))
-
-
-# CONTACT INFORMATION FORM
-class ContactInformationForm(ModelForm):
-  
-  class Meta:
-    model = UserProfile
-    fields = ('emails', 'phone')
-
-  def clean_phone(self):
-    if 'phone' in self.cleaned_data:
-      value = self.cleaned_data['phone']
-      if value == '': return ''
-      try:
-        v = int(value)
-      except:
-        raise forms.ValidationError(_("This field must be an integer"))
-      return v
-      
-
-class SocialNetworkForm(forms.Form):
-  social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
-  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username or public profile link'}))
-
-class SocialNetworkFormSet(BaseFormSet):
-    def clean(self):
-        if any(self.errors):
-            return
-        social_networks = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
-            social = form.cleaned_data['social_network']
-            if social in social_networks:
-                raise forms.ValidationError(_("You entered a repeated social network"))
-            social_networks.append(social)
-
-class InstantMessageForm(forms.Form):
-  instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
-  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
-
-
-class InstantMessageFormSet(BaseFormSet):
-    def clean(self):
-        if any(self.errors):
-            return
-        ims = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i] 
-            im = form.cleaned_data['instant_message']
-            if im in ims:
-                raise forms.ValidationError(_("You entered a repeated instant message"))
-            ims.append(im)
-
-
-# LIKES FORM
-
-class LikesForm(ModelForm):
-  class Meta:
-    model = UserProfile
-    fields = ('enjoy_people', 'movies',  'sports', 'other_pages', 'sharing',  'incredible', 
-        'inspired_by', 'quotes', 'pw_opinion' )
-    widgets = {
-          'enjoy_people' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What kind of people you like to know and learn from them'}),
-          'inspired_by' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
-          'movies' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Movies, series, books, games...'}),
-          'sports' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
-          'other_pages' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Other webpages and applications you like'}),
-          'sharing' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What do you like to teach, learn or share?'}),
-          'incredible' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Any amazing thing you\'ve seen or done in your life'}),
-          'quotes' : Textarea(attrs={'size': max_long_len, 'class' : 'span8', 'rows' : 4}),
-          'pw_opinion' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Your opinion about PEOPLEWINGS'}),
-      }
-
-
+                    msg = "You entered a repeated language"
+                    form._errors['language'] = form.error_class([msg])
+                    del form.cleaned_data["language"]
+                    #raise forms.ValidationError(_("You entered a repeated language"))
+                else: languages.append(lang)
+            else: raise forms.ValidationError(_("This field is required"))
 
 class UserLocationForm(forms.Form):
   hometown = forms.CharField(max_length=50, required=False)
@@ -185,9 +114,9 @@ class AnotherLocationForm(forms.Form):
   location_city = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
   location_country = forms.CharField(max_length=50, required=False, widget=forms.HiddenInput())
   location_place_id = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
-  
 
-# ABOUT ME FORM
+
+# 2. ABOUT ME FORM
 class AboutMeForm1(ModelForm):
   class Meta:
     model = UserProfile
@@ -231,6 +160,93 @@ class EducationFormSet(BaseFormSet):
             return
 
 
+# 3. LIKES FORM
+class LikesForm(ModelForm):
+  class Meta:
+    model = UserProfile
+    fields = ('enjoy_people', 'movies',  'sports', 'other_pages', 'sharing',  'incredible', 
+        'inspired_by', 'quotes', 'pw_opinion' )
+    widgets = {
+          'enjoy_people' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What kind of people you like to know and learn from them'}),
+          'inspired_by' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
+          'movies' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Movies, series, books, games...'}),
+          'sports' : TextInput(attrs={'size': max_long_len, 'class' : 'span8'}),
+          'other_pages' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Other webpages and applications you like'}),
+          'sharing' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'What do you like to teach, learn or share?'}),
+          'incredible' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Any amazing thing you\'ve seen or done in your life'}),
+          'quotes' : Textarea(attrs={'size': max_long_len, 'class' : 'span8', 'rows' : 4}),
+          'pw_opinion' : TextInput(attrs={'size': max_long_len, 'class' : 'span8', 'placeholder': 'Your opinion about PEOPLEWINGS'}),
+      }  
+
+
+# 4. CONTACT INFORMATION FORM
+class ContactInformationForm(ModelForm):
+  
+  class Meta:
+    model = UserProfile
+    fields = ('emails', 'phone')
+
+  def clean_phone(self):
+    if 'phone' in self.cleaned_data:
+      value = self.cleaned_data['phone']
+      if value == '': return ''
+      try:
+        v = int(value)
+      except:
+        raise forms.ValidationError(_("This field must be an integer"))
+      return v
+      
+class SocialNetworkForm(forms.Form):
+  social_network = forms.CharField(required=False, label="Social Network", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in SocialNetwork.objects.all()]))
+  social_network_username = forms.CharField(required=False, label="Social Network Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username or public profile link'}))
+
+class SocialNetworkFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        social_networks = []
+        social_networks_usernames = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            social = form.cleaned_data['social_network']
+            username = form.cleaned_data['social_network_username']
+
+            for i in range(len(social_networks)):
+              if social == social_networks[i] and username == social_networks_usernames[i]:
+                msg = "You already specified this username fot the same social network"
+                form._errors['social_network_username'] = form.error_class([msg])
+                del form.cleaned_data["social_network_username"]
+                #raise forms.ValidationError(_("You entered a repeated social network"))
+            social_networks.append(social)
+            social_networks_usernames.append(username)
+
+
+class InstantMessageForm(forms.Form):
+  instant_message = forms.CharField(required=False, label="Instant Message", max_length=max_short_len, widget=forms.Select(choices=[(l.id, unicode(l.name)) for l in InstantMessage.objects.all()]))
+  instant_message_username = forms.CharField(required=False, label="Instant Message Username", max_length=max_short_len, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
+
+class InstantMessageFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        ims = []
+        instant_message_usernames = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i] 
+            im = form.cleaned_data['instant_message']
+            username = form.cleaned_data['instant_message_username']
+
+            for i in range(len(ims)):
+              if im == ims[i] and username == instant_message_usernames[i]:
+                msg = "You already specified this username for the same instant message"
+                form._errors['instant_message_username'] = form.error_class([msg])
+                del form.cleaned_data["instant_message_username"]
+                #raise forms.ValidationError(_("You entered a repeated instant message"))
+            ims.append(im)
+            instant_message_usernames.append(username)
+
+
+# CUSTOM PROFILE FORM
 class CustomProfileForm(ModelForm):
   uni = forms.CharField(max_length=50, required=False)
   uni.widget = forms.TextInput(attrs={'data-provide' : 'typeahead', 'class' : 'foo'})

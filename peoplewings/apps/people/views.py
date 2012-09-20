@@ -41,30 +41,47 @@ return render_to_response('people/basic_info.html',  {'formset': formset}, conte
 """
 @login_required
 def manage_basic_information(request):
-    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
-    LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
     profile = request.user.get_profile()
     uid = profile.id
     avatar = profile.avatar
+
+    BasicInfoFormSet = formset_factory(BasicInformationForm, extra=0)
+    LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=0)
+    CitiesFormset = formset_factory(UserLocationForm, extra=0)
+    LocationFormset = formset_factory(AnotherLocationForm, extra=0)
+
     if request.method == 'POST':
         formset = BasicInfoFormSet(request.POST, request.FILES)
         langset = LangFormSet(request.POST,  prefix='lang')
-        if formset.is_valid() and langset.is_valid():
-            save_basic_info(formset.cleaned_data, langset.cleaned_data, request.user)
+        cities_formset = CitiesFormset(request.POST or None)
+        if formset.is_valid() and langset.is_valid() and cities_formset.is_valid():
+            save_basic_info(formset.cleaned_data, langset.cleaned_data, profile)
+            #save_locations_info(cities_formset.cleaned_data, profile)
             return HttpResponseRedirect('/users/profile/')
     else:
-        initial = load_basic_data(request.user)
+        initial = load_basic_data(profile)
         formset = BasicInfoFormSet(initial=initial)
+        initial_locations = load_location_data(profile)
         data = []
         for lang in UserLanguage.objects.filter(user_profile_id=uid):
             data.append({'language': lang.language_id, 'level': lang.level})
         if (len(data) == 0): LangFormSet = formset_factory(LanguageForm, formset=LanguageFormSet, extra=1)
         langset = LangFormSet(initial=data, prefix='lang')
-    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': uid, 'avatar':avatar}, context_instance=RequestContext(request))
+
+        if (len(initial_locations) > 0):
+            #CitiesFormset = formset_factory(UserLocationForm, extra=0)
+            cities_formset = CitiesFormset(initial=initial_locations)
+            LocationFormset = formset_factory(AnotherLocationForm, extra=1)
+            locationset = LocationFormset()
+        else:
+            CitiesFormset = formset_factory(UserLocationForm, extra=1)
+            locationset = LocationFormset()
+            cities_formset = CitiesFormset()
+
+    return render_to_response('people/basic_info.html', {'formset': formset, 'langset': langset, 'profile_id': uid, 'avatar':avatar, 'cities_formset': cities_formset}, context_instance=RequestContext(request))
 
 
-def load_basic_data(user):
-    up = user.get_profile()
+def load_basic_data(up):
     initial = up.interested_in
     if initial == 'B': initial = ['M','F']
     data = [{ 'gender': up.gender, 
@@ -75,9 +92,8 @@ def load_basic_data(user):
     }]
     return data
 
-def save_basic_info(info, langs, user):
+def save_basic_info(info, langs, profile):
     data=info[0]
-    profile = user.get_profile()
     interested_len = len(data['interested_in'])
     if interested_len > 0 :
         if interested_len == 1 : 
@@ -99,8 +115,72 @@ def save_basic_info(info, langs, user):
             user_lan = UserLanguage.objects.get_or_create(user_profile_id=profile.id, language_id=lang['language'], level=lang['level'])
     profile.save()
 
+"""
+@login_required
+def manage_locations_information(request):
+    CitiesFormset = formset_factory(UserLocationForm, extra=0)
+    LocationFormset = formset_factory(AnotherLocationForm, extra=0)
+    if request.method == 'POST':
+        formset = CitiesFormset(request.POST or None)
+        if formset.is_valid():
+            #print formset1.cleaned_data
+            save_locations_info(formset.cleaned_data, request.user)
+            return HttpResponseRedirect('/users/profile/')
+        else: print formset1.errors
+    else:
+        initial = load_location_data(request.user)
+        if (len(initial) > 0):
+            #CitiesFormset = formset_factory(UserLocationForm, extra=0)
+            formset = CitiesFormset(initial=initial)
+            LocationFormset = formset_factory(AnotherLocationForm, extra=1)
+            locationset = LocationFormset()
+        else:
+            CitiesFormset = formset_factory(UserLocationForm, extra=1)
+            locationset = LocationFormset()
+            formset = CitiesFormset()
+    #'formset2': locationset
+    return render_to_response('people/location_info.html', {'formset1': formset}, context_instance=RequestContext(request))
+"""
+def save_locations_info(data, profile):
+    data=data[0]
+    hometown = City.objects.get_or_create(cid=data['home_place_id'], name=data['home_city'], country=data['home_country'])
+    current = City.objects.get_or_create(cid=data['current_city_place_id'], name=data['current_city_city'], country=data['current_city_country'])
+    profile.hometown = hometown[0]
+    profile.current_city = current[0]
+    profile.save()
 
-
+def load_location_data(profile):
+    if profile.hometown != None: 
+        verbose_home = profile.hometown.name + ", " + profile.hometown.country
+        home_city = profile.hometown.name
+        home_country = profile.hometown.country
+        home_place_id = profile.hometown.cid
+    else: 
+        verbose_home = ''
+        home_city = ''
+        home_country = ''
+        home_place_id = ''
+    if profile.current_city != None: 
+        verbose_current = profile.current_city.name + ", " + profile.current_city.country
+        current_city_city = profile.current_city.name
+        current_city_country = profile.current_city.country
+        current_city_place_id = profile.current_city.cid
+    else: 
+        verbose_current = ''
+        current_city_city = ''
+        current_city_country = ''
+        current_city_place_id = ''
+    data = [{
+            'hometown': verbose_home,
+            'home_city': home_city, 
+            'home_country': home_country, 
+            'home_place_id': home_place_id,  
+            'current_city': verbose_current,
+            'current_city_city': current_city_city, 
+            'current_city_country': current_city_country,
+            'current_city_place_id': current_city_place_id
+    }]
+    return data
 
 # CONTACT INFORMATION VIEW (LOAD/SAVE)
 @login_required
@@ -167,7 +247,7 @@ def manage_likes_information(request):
         form = LikesForm(instance=request.user.get_profile())
     return render_to_response('people/likes_info.html', {'form': form}, context_instance=RequestContext(request))
 
-    
+"""    
 def save_likes_info(data, user):
     #print data
     profile = user.get_profile()
@@ -181,76 +261,7 @@ def save_likes_info(data, user):
     profile.incredible=data['incredible']
     profile.pw_opinion=data['pw_opinion']
     profile.save()
-
-@login_required
-def manage_locations_information(request):
-    CitiesFormset = formset_factory(UserLocationForm, extra=0)
-    LocationFormset = formset_factory(AnotherLocationForm, extra=0)
-    if request.method == 'POST':
-        formset = CitiesFormset(request.POST or None)
-        if formset.is_valid():
-            #print formset1.cleaned_data
-            save_locations_info(formset.cleaned_data, request.user)
-            return HttpResponseRedirect('/users/profile/')
-        else: print formset1.errors
-    else:
-        initial = load_location_data(request.user)
-        if (len(initial) > 0):
-            #CitiesFormset = formset_factory(UserLocationForm, extra=0)
-            formset = CitiesFormset(initial=initial)
-            LocationFormset = formset_factory(AnotherLocationForm, extra=1)
-            locationset = LocationFormset()
-        else:
-            CitiesFormset = formset_factory(UserLocationForm, extra=1)
-            locationset = LocationFormset()
-            formset = CitiesFormset()
-    #'formset2': locationset
-    return render_to_response('people/location_info.html', {'formset1': formset}, context_instance=RequestContext(request))
-
-def save_locations_info(data, user):
-    profile = user.get_profile()
-    data=data[0]
-    hometown = City.objects.get_or_create(cid=data['home_place_id'], name=data['home_city'], country=data['home_country'])
-    current = City.objects.get_or_create(cid=data['current_city_place_id'], name=data['current_city_city'], country=data['current_city_country'])
-    profile.hometown = hometown[0]
-    profile.current_city = current[0]
-    profile.save()
-
-def load_location_data(user):
-    profile = user.get_profile()
-    if profile.hometown != None: 
-        verbose_home = profile.hometown.name + ", " + profile.hometown.country
-        home_city = profile.hometown.name
-        home_country = profile.hometown.country
-        home_place_id = profile.hometown.cid
-    else: 
-        verbose_home = ''
-        home_city = ''
-        home_country = ''
-        home_place_id = ''
-    if profile.current_city != None: 
-        verbose_current = profile.current_city.name + ", " + profile.current_city.country
-        current_city_city = profile.current_city.name
-        current_city_country = profile.current_city.country
-        current_city_place_id = profile.current_city.cid
-    else: 
-        verbose_current = ''
-        current_city_city = ''
-        current_city_country = ''
-        current_city_place_id = ''
-    data = [{
-            'hometown': verbose_home,
-            'home_city': home_city, 
-            'home_country': home_country, 
-            'home_place_id': home_place_id,  
-            'current_city': verbose_current,
-            'current_city_city': current_city_city, 
-            'current_city_country': current_city_country,
-            'current_city_place_id': current_city_place_id
-    }]
-    return data
-
-    
+"""
 
 # ABOUT ME VIEW (LOAD/SAVE)
 @login_required
@@ -357,7 +368,7 @@ def update_status(request):
           up = request.user.get_profile()
           up.pw_state = form.cleaned_data['pw_state']
           up.save()
-          if up.pw_state != 'W': wings = Wing.objects.filter(host=up).update(status=up.pw_state)
+          if up.pw_state != 'W': wings = Wing.objects.filter(author=up).update(status=up.pw_state)
           return HttpResponseRedirect('/wings/list/')
 
 

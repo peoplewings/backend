@@ -38,7 +38,7 @@
 		<ul class="thumbnails">
             <li class="span4">
               <a href="#" class="thumbnail" style="width:246px; height: 284px">
-                <img id="avatar" src="/{{avatar}}" onerror='this.onerror = null; this.src="{% static "img/blank_avatar.jpg" %}"' alt="">
+                <img id="avatar" src="{{avatar}}" alt="User avatar">
 			    <div class="progress progress-striped"  style="margin-top:10px;display:none;">
   					<div class="bar" style="width: 0%;"></div>
 			  	</div>
@@ -67,7 +67,7 @@
 	<center style="margin: 10px 0">
 	<img id="cropbox" style="margin: 0 30px" src="" alt="">
 	</center>
-<form id="coords" class="coords" onsubmit="return false;" style="display: block">
+<form id="coords" class="coords" onsubmit="return false;" style="display: none">
 
       <div>
       <label>X1 <input type="text" size="4" id="id_x" name="x1"></label>
@@ -113,7 +113,6 @@
 				if (window.File && window.FileReader && window.FileList && window.Blob) {
   					function handleFileSelect(evt) {
     					var files = evt.target.files; // FileList object
-						console.dir(files)
 					    // files is a FileList of File objects. List some properties.
 					    //var output = [];
 					    /*
@@ -134,6 +133,7 @@
 					    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 						*/
 						if (files.length > 0) uploadFile(files[0])
+						$(this).attr("value", "");
 					  }
 					  document.getElementById('upload').addEventListener('change', handleFileSelect, false);
 				} else {
@@ -165,60 +165,47 @@
 			        }
 			      }
 			      function uploadComplete(evt) {
-			        /* This event is raised when the server send back a response */
-			         //$(document).innerHTML = evt.target.responseText
 			        var data = $.parseJSON(evt.target.response)
 					if (data.success){
-						console.log(data)
+						//console.log("WxH: " + data.data.width + "x" + data.data.height)
 						$('.progress').hide()
-						$('.modal-body img').attr("src", "/media/{{ profile_id }}/" + data.data.image)
-						console.log("WxH: " + data.data.width + "x" + data.data.height)
+						$('.modal-body img').attr({
+							"src": "/media/{{ profile_id }}/" + data.data.image,
+							"data-index": data.data.id
+						})
+
 						
 						$('#cropbox').Jcrop({
 	        				onChange:   showCoords,
 					        onSelect:   showCoords,
 					        onRelease:  clearCoords,
-							aspectRatio: 8 / 10,
+							aspectRatio: 866 / 1000,
 							setSelect:   [ 50, 50, 296, 334],
-							minSize: [123, 142],
+							minSize: [246, 284],
+							trueSize: [data.data.width, data.data.height],
 							//boxWidth: 600, 
 							//boxHeight: 400
 					    });
 
 						$('#myModal').modal('show')
-						/*$('#cancel-crop').click(function(evt){
-							//alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
+						
+						$('#myModal').on('hidden', function(evt){
 							deleteImage(data.data.id)
-							
-						})*/
-						$('#myModal').on('hide', function(evt){
-							//alert('An image was uploaded, saved to disk, but dismissed... FIX IT!!')
-							console.log('Hide..............')
-							deleteImage(data.data.id)
-							
 						})
-						
-						
-						
 						
 						$('#submit-avatar').click(function(evt){
 						
-						//console.log('Jcrop resized to...' + $('div.jcrop-holder img').width() + "x" + $('div.jcrop-holder img').height())
-						//var real_w = data.data.width;
-						//var resized_w = $('div.jcrop-holder img').width()
-						//var scale = real_w / resized_w
-						//console.log("Scale factor is: " + scale)
-						var scale = 1;
 						var fd = new FormData();
-					    fd.append("x", $('#id_x').val()*scale);
-						fd.append("y", $('#id_y').val()*scale);
-						fd.append("w", $('#id_w').val()*scale);
-						fd.append("h", $('#id_h').val()*scale);
-						fd.append("original", data.data.id);
-						//fd.append("filename", data.data.image);
+					    fd.append("x", $('#id_x').val());
+						fd.append("y", $('#id_y').val());
+						fd.append("w", $('#id_w').val());
+						fd.append("h", $('#id_h').val());
+						id_image = $('img#cropbox').attr("data-index")
+						fd.append("original", id_image);
+						
 					    var xhr = new XMLHttpRequest();
 						xhr.addEventListener("load", avatarUploaded, false);
-					    xhr.open("POST", "/cropper/"+ data.data.id +"/");
+					    xhr.open("POST", "/cropper/"+ id_image +"/");
 						xhr.setRequestHeader("X_REQUESTED_WITH", 'XMLHttpRequest');
 						xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
 					    xhr.send(fd);
@@ -259,10 +246,6 @@
 			      $('#id_w').val(Math.floor(c.w));
 			      $('#id_h').val(Math.floor(c.h));
 			    };
-				$.foo = function(){
-					console.log("Width: " + $('.modal-body img').width() + " Height: " + $('.modal-body img').height())
-					
-				}
 			    function clearCoords()
 			    {
 			      $('#coords input').val('');
@@ -270,16 +253,14 @@
 			    function avatarUploaded(evt)
 				{
 					var data = $.parseJSON(evt.target.response)
-					console.dir(data)
 					$('#avatar').attr("src", data.data.image.url)
 					$('#avatar').width(246)
 					$('#avatar').height(284)
 					$('#myModal').modal('hide')
 					
-					
 				};
-				function deleteImage(id_image){
-					console.log('DeleteImage...')
+				function deleteImage(){
+					id_image = $('img#cropbox').attr("data-index")
 				    var xhr = new XMLHttpRequest();
 					xhr.addEventListener("load", deleteSuccess, false);
 				    xhr.open("POST", "/ajax/image/delete/"+ id_image +"/");
