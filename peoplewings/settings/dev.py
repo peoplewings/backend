@@ -18,7 +18,7 @@ DATABASES = {
         'USER': 'postgres',                      # Not used with sqlite3.
         'PASSWORD': '1111',                  # Not used with sqlite3.
         'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -39,9 +39,9 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
+    'registration',
     # Project custom apps
     'peoplewings.apps.landing',
-    'peoplewings.apps.registration',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
     'peoplewings.apps.wings',

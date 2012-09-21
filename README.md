@@ -1,4 +1,4 @@
-# Peoplewings project reference
+# Peoplewings backend API
 
 ## Prerequisites
 

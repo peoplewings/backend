@@ -3,27 +3,27 @@ from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin, auth
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from people.forms import CustomRegisterForm
+from apps.people.forms import CustomRegisterForm
 
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^$', 'landing.views.welcome', name='home'),
+    url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
 
     # Authentication patterns:
-    url(r'^register/$', 'registration.views.register',    {'form_class':CustomRegisterForm, 'backend':'people.backends.default.DefaultBackend'}, name='registration_register'),
-    url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
-    url(r'^activate/complete/$', 'landing.views.welcome', name='home'),
-    url(r'^', include('registration.backends.default.urls')),
+    url(r'^register/$', 'peoplewings.apps.locations.views.register',    {'form_class':CustomRegisterForm, 'backend':'peoplewings.apps.people.backends.default.DefaultBackend'}, name='registration_register'),
+    #url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
+    #url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    #url(r'^activate/complete/$', 'landing.views.welcome', name='home'),
+    #url(r'^', include('registration.backends.default.urls')),
 
     # Apps patterns
-    url(r'^users/', include('people.urls')),
-    url(r'^ajax/', include('ajax.urls')),
-    url(r'^wings/', include('wings.urls')),
+    #url(r'^users/', include('peoplewings.apps.people.urls')),
+    #url(r'^ajax/', include('peoplewings.apps.ajax.urls')),
+    #url(r'^wings/', include('peoplewings.apps.wings.urls')),
 
-    url('^cropper/', include('cropper.urls')),
-    url(r'^search/', include('search.urls')),
+    #url('^cropper/', include('peoplewings.apps.cropper.urls')),
+    #url(r'^search/', include('peoplewings.apps.search.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
