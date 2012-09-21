@@ -1,6 +1,6 @@
 from django.db import models
-from people.models import UserProfile
-from wings.models import Wing
+from peoplewings.apps.people.models import UserProfile
+from peoplewings.apps.wings.models import Wing
 
 max_text_msg_len = 1000
 max_short_text_len = 200

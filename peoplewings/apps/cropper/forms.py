@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from cropper.models import Cropped, Original
+from models import Cropped, Original
 
 class OriginalForm(forms.ModelForm):
     """

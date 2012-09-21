@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from cropper.views import UploadView, CropView
+from views import UploadView, CropView
 
 urlpatterns = patterns('',
     url('^$',                       UploadView.as_view(), name='cropper_upload'),

@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 from registration.signals import user_registered
-from people.signals import user_deleted
+from signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from registration.forms import RegistrationForm
-from cropper.models import Cropped
-from locations.models import City
+from peoplewings.apps.cropper.models import Cropped
+from peoplewings.apps.locations.models import City
 
 max_short_len = 20
 max_medium_len = 50

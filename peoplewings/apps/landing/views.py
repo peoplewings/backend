@@ -6,4 +6,4 @@ from django.contrib.auth.models import User
 
 def welcome(request):
     now = datetime.datetime.now()	
-    return render_to_response('landing/home.html', {'user': request.user, 'time': now})
+    return render_to_response('home.html', {'time': now})

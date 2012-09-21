@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content_title %}
+<div class="row">
+	<div class="span10">
+      <h4 style="margin-left: 10pt;">Hello, it's {{time}} </h4>
+	</div>
+	
+</div>
+{% endblock %}
+{% block content %}
+	
+<h1>Peoplewings project reference</h1>
+
+<h2>Prerequisites</h2>
+
+<p>In order to work with this repo you will need the following tools installed in your system:</p>
+
+<ul>
+<li>Git</li>
+<li>Python 2.7 &amp; Easy_install (optional just to install pip and other packages)</li>
+<li>Pip (easy_install pip)</li>
+<li>Virtual env 1.7+ (pip install virtualenv)</li>
+<li><p>Foreman (gem install foreman)</p></li>
+<li><p>PostgreSQL (optional just to test locally)</p></li>
+<li>Heroku toolbelt (optional, highly recommended!)</li>
+</ul>
+
+<h2>Setup</h2>
+
+<ul>
+<li><p>Create a virtual environment with <em>virtualenv</em></p>
+
+<p><code>$ virtualenv path/to/your/virtualenvs/virtual-env-name --distribute</code></p></li>
+<li><p>Activate your virtual environment</p>
+
+<p><code>$ source path/to/your/virtualenvs/virtual-env-name/bin/activate</code></p></li>
+<li><p>Install requiriments using requirements.txt from this repo</p>
+
+<p><code>$ pip install -r requiriments.txt</code></p></li>
+<li><p>Start the gunicorn web server</p>
+
+<p><code>$ foreman start</code></p></li>
+</ul>
+
+<p>Now you can open the application on 0.0.0.0:5000</p>
+
+<p>Full reference can be found here:</p>
+
+<ul>
+<li>https://devcenter.heroku.com/articles/django</li>
+<li>https://devcenter.heroku.com/articles/heroku-postgres-dev-plan</li>
+<li>https://devcenter.heroku.com/articles/procfile</li>
+<li>https://devcenter.heroku.com/articles/error-codes</li>
+</ul>
+
+<h2>Development notes</h2>
+
+<p>Find the project documentation in <a href="/88fingerskid/peoplewings/src/master/src/doc/documentation.md/" title="Peoplewings documentation">Documentation</a></p>
+
+<h3>Needed environment variables</h3>
+{% endblock %}

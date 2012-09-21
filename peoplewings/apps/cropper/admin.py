@@ -1,6 +1,6 @@
 from django.contrib import admin
-from cropper.models import Original, Cropped
-from cropper import settings
+from models import Original, Cropped
+import settings
 
 class OriginalAdmin(admin.ModelAdmin):
     """

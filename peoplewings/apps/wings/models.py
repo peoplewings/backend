@@ -1,6 +1,6 @@
 from django.db import models
-from people.models import PW_STATE_CHOICES, UserProfile
-from locations.models import City
+from peoplewings.apps.people.models import PW_STATE_CHOICES, UserProfile
+from peoplewings.apps.locations.models import City
 
 max_text_msg_len = 1000
 max_short_text_len = 200
