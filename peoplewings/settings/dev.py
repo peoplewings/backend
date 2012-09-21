@@ -39,8 +39,8 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
-    'registration',
     # Project custom apps
+    'peoplewings.apps.registration',
     'peoplewings.apps.landing',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
