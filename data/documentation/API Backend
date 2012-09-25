@@ -1,0 +1,17 @@
+# PeopleWings Backend API
+
+IMPORTANT!! All urls start with /api/v1/
+## Register a new user:
+ - Request
+    POST /newuser
+    {"username":"RESTLegend", "password":"asdf", "first_name":"REST", "last_name":"Legend", "email":"REST@Legend.com"}
+ - Response:
+    201 CREATED
+    {}
+
+## Activate
+ - Request
+    POST /
+
+        
+

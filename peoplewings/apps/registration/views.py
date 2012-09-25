@@ -8,7 +8,9 @@ from django.shortcuts import redirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from registration.backends import get_backend
+from peoplewings.apps.registration.backends import get_backend
+
+from peoplewings.apps.ajax.utils import json_response, json_success_response
 
 
 def activate(request, backend,
@@ -199,6 +201,9 @@ def register(request, backend, success_url=None, form_class=None,
     for key, value in extra_context.items():
         context[key] = callable(value) and value() or value
 
-    return render_to_response(template_name,
-                              {'form': form},
-                              context_instance=context)
+    #return render_to_response(template_name,
+     #                         {'form': form},
+      #                        context_instance=context)
+    import pprint
+    pprint.pprint(form.__dict__)
+    return json_success_response({"patata": "patata"})

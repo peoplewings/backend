@@ -9,7 +9,7 @@ django-registration 1.0. For new installs, use
 
 import warnings
 
-warnings.warn("include('registration.urls') is deprecated; use include('registration.backends.default.urls') instead.",
+warnings.warn("include('peoplewings.apps.registration.urls') is deprecated; use include('peoplewings.apps.registration.backends.custom.urls') instead.",
               PendingDeprecationWarning)
 
-from registration.backends.default.urls import *
+from peoplewings.apps.registration.backends.custom.urls import *
