@@ -76,7 +76,8 @@ class CustomBackend(object):
         class of this backend as the sender.
 
         """
-        username, email, password, last_name, first_name = kwargs['first_name'] + "." + str(random.getrandbits(24)), kwargs['email'], kwargs['password1'], kwargs['last_name'], kwargs['first_name']
+       
+        username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password1'], kwargs['last_name'], kwargs['first_name']
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:

@@ -9,9 +9,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from peoplewings.apps.registration.backends import get_backend
-
-from peoplewings.apps.ajax.utils import json_response, json_success_response
-
+import random
 
 def activate(request, backend,
              template_name='registration/activate.html',
@@ -177,33 +175,22 @@ def register(request, backend, success_url=None, form_class=None,
     argument.
     
     """
+    request.POST['username'] = request.POST['first_name'] + "_" + str(random.getrandbits(24))
+    request.POST['password2'] = request.POST['password1']
+    bundle_data = request.POST
     backend = get_backend(backend)
     if not backend.registration_allowed(request):
         return redirect(disallowed_url)
     if form_class is None:
         form_class = backend.get_form_class(request)
-
-    if request.method == 'POST':
         form = form_class(data=request.POST, files=request.FILES)
         if form.is_valid():
-            new_user = backend.register(request, **form.cleaned_data)
-            if success_url is None:
-                to, args, kwargs = backend.post_registration_redirect(request, new_user)
-                return redirect(to, *args, **kwargs)
-            else:
-                return redirect(success_url)
-    else:
-        form = form_class()
-    
+            request.POST = bundle_data
+            new_user = backend.register(request, **form.data)
+            return   
     if extra_context is None:
         extra_context = {}
     context = RequestContext(request)
     for key, value in extra_context.items():
         context[key] = callable(value) and value() or value
-
-    #return render_to_response(template_name,
-     #                         {'form': form},
-      #                        context_instance=context)
-    import pprint
-    pprint.pprint(form.__dict__)
-    return json_success_response({"patata": "patata"})
+    return form

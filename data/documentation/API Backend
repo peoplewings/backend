@@ -1,17 +1,46 @@
 # PeopleWings Backend API
 
 IMPORTANT!! All urls start with /api/v1/
-## Register a new user:
- - Request
+## Register:
+ - Request:
     POST /newuser
     {"username":"RESTLegend", "password":"asdf", "first_name":"REST", "last_name":"Legend", "email":"REST@Legend.com"}
  - Response:
     201 CREATED
-    {}
+    {"status": True, "code":"201", "txt":"Your account has been succesfully..."}
+    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
-## Activate
- - Request
-    POST /
+## Activate:
+ - Request:
+
+ - Response:  
+    
+    {"status":True, "code":"201", "txt":"Your account has been activated"}
+    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+## Login
+ - Request:
+
+ - Response:
+
+## Logout:
+ - Request:
+
+ - Response:
+
+## Unregister:
+ - Request:
+
+ - Response:
+
+## Update user (account settings):
+ - Request:
+
+ - Response:
+
+## Forgot password:
+ - Request:
+
+ - Response:
 
         
 

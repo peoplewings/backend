@@ -210,7 +210,7 @@ class Relationship(models.Model):
     user2 = models.ForeignKey('UserProfile', related_name='r2')
 """
 
-def createUserProfile(sender, user, request, **kwargs):
+def createUserProfile(sender, user, request, **kwargs):  
     form = RegistrationForm(request.POST)
     registered_user = User.objects.get(username=user.username)
     registered_user.last_name = kwargs['lastname']
