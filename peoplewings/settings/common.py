@@ -4,8 +4,8 @@ import dj_database_url
 
 DATABASES = {'default': dj_database_url.config(default='postgres://localhost')}
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) # The Django project
-PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The genral project
+PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')) # The Django project
+PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The general project
 
 TIME_ZONE = 'Europe/Madrid'
 
