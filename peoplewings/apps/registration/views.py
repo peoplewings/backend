@@ -7,6 +7,7 @@ Views which allow users to create and activate accounts.
 from django.shortcuts import redirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django import forms
 
 from peoplewings.apps.registration.backends import get_backend
 import random
@@ -175,22 +176,34 @@ def register(request, backend, success_url=None, form_class=None,
     argument.
     
     """
-    request.POST['username'] = request.POST['first_name'] + "_" + str(random.getrandbits(24))
+    request.POST['username'] = request.POST['first_name'] + "." + str(random.getrandbits(24))
     request.POST['password2'] = request.POST['password1']
     bundle_data = request.POST
     backend = get_backend(backend)
     if not backend.registration_allowed(request):
         return redirect(disallowed_url)
-    if form_class is None:
-        form_class = backend.get_form_class(request)
-        form = form_class(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            request.POST = bundle_data
-            new_user = backend.register(request, **form.data)
-            return   
+    new_user = backend.register(request, **bundle_data)
+    return   
     if extra_context is None:
         extra_context = {}
     context = RequestContext(request)
     for key, value in extra_context.items():
         context[key] = callable(value) and value() or value
     return form
+
+GENDER_CHOICES = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+)
+class UserSignUpForm(forms.Form):
+    first_name = forms.CharField(max_length=50, required=True)
+    last_name = forms.CharField(max_length=50, required=True)
+    email = forms.CharField(max_length=50, required=True)
+    email_2 = forms.CharField(max_length=50, required=True)
+    birthday_day = forms.IntegerField(min_value=1, max_value=31, required=True)
+    birthday_month = forms.IntegerField(min_value=1, max_value=12, required=True)
+    birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=True)
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=True)
+    password1 = forms.CharField(max_length=50, required=True)
+    csrfmiddlewaretoken = forms.CharField(max_length=100, required=True)
+

@@ -42,10 +42,48 @@ Full reference can be found here:
  
 
 
-## Development notes
+## API
 
-Find the project documentation in [Documentation](/88fingerskid/peoplewings/src/master/src/doc/documentation.md/ "Peoplewings documentation")
+IMPORTANT!! All urls start with /api/v1/
+### Register:
+ - Request:
+    POST /newuser
+    {"birthday_day":5, "birthday_month":3, "birthday_year":1999, "csrfmiddlewaretoken":"adsasd", "email":"asdadsqwe@asdasd.com", "email_2":"asdadsqwe@asdasd.com", "first_name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}
+ - Response:
+    201 CREATED
+    {"status": True, "code":"201", "data":"Your account has been succesfully..."}
+    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
-  
+### Activate:
+ - Request:
+    /POST 
+ - Response:
+    
+    {"status":True, "code":"201", "txt":"Your account has been activated"}
+    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+### Login
+ - Request:
+
+ - Response:
+
+### Logout:
+ - Request:
+
+ - Response:
+
+### Unregister:
+ - Request:
+
+ - Response:
+
+### Update user (account settings):
+ - Request:
+
+ - Response:
+
+### Forgot password:
+ - Request:
+
+ - Response:
 
 ### Needed environment variables
