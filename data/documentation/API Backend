@@ -42,5 +42,21 @@ IMPORTANT!! All urls start with /api/v1/
 
  - Response:
 
-        
+
+
+## List all users
+ - Request:
+    GET /users                                             
+    {}
+ - Response:
+    {"status": True, "data":{"username":username, "first_name":first_name, "last_name":last_name, "email":email}}
+    {"status": False, "code":"401", "errors":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+
+## View my presentation profile
+ - Request:
+    GET /users/me/profile                                             
+    {}
+ - Response:
+    {"status": True, "data":{"gender":"M", "birthday":01-01-1981, "age":29, "interested_in":F, civil_state}}
+    {"status": False, "code":"401", "errors":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
