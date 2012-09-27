@@ -94,15 +94,21 @@ class UserSignUpResource(ModelResource):
 
 class UserResource(ModelResource):
     class Meta:
-        queryset = User.objects.filter(is_active=True)
-        resource_name = 'users'
-        list_allowed_methods = ['get']
-        detail_allowed_methods = ['get']
         object_class = User
+        queryset = User.objects.all()
+        allowed_methods = ['post']
+        include_resource_uri = False
+        resource_name = 'user/activation'
+        serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = Authentication()
         authorization = Authorization()
-        include_resource_uri = False
-        fields = ['username', 'first_name', 'last_name', 'email',]
+        always_return_data = True
+        #validation = FormValidation(form_class=ActivationForm)
+
+        def obj_create(self, bundle, request=None, **kwargs):
+            request.POST = bundle.data
+            self.form_data = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')            
+            return bundle
 
 
 

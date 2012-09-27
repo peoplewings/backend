@@ -205,5 +205,4 @@ class UserSignUpForm(forms.Form):
     birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=True)
     gender = forms.ChoiceField(choices=GENDER_CHOICES, required=True)
     password1 = forms.CharField(max_length=50, required=True)
-    csrfmiddlewaretoken = forms.CharField(max_length=100, required=True)
-
+    
