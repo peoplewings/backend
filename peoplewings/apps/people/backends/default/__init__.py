@@ -2,9 +2,9 @@ from django.conf import settings
 from django.contrib.sites.models import RequestSite
 from django.contrib.sites.models import Site
 
-from registration import signals
-from registration.forms import RegistrationForm
-from registration.models import RegistrationProfile
+from peoplewings.apps.registration import signals
+from peoplewings.apps.registration.forms import RegistrationForm
+from peoplewings.apps.registration.models import RegistrationProfile
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.core.validators import email_re

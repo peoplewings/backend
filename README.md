@@ -50,21 +50,32 @@ IMPORTANT!! All urls start with /api/v1/
     POST /newuser
     {"birthday_day":5, "birthday_month":3, "birthday_year":1999, "csrfmiddlewaretoken":"adsasd", "email":"asdadsqwe@asdasd.com", "email_2":"asdadsqwe@asdasd.com", "first_name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}
  - Response:
-    {"status": True, "code":"201", "data":"Your account has been succesfully..."}
-    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+   - OK
+     - 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
+   - NO 
+     - 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
 ### Activate:
  - Request:
     POST /user/
+    {"activation_key":"asdkjbsjnskn"}
  - Response:
-    
-    {"status":True, "code":"201", "txt":"Your account has been activated"}
-    {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+   - OK 
+     - 201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}
+   - NO
+     - 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
+     - 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
+     - 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
 ### Login
  - Request:
-
+    /POST /accesstoken
+     - 201 CREATED {username = "Joan", password = "asdfasdf"}
  - Response:
-
+   - OK
+     - 201 CREATED {"status":True, "code":"201", csrfmiddlewaretoken = "uSSlOwp4kTJdnOolo0UTVLkY18ih37qP"}
+   - NO
+     - 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
+     - 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
 ### Logout:
  - Request:
 
