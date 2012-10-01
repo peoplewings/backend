@@ -3,6 +3,8 @@ import re
 from django.utils.text import compress_string
 from django.utils.cache import patch_vary_headers
 
+from django.http import HttpResponseRedirect
+
 from django import http
 
 try:
@@ -38,6 +40,7 @@ class XsSharing(object):
 
     def process_response(self, request, response):
         # Avoid unnecessary work
+        if type(response) == str: response = HttpResponseRedirect(response)
         if response.has_header('Access-Control-Allow-Origin'):
             return response
 
