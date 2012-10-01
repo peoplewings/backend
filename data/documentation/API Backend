@@ -47,16 +47,197 @@ IMPORTANT!! All urls start with /api/v1/
 ## List all users
  - Request:
     GET /users                                             
-    {}
+    Range: objects=0-10
+
  - Response:
+    206 Partial Content
     {"status": True, "data":{"username":username, "first_name":first_name, "last_name":last_name, "email":email}}
     {"status": False, "code":"401", "errors":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
 ## View my presentation profile
  - Request:
     GET /users/me/profile                                             
-    {}
+
  - Response:
-    {"status": True, "data":{"gender":"M", "birthday":01-01-1981, "age":29, "interested_in":F, civil_state}}
-    {"status": False, "code":"401", "errors":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+    200 OK
+    {
+        "status": True, 
+        "data":
+        {
+            "gender": "M", 
+            "birthday": "01-01-1981", 
+            "age": 31, 
+            "interested_in": "F"
+        }
+    }
+    {
+        "status": False, 
+        "code": "401", 
+        "errors":
+        {
+            "error1": "aslkjdhkladn", 
+            "error2": "kajsdojbn"
+        }
+    }
+
+## View others presentation profile
+ - Request:
+    GET /users/<id>/profile
+
+ - Response:
+    200 OK
+    {
+        "status": True, 
+        "data":
+        {
+            "gender":"M", 
+            "birthday": "01-01-1981", 
+            "age": 31, 
+            "interested_in": "F"
+        }
+    }
+    {
+        "status": False, 
+        "code": "401", 
+        "errors":
+        {
+            "error1": "aslkjdhkladn", 
+            "error2": "kajsdojbn"
+        }
+    }
+
+## View my basic information
+ - Request:
+    GET /users/me/profile/basic    
+
+ - Response: 
+    200 OK
+    {
+        "status": True, 
+        "data":
+        { 
+                "gender":"M", 
+                "birthday": "01-01-1981", 
+                "show_birthday": "Y", 
+                "interested_in": "F", 
+                "civil_state": "S", 
+                "languages":
+                    [ 
+                        {"language": English, "level": "Intermediate"},
+                        {"language": Spanish, "level": "Expert"},
+                      
+                    ],
+                "hometownVerbose": "Barcelona, Spain", 
+                "currentVerbose": "Bilbao, Spain",
+                "avatar": "/media/167/65v786s786sa5.jpg" 
+        }
+    }
+    {
+        "status": False, 
+        "code": "401", 
+        "errors":
+        {
+            "error1":"aslkjdhkladn", 
+            "error2":"kajsdojbn"
+        }
+    }
+
+## Edit my basic information
+ - Request:
+    POST /users/me/profile/basic
+    {
+        "gender":"M", 
+        "birthday": "01-01-1981", 
+        "show_birthday": "Y", 
+        "interested_in": "F", 
+        "civil_state": "S", 
+        "languages":
+            [ 
+                {"language": English, "level": "Intermediate"},
+                {"language": Spanish, "level": "Expert"},
+  
+            ],
+        "hometown_city": "kwejrtkjfbgkjd", 
+        "hometown_region": "ekuwofbbjsdfher", 
+        "hometown_country": "23krh8by90ehbrw4yui", 
+        "current_city": "ioerhtuiehndwkueur", 
+        "current_city": "o832ybviw8ty9wvubw", 
+        "current_city": "nmocidr73487b3t98g", 
+        "avatar": "/media/167/65v786s786sa5.jpg"
+    }
+
+ - Response: 
+    204 No Content
+    
+
+
+## View About me
+ - Request:
+    GET /users/me/profile/about    
+
+ - Response: 
+    200 OK
+    {
+        "status": True, 
+        "data":
+        { 
+                "allAboutYou": "Hi there!", 
+                "currentMission": "I'm cool", 
+                "occupation": "jkdbfgiudbui", 
+                "company": "ewkrubfdsjb", 
+                "education": 
+                [
+                    {"education": "My university", "degree": "Computer Science"},
+                    {"education": "My university", "degree": "Computer Science"}
+
+                ],
+                "personalPhilosophy": "kjdfbghdfbgk",
+                "politicalViews": "dfgboieubgiuerb",
+                "religion": "lfh3r9ybdviu"
+        }
+    }
+    {
+        "status": False, 
+        "code": "401", 
+        "errors":
+        {
+            "error1":"aslkjdhkladn", 
+            "error2":"kajsdojbn"
+        }
+    }
+
+## Edit my About me
+ - Request:
+    POST /users/me/profile/about
+    { 
+        "allAboutYou": "Hi there!", 
+        "currentMission": "I'm cool", 
+        "occupation": "jkdbfgiudbui", 
+        "company": "ewkrubfdsjb", 
+        "education": 
+        [
+            {"education": "My university", "degree": "Computer Science"},
+            {"education": "My university", "degree": "Computer Science"}
+
+        ],
+        "personalPhilosophy": "kjdfbghdfbgk",
+        "politicalViews": "dfgboieubgiuerb",
+        "religion": "lfh3r9ybdviu"
+    }
+
+ - Response: 
+    204 No Content
+    {
+        "status": True
+    }
+
+    {
+        "status": False, 
+        "code":"401", 
+        "errors":
+        {
+            "error1":"aslkjdhkladn", 
+            "error2":"kajsdojbn"
+        }
+    }
 
