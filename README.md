@@ -40,8 +40,6 @@ Full reference can be found here:
 - https://devcenter.heroku.com/articles/procfile
 - https://devcenter.heroku.com/articles/error-codes
  
-
-
 ## API
 
 IMPORTANT!! All urls start with /api/v1/
@@ -87,7 +85,7 @@ IMPORTANT!! All urls start with /api/v1/
     - 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
     
 
-### Unregister:
+### Unregister: (delete account)
  - Request:
 
  - Response:
