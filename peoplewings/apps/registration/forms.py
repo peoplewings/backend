@@ -121,3 +121,25 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
         if email_domain in self.bad_domains:
             raise forms.ValidationError(_("Registration using free email addresses is prohibited. Please supply a different email address."))
         return self.cleaned_data['email']
+
+GENDER_CHOICES = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+)
+class UserSignUpForm(forms.Form):
+    first_name = forms.CharField(max_length=50, required=True)
+    last_name = forms.CharField(max_length=50, required=True)
+    email = forms.CharField(max_length=50, required=True)
+    email_2 = forms.CharField(max_length=50, required=True)
+    birthday_day = forms.IntegerField(min_value=1, max_value=31, required=True)
+    birthday_month = forms.IntegerField(min_value=1, max_value=12, required=True)
+    birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=True)
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=True)
+    password1 = forms.CharField(max_length=50, required=True)
+
+class ActivationForm(forms.Form):
+    activation_key = forms.CharField(max_length=50, required=True)
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=50, required=True)
+    password = forms.CharField(max_length=50, required=True)

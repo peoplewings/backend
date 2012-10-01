@@ -4,11 +4,13 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils.timezone import utc
 from django.db import models
 from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
+from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired
 
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
@@ -49,7 +51,7 @@ class RegistrationManager(models.Manager):
             try:
                 profile = self.get(activation_key=activation_key)
             except self.model.DoesNotExist:
-                return False
+                raise ActivationCompleted()
             if not profile.activation_key_expired():
                 user = profile.user
                 user.is_active = True
@@ -57,6 +59,10 @@ class RegistrationManager(models.Manager):
                 profile.activation_key = self.model.ACTIVATED
                 profile.save()
                 return user
+            else:
+                raise KeyExpired()
+        else:
+            raise NotAKey()
         return False
     
     def create_inactive_user(self, username, email, password,
@@ -200,8 +206,9 @@ class RegistrationProfile(models.Model):
         
         """
         expiration_date = datetime.timedelta(days=settings.ACCOUNT_ACTIVATION_DAYS)
-        return self.activation_key == self.ACTIVATED or \
-               (self.user.date_joined + expiration_date <= datetime.datetime.now())
+        print self.user.date_joined + expiration_date
+        print datetime.datetime.now()
+        return self.activation_key == self.ACTIVATED or (self.user.date_joined + expiration_date <= datetime.datetime.utcnow().replace(tzinfo=utc))
     activation_key_expired.boolean = True
 
     def send_activation_email(self, site):
@@ -254,4 +261,3 @@ class RegistrationProfile(models.Model):
                                    ctx_dict)
         
         self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
-    
