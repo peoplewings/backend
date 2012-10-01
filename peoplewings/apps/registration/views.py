@@ -3,11 +3,13 @@ Views which allow users to create and activate accounts.
 
 """
 import random
+import datetime
+from django.utils.timezone import utc
 
 from django.shortcuts import redirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login as auth_login, authenticate
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.registration.backends import get_backend
 from peoplewings.apps.registration.exceptions import NotActive, AuthFail
@@ -58,11 +60,13 @@ def register(request, backend, success_url=None, form_class=None,
         context[key] = callable(value) and value() or value
     return form
 
-def do_login(**kwargs):
-    user = authenticate(username=kwargs['username'], password=kwargs['password'])
+def do_login(request, username, password):
+    user = authenticate(username=username, password=password)
     if user:
         if user.is_active:
-            login(request, user)
+            # Update last login
+            user.last_login = datetime.datetime.utcnow().replace(tzinfo=utc)
+            user.save() 
             return user
         else:
             raise NotActive()
@@ -70,12 +74,12 @@ def do_login(**kwargs):
         raise AuthFail()
 
 def login(bundle):
-    ## Checks if the user/pass is valid
-    user = do_login(request = bundle, username = bundle.data['username'], password = bundle.data['password'])
+    ## Checks if the user/pass is valid    
+    user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
     ## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
-    api_token = ApiToken.objects.create()
+    api_token = ApiToken.objects.create(user=user)
     ## Links the user to the token
-    api_token.save(user=user)
+    api_token.save()
     return api_token.token
     
     

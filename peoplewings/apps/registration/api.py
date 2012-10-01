@@ -174,13 +174,19 @@ class LoginResource(ModelResource):
 
     def obj_create(self, bundle, request=None, **kwargs):
         bundle.data = login(bundle)
-        import pprint
-        pprint.pprint(bundle.data)
         return bundle
         
     def dehydrate(self, bundle):
         bundle.data['status'] = True
         bundle.data['code'] = 201       
+        return bundle
+
+    def full_dehydrate(self, bundle):
+        token = bundle.data
+        bundle.data = {}
+        bundle.data['status'] = True
+        bundle.data['code'] = 201 
+        bundle.data['token'] = token      
         return bundle
 
     def wrap_view(self, view):

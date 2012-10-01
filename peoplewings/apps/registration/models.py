@@ -4,6 +4,7 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils.timezone import utc
 from django.db import models
 from django.db import transaction
 from django.template.loader import render_to_string
@@ -205,8 +206,9 @@ class RegistrationProfile(models.Model):
         
         """
         expiration_date = datetime.timedelta(days=settings.ACCOUNT_ACTIVATION_DAYS)
-        return self.activation_key == self.ACTIVATED or \
-               (self.user.date_joined + expiration_date <= datetime.datetime.now())
+        print self.user.date_joined + expiration_date
+        print datetime.datetime.now()
+        return self.activation_key == self.ACTIVATED or (self.user.date_joined + expiration_date <= datetime.datetime.utcnow().replace(tzinfo=utc))
     activation_key_expired.boolean = True
 
     def send_activation_email(self, site):
