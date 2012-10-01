@@ -81,6 +81,28 @@ def login(bundle):
     ## Links the user to the token
     api_token.save()
     return api_token.token
+
+def api_token_is_authenticated(bundle, **kwargs):
+    ##Check if the user exists
+    token = bundle.META.get("HTTP_X_AUTH_TOKEN")
+    #apitoken = ApiToken.objects.get(token = token, last > datetime.datetime.utcnow().replace(tzinfo=utc) + 3600)
+    try:    
+        apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=3600)))
+        apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)
+        apitoken.save()
+        user = User.objects.get(pk=apitoken.user_id)
+        return user        
+    except:
+        return False
+
+def logout(bundle):
+    try:    
+        apitoken = ApiToken.objects.get(token = bundle.META.get("HTTP_X_AUTH_TOKEN"), user_id = bundle.user.pk)    
+        apitoken.delete()
+        return True
+    except:
+        return False
+    
     
     
     

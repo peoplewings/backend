@@ -6,7 +6,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.defaults import *
 from tastypie.api import Api
 
-from peoplewings.apps.registration.api import UserSignUpResource, UserResource, LoginResource
+from peoplewings.apps.registration.api import UserSignUpResource, UserResource, LoginResource, LogoutResource
 
 admin.autodiscover()
 
@@ -14,6 +14,7 @@ v1_api=Api(api_name='v1')
 v1_api.register(UserSignUpResource())
 v1_api.register(UserResource())
 v1_api.register(LoginResource())
+v1_api.register(LogoutResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
