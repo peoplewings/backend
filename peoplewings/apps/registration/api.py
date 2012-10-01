@@ -8,7 +8,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest
+from tastypie.http import HttpBadRequest, HttpUnauthorized
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError
@@ -17,10 +17,11 @@ from django.utils.cache import patch_cache_control
 
 from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive
 from peoplewings.apps.registration.models import RegistrationProfile
-from peoplewings.apps.registration.views import register, activate, login    
+from peoplewings.apps.registration.views import register, activate, login, logout   
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 class UserSignUpResource(ModelResource):
     
@@ -224,5 +225,66 @@ class LoginResource(ModelResource):
                 # error message.
                 return self._handle_500(request, e)
 
+        return wrapper     
+
+class LogoutResource(ModelResource):
+    form_data = None    
+    class Meta:
+        object_class = User
+        queryset = User.objects.all()
+        allowed_methods = ['post']
+        include_resource_uri = False
+        resource_name = 'noauth'
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True
+        #validation = FormValidation(form_class=LoginForm)
+
+    def dehydrate(self, bundle):
+        bundle.data = {}
+        bundle.data['status'] = True
+        bundle.data['code'] = 204       
+        return bundle
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        #destroy this session data
+        if (logout(request)):
+            return bundle
+        raise ImmediateHttpResponse(response=HttpApplicationError())
+
+    def wrap_view(self, view):
+        @csrf_exempt
+        def wrapper(request, *args, **kwargs):
+            try:
+                callback = getattr(self, view)
+                response = callback(request, *args, **kwargs)
+
+                if request.is_ajax():
+                    patch_cache_control(response, no_cache=True)
+
+                # response is a HttpResponse object, so follow Django's instructions
+                # to change it to your needs before you return it.
+                # https://docs.djangoproject.com/en/dev/ref/request-response/
+                response.status_code = 204
+                return response
+            except BadRequest, e:
+                return HttpBadRequest({'code': 666, 'message':e.args[0]})
+            except ValidationError, e:
+                # Or do some JSON wrapping around the standard 500                
+                bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
+                return self.create_response(request, bundle, response_class = HttpBadRequest)
+            except ImmediateHttpResponse, e:
+                if (isinstance(e.response, HttpUnauthorized)):
+                    bundle = {"code": 401, "status": False, "error":"Unauthorized"}
+                    return self.create_response(request, bundle, response_class = HttpUnauthorized)
+                if (isinstance(e.response, HttpApplicationError)):
+                    bundle = {"code": 401, "status": False, "error":"Error"}
+                    return self.create_response(request, bundle, response_class = HttpApplicationError)
+            except Exception, e:
+                # Rather than re-raising, we're going to things similar to
+                # what Django does. The difference is returning a serialized
+                # error message.
+                return self._handle_500(request, e)
         return wrapper     
     

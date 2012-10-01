@@ -57,7 +57,7 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Activate:
  - Request:
-    POST /user/
+    POST /user/activation
     {"activation_key":"asdkjbsjnskn"}
  - Response:
    - OK 
@@ -68,18 +68,24 @@ IMPORTANT!! All urls start with /api/v1/
      - 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
 ### Login
  - Request:
-    /POST /accesstoken
+    /POST /auth
      - 201 CREATED {username = "Joan", password = "asdfasdf"}
  - Response:
    - OK
-     - 201 CREATED {"status":True, "code":"201", csrfmiddlewaretoken = "uSSlOwp4kTJdnOolo0UTVLkY18ih37qP"}
+     - 201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
    - NO
      - 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
      - 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
 ### Logout:
  - Request:
-
+    /POST /noauth
+    {"token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
  - Response:
+   - OK
+    - 204 NO CONTENT {"status":True, "code":"204"}
+   - NO
+    - 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
+    
 
 ### Unregister:
  - Request:

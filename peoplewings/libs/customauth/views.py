@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext as _
 from tastypie.http import HttpUnauthorized
+from tastypie.authentication import Authentication
 
 try:
     from hashlib import sha1
@@ -45,7 +46,8 @@ class ApiTokenAuthentication(Authentication):
         """
         Finds the user with the API Token.
         """
-
+        import pprint
+        pprint.pprint(request)
         if not request.META.get('HTTP_AUTHORIZATION'):
             return self._unauthorized()
 
