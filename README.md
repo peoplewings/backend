@@ -86,29 +86,29 @@ IMPORTANT!! All urls start with /api/v1/
     * 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
     
 
-### Delete account (Joan):
+### Delete account (Joan) 03/09:
 
-### Update user (account settings) (Joan):
+### Update account (Joan) 03/09:
 
-### Forgot password (Joan):
+### Forgot password (Joan) 03/09:
 
-### View my profile
+### View my profile (Eze) 05/09:
 
-### Update my profile
+### Update my profile (Eze) 05/09:
 
-### View another profile
+### View another profile (Eze) 05/09:
 
-### Upload image
+### Upload image (Joan) 04/09:
 
-### Crop image
+### Crop image (Joan) (undefined):
 
-### View my wings
+### View my wings (Eze) 09/09:
 
-### View one of my wings
+### View one of my wings (Eze) 09/09:
 
-### Create wing
+### Create wing (Eze) 09/09:
 
-### Update wing
+### Update wing (Eze) 09/09:
 
-### Search (wings)
+### Search (wings) (undefined):
 
