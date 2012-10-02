@@ -87,14 +87,14 @@ class UserSignUpResource(ModelResource):
 
         return wrapper
 
-class UserResource(ModelResource):
+class ActivationResource(ModelResource):
     form_data = None    
     class Meta:
         object_class = User
         queryset = User.objects.all()
         allowed_methods = ['post']
         include_resource_uri = False
-        resource_name = 'user/activation'
+        resource_name = 'activation'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = Authentication()
         authorization = Authorization()
@@ -288,3 +288,22 @@ class LogoutResource(ModelResource):
                 return self._handle_500(request, e)
         return wrapper     
     
+class AccountResource(ModelResource):       
+    class Meta:
+        object_class = User
+        queryset = User.objects.all()
+        allowed_methods = ['get']
+        include_resource_uri = False
+        resource_name = 'account'
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True
+        
+    def apply_authorization_limits(self, request, object_list=None):
+        if request and request.method in ('GET'):  # 1.
+            import pprint
+            pprint.pprint (object_list.__dict__)
+            pprint.pprint (request.user)
+            return object_list.filter(id = request.user.id)
+        return []

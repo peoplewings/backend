@@ -55,7 +55,7 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Activate:
  - Request:
-    POST /user/activation
+    POST /activation
     {"activation_key":"asdkjbsjnskn"}
  - Response:
    - OK 

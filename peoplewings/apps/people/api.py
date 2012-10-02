@@ -8,7 +8,8 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden
+from tastypie.utils import dict_strip_unicode_keys
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError
@@ -19,89 +20,60 @@ from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 
 from django.core import serializers
-import json
 from django.http import HttpResponse
-from peoplewings.apps.registration.api import UserResource
+from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.people.forms import UserProfileForm
+from peoplewings.apps.people.authorization import ProfileAuthorization
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
-class UserProfileResource(ModelResource):
-    
-    form_data = None
+class UserProfileResource(ModelResource):    
+    user = fields.ToOneField(AccountResource, 'user')
+    method = None
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
         allowed_methods = ['get', 'post']
         include_resource_uri = False
         resource_name = 'profile'
-        #excludes = ['is_active', 'is_staff', 'is_superuser']
-        #fields = ['pw_state', 'avatar']
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = Authentication()
+        authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
         validation = FormValidation(form_class=UserProfileForm)
 
-
-    def get_detail(self, request, **kwargs):
-        up = UserProfile.objects.get(pk=kwargs['pk'])
-        response = serializers.serialize("json", UserProfile.objects.all().filter(pk=kwargs['pk']), indent=2)
-        return HttpResponse(response)
+    def apply_authorization_limits(self, request, object_list=None):
+        if request and request.method in ('GET'):  # 1.
+            return object_list.filter(user=request.user)
 
     def post_detail(self, request, **kwargs):
-        #print kwargs
-        import pprint
-        pprint.pprint(request.POST)
-        #print "received age: ", request.POST.__getitem__("age")
-        up = UserProfile.objects.get(pk=kwargs['pk'])
-        for i in request.POST: print i
-        f = UserProfileForm(request.POST)
-
-
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)       
+        up = UserProfile.objects.get(user=request.user)
+        for i in bundle.data:
+            setattr(up, i, bundle.data.get(i))
+        up.save()
+        self.method = 'POST'
+        updated_bundle = self.dehydrate(bundle)
+        updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
+        return self.create_response(request, updated_bundle, response_class=HttpAccepted) 
+    
     def post_list(self, request, **kwargs):
-        print "/// Entrada a post_list ///"
-
-    def get_list(self, request, **kwargs):
-        #print "//// Entrada a get_list ////"
-        response = serializers.serialize("json", UserProfile.objects.all(), indent=2)
-        return HttpResponse(response)
-
-    def obj_create(self, bundle, **kwargs):
-        print "/// Entrada a obj_create ///"
-
-    def obj_update(self, bundle, **kwargs):
-        print "/// Entrada a obj_update ///" 
-
-    """
-    def full_dehydrate(self, bundle):
-        print "entramos en dehydrate"
-        print bundle
-        bundle.data = {}
-        if self.form_data and self.form_data._errors:
-            bundle.data['status'] = False
-            bundle.data['code'] = 401
-            bundle.data['errors'] = self.form_data._errors
-        else:
-            bundle.data['status'] = True
-            bundle.data['code'] = 201
-            bundle.data['data'] = 'Profile Complete ;-)'        
-        return bundle
-    """
+        return self.create_response(request, {}, response_class=HttpForbidden)
 
     def dehydrate(self, bundle):
-        print "entramos en dehydrate"
-        bundle.data['status'] = True
-        bundle.data['code'] = 201       
-        return bundle
-
-    def full_dehydrate(self, bundle):
-        print "entramos en dehydrate"
-        token = bundle.data
-        bundle.data = {}
-        bundle.data['status'] = True
-        bundle.data['code'] = 201 
-        bundle.data['token'] = token      
-        return bundle
-
+        print 'METHOD: ', self.method
+        if self.method:
+            bundle.data = {}
+            bundle.data['status'] = True
+            bundle.data['code'] = 204
+            bundle.data['data'] = 'Updated'
+            return bundle   
+        else:
+             return super(UserProfileResource, self).dehydrate(bundle)        
+    
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
 
     def wrap_view(self, view):
         @csrf_exempt
@@ -125,8 +97,12 @@ class UserProfileResource(ModelResource):
                 bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
                 return self.create_response(request, bundle, response_class = HttpBadRequest)
             except ImmediateHttpResponse, e:
-                bundle = {"code": 777, "status": False, "error": e}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)          
+                if (isinstance(e.response, HttpUnauthorized)):
+                    bundle = {"code": 401, "status": False, "error":"Unauthorized"}
+                    return self.create_response(request, bundle, response_class = HttpUnauthorized)
+                if (isinstance(e.response, HttpApplicationError)):
+                    bundle = {"code": 401, "status": False, "error":"Error"}
+                    return self.create_response(request, bundle, response_class = HttpApplicationError)          
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized

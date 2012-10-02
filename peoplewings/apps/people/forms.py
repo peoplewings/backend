@@ -4,7 +4,7 @@ from django.forms import ModelForm, extras, Textarea
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
-from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
+from peoplewings.apps.registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
