@@ -46,12 +46,12 @@
 
 <p>IMPORTANT!! All urls start with /api/v1/</p>
 
-<h3>Register:</h3>
+<h3>Register (Joan):</h3>
 
 <ul>
 <li>Request:
 POST /newuser
-{"birthday<em>day":5, "birthday</em>month":3, "birthday<em>year":1999, "csrfmiddlewaretoken":"adsasd", "email":"asdadsqwe@asdasd.com", "email</em>2":"asdadsqwe@asdasd.com", "first<em>name":"Ez", "gender":"M", "last</em>name":"Pz", "password1":"asdf"}</li>
+{"birthday<em>day":5, "birthday</em>month":3, "birthday<em>year":1999, "email":"asdadsqwe@asdasd.com", "email2":"asdadsqwe@asdasd.com", "first</em>name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}</li>
 <li>Response:
 <ul><li>OK
 <ul><li>201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}</li></ul></li>
@@ -59,7 +59,7 @@ POST /newuser
 <ul><li>400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}</li></ul></li></ul></li>
 </ul>
 
-<h3>Activate:</h3>
+<h3>Activate (Joan):</h3>
 
 <ul>
 <li>Request:
@@ -73,7 +73,7 @@ POST /activation
 <ul><li>400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}</li>
 <li>400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}</li>
 <li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
-<h3>Login</h3></li></ul></li></ul></li>
+<h3>Login (Joan):</h3></li></ul></li></ul></li>
 <li><p>Request:
 /POST /auth</p>
 
@@ -85,10 +85,11 @@ POST /activation
 <li>NO
 <ul><li>400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}</li>
 <li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
-<h3>Logout:</h3></li></ul></li></ul></li>
+<h3>Logout (Joan):</h3></li></ul></li></ul></li>
 <li><p>Request:
 /POST /noauth
-{"token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}</p></li>
+{}
+X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</p></li>
 <li>Response:
 <ul><li>OK</li>
 <li>204 NO CONTENT {"status":True, "code":"204"}</li>
@@ -96,27 +97,30 @@ POST /activation
 <li>400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}</li></ul></li>
 </ul>
 
-<h3>Unregister: (delete account)</h3>
+<h3>Delete account (Joan) 03/09:</h3>
 
-<ul>
-<li><p>Request:</p></li>
-<li><p>Response:</p></li>
-</ul>
+<h3>Update account (Joan) 03/09:</h3>
 
-<h3>Update user (account settings):</h3>
+<h3>Forgot password (Joan) 03/09:</h3>
 
-<ul>
-<li><p>Request:</p></li>
-<li><p>Response:</p></li>
-</ul>
+<h3>View my profile (Eze) 05/09:</h3>
 
-<h3>Forgot password:</h3>
+<h3>Update my profile (Eze) 05/09:</h3>
 
-<ul>
-<li><p>Request:</p></li>
-<li><p>Response:</p></li>
-</ul>
+<h3>View another profile (Eze) 05/09:</h3>
 
-<h3>Needed environment variables</h3>
+<h3>Upload image (Joan) 04/09:</h3>
+
+<h3>Crop image (Joan) (undefined):</h3>
+
+<h3>View my wings (Eze) 09/09:</h3>
+
+<h3>View one of my wings (Eze) 09/09:</h3>
+
+<h3>Create wing (Eze) 09/09:</h3>
+
+<h3>Update wing (Eze) 09/09:</h3>
+
+<h3>Search (wings) (undefined):</h3>
 
 
