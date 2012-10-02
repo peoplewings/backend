@@ -43,17 +43,17 @@ Full reference can be found here:
 ## API
 
 IMPORTANT!! All urls start with /api/v1/
-### Register:
+### Register (Joan):
  * Request:
     POST /newuser
-    {"birthday_day":5, "birthday_month":3, "birthday_year":1999, "csrfmiddlewaretoken":"adsasd", "email":"asdadsqwe@asdasd.com", "email_2":"asdadsqwe@asdasd.com", "first_name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}
+    {"birthday_day":5, "birthday_month":3, "birthday_year":1999, "email":"asdadsqwe@asdasd.com", "email2":"asdadsqwe@asdasd.com", "first_name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}
  * Response:
    * OK
      * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
    * NO 
      * 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
 
-### Activate:
+### Activate (Joan):
  * Request:
     POST /activation
     {"activation_key":"asdkjbsjnskn"}
@@ -64,7 +64,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
      * 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
      * 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
-### Login
+### Login (Joan):
  * Request:
     /POST /auth
      * 201 CREATED {username = "Joan", password = "asdfasdf"}
@@ -74,10 +74,11 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
      * 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
      * 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
-### Logout:
+### Logout (Joan):
  * Request:
     /POST /noauth
-    {"token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+    {}
+    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
     * 204 NO CONTENT {"status":True, "code":"204"}
@@ -85,19 +86,29 @@ IMPORTANT!! All urls start with /api/v1/
     * 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
     
 
-### Unregister: (delete account)
- * Request:
+### Delete account (Joan):
 
- * Response:
+### Update user (account settings) (Joan):
 
-### Update user (account settings):
- * Request:
+### Forgot password (Joan):
 
- * Response:
+### View my profile
 
-### Forgot password:
- * Request:
+### Update my profile
 
- * Response:
+### View another profile
 
-### Needed environment variables
+### Upload image
+
+### Crop image
+
+### View my wings
+
+### View one of my wings
+
+### Create wing
+
+### Update wing
+
+### Search (wings)
+
