@@ -65,31 +65,36 @@ POST /newuser
 <li>Request:
 POST /activation
 {"activation_key":"asdkjbsjnskn"}</li>
-<li><p>Response:</p>
-
+<li>Response:
 <ul><li>OK 
 <ul><li>201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}</li></ul></li>
 <li>NO
 <ul><li>400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}</li>
 <li>400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}</li>
-<li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
-<h3>Login (Joan):</h3></li></ul></li></ul></li>
-<li><p>Request:
-/POST /auth</p>
+<li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}</li></ul></li></ul></li>
+</ul>
 
+<h3>Login (Joan):</h3>
+
+<ul>
+<li>Request:
+/POST /auth
 <ul><li>201 CREATED {username = "Joan", password = "asdfasdf"}</li></ul></li>
-<li><p>Response:</p>
-
+<li>Response:
 <ul><li>OK
 <ul><li>201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}</li></ul></li>
 <li>NO
 <ul><li>400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}</li>
-<li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
-<h3>Logout (Joan):</h3></li></ul></li></ul></li>
-<li><p>Request:
+<li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}</li></ul></li></ul></li>
+</ul>
+
+<h3>Logout (Joan):</h3>
+
+<ul>
+<li>Request:
 /POST /noauth
 {}
-X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</p></li>
+X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
 <li>Response:
 <ul><li>OK</li>
 <li>204 NO CONTENT {"status":True, "code":"204"}</li>
