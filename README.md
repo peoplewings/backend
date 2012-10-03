@@ -93,10 +93,46 @@ IMPORTANT!! All urls start with /api/v1/
 ### Forgot password (Joan) 03/09:
 
 ### View my profile (Eze) 05/09:
+ - Request:
+    /GET /profiles
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Update my profile (Eze) 05/09:
+ - Request:
+    /POST /profiles/me
+    {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+    { COMPLETAR }
+ - Response:
+   - OK
+     - 202 Accepted {"code": 204, "data": "Updated", "status": true}
 
 ### View another profile (Eze) 05/09:
+ - Request:
+    /GET /profiles/?user=19
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+
+### View a list of Profiles (Ezequiel) 05/09:
+ - Request:
+    /GET /profiles/?from=1&to=4
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+     
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Upload image (Joan) 04/09:
 
@@ -111,46 +147,6 @@ IMPORTANT!! All urls start with /api/v1/
 ### Update wing (Eze) 09/09:
 
 ### Search (wings) (undefined):
-
-
-
-
-### View all Profiles (Ezequiel)
- - Request:
-    /GET /profiles
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
-    "from": 1, "to": 4
- - Response:
-   - OK
-     - 200 OK 
-     [
-     {"age": 12, "allAboutYou": "", "avatar": "/static/img/blank_avatar.jpg", "birthday": "2000-03-10", "civilState": "", "company": "", "emails": "", "enjoyPeople": "", "gender": "M", "id": "3", "incredible": "", "inspiredBy": "", "interestedIn": "", "mainMission": "", "movies": "", "nameToShow": "eze", "occupation": "", "otherPages": "", "personalPhilosophy": "", "phone": "", "placesGonnaGo": "", "placesLivedIn": "", "placesVisited": "", "placesWannaGo": "", "politicalOpinion": "", "pwOpinion": "", "pwState": "Y", "quotes": "", "religion": "", "sharing": "", "showBirthday": "N", "sports": "", "user": "/api/v1/account/5/"}
-     , 
-     {"age": 12, "allAboutYou": "", "avatar": "/static/img/blank_avatar.jpg", "birthday": "2000-04-09", "civilState": "", "company": "", "emails": "", "enjoyPeople": "", "gender": "M", "id": "5", "incredible": "", "inspiredBy": "", "interestedIn": "", "mainMission": "", "movies": "", "nameToShow": "aaaa", "occupation": "", "otherPages": "", "personalPhilosophy": "", "phone": "", "placesGonnaGo": "", "placesLivedIn": "", "placesVisited": "", "placesWannaGo": "", "politicalOpinion": "", "pwOpinion": "", "pwState": "W", "quotes": "", "religion": "", "sharing": "", "showBirthday": "F", "sports": "", "user": "/api/v1/account/7/"}
-     , 
-     {"age": 16, "allAboutYou": "", "avatar": "/static/img/blank_avatar.jpg", "birthday": "1995-12-07", "civilState": "", "company": "", "emails": "", "enjoyPeople": "", "gender": "M", "id": "6", "incredible": "", "inspiredBy": "", "interestedIn": "", "mainMission": "", "movies": "", "nameToShow": "d", "occupation": "", "otherPages": "", "personalPhilosophy": "", "phone": "", "placesGonnaGo": "", "placesLivedIn": "", "placesVisited": "", "placesWannaGo": "", "politicalOpinion": "", "pwOpinion": "", "pwState": "W", "quotes": "", "religion": "", "sharing": "", "showBirthday": "F", "sports": "", "user": "/api/v1/account/8/"}
-     ]
-   - NO
-     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
-
-### View one Profile (Ezequiel)
- - Request:
-    /GET /profiles/19
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
- - Response:
-   - OK
-     - 200 OK {"age": 22, "allAboutYou": "", "avatar": "/static/img/blank_avatar.jpg", "birthday": "1990-02-01", "civilState": "", "company": "", "emails": "", "enjoyPeople": "", "gender": "M", "id": "19", "incredible": "", "inspiredBy": "", "interestedIn": "", "mainMission": "", "movies": "", "nameToShow": "lala", "occupation": "", "otherPages": "", "personalPhilosophy": "", "phone": "", "placesGonnaGo": "", "placesLivedIn": "", "placesVisited": "", "placesWannaGo": "", "politicalOpinion": "", "pwOpinion": "", "pwState": "N", "quotes": "", "religion": "", "sharing": "", "showBirthday": "F", "sports": "", "user": "/api/v1/account/21/"}
-   - NO
-     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
-
-### Edit my Profile (Ezequiel)
- - Request:
-    /POST /profiles/19
-    {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
-    {"pw_state":"Y"}
- - Response:
-   - OK
-     - 202 Accepted {"code": 204, "data": "Updated", "status": true}
 
 
 ### Needed environment variables

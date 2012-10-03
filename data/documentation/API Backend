@@ -106,9 +106,9 @@ IMPORTANT!! All urls start with /api/v1/
         }
     }
 
-## View my basic information
+## View my Profile
  - Request:
-    GET /users/me/profile/basic    
+    GET /profile
 
  - Response: 
     200 OK
@@ -129,9 +129,11 @@ IMPORTANT!! All urls start with /api/v1/
                     ],
                 "hometownVerbose": "Barcelona, Spain", 
                 "currentVerbose": "Bilbao, Spain",
-                "avatar": "/media/167/65v786s786sa5.jpg" 
+                "avatar": "/media/167/65v786s786sa5.jpg",
+                ...
         }
     }
+
     {
         "status": False, 
         "code": "401", 
@@ -142,9 +144,9 @@ IMPORTANT!! All urls start with /api/v1/
         }
     }
 
-## Edit my basic information
+## Edit my Profile
  - Request:
-    POST /users/me/profile/basic
+    POST /profile
     {
         "gender":"M", 
         "birthday": "01-01-1981", 
@@ -163,81 +165,10 @@ IMPORTANT!! All urls start with /api/v1/
         "current_city": "ioerhtuiehndwkueur", 
         "current_city": "o832ybviw8ty9wvubw", 
         "current_city": "nmocidr73487b3t98g", 
-        "avatar": "/media/167/65v786s786sa5.jpg"
+        "avatar": "/media/167/65v786s786sa5.jpg",
+        ...
     }
 
  - Response: 
     204 No Content
-    
-
-
-## View About me
- - Request:
-    GET /users/me/profile/about    
-
- - Response: 
-    200 OK
-    {
-        "status": True, 
-        "data":
-        { 
-                "allAboutYou": "Hi there!", 
-                "currentMission": "I'm cool", 
-                "occupation": "jkdbfgiudbui", 
-                "company": "ewkrubfdsjb", 
-                "education": 
-                [
-                    {"education": "My university", "degree": "Computer Science"},
-                    {"education": "My university", "degree": "Computer Science"}
-
-                ],
-                "personalPhilosophy": "kjdfbghdfbgk",
-                "politicalViews": "dfgboieubgiuerb",
-                "religion": "lfh3r9ybdviu"
-        }
-    }
-    {
-        "status": False, 
-        "code": "401", 
-        "errors":
-        {
-            "error1":"aslkjdhkladn", 
-            "error2":"kajsdojbn"
-        }
-    }
-
-## Edit my About me
- - Request:
-    POST /users/me/profile/about
-    { 
-        "allAboutYou": "Hi there!", 
-        "currentMission": "I'm cool", 
-        "occupation": "jkdbfgiudbui", 
-        "company": "ewkrubfdsjb", 
-        "education": 
-        [
-            {"education": "My university", "degree": "Computer Science"},
-            {"education": "My university", "degree": "Computer Science"}
-
-        ],
-        "personalPhilosophy": "kjdfbghdfbgk",
-        "politicalViews": "dfgboieubgiuerb",
-        "religion": "lfh3r9ybdviu"
-    }
-
- - Response: 
-    204 No Content
-    {
-        "status": True
-    }
-
-    {
-        "status": False, 
-        "code":"401", 
-        "errors":
-        {
-            "error1":"aslkjdhkladn", 
-            "error2":"kajsdojbn"
-        }
-    }
-
+    401 Unauthorized

@@ -7,6 +7,7 @@ from peoplewings.apps.registration.signals import user_registered
 from peoplewings.apps.registration.forms import RegistrationForm
 from peoplewings.apps.cropper.models import Cropped
 from peoplewings.apps.locations.models import City
+from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES
 
 max_short_len = 20
 max_medium_len = 50
@@ -56,28 +57,12 @@ class City(models.Model):
 
 # LANGUAGE
 class Language(models.Model):
-    """
-    LANGUAGES_CHOICES = (
-        ('E', 'English'),
-        ('S', 'Spanish'),
-        ('G', 'German'),
-        ('F', 'French'),
-        ('C', 'Chinese'),
-        ('P', 'Portuguese'),
-    )
-    """
     name = models.CharField(max_length=max_short_len, unique=True)  
 
 class UserLanguage(models.Model):
-
-    LANGUAGES_LEVEL_CHOICES = (
-        ('B', 'Beginner'),
-        ('I', 'Intermediate'),
-        ('E', 'Expert'),
-    )
     user_profile = models.ForeignKey('UserProfile')
     language = models.ForeignKey('Language')
-    level = models.CharField(max_length=1, choices=LANGUAGES_LEVEL_CHOICES)
+    level = models.CharField(max_length=100, choices=LANGUAGES_LEVEL_CHOICES)
 
 # UNIVERSITY
 class University(models.Model):

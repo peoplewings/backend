@@ -33,3 +33,11 @@ CIVIL_STATE_CHOICES = (
     ('DI', 'Divorced'),
     ('SE', 'Separated'),
 )
+
+LANGUAGES_LEVEL_CHOICES = (
+    ('Beginner', 'Beginner'),
+    ('Intermediate', 'Intermediate'),
+    ('Expert', 'Expert'),
+)
+
+LANGUAGES_LEVEL_CHOICES_KEYS, LANGUAGES_LEVEL_CHOICES_VALUES  = zip(*LANGUAGES_LEVEL_CHOICES)
