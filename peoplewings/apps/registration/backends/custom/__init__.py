@@ -77,7 +77,7 @@ class CustomBackend(object):
 
         """
        
-        username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password1'], kwargs['last_name'], kwargs['first_name']
+        username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password'], kwargs['last_name'], kwargs['first_name']
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:
@@ -149,7 +149,16 @@ class CustomBackend(object):
         """
         return ('registration_activation_complete', (), {})
 
-    
+def forgot_password(self, request, **kwargs):
+                       
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+        
+        sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
+        return sent
+
 class AuthMailBackend(ModelBackend):
     def authenticate(self, username=None, password=None):
         if email_re.search(username):

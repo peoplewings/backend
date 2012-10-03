@@ -123,19 +123,19 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
         return self.cleaned_data['email']
 
 GENDER_CHOICES = (
-    ('M', 'Male'),
-    ('F', 'Female'),
+    ('Male', 'Male'),
+    ('Female', 'Female'),
 )
 class UserSignUpForm(forms.Form):
     first_name = forms.CharField(max_length=50, required=True)
     last_name = forms.CharField(max_length=50, required=True)
     email = forms.CharField(max_length=50, required=True)
-    email_2 = forms.CharField(max_length=50, required=True)
+    repeat_email = forms.CharField(max_length=50, required=True)
     birthday_day = forms.IntegerField(min_value=1, max_value=31, required=True)
     birthday_month = forms.IntegerField(min_value=1, max_value=12, required=True)
     birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=True)
     gender = forms.ChoiceField(choices=GENDER_CHOICES, required=True)
-    password1 = forms.CharField(max_length=50, required=True)
+    password = forms.CharField(max_length=50, required=True)
 
 class ActivationForm(forms.Form):
     activation_key = forms.CharField(max_length=50, required=True)
@@ -143,3 +143,9 @@ class ActivationForm(forms.Form):
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=50, required=True)
     password = forms.CharField(max_length=50, required=True)
+
+class AccountForm(forms.Form):
+    is_active = forms.BooleanField(required=False)
+
+class ForgotForm(forms.Form):
+    email = forms.EmailField(required=True)

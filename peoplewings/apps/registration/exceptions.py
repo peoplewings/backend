@@ -19,3 +19,11 @@ class NotActive(Exception):
 class AuthFail(Exception):
     def render(self, request):
         return HttpResponse()
+
+class DeletedAccount(Exception):
+    def render(self, request):
+        return HttpResponse()
+
+class BadParameters(Exception):
+    def render(self, request):
+        return HttpResponse()

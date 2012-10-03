@@ -1,6 +1,6 @@
 #Registration API
-from django.contrib.auth.models import User
 import json
+
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -14,13 +14,15 @@ from django.utils import simplejson
 from django.db import IntegrityError
 from django.forms import ValidationError
 from django.utils.cache import patch_cache_control
+from django.contrib.auth.models import User
 
-from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive
-from peoplewings.apps.registration.models import RegistrationProfile
-from peoplewings.apps.registration.views import register, activate, login, logout   
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm
+
+from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters
+from peoplewings.apps.registration.models import RegistrationProfile
+from peoplewings.apps.registration.views import register, activate, login, logout, delete_account
+from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, AccountForm, ForgotForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 class UserSignUpResource(ModelResource):
@@ -78,7 +80,11 @@ class UserSignUpResource(ModelResource):
                 return self.create_response(request, bundle, response_class = HttpBadRequest)
             except ImmediateHttpResponse, e:
                 bundle = {"code": 777, "status": False, "error": json.loads(e.response.content)}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)          
+                return self.create_response(request, bundle, response_class = HttpBadRequest)  
+            except BadParameters, e:
+                # This exception occurs when the provided key has expired
+                bundle = {"code": 813, "status": False, "error": e.args[0]}
+                return self.create_response(request, bundle, response_class = HttpBadRequest)        
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
@@ -289,21 +295,163 @@ class LogoutResource(ModelResource):
         return wrapper     
     
 class AccountResource(ModelResource):       
+    method = None    
     class Meta:
         object_class = User
         queryset = User.objects.all()
-        allowed_methods = ['get']
+        allowed_methods = ['get', 'post']
         include_resource_uri = False
-        resource_name = 'account'
+        resource_name = 'accounts/me'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        
+        excludes = ['id', 'is_active', 'is_staff', 'is_superuser', 'username']
+        validation = FormValidation(form_class=AccountForm)
+    
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
+   
     def apply_authorization_limits(self, request, object_list=None):
         if request and request.method in ('GET'):  # 1.
-            import pprint
-            pprint.pprint (object_list.__dict__)
-            pprint.pprint (request.user)
             return object_list.filter(id = request.user.id)
         return []
+    
+    def obj_create(self, bundle, request, **kwargs):
+        if bundle.data.get('is_active'):        
+            account =  request.user
+            if account and account.is_active:
+                delete_account(account)
+                self.method = 'POST'            
+            else:
+                bundle.data = {}
+                bundle.data['status'] = False
+                bundle.data['code'] = 410
+                bundle.data['data'] = 'The account does not exist'
+                raise DeletedAccount(bundle.data)                
+            return bundle
+        else:
+            bundle.data = {}
+            bundle.data['status'] = False
+            bundle.data['code'] = 400
+            bundle.data['data'] = 'Invalid parameters'
+            raise BadParameters(bundle.data)
+        return bundle
+
+    def dehydrate(self, bundle):
+        if self.method and self.method == 'POST':
+            bundle.data = {}
+            bundle.data['status'] = True
+            bundle.data['code'] = 202
+            bundle.data['data'] = 'Account deleted'
+            self.method = None
+
+        return bundle
+
+    def wrap_view(self, view):
+        @csrf_exempt
+        def wrapper(request, *args, **kwargs):
+            try:
+                callback = getattr(self, view)
+                response = callback(request, *args, **kwargs)
+
+                if request.is_ajax():
+                    patch_cache_control(response, no_cache=True)
+
+                return response
+            except BadRequest, e:
+                return HttpBadRequest({'code': 666, 'message':e.args[0]})
+            except ValidationError, e:
+                # Or do some JSON wrapping around the standard 500                
+                bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
+                return self.create_response(request, bundle, response_class = HttpBadRequest)
+            except DeletedAccount, e:
+                return self.create_response(request, e.args[0], response_class = HttpBadRequest)
+            except BadParameters, e:
+                return self.create_response(request, e.args[0], response_class = HttpBadRequest)
+            except ImmediateHttpResponse, e:
+                if (isinstance(e.response, HttpUnauthorized)):
+                    bundle = {"code": 401, "status": False, "error":"Unauthorized"}
+                    return self.create_response(request, bundle, response_class = HttpUnauthorized)
+                if (isinstance(e.response, HttpApplicationError)):
+                    bundle = {"code": 401, "status": False, "error":"Error"}
+                    return self.create_response(request, bundle, response_class = HttpApplicationError)
+            except Exception, e:
+                # Rather than re-raising, we're going to things similar to
+                # what Django does. The difference is returning a serialized
+                # error message.
+                return self._handle_500(request, e)
+        return wrapper    
+    
+class ForgotResource(ModelResource):       
+  
+    class Meta:
+        object_class = User
+        queryset = User.objects.all()
+        allowed_methods = ['post']
+        include_resource_uri = False
+        resource_name = 'forgot'
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = Authentication()
+        authorization = Authorization()
+        always_return_data = True
+        validation = FormValidation(form_class=ForgotForm)
+
+    def obj_create(self, bundle, request, **kwargs):
+        if Users.objects.get(email=bundle.data['email']):        
+            user = Users.objects.get(email=bundle.data['email'])
+            res = forgot_password(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')
+            if res:
+                return bundle
+        bundle.data = {}
+        bundle.data['status'] = False
+        bundle.data['code'] = 400
+        bundle.data['data'] = 'Invalid email'
+        raise BadParameters(bundle.data)
+
+    def dehydrate(self, bundle):
+        if self.method and self.method == 'POST':
+            bundle.data = {}
+            bundle.data['status'] = True
+            bundle.data['code'] = 202
+            bundle.data['data'] = 'Email sent'
+            self.method = None
+
+        return bundle
+
+    def wrap_view(self, view):
+        @csrf_exempt
+        def wrapper(request, *args, **kwargs):
+            try:
+                callback = getattr(self, view)
+                response = callback(request, *args, **kwargs)
+
+                if request.is_ajax():
+                    patch_cache_control(response, no_cache=True)
+
+                return response
+            except BadRequest, e:
+                return HttpBadRequest({'code': 666, 'message':e.args[0]})
+            except ValidationError, e:
+                # Or do some JSON wrapping around the standard 500                
+                bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
+                return self.create_response(request, bundle, response_class = HttpBadRequest)
+            except DeletedAccount, e:
+                return self.create_response(request, e.args[0], response_class = HttpBadRequest)
+            except BadParameters, e:
+                return self.create_response(request, e.args[0], response_class = HttpBadRequest)
+            except ImmediateHttpResponse, e:
+                if (isinstance(e.response, HttpUnauthorized)):
+                    bundle = {"code": 401, "status": False, "error":"Unauthorized"}
+                    return self.create_response(request, bundle, response_class = HttpUnauthorized)
+                if (isinstance(e.response, HttpApplicationError)):
+                    bundle = {"code": 401, "status": False, "error":"Error"}
+                    return self.create_response(request, bundle, response_class = HttpApplicationError)
+            except Exception, e:
+                # Rather than re-raising, we're going to things similar to
+                # what Django does. The difference is returning a serialized
+                # error message.
+                return self._handle_500(request, e)
+        return wrapper       
+
+   

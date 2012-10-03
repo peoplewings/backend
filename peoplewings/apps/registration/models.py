@@ -105,6 +105,18 @@ class RegistrationManager(models.Manager):
         activation_key = sha_constructor(salt+username).hexdigest()
         return self.create(user=user,
                            activation_key=activation_key)
+
+    def update_profile(self, user):
+
+        salt = sha_constructor(str(random.random())).hexdigest()[:5]
+        username = user.username
+        if isinstance(username, unicode):
+            username = username.encode('utf-8')
+        activation_key = sha_constructor(salt+username).hexdigest()
+        self.remove(user=user)
+        
+        return self.create(user=user,
+                           activation_key=activation_key)
         
     def delete_expired_users(self):
         """
@@ -151,6 +163,13 @@ class RegistrationManager(models.Manager):
                 user = profile.user
                 if not user.is_active:
                     user.delete()
+
+    def create_forgot_user(self, user, site):
+        
+        registration_profile = self.update_profile(user)
+        sent = registration_profile.send_activation_email(site, user)
+
+        return sent
 
 
 class RegistrationProfile(models.Model):
@@ -261,3 +280,19 @@ class RegistrationProfile(models.Model):
                                    ctx_dict)
         
         self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+
+def send_forgot_email(self, site, user):
+        
+        ctx_dict = {'reset_token': self.activation_key,
+                    'username': user.email,
+                    'site': site}
+        subject = render_to_string('registration/forgot_password_email_subject.txt',
+                                   ctx_dict)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+        
+        message = render_to_string('registration/forgot_email.txt',
+                                   ctx_dict)
+        
+        self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+        return True
