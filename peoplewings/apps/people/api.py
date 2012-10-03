@@ -27,6 +27,8 @@ from peoplewings.apps.people.authorization import ProfileAuthorization
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 
+
+
 class LanguageResource(ModelResource):
     #languages = fields.ToManyField('peoplewings.apps.people.api.UserLanguageResource', 'languages')
     class Meta:
@@ -61,6 +63,7 @@ class UserLanguageResource(ModelResource):
 class UserProfileResource(ModelResource):    
     user = fields.ToOneField(AccountResource, 'user')
     languages = fields.ToManyField(LanguageResource, 'languages', full=True)
+    #education = fields.ToManyField()
     method = None
     class Meta:
         object_class = UserProfile
@@ -112,10 +115,10 @@ class UserProfileResource(ModelResource):
             for lang in bundle.data['languages']:
                 if lang['level'] not in LANGUAGES_LEVEL_CHOICES_KEYS: raise Exception("Incorrect level: it doesn't exist!!")
                 UserLanguage.objects.get_or_create(user_profile_id=up.id, language_id=Language.objects.get(name=lang['name']).id, level=lang['level'])
-        bundle.data.pop('languages')
+            bundle.data.pop('languages')
 
         for i in bundle.data:
-            setattr(up, i, bundle.data.get(i))
+            if hasattr(up, i): setattr(up, i, bundle.data.get(i))
         up.save()
         self.method = 'POST'
         updated_bundle = self.dehydrate(bundle)
