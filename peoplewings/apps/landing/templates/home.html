@@ -50,8 +50,8 @@
 
 <ul>
 <li>Request:
-POST /newuser
-{"birthday<em>day":5, "birthday</em>month":3, "birthday<em>year":1999, "email":"asdadsqwe@asdasd.com", "email2":"asdadsqwe@asdasd.com", "first</em>name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}</li>
+POST /newuser/
+{"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"joan@peoplewings.com", "repeatEmail":"joan@peoplewings.com", "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}</li>
 <li>Response:
 <ul><li>OK
 <ul><li>201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}</li></ul></li>
@@ -63,38 +63,33 @@ POST /newuser
 
 <ul>
 <li>Request:
-POST /activation
-{"activation_key":"asdkjbsjnskn"}</li>
-<li>Response:
+POST /activation/
+{"activationKey":"asdkjbsjnskn"}</li>
+<li><p>Response:</p>
+
 <ul><li>OK 
 <ul><li>201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}</li></ul></li>
 <li>NO
 <ul><li>400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}</li>
 <li>400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}</li>
-<li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}</li></ul></li></ul></li>
-</ul>
+<li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
+<h3>Login (Joan):</h3></li></ul></li></ul></li>
+<li><p>Request:
+/POST /auth/</p>
 
-<h3>Login (Joan):</h3>
-
-<ul>
-<li>Request:
-/POST /auth
 <ul><li>201 CREATED {username = "Joan", password = "asdfasdf"}</li></ul></li>
-<li>Response:
+<li><p>Response:</p>
+
 <ul><li>OK
 <ul><li>201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}</li></ul></li>
 <li>NO
 <ul><li>400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}</li>
-<li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}</li></ul></li></ul></li>
-</ul>
-
-<h3>Logout (Joan):</h3>
-
-<ul>
-<li>Request:
-/POST /noauth
+<li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
+<h3>Logout (Joan):</h3></li></ul></li></ul></li>
+<li><p>Request:
+/POST /noauth/
 {}
-X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
+X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</p></li>
 <li>Response:
 <ul><li>OK</li>
 <li>204 NO CONTENT {"status":True, "code":"204"}</li>
@@ -102,17 +97,107 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <li>400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}</li></ul></li>
 </ul>
 
-<h3>Delete account (Joan) 03/09:</h3>
+<h3>View my account (Joan):</h3>
 
-<h3>Update account (Joan) 03/09:</h3>
+<ul>
+<li>Request:
+/GET /accounts/me
+{}
+X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
+<li>Response:
+<ul><li>OK</li>
+<li>200 OK {"status":True, "code":"200", "data":[{"dateJoined": "2012-09-28T10:49:53.497530+00:00", "email": "fr33d4n@gmail.com", "firstName": "Ez", "lastLogin": "2012-10-02T11:35:04.505081+00:00", "lastName": "Pz", "password": "pbkdf2_sha256$10000$t4RMJPP649ZE$bhUiYcVcteTXYcdBDba5AjH9DM6ckBI+SjhGicelWAs="}]}</li>
+<li>NO (Method not allowed and unauthorized)</li></ul></li>
+</ul>
 
-<h3>Forgot password (Joan) 03/09:</h3>
+<h3>Delete account (Joan):</h3>
 
-<h3>View my profile (Eze) 05/09:</h3>
+<ul>
+<li>Request:
+/POST /accounts/me/
+{"isActive" = false}
+X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
+<li>Response:
+<ul><li>OK
+<ul><li>204 NO CONTENT</li></ul></li>
+<li>NO (Method not allowed and unauthorized)
+<ul><li>400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}</li>
+<li>400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}</li></ul></li></ul></li>
+</ul>
+
+<h3>Update account (Joan) (undefined):</h3>
+
+<ul>
+<li><p>Need specifications.</p>
+
+<h3>Forgot password (Joan) 03/09:</h3></li>
+<li><p>Request:
+/POST /accounts/me/password/
+{"isActive" = false}</p></li>
+<li><p>Response:</p>
+
+<ul><li>OK
+<ul><li>204 NO CONTENT</li></ul></li>
+<li>NO (Method not allowed and unauthorized)
+<ul><li>400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}</li>
+<li>400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
+<h3>View my profile (Eze) 05/09:</h3></li></ul></li></ul></li>
+<li><p>Request:
+/GET /profiles
+"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"</p></li>
+<li><p>Response:</p>
+
+<ul><li><p>OK</p>
+
+<ul><li>200 OK </li></ul></li>
+<li><p>NO</p>
+
+<ul><li>401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}</li></ul></li></ul></li>
+</ul>
 
 <h3>Update my profile (Eze) 05/09:</h3>
 
+<ul>
+<li>Request:
+/POST /profiles/me
+{"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+{ COMPLETAR }</li>
+<li>Response:
+<ul><li>OK
+<ul><li>202 Accepted {"code": 204, "data": "Updated", "status": true}</li></ul></li></ul></li>
+</ul>
+
 <h3>View another profile (Eze) 05/09:</h3>
+
+<ul>
+<li>Request:
+/GET /profiles/?user=19
+"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"</li>
+<li><p>Response:</p>
+
+<ul><li><p>OK</p>
+
+<ul><li>200 OK </li></ul></li>
+<li><p>NO</p>
+
+<ul><li>401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}</li></ul></li></ul></li>
+</ul>
+
+<h3>View a list of Profiles (Ezequiel) 05/09:</h3>
+
+<ul>
+<li>Request:
+/GET /profiles/?from=1&amp;to=4
+"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"</li>
+<li><p>Response:</p>
+
+<ul><li><p>OK</p>
+
+<ul><li>200 OK </li></ul></li>
+<li><p>NO</p>
+
+<ul><li>401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}</li></ul></li></ul></li>
+</ul>
 
 <h3>Upload image (Joan) 04/09:</h3>
 
@@ -127,5 +212,7 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <h3>Update wing (Eze) 09/09:</h3>
 
 <h3>Search (wings) (undefined):</h3>
+
+<h3>Needed environment variables</h3>
 
 
