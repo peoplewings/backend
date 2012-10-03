@@ -1,1 +1,1 @@
-from settings import test
+from test import *
