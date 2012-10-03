@@ -64,6 +64,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
      * 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
      * 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
+
 ### Login (Joan):
  * Request:
     /POST /auth/
@@ -74,6 +75,7 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
      * 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
      * 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
+
 ### Logout (Joan):
  * Request:
     /POST /noauth/
@@ -109,6 +111,7 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Update account (Joan) (undefined):
  * Need specifications.
+
 ### Forgot password (Joan) 03/09:
  * Request:
     /POST /accounts/me/password/
@@ -119,6 +122,7 @@ IMPORTANT!! All urls start with /api/v1/
    * NO (Method not allowed and unauthorized)
      * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
      * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
+
 ### View my profile (Eze) 05/09:
  - Request:
     /GET /profiles
