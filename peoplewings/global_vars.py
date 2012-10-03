@@ -10,15 +10,15 @@ PW_STATE_CHOICES = (
     ('W', 'By wing'),
 )
 
-BIRTHDAY_CHOICES = (
+SHOW_BIRTHDAY_CHOICES = (
     ('F', 'My full birthday'),
     ('P', 'Only month & day'),
     ('N', 'Don\'t show'),
 )
 
 GENDER_CHOICES = (
-    ('M', 'Male'),
-    ('F', 'Female'),
+    ('Male', 'Male'),
+    ('Female', 'Female'),
 )
 
 CIVIL_STATE_CHOICES = (
@@ -33,3 +33,11 @@ CIVIL_STATE_CHOICES = (
     ('DI', 'Divorced'),
     ('SE', 'Separated'),
 )
+
+LANGUAGES_LEVEL_CHOICES = (
+    ('Beginner', 'Beginner'),
+    ('Intermediate', 'Intermediate'),
+    ('Expert', 'Expert'),
+)
+
+LANGUAGES_LEVEL_CHOICES_KEYS, LANGUAGES_LEVEL_CHOICES_VALUES  = zip(*LANGUAGES_LEVEL_CHOICES)

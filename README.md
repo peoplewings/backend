@@ -120,10 +120,46 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
      * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
 ### View my profile (Eze) 05/09:
+ - Request:
+    /GET /profiles
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Update my profile (Eze) 05/09:
+ - Request:
+    /POST /profiles/me
+    {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+    { COMPLETAR }
+ - Response:
+   - OK
+     - 202 Accepted {"code": 204, "data": "Updated", "status": true}
 
 ### View another profile (Eze) 05/09:
+ - Request:
+    /GET /profiles/?user=19
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+
+### View a list of Profiles (Ezequiel) 05/09:
+ - Request:
+    /GET /profiles/?from=1&to=4
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ - Response:
+   - OK
+     - 200 OK 
+     
+   - NO
+     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Upload image (Joan) 04/09:
 
@@ -138,4 +174,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### Update wing (Eze) 09/09:
 
 ### Search (wings) (undefined):
+
+
+### Needed environment variables
 

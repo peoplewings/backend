@@ -7,7 +7,7 @@ from django.conf.urls.defaults import *
 from tastypie.api import Api
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource
-from peoplewings.apps.people.api import UserProfileResource
+from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource
 
 admin.autodiscover()
 
@@ -18,6 +18,8 @@ v1_api.register(UserProfileResource())
 v1_api.register(LoginResource())
 v1_api.register(LogoutResource())
 v1_api.register(AccountResource())
+v1_api.register(UserLanguageResource())
+v1_api.register(LanguageResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
