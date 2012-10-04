@@ -1,3 +1,5 @@
+import datetime
+from django.utils.timezone import utc
 from django.conf import settings
 from django.contrib.sites.models import RequestSite
 from django.contrib.sites.models import Site
@@ -5,6 +7,7 @@ from django.contrib.sites.models import Site
 from peoplewings.apps.registration import signals
 from peoplewings.apps.registration.forms import RegistrationForm
 from peoplewings.apps.registration.models import RegistrationProfile
+from peoplewings.apps.registration.exceptions import  NotAKey
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.core.validators import email_re
@@ -149,8 +152,8 @@ class CustomBackend(object):
         """
         return ('registration_activation_complete', (), {})
 
-def forgot_password(self, request, **kwargs):
-                       
+    def forgot_password(self, request, **kwargs):
+                           
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:
@@ -158,6 +161,17 @@ def forgot_password(self, request, **kwargs):
         
         sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
         return sent
+
+    def check_forgot_token(self, filters):
+       
+        try:
+            reg = RegistrationProfile.objects.get(activation_key = filters.get('forgotToken'))
+            if reg.key_timestamp + datetime.timedelta(hours=24*7) > datetime.datetime.utcnow().replace(tzinfo=utc):
+                return True
+            else:
+                return False
+        except:
+            raise NotAKey()
 
 class AuthMailBackend(ModelBackend):
     def authenticate(self, username=None, password=None):

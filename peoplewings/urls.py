@@ -6,7 +6,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.defaults import *
 from tastypie.api import Api
 
-from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource
+from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource
 from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource
 
 admin.autodiscover()
@@ -18,6 +18,7 @@ v1_api.register(UserProfileResource())
 v1_api.register(LoginResource())
 v1_api.register(LogoutResource())
 v1_api.register(AccountResource())
+v1_api.register(ForgotResource())
 v1_api.register(UserLanguageResource())
 v1_api.register(LanguageResource())
 

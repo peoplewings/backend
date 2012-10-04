@@ -6,4 +6,6 @@
 !/media/*.png
 !/media/*.md
 /.idea/
+/settings/__init__.py
+requirements.txt
 peoplewings/settings_ezequiel.py

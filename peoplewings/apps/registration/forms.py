@@ -141,11 +141,11 @@ class ActivationForm(forms.Form):
     activation_key = forms.CharField(max_length=50, required=True)
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=50, required=True)
+    username = forms.EmailField(max_length=50, required=True)
     password = forms.CharField(max_length=50, required=True)
 
 class AccountForm(forms.Form):
     is_active = forms.BooleanField(required=False)
 
 class ForgotForm(forms.Form):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(required=False)

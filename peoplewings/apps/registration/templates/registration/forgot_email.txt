@@ -6,6 +6,10 @@ http://{{ site.domain }}/password/reset/confirm/{{ reset_token }}/
 
 Your username, in case you've forgotten: {{ email }}
 
+Please note that this link is valid only for 7 days.
+
+If you didn't request a new password, just ignore this email and have a great day!
+
 Thanks for using our site!
 
 The {{ site.domain }} team

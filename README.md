@@ -112,16 +112,40 @@ IMPORTANT!! All urls start with /api/v1/
 ### Update account (Joan) (undefined):
  * Need specifications.
 
-### Forgot password (Joan) 03/09:
+### Request Forgot password (Joan):
  * Request:
-    /POST /accounts/me/password/
-    {"isActive" = false}
+    /POST /forgot/
+    {"email" = "joan@peoplewings.com"}
  * Response:
    * OK
-     * 204 NO CONTENT
-   * NO (Method not allowed and unauthorized)
-     * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
+     * 202 CREATED {"code": 202, "data": "Email sent", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid email", "status": false}
+     * 400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}
+
+## Check if the resetPassword link is valid (Joan):
+ * Request:
+    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
+    {}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": "The link is valid", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid link", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
+
+## Submit new password (Joan) (pending):
+ * Request:
+    /POST /password
+    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+ * Response:
+   * OK
+     * 200 OK {"code": 202, "data": "Password reseted", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}
+     * 400 BAD REQUEST {"code": 777, "error": {"forgotToken": ["This field is required."], "newPassword": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}
 
 ### View my profile (Eze) 05/09:
  - Request:

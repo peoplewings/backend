@@ -12,7 +12,7 @@ from django.template import RequestContext
 from django.contrib.auth import login as auth_login, authenticate
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.registration.backends import get_backend
-from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadParameters
+from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadParameters, NotAKey
 from django.contrib.auth.models import User
 
 
@@ -129,5 +129,8 @@ def forgot_password(request, backend, **kwargs):
             return True
     return False
 
+def check_forgot_token(filters, backend):
+    backend = get_backend(backend)
+    return backend.check_forgot_token(filters)
     
     

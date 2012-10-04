@@ -113,8 +113,11 @@ class RegistrationManager(models.Manager):
         if isinstance(username, unicode):
             username = username.encode('utf-8')
         activation_key = sha_constructor(salt+username).hexdigest()
-        self.remove(user=user)
-        
+        try:        
+            previous = RegistrationProfile.objects.get(user=user)
+            previous.delete()            
+        except:
+            pass           
         return self.create(user=user,
                            activation_key=activation_key)
         
@@ -167,7 +170,7 @@ class RegistrationManager(models.Manager):
     def create_forgot_user(self, user, site):
         
         registration_profile = self.update_profile(user)
-        sent = registration_profile.send_activation_email(site, user)
+        sent = registration_profile.send_forgot_email(site, user)
 
         return sent
 
@@ -192,6 +195,7 @@ class RegistrationProfile(models.Model):
     
     user = models.ForeignKey(User, unique=True, verbose_name=_('user'))
     activation_key = models.CharField(_('activation key'), max_length=40)
+    key_timestamp = models.DateTimeField(auto_now_add = True, null=True)
     
     objects = RegistrationManager()
     
@@ -281,7 +285,7 @@ class RegistrationProfile(models.Model):
         
         self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
 
-def send_forgot_email(self, site, user):
+    def send_forgot_email(self, site, user):
         
         ctx_dict = {'reset_token': self.activation_key,
                     'username': user.email,
