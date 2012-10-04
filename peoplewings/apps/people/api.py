@@ -357,9 +357,6 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
-        #print "entrada a get_detail"
-        #pprint.pprint(request.__dict__)
-        pprint.pprint(kwargs)
         if 'pk' in kwargs and kwargs['pk'] == 'me':
             kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         return super(UserProfileResource, self).get_detail(request, **kwargs)
