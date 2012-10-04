@@ -1,3 +1,5 @@
+import datetime
+from django.utils.timezone import utc
 from django.conf import settings
 from django.contrib.sites.models import RequestSite
 from django.contrib.sites.models import Site
@@ -5,6 +7,7 @@ from django.contrib.sites.models import Site
 from peoplewings.apps.registration import signals
 from peoplewings.apps.registration.forms import RegistrationForm
 from peoplewings.apps.registration.models import RegistrationProfile
+from peoplewings.apps.registration.exceptions import  NotAKey
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.core.validators import email_re
@@ -77,11 +80,8 @@ class CustomBackend(object):
 
         """
        
-        username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password1'], kwargs['last_name'], kwargs['first_name']
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(request)
+        username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password'], kwargs['last_name'], kwargs['first_name']
+        site = settings.SITE
         # username = kwargs['first_name'] + "." + kwargs['last_name'] 
         new_user = RegistrationProfile.objects.create_inactive_user(username, email,
                                                                     password, site)
@@ -149,7 +149,24 @@ class CustomBackend(object):
         """
         return ('registration_activation_complete', (), {})
 
-    
+    def forgot_password(self, request, **kwargs):
+                           
+        site = settings.SITE
+        
+        sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
+        return sent
+
+    def check_forgot_token(self, filters):
+       
+        try:
+            reg = RegistrationProfile.objects.get(activation_key = filters.get('forgotToken'))
+            if reg.key_timestamp + datetime.timedelta(hours=24*7) > datetime.datetime.utcnow().replace(tzinfo=utc):
+                return True
+            else:
+                return False
+        except:
+            raise NotAKey()
+
 class AuthMailBackend(ModelBackend):
     def authenticate(self, username=None, password=None):
         if email_re.search(username):

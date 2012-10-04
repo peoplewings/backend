@@ -52,7 +52,8 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-
+#SITE
+SITE = 'http://peoplewings-frontend.herokuapp.com'
 # SMTP settings
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'

@@ -45,18 +45,19 @@ Full reference can be found here:
 IMPORTANT!! All urls start with /api/v1/
 ### Register (Joan):
  * Request:
-    POST /newuser
-    {"birthday_day":5, "birthday_month":3, "birthday_year":1999, "email":"asdadsqwe@asdasd.com", "email2":"asdadsqwe@asdasd.com", "first_name":"Ez", "gender":"M", "last_name":"Pz", "password1":"asdf"}
+    POST /newuser/
+    {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"joan@peoplewings.com", "repeatEmail":"joan@peoplewings.com", "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}
  * Response:
    * OK
      * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
    * NO 
      * 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+     * 400 BAD REQUEST {"code": 813, "error": "The email is already being used", "status": false}
 
 ### Activate (Joan):
  * Request:
-    POST /activation
-    {"activation_key":"asdkjbsjnskn"}
+    POST /activation/
+    {"activationKey":"asdkjbsjnskn"}
  * Response:
    * OK 
      * 201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}
@@ -64,9 +65,10 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
      * 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
      * 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
+
 ### Login (Joan):
  * Request:
-    /POST /auth
+    /POST /auth/
      * 201 CREATED {username = "Joan", password = "asdfasdf"}
  * Response:
    * OK
@@ -74,9 +76,10 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
      * 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
      * 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
+
 ### Logout (Joan):
  * Request:
-    /POST /noauth
+    /POST /noauth/
     {}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -85,12 +88,65 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
     * 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
     
+### View my account (Joan):
+ * Request:
+    /GET /accounts/me
+    {}
+    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+ * Response:
+   * OK
+    * 200 OK {"status":True, "code":"200", "data":[{"dateJoined": "2012-09-28T10:49:53.497530+00:00", "email": "fr33d4n@gmail.com", "firstName": "Ez", "lastLogin": "2012-10-02T11:35:04.505081+00:00", "lastName": "Pz", "password": "pbkdf2_sha256$10000$t4RMJPP649ZE$bhUiYcVcteTXYcdBDba5AjH9DM6ckBI+SjhGicelWAs="}]}
+   * NO (Method not allowed and unauthorized)
+    
+### Delete account (Joan):
+ * Request:
+    /POST /accounts/me/
+    {"isActive" = false}
+    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+ * Response:
+   * OK
+     * 204 NO CONTENT
+   * NO (Method not allowed and unauthorized)
+     * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
 
-### Delete account (Joan) 03/09:
+### Update account (Joan) (undefined):
+ * Need specifications.
 
-### Update account (Joan) 03/09:
+### Request Forgot password (Joan):
+ * Request:
+    /POST /forgot/
+    {"email" = "joan@peoplewings.com"}
+ * Response:
+   * OK
+     * 202 CREATED {"code": 202, "data": "Email sent", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid email", "status": false}
+     * 400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}
 
-### Forgot password (Joan) 03/09:
+### Check if the resetPassword link is valid (Joan):
+ * Request:
+    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
+    {}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": "The link is valid", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 400, "data": "Invalid link", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
+
+### Submit new password (Joan):
+ * Request:
+    /POST /forgot/
+    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": "Password changed", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
 ### View a list of Profiles (Ezequiel) 05/09:
  * Request:

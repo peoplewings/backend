@@ -4,7 +4,7 @@ from django.forms import ModelForm, extras, Textarea
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
-from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
+from peoplewings.apps.registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 from models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -356,8 +356,16 @@ class UserProfileForm(forms.Form):
     pw_opinion = forms.CharField(max_length=max_long_len, required=False) 
 
     # Trips
+<<<<<<< HEAD
     places_lived_in = forms.CharField(max_length=max_long_len, required=False)
     places_visited = forms.CharField(max_length=max_long_len, required=False)    
     places_gonna_go = forms.CharField(max_length=max_long_len, required=False)
     places_wanna_go = forms.CharField(max_length=max_long_len, required=False) 
     
+=======
+    places_lived_in = forms.TextField(max_length=max_long_len, required=False)
+    places_visited = forms.TextField(max_length=max_long_len, required=False)    
+    places_gonna_go = forms.TextField(max_length=max_long_len, required=False)
+    places_wanna_go = forms.TextField(max_length=max_long_len, required=False) 
+    """
+>>>>>>> 0152a1801b34e197ba0939e5421d248ee58a01b9

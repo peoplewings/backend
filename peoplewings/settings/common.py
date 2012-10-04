@@ -101,6 +101,7 @@ AUTHENTICATION_BACKENDS = (
     'peoplewings.apps.people.backends.default.AuthMailBackend',
     'django.contrib.auth.backends.ModelBackend',)
 
+APPEND_SLASH=False
 # A place for watchers
 """
 print "PROJECT_ROOT: " + PROJECT_ROOT

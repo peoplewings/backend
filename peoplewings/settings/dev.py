@@ -54,6 +54,8 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
+SITE = 'http://peoplewings-frontend.herokuapp.com'
+
 # SMTP settings
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'

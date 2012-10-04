@@ -12,8 +12,9 @@ from django.template import RequestContext
 from django.contrib.auth import login as auth_login, authenticate
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.registration.backends import get_backend
-from peoplewings.apps.registration.exceptions import NotActive, AuthFail
+from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadParameters, NotAKey
 from django.contrib.auth.models import User
+from peoplewings.apps.registration.models import *
 
 
 def activate(request, backend,
@@ -46,7 +47,10 @@ def register(request, backend, success_url=None, form_class=None,
              extra_context=None):
 
     request.POST['username'] = request.POST['first_name'] + "." + str(random.getrandbits(24))
-    request.POST['password2'] = request.POST['password1']
+    request.POST['password2'] = request.POST['password']
+    if request.POST['email'] != request.POST['repeat_email']: 
+        bundle = {"email": ["Emails don't match"]}    
+        raise BadParameters(bundle)
     bundle_data = request.POST
     backend = get_backend(backend)
     if not backend.registration_allowed(request):
@@ -102,7 +106,44 @@ def logout(bundle):
         return True
     except:
         return False
-    
-    
+
+def delete_account(user=None):
+    # If the user exists
+    if user and User.objects.get(pk = user.id):
+        # 1) delete profile
+        # 2) delete wings
+        # 3) delete notifications
+        # 4) delete account
+        account = User.objects.get(pk = user.id)
+        account.is_active = False
+        account.save()
+        # 5) delete tokens
+        token = ApiToken.objects.filter(user_id = user.id)
+        token.delete()
+    return
+
+def forgot_password(request, backend, **kwargs):
+    if request.user and User.objects.get(pk = request.user.id):
+        backend = get_backend(backend)
+        sent = backend.forgot_password(request, **kwargs)
+        if sent:
+            return True
+    return False
+
+def check_forgot_token(filters, backend):
+    backend = get_backend(backend)
+    return backend.check_forgot_token(filters)
+
+def change_password(data):
+    try:
+        reg = RegistrationProfile.objects.get(activation_key = data['forgot_token'])
+        reg.activation_key = 'ALREADY ACTIVE'
+        reg.save()
+        user = User.objects.get(pk = reg.user_id)
+        user.set_password(data['new_password'])
+        user.is_active = True
+        user.save()
+    except:
+        raise NotAKey()
     
     
