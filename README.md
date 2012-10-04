@@ -52,6 +52,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
    * NO 
      * 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
+     * 400 BAD REQUEST {"code": 813, "error": "The email is already being used", "status": false}
 
 ### Activate (Joan):
  * Request:
@@ -135,7 +136,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
 
-## Submit new password (Joan) (pending):
+## Submit new password (Joan):
  * Request:
     /POST /password
     {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 

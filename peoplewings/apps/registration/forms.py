@@ -129,7 +129,7 @@ GENDER_CHOICES = (
 class UserSignUpForm(forms.Form):
     first_name = forms.CharField(max_length=50, required=True)
     last_name = forms.CharField(max_length=50, required=True)
-    email = forms.CharField(max_length=50, required=True)
+    email = forms.EmailField(max_length=50, required=True)
     repeat_email = forms.CharField(max_length=50, required=True)
     birthday_day = forms.IntegerField(min_value=1, max_value=31, required=True)
     birthday_month = forms.IntegerField(min_value=1, max_value=12, required=True)

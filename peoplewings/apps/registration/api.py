@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 
-from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters
+from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser
 from peoplewings.apps.registration.models import RegistrationProfile
 from peoplewings.apps.registration.views import register, activate, login, logout, delete_account, forgot_password, check_forgot_token
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, AccountForm, ForgotForm
@@ -35,7 +35,6 @@ class UserSignUpResource(ModelResource):
         allowed_methods = ['post']
         include_resource_uri = False
         resource_name = 'newuser'
-        #excludes = ['is_active', 'is_staff', 'is_superuser']
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = Authentication()
         authorization = Authorization()
@@ -85,7 +84,11 @@ class UserSignUpResource(ModelResource):
             except BadParameters, e:
                 # This exception occurs when the provided key has expired
                 bundle = {"code": 813, "status": False, "error": e.args[0]}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)        
+                return self.create_response(request, bundle, response_class = HttpBadRequest)
+            except ExistingUser, e:
+                # This exception occurs when the provided key has expired
+                bundle = {"code": 813, "status": False, "error": "The email is already being used"}
+                return self.create_response(request, bundle, response_class = HttpBadRequest)       
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized

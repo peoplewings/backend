@@ -81,10 +81,7 @@ class CustomBackend(object):
         """
        
         username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password'], kwargs['last_name'], kwargs['first_name']
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(request)
+        site = settings.SITE
         # username = kwargs['first_name'] + "." + kwargs['last_name'] 
         new_user = RegistrationProfile.objects.create_inactive_user(username, email,
                                                                     password, site)

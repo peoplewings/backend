@@ -10,7 +10,7 @@ from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
-from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired
+from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, ExistingUser
 
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
@@ -76,6 +76,13 @@ class RegistrationManager(models.Manager):
         user. To disable this, pass ``send_email=False``.
         
         """
+        try:
+            user = User.objects.filter(email=email)
+        except Exception:
+            pass
+        if user:
+            raise ExistingUser
+
         new_user = User.objects.create_user(username, email, password)
         new_user.is_active = False
         new_user.save()

@@ -27,3 +27,7 @@ class DeletedAccount(Exception):
 class BadParameters(Exception):
     def render(self, request):
         return HttpResponse()
+
+class ExistingUser(Exception):
+    def render(self, request):
+        return HttpResponse()

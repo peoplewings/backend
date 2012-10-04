@@ -1,8 +1,8 @@
-You're receiving this e-mail because you requested a password reset for your user account at {{ site.domain }}
+You're receiving this e-mail because you requested a password reset for your user account at {{ site }}
 
 Please go to the following page and choose a new password:
 
-http://{{ site.domain }}/password/reset/confirm/{{ reset_token }}/
+http://{{ site }}/password/reset/confirm/{{ reset_token }}/
 
 Your username, in case you've forgotten: {{ email }}
 
@@ -12,4 +12,4 @@ If you didn't request a new password, just ignore this email and have a great da
 
 Thanks for using our site!
 
-The {{ site.domain }} team
+The {{ site }} team
