@@ -265,7 +265,10 @@ class UserProfileResource(ModelResource):
             i.data['country'] = country.name
         return bundle.data['other_locations']
 
+    """
     def apply_authorization_limits(self, request, object_list=None):
+        if request and request.method in ('POST'):
+            return object_list.get(user=request.user)
         if request and request.method in ('GET'):
             if 'from' in request.GET and 'to' in request.GET:
                 initial = request.GET['from']
@@ -277,6 +280,7 @@ class UserProfileResource(ModelResource):
                 return object_list.filter(pk=request.GET['pk'])
             else: 
                 return object_list.filter(user=request.user)
+    """    
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
@@ -295,20 +299,20 @@ class UserProfileResource(ModelResource):
         if 'education' in bundle.data:
             UserProfileStudiedUniversity.objects.filter(user_profile_id=up.id).delete()
             for e in bundle.data['education']:
-                uni, b = University.objects.get_or_create(name=e['university'])
+                uni, b = University.objects.get_or_create(name=e['name'])
                 UserProfileStudiedUniversity.objects.get_or_create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
             bundle.data.pop('education')
 
         if 'instant_messages' in bundle.data:
             UserInstantMessage.objects.filter(user_profile_id=up.id).delete()
             for im in bundle.data['instant_messages']:
-                UserInstantMessage.objects.get_or_create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['instant_message']).id, instant_message_username=im['username'])
+                UserInstantMessage.objects.get_or_create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['name']).id, instant_message_username=im['username'])
             bundle.data.pop('instant_messages')
 
         if 'social_networks' in bundle.data:
             UserSocialNetwork.objects.filter(user_profile_id=up.id).delete()
             for sn in bundle.data['social_networks']:
-                UserSocialNetwork.objects.get_or_create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['social_network']).id, social_network_username=sn['username'])
+                UserSocialNetwork.objects.get_or_create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['name']).id, social_network_username=sn['username'])
             bundle.data.pop('social_networks')
 
         if 'current' in bundle.data:
@@ -351,6 +355,15 @@ class UserProfileResource(ModelResource):
     def post_list(self, request, **kwargs):
         print "no autorizado el post_list"
         return self.create_response(request, {}, response_class=HttpForbidden)
+
+    def get_detail(self, request, **kwargs):
+        #print "entrada a get_detail"
+        #pprint.pprint(request.__dict__)
+        pprint.pprint(kwargs)
+        if 'pk' in kwargs and kwargs['pk'] == 'me':
+            kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        return super(UserProfileResource, self).get_detail(request, **kwargs)
+
 
     def dehydrate(self, bundle):
         if self.method:
