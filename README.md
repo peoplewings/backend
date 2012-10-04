@@ -94,7 +94,7 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### View my profile (Eze) 05/09:
  - Request:
-    /GET /profiles
+    /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  - Response:
    - OK
@@ -105,9 +105,17 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Update my profile (Eze) 05/09:
  - Request:
-    /POST /profiles/me
+    /POST profiles/me/
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
-    { COMPLETAR }
+    { "current" : {"city": "Barcelona", "region":"Catalunya", "country":"Spain"},
+    "hometown" : {"city": "Barcelona", "region":"Catalunya", "country":"Spain"},
+    "other_locations": 
+      [
+        {"city": "Barcelona", "region":"Catalunya", "country":"Spain"},
+        {"city": "Madrid", "region":"Madrid", "country":"Spain"},
+        {"city": "Bilbao", "region":"Pais Vasco", "country":"Spain"}
+      ]
+    }
  - Response:
    - OK
      - 202 Accepted {"code": 204, "data": "Updated", "status": true}

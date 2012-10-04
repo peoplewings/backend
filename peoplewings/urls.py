@@ -8,6 +8,7 @@ from tastypie.api import Api
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource
 from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource
+from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 
 admin.autodiscover()
 
@@ -26,6 +27,9 @@ v1_api.register(UserSocialNetworkResource())
 v1_api.register(SocialNetworkResource())
 v1_api.register(UserInstantMessageResource())
 v1_api.register(InstantMessageResource())
+v1_api.register(CityResource())
+v1_api.register(RegionResource())
+v1_api.register(CountryResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),

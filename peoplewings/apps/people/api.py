@@ -27,6 +27,9 @@ from peoplewings.apps.people.authorization import ProfileAuthorization
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 
+from peoplewings.apps.locations.api import CityResource
+from peoplewings.apps.locations.models import Country, Region, City
+
 import pprint
 
 class InstantMessageResource(ModelResource):
@@ -142,6 +145,9 @@ class UserProfileResource(ModelResource):
     education = fields.ToManyField(UniversityResource, 'universities', full=True)
     social_networks = fields.ToManyField(SocialNetworkResource, 'social_networks', full=True)
     instant_messages = fields.ToManyField(InstantMessageResource, 'instant_messages', full=True)
+    current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
+    hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
+    other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
     method = None
     class Meta:
         object_class = UserProfile
@@ -192,7 +198,7 @@ class UserProfileResource(ModelResource):
         up = UserProfile.objects.get(pk=id_user)
 
         for i in bundle.data['social_networks']: 
-            # i = {id: id_language, name:'Spanish'}
+            # i = {id: id_social_networks, name:'Facebook'}
             sn = SocialNetwork.objects.get(pk=i.data['id'])
             usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=up)
             i.data['username'] = usn.social_network_username
@@ -206,12 +212,58 @@ class UserProfileResource(ModelResource):
         up = UserProfile.objects.get(pk=id_user)
 
         for i in bundle.data['instant_messages']: 
-            # i = {id: id_language, name:'Spanish'}
+            # i = {id: id_instant_message, name:'Whatsapp'}
             im = InstantMessage.objects.get(pk=i.data['id'])
             uim = UserInstantMessage.objects.get(instant_message=im, user_profile=up)
             i.data['username'] = uim.instant_message_username
             i.data.pop('id')
-        return bundle.data['instant_messages']        
+        return bundle.data['instant_messages']
+
+    def dehydrate_current(self, bundle):
+        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
+        up = UserProfile.objects.get(pk=id_user)
+
+        city = up.current_city
+        if city is None: return {}
+        region = city.region
+        country = region.country
+        bundle.data['current'] = {}
+        bundle.data['current']['city'] = city.name
+        bundle.data['current']['region'] = region.name
+        bundle.data['current']['country'] = country.name
+        return bundle.data['current']
+
+    def dehydrate_hometown(self, bundle):
+        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
+        up = UserProfile.objects.get(pk=id_user)
+
+        city = up.hometown
+        if city is None: return {}
+        region = city.region
+        country = region.country
+        bundle.data['hometown'] = {}
+        bundle.data['hometown']['city'] = city.name
+        bundle.data['hometown']['region'] = region.name
+        bundle.data['hometown']['country'] = country.name
+        return bundle.data['hometown']
+
+    def dehydrate_other_locations(self, bundle):
+        #print "dehydrate instant_message "
+        #id_user = bundle.data['id']
+        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
+        up = UserProfile.objects.get(pk=id_user)
+
+        for i in bundle.data['other_locations']: 
+            # tenemos: i.data = {id: id_city, lat, lon, name, resource_uri, short_name}
+            # queremos: i.data = {city: nombre_city, region: nombre_region, country: nombre_country}
+            city = City.objects.get(pk=i.data['id'])
+            i.data = {}
+            region = city.region
+            country = region.country
+            i.data['city'] = city.name
+            i.data['region'] = region.name
+            i.data['country'] = country.name
+        return bundle.data['other_locations']
 
     def apply_authorization_limits(self, request, object_list=None):
         if request and request.method in ('GET'):
@@ -233,7 +285,6 @@ class UserProfileResource(ModelResource):
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)       
         up = UserProfile.objects.get(user=request.user)
 
-        
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
@@ -259,6 +310,35 @@ class UserProfileResource(ModelResource):
             for sn in bundle.data['social_networks']:
                 UserSocialNetwork.objects.get_or_create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['social_network']).id, social_network_username=sn['username'])
             bundle.data.pop('social_networks')
+
+        if 'current' in bundle.data:
+            if 'city' in bundle.data['current'] and 'region' in bundle.data['current'] and 'country' in bundle.data['current']:
+                country, b = Country.objects.get_or_create(name=bundle.data['current']['country'])
+                region, b = Region.objects.get_or_create(name=bundle.data['current']['region'], country=country)
+                city, b = City.objects.get_or_create(name=bundle.data['current']['city'], region=region)
+                up.current_city = city
+            else:
+                up.current_city = None
+            bundle.data.pop('current')
+
+        if 'hometown' in bundle.data:
+            if 'city' in bundle.data['hometown'] and 'region' in bundle.data['hometown'] and 'country' in bundle.data['hometown']:
+                country, b = Country.objects.get_or_create(name=bundle.data['hometown']['country'])
+                region, b = Region.objects.get_or_create(name=bundle.data['hometown']['region'], country=country)
+                city, b = City.objects.get_or_create(name=bundle.data['hometown']['city'], region=region)
+                up.hometown = city
+            else:
+                up.hometown = None
+            bundle.data.pop('hometown')
+
+        if 'other_locations' in bundle.data:
+            up.other_locations = []
+            for ol in bundle.data['other_locations']:
+                country, b = Country.objects.get_or_create(name=ol['country'])
+                region, b = Region.objects.get_or_create(name=ol['region'], country=country)
+                city, b = City.objects.get_or_create(name=ol['city'], region=region)
+                up.other_locations.add(city)
+            bundle.data.pop('other_locations')
 
         for i in bundle.data:
             if hasattr(up, i): setattr(up, i, bundle.data.get(i))
