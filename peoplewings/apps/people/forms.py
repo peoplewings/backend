@@ -311,53 +311,53 @@ customize_register_form()
 
 class UserProfileForm(forms.Form):
     pw_state = forms.ChoiceField(choices=PW_STATE_CHOICES, required=False)
-    avatar = forms.CharField(max_length=4, required=False)
-    """
+    avatar = forms.CharField(max_length=100, required=True)
+
     #Basic Information
     birthday_day = forms.IntegerField(min_value=1, max_value=31, required=False)
     birthday_month = forms.IntegerField(min_value=1, max_value=12, required=False)
     birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=False)
-    show_birthday = forms.ChoiceField(max_length=1, choices=SHOW_BIRTHDAY_CHOICES, required=False)
-    gender = forms.ChoiceField(max_length=6, choices=GENDER_CHOICES, required=False)
+    show_birthday = forms.ChoiceField(choices=SHOW_BIRTHDAY_CHOICES, required=False)
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=False)
     interested_in = forms.CharField(max_length=1, required=False)
-    civil_state = forms.ChoiceField(max_length=2, choices=CIVIL_STATE_CHOICES, required=False)
-    languages = forms.ManyToManyField(Language, through='UserLanguage', required=False)
+    civil_state = forms.ChoiceField(choices=CIVIL_STATE_CHOICES, required=False)
+    #languages = forms.ManyToManyField(Language, through='UserLanguage', required=False)
 
     # Locations
-    current_city = forms.ForeignKey(City, related_name='cc+', required=False)
-    hometown = forms.ForeignKey(City, related_name='ht+', required=False)
-    other_locations = forms.ManyToManyField(City, related_name='ol+', required=False)
+    #current_city = forms.ForeignKey(City, related_name='cc+', required=False)
+    #hometown = forms.ForeignKey(City, related_name='ht+', required=False)
+    #other_locations = forms.ManyToManyField(City, related_name='ol+', required=False)
 
     # Contact info
     emails = forms.EmailField()
     phone = forms.CharField(max_length=max_short_len, required=False)
-    social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
-    instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
+    #social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
+    #instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
 
     # About me
-    all_about_you = forms.TextField(max_length=max_long_len, brequired=False)
-    main_mission = forms.TextField(max_length=max_long_len, required=False, verbose_name='Current mission')
+    all_about_you = forms.CharField(max_length=max_long_len, required=False)
+    main_mission = forms.CharField(max_length=max_long_len, required=False)
     occupation = forms.CharField(max_length=max_short_len, required=False)
-    company = forms.CharField(max_length=max_short_len, required=False, verbose_name='Companies')
-    universities = forms.ManyToManyField(University, through='UserProfileStudiedUniversity', required=False)
-    personal_philosophy = forms.TextField(max_length=max_long_len, required=False)
-    political_opinion = forms.CharField(max_length=max_short_len, required=False, verbose_name='Political views')
+    company = forms.CharField(max_length=max_short_len, required=False)
+    #universities = forms.ManyToManyField(University, through='UserProfileStudiedUniversity', required=False)
+    personal_philosophy = forms.CharField(max_length=max_long_len, required=False)
+    political_opinion = forms.CharField(max_length=max_short_len, required=False)
     religion = forms.CharField(max_length=max_short_len, required=False)
 
     # Likes
-    enjoy_people = forms.TextField(verbose_name="People I enjoy", max_length=max_long_len, required=False)
-    movies = forms.TextField(verbose_name="Likes", max_length=max_long_len, required=False)
-    sports = forms.TextField(max_length=max_long_len, required=False)
-    other_pages = forms.TextField(verbose_name="Likes", max_length=max_long_len, required=False)    
-    sharing = forms.TextField(verbose_name="Show, learn, share...", max_length=max_long_len, required=False)
-    incredible = forms.TextField(verbose_name="Amazing things done/seen", max_length=max_long_len, required=False)
-    inspired_by = forms.TextField(verbose_name="People who inspires you", max_length=max_long_len, required=False)
-    quotes = forms.TextField(verbose_name="Favorite quotations", max_length=max_long_len, required=False)
-    pw_opinion = forms.TextField(verbose_name="Your opinion please", max_length=max_long_len, required=False) 
+    enjoy_people = forms.CharField(max_length=max_long_len, required=False)
+    movies = forms.CharField(max_length=max_long_len, required=False)
+    sports = forms.CharField(max_length=max_long_len, required=False)
+    other_pages = forms.CharField(max_length=max_long_len, required=False)    
+    sharing = forms.CharField(max_length=max_long_len, required=False)
+    incredible = forms.CharField(max_length=max_long_len, required=False)
+    inspired_by = forms.CharField(max_length=max_long_len, required=False)
+    quotes = forms.CharField(max_length=max_long_len, required=False)
+    pw_opinion = forms.CharField(max_length=max_long_len, required=False) 
 
     # Trips
-    places_lived_in = forms.TextField(max_length=max_long_len, required=False)
-    places_visited = forms.TextField(max_length=max_long_len, required=False)    
-    places_gonna_go = forms.TextField(max_length=max_long_len, required=False)
-    places_wanna_go = forms.TextField(max_length=max_long_len, required=False) 
-    """
+    places_lived_in = forms.CharField(max_length=max_long_len, required=False)
+    places_visited = forms.CharField(max_length=max_long_len, required=False)    
+    places_gonna_go = forms.CharField(max_length=max_long_len, required=False)
+    places_wanna_go = forms.CharField(max_length=max_long_len, required=False) 
+    
