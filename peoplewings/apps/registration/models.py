@@ -175,7 +175,7 @@ class RegistrationManager(models.Manager):
                     user.delete()
 
     def create_forgot_user(self, user, site):
-        
+
         registration_profile = self.update_profile(user)
         sent = registration_profile.send_forgot_email(site, user)
 

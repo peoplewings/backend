@@ -151,7 +151,7 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <li>400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}</li></ul></li></ul></li>
 </ul>
 
-<h2>Check if the resetPassword link is valid (Joan):</h2>
+<h3>Check if the resetPassword link is valid (Joan):</h3>
 
 <ul>
 <li>Request:
@@ -166,19 +166,19 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <li>400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}</li></ul></li></ul></li>
 </ul>
 
-<h2>Submit new password (Joan):</h2>
+<h3>Submit new password (Joan):</h3>
 
 <ul>
 <li>Request:
-/POST /password
+/POST /forgot/
 {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} </li>
 <li>Response:
 <ul><li>OK
-<ul><li>200 OK {"code": 202, "data": "Password reseted", "status": true}</li></ul></li>
+<ul><li>200 OK {"code": 200, "data": "Password changed", "status": true}</li></ul></li>
 <li>NO 
-<ul><li>400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}</li>
-<li>400 BAD REQUEST {"code": 777, "error": {"forgotToken": ["This field is required."], "newPassword": ["This field is required"]}, "status": false}</li>
-<li>400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}</li></ul></li></ul></li>
+<ul><li>400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}</li>
+<li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li>
+<li>400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}</li></ul></li></ul></li>
 </ul>
 
 <h3>View my profile (Eze) 05/09:</h3>

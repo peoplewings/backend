@@ -151,10 +151,7 @@ class CustomBackend(object):
 
     def forgot_password(self, request, **kwargs):
                            
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(request)
+        site = settings.SITE
         
         sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
         return sent

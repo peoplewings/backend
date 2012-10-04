@@ -124,7 +124,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 400, "data": "Invalid email", "status": false}
      * 400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}
 
-## Check if the resetPassword link is valid (Joan):
+### Check if the resetPassword link is valid (Joan):
  * Request:
     /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
     {}
@@ -136,17 +136,17 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
 
-## Submit new password (Joan):
+### Submit new password (Joan):
  * Request:
-    /POST /password
+    /POST /forgot/
     {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
  * Response:
    * OK
-     * 200 OK {"code": 202, "data": "Password reseted", "status": true}
+     * 200 OK {"code": 200, "data": "Password changed", "status": true}
    * NO 
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}
-     * 400 BAD REQUEST {"code": 777, "error": {"forgotToken": ["This field is required."], "newPassword": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid user", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
 ### View my profile (Eze) 05/09:
  - Request:

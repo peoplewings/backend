@@ -14,6 +14,7 @@ from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.registration.backends import get_backend
 from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadParameters, NotAKey
 from django.contrib.auth.models import User
+from peoplewings.apps.registration.models import *
 
 
 def activate(request, backend,
@@ -132,5 +133,17 @@ def forgot_password(request, backend, **kwargs):
 def check_forgot_token(filters, backend):
     backend = get_backend(backend)
     return backend.check_forgot_token(filters)
+
+def change_password(data):
+    try:
+        reg = RegistrationProfile.objects.get(activation_key = data['forgot_token'])
+        reg.activation_key = 'ALREADY ACTIVE'
+        reg.save()
+        user = User.objects.get(pk = reg.user_id)
+        user.set_password(data['new_password'])
+        user.is_active = True
+        user.save()
+    except:
+        raise NotAKey()
     
     

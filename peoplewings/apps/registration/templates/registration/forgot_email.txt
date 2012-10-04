@@ -4,7 +4,7 @@ Please go to the following page and choose a new password:
 
 http://{{ site }}/password/reset/confirm/{{ reset_token }}/
 
-Your username, in case you've forgotten: {{ email }}
+Your username, in case you've forgotten: {{ username }}
 
 Please note that this link is valid only for 7 days.
 
