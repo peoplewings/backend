@@ -356,16 +356,8 @@ class UserProfileForm(forms.Form):
     pw_opinion = forms.CharField(max_length=max_long_len, required=False) 
 
     # Trips
-<<<<<<< HEAD
     places_lived_in = forms.CharField(max_length=max_long_len, required=False)
     places_visited = forms.CharField(max_length=max_long_len, required=False)    
     places_gonna_go = forms.CharField(max_length=max_long_len, required=False)
     places_wanna_go = forms.CharField(max_length=max_long_len, required=False) 
-    
-=======
-    places_lived_in = forms.TextField(max_length=max_long_len, required=False)
-    places_visited = forms.TextField(max_length=max_long_len, required=False)    
-    places_gonna_go = forms.TextField(max_length=max_long_len, required=False)
-    places_wanna_go = forms.TextField(max_length=max_long_len, required=False) 
-    """
->>>>>>> 0152a1801b34e197ba0939e5421d248ee58a01b9
+
