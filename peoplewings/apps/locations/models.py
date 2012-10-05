@@ -15,7 +15,7 @@ class CountryManager(models.Manager):
 
 class Country(models.Model):
     short_name = models.CharField(max_length=max_short_len, unique=True)  
-    name = models.CharField(max_length=max_short_len, unique=False)
+    name = models.CharField(max_length=max_short_len, unique=True)
     lat = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
     lon = models.DecimalField(max_digits=12, decimal_places=9, default=0.0)
     objects = CountryManager()

@@ -148,47 +148,122 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
-### View my profile (Eze) 05/09:
- - Request:
-    /GET /profiles
+### View a list of Profiles (Ezequiel) 05/09:
+ * Request:
+    /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
- - Response:
-   - OK
-     - 200 OK 
+ * Response:
+   * OK
+     * 200 OK 
+      [
+        {"age": 22, "allAboutYou": "lalalal", ...},
+        {"age": 24, "allAboutYou": "lelelel", ...},
+        ...
+      ]
 
-   - NO
-     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+### View my profile (Eze) 05/09:
+ * Request:
+    /GET profiles/me/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ * Response:
+   * OK
+     * 200 OK 
+      {
+          "age": 22, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1990-02-01", "civilState": "",
+          "company": "", 
+          "current": 
+            {
+              "city": "Barcelona",
+              "country": "Spain",
+              "region": "Catalonia"
+            },
+          "education": 
+            [
+              {
+                "degree": "Computer Science",
+                "name": "University of Reading"
+              },
+              {
+                "degree": "Artificial Intelligence",
+                "name": "University of London"
+              }
+            ],
+          ....
+      }
+   * NO
+     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Update my profile (Eze) 05/09:
- - Request:
-    /POST /profiles/me
+ * Request:
+    /POST profiles/me/
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
-    { COMPLETAR }
- - Response:
-   - OK
-     - 202 Accepted {"code": 204, "data": "Updated", "status": true}
+    {
+      "allAboutYou": "All about me", 
+      "current": {"city": "Barcelona", "country": "Spain", "region": "Catalonia"}, 
+      "education": 
+        [
+          {"degree": "Computer Science", "name": "University of Reading"}, 
+          {"degree": "Artificial Intelligence", "name": "University of London"}
+        ], 
+      "hometown": {"city": "Bilbao",  "country": "Spain", "region": "Pais Vasco"},
+      "instantMessages": 
+        [
+          {"name": "Skype", "username": "My IM Username"}, 
+          {"name": "Whatsapp", "username": "My IM Username 2"}
+        ], 
+      "languages": 
+        [
+          {"level": "Expert", "name": "English"}, 
+          {"level": "Beginner", "name": "Spanish"}
+        ],
+      "otherLocations": 
+      [
+        {"city": "Barcelona", "country": "Spain", "region": "Catalunya"}, 
+        {"city": "Madrid", "country": "Spain", "region": "Madrid"}, 
+        {"city": "Alava", "country": "Spain", "region": "Pais Vasco"}
+      ], 
+      "socialNetworks": 
+      [
+        {"name": "Facebook", "username": "Facebook Username"}, 
+        {"name": "Twitter", "username": "Twitter Username"}
+      ]
+    }
+
+ * Response:
+   * OK
+     * 202 Accepted {"code": 204, "data": "Updated", "status": true}
+   * NO
+     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### View another profile (Eze) 05/09:
- - Request:
-    /GET /profiles/?user=19
+ * Request:
+    /GET profiles/17/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
- - Response:
-   - OK
-     - 200 OK 
+ * Response:
+   * OK
+     * 200 OK 
+      {
+        "age": 24, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1988-02-01", "civilState": "",
+        "company": "", 
+        "current": 
+          {
+            "city": "Barcelona",
+            "country": "Spain",
+            "region": "Catalonia"
+          },
+        "education": 
+          [
+            {
+              "degree": "Philosophy",
+              "name": "Universidad de Madrid"
+            }
+          ],
+        ....
+      }
+          
+   * NO
+     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
-   - NO
-     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
-
-### View a list of Profiles (Ezequiel) 05/09:
- - Request:
-    /GET /profiles/?from=1&to=4
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
- - Response:
-   - OK
-     - 200 OK 
-     
-   - NO
-     - 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 ### Upload image (Joan) 04/09:
 
