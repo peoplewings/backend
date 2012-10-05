@@ -265,13 +265,22 @@ IMPORTANT!! All urls start with /api/v1/
      * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 
-### Upload image (Joan) 04/09:
+### Upload image (Joan) (W8 Sergi):
 
-### Crop image (Joan) (undefined):
+### Crop image (Joan) (W8 Sergi):
 
-### View my wings (Eze) 09/09:
-
-### View one of my wings (Eze) 09/09:
+### View my wings (Joan) 09/09:
+ * Request:
+    /GET /wings/me
+    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": "Password changed", "status": true}
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
+### View one wings (Eze) 09/09:
 
 ### Create wing (Eze) 09/09:
 

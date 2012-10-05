@@ -6,9 +6,17 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpAccepted
 
-class WingResource(ModelResource):
+from django.utils.cache import *
+from django import http as djangoHttp
+from django.views.decorators.csrf import csrf_exempt
+from django.forms import ValidationError
+
+from peoplewings.apps.wings.models import Wing
+from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+
+class WingsResource(ModelResource):
     
     class Meta:
         object_class = Wing
@@ -24,15 +32,28 @@ class WingResource(ModelResource):
 
     def prepend_urls(self):      
         return [
-            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_list'), name="api_dispatch_list"),
-            url(r"^(?P<resource_name>%s)/(?P<wing_id>[\d]+%s)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_detail_with_wing_id'), name="api_dispatch_detail_with_wing_id"),
+            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('dispatch_list'), name="api_dispatch_list"),
+            url(r"^(?P<resource_name>%s)/(?P<wing_id>[\d]+%s)%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('dispatch_detail_with_wing_id'), name="api_dispatch_detail_with_wing_id"),
         ]
 
     def dispatch_detail_with_wing_id(self, request, resource_name, wing_id):
-
+        print 'HEY'
         return dispatch_detail(self, request, resource_name, wing_id)
     
+    def patch_detail(self, request, **kwargs):
+        print 'PATCH DETAIL'        
+        return self.create_response(request, {}, response_class=HttpAccepted)
+
+    def post_detail(self, request, **kwargs):
+        if 'HTTP_X_HTTP_METHOD_OVERRIDE' in request.META:
+            print 'PUTA MIERDA'
+        print 'POST DETAIL'        
+        return self.create_response(request, {}, response_class=HttpAccepted)
+
     def wrap_view(self, view):
+        @csrf_exempt
         def wrapper(request, *args, **kwargs):
             try:
                 callback = getattr(self, view)
@@ -41,11 +62,7 @@ class WingResource(ModelResource):
                 varies = getattr(self._meta.cache, "varies", [])
 
                 if varies:
-                    patch_vary_headers(response, varies)
-
-                if self._meta.cache.cacheable(request, response):
-                    if self._meta.cache.cache_control():
-                        patch_cache_control(response, **self._meta.cache.cache_control())
+                    patch_vary_headers(response, varies)             
 
                 if request.is_ajax() and not response.has_header("Cache-Control"):
                     patch_cache_control(response, no_cache=True)

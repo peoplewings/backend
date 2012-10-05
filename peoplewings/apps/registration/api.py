@@ -12,7 +12,7 @@ from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.forms import ValidationError
 from django.utils.cache import patch_cache_control
 from django.contrib.auth.models import User
@@ -42,6 +42,7 @@ class UserSignUpResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=UserSignUpForm)
 
+    @transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         request.POST = bundle.data
         self.form_data = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')            
@@ -112,6 +113,7 @@ class ActivationResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=ActivationForm)
 
+    @transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         request.POST = bundle.data
         self.form_data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
@@ -184,6 +186,7 @@ class LoginResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=LoginForm)
 
+    @transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         bundle.data = login(bundle)
         return bundle
@@ -258,6 +261,7 @@ class LogoutResource(ModelResource):
         bundle.data['code'] = 204       
         return bundle
 
+    @transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         #destroy this session data
         if (logout(request)):
@@ -321,7 +325,7 @@ class AccountResource(ModelResource):
         if request and request.method in ('GET'):  # 1.
             return object_list.filter(id = request.user.id)
         return []
-    
+    @transaction.commit_on_success
     def obj_create(self, bundle, request, **kwargs):
         if bundle.data.get('is_active'):        
             account =  request.user
@@ -421,6 +425,7 @@ class ForgotResource(ModelResource):
             raise KeyExpired()
         return self.create_response(request, bundle)           
 
+    @transaction.commit_on_success
     def obj_create(self, bundle, request, **kwargs):
         
         if bundle.data.get('email'):
