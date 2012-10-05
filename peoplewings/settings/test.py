@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'south',
     'tastypie',
     # Project custom apps
-    'peoplewings.apps.landing',
+    #'peoplewings.apps.landing',
     'peoplewings.apps.registration',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
@@ -48,7 +48,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
-    'peoplewings.apps.notifications',
+    #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
