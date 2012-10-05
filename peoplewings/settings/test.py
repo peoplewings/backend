@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'south',
     'tastypie',
     # Project custom apps
-    #'peoplewings.apps.landing',
+    'peoplewings.apps.landing',
     'peoplewings.apps.registration',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
