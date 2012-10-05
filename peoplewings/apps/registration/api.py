@@ -39,7 +39,7 @@ class UserSignUpResource(ModelResource):
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = Authentication()
         authorization = Authorization()
-        always_return_data = True
+        #always_return_data = True
         validation = FormValidation(form_class=UserSignUpForm)
 
     def obj_create(self, bundle, request=None, **kwargs):

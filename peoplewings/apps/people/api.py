@@ -8,12 +8,13 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError
 from tastypie.utils import dict_strip_unicode_keys
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError, transaction
 from django.forms import ValidationError
+from django import forms
 from django.utils.cache import patch_cache_control
 
 from peoplewings.apps.ajax.utils import json_response
@@ -139,6 +140,7 @@ class UserLanguageResource(ModelResource):
         always_return_data = True
         #validation = FormValidation(form_class=UserProfileForm)
 
+
 class UserProfileResource(ModelResource):    
     user = fields.ToOneField(AccountResource, 'user')
     languages = fields.ToManyField(LanguageResource, 'languages', full=True)
@@ -148,7 +150,9 @@ class UserProfileResource(ModelResource):
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
+
     method = None
+
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
@@ -160,7 +164,6 @@ class UserProfileResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
         validation = FormValidation(form_class=UserProfileForm)
-        ordering = ['social_networks', 'instant_messages']
 
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -284,11 +287,12 @@ class UserProfileResource(ModelResource):
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
+
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)       
         up = UserProfile.objects.get(user=request.user)
-
+        self.is_valid(bundle, request)
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
@@ -380,8 +384,6 @@ class UserProfileResource(ModelResource):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):    
             try:
-                #print kwargs
-                #print request
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
                 if request.is_ajax():
@@ -389,26 +391,26 @@ class UserProfileResource(ModelResource):
 
                 return response
             except BadRequest, e:
-                return HttpBadRequest({'code': 666, 'message':e.args[0]})
+                return HttpResponse({'code': 666, 'message':e.args[0]})
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 bundle = {"code": 777, "status": False, "errors": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)
-            except ValidationError, e:
-                # Or do some JSON wrapping around the standard 500
-                bundle = {"code": 777, "status": False, "errors": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)
+                return self.create_response(request, bundle, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpUnauthorized)):
                     bundle = {"code": 401, "status": False, "errors":"Unauthorized"}
-                    return self.create_response(request, bundle, response_class = HttpUnauthorized)
+                    return self.create_response(request, bundle, response_class = HttpResponse)
                 if (isinstance(e.response, HttpApplicationError)):
                     bundle = {"code": 401, "status": False, "errors":"Error"}
-                    return self.create_response(request, bundle, response_class = HttpApplicationError)          
+                    return self.create_response(request, bundle, response_class = HttpResponse)   
+                else:
+                    bundle = {"code": 777, "status": False, "errors": json.loads(e.response.content)}
+                    return self.create_response(request, bundle, response_class = HttpResponse)   
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
                 # error message.
+
                 return self._handle_500(request, e)
 
         return wrapper
