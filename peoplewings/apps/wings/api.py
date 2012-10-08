@@ -10,8 +10,9 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-<<<<<<< HEAD
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpAccepted
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpAccepted, HttpResponse
+from tastypie.utils import trailing_slash
+from tastypie.resources import ModelResource
 
 from django.utils.cache import *
 from django import http as djangoHttp
@@ -20,15 +21,6 @@ from django.forms import ValidationError
 
 from peoplewings.apps.wings.models import Wing
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-=======
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpResponse
-from tastypie.utils import trailing_slash
-from tastypie.resources import ModelResource
-from peoplewings.apps.wings.models import Wing
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-
-
->>>>>>> 1
 
 class WingsResource(ModelResource):
     

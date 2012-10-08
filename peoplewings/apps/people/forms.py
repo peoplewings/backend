@@ -311,8 +311,7 @@ customize_register_form()
 
 class UserProfileForm(forms.Form):
     pw_state = forms.ChoiceField(choices=PW_STATE_CHOICES, required=False)
-    avatar = forms.CharField(max_length=100, required=True)
-
+    avatar = forms.CharField(max_length=max_long_len, required=False)
     #Basic Information
     birthday_day = forms.IntegerField(min_value=1, max_value=31, required=False)
     birthday_month = forms.IntegerField(min_value=1, max_value=12, required=False)
@@ -329,7 +328,7 @@ class UserProfileForm(forms.Form):
     #other_locations = forms.ManyToManyField(City, related_name='ol+', required=False)
 
     # Contact info
-    emails = forms.EmailField()
+    emails = forms.EmailField(required=False)
     phone = forms.CharField(max_length=max_short_len, required=False)
     #social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
     #instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
