@@ -1,19 +1,29 @@
-from tastypie.resources import ModelResource
+
+from django.conf.urls.defaults import url
+from django.views.decorators.csrf import csrf_exempt
+from django.forms import ValidationError
 
 from tastypie import fields
+from tastypie import *
 from tastypie.authentication import *
 from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpResponse
+from tastypie.utils import trailing_slash
+from tastypie.resources import ModelResource
+from peoplewings.apps.wings.models import Wing
+from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 
-class WingResource(ModelResource):
+
+
+class WingsResource(ModelResource):
     
     class Meta:
         object_class = Wing
         queryset = Wing.objects.all()
-        allowed_methods = ['post']
+        allowed_methods = ['patch']
         include_resource_uri = False
         resource_name = 'wings'
         serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -24,15 +34,19 @@ class WingResource(ModelResource):
 
     def prepend_urls(self):      
         return [
-            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_list'), name="api_dispatch_list"),
-            url(r"^(?P<resource_name>%s)/(?P<wing_id>[\d]+%s)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('dispatch_detail_with_wing_id'), name="api_dispatch_detail_with_wing_id"),
+            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('dispatch_list'), name="api_dispatch_list"),
+            url(r"^(?P<resource_name>%s)/(?P<wing_id>[\d]+)%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
 
-    def dispatch_detail_with_wing_id(self, request, resource_name, wing_id):
-
-        return dispatch_detail(self, request, resource_name, wing_id)
+    def post_detail(self, request, **kwargs):
+        ##TODO
+        print 'hola'
+        return self.create_response(request, bundle, response_class = HttpResponse)
     
     def wrap_view(self, view):
+        @csrf_exempt
         def wrapper(request, *args, **kwargs):
             try:
                 callback = getattr(self, view)
