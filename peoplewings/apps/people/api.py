@@ -30,7 +30,7 @@ from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 
-from peoplewings.apps.wings.api import WingsResource
+from peoplewings.apps.wings.api import AccomodationsResource
 
 import pprint
 
@@ -169,40 +169,21 @@ class UserProfileResource(ModelResource):
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/me/wings%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('list_wings'), name="api_list_wings"),
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('list_wings'), name="api_list_wings"),
-            
-            url(r"^(?P<resource_name>%s)/me/wings/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('detail_wing'), name="api_detail_wing"),
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('detail_wing'), name="api_detail_wing"),
-        
+            ##/profiles/<profile_id>|me/accomodations/
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_collection'), name="api_list_wings"), 
+            ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_detail'), name="api_detail_wing"),
         ]
 
-    def list_wings(self, request, **kwargs):
-        try:
-            obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
-        except ObjectDoesNotExist:
-            return HttpGone()
-        except MultipleObjectsReturned:
-            return HttpMultipleChoices("More than one resource is found at this URI.")
+    def accomodation_collection(self, request, **kwargs):
+        accomodation_resource = AccomodationsResource()
+        return accomodation_resource.dispatch_list(request, **kwargs)        
 
-        wing_resource = WingsResource()
-        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = request.user.pk
-        if request.method == 'GET': return wing_resource.get_list(request, profile_id=kwargs['profile_id'])
-        if request.method == 'POST': return wing_resource.obj_create(request, profile_id=kwargs['profile_id'])
-
-    def detail_wing(self, request, **kwargs):
-        try:
-            obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
-        except ObjectDoesNotExist:
-            return HttpGone()
-        except MultipleObjectsReturned:
-            return HttpMultipleChoices("More than one resource is found at this URI.")
-
-        wing_resource = WingsResource()
-        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = request.user.pk
-        if request.method == 'GET': return wing_resource.get_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
-        if request.method == 'POST': return wing_resource.post_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
-        if request.method == 'PUT': return wing_resource.put_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
+    def accomodation_detail(self, request, **kwargs):
+        accomodation_resource = AccomodationsResource()
+        return accomodation_resource.dispatch_detail(request, **kwargs)
 
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):

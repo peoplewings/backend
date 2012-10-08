@@ -13,51 +13,64 @@ from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpAccepted, HttpResponse
 from tastypie.utils import trailing_slash
 from tastypie.resources import ModelResource
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 from django.utils.cache import *
 from django import http as djangoHttp
 from django.views.decorators.csrf import csrf_exempt
 from django.forms import ValidationError
 
-from peoplewings.apps.wings.models import Wing
+from peoplewings.apps.wings.models import Accomodation
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.apps.locations.models import City, Region, Country
+from peoplewings.apps.people.models import UserProfile
 
-class WingsResource(ModelResource):
-    
+class AccomodationsResource(ModelResource):    
+
     class Meta:
-        object_class = Wing
-        queryset = Wing.objects.all()
-        allowed_methods = ['patch']
+        object_class = Accomodation
+        queryset = Accomodation.objects.all()
+        allowed_methods = ['get', 'post']
         include_resource_uri = False
-        resource_name = 'wings'
+        resource_name = 'accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = Authentication()
+        authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
         #validation = FormValidation(form_class=UserSignUpForm)
 
-    def prepend_urls(self):      
-        return [
-            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('dispatch_list'), name="api_dispatch_list"),
-            url(r"^(?P<resource_name>%s)/(?P<wing_id>[\d]+)%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
-        ]
+    def obj_create(self, bundle, request=None, **kwargs):
 
-    def post_detail(self, request, **kwargs):
-        ##TODO
-        print 'hola'
-        return self.create_response(request, bundle, response_class = HttpResponse)
-    
-    def patch_detail(self, request, **kwargs):
-        print 'PATCH DETAIL'        
-        return self.create_response(request, {}, response_class=HttpAccepted)
+        bundle.obj = self._meta.object_class()
 
-    def post_detail(self, request, **kwargs):
-        if 'HTTP_X_HTTP_METHOD_OVERRIDE' in request.META:
-            print 'PUTA MIERDA'
-        print 'POST DETAIL'        
-        return self.create_response(request, {}, response_class=HttpAccepted)
+        for key, value in kwargs.items():
+            setattr(bundle.obj, key, value)
+
+        setattr(bundle.obj, 'author', UserProfile.objects.get(user=request.user))
+        
+        loc = {}
+        data = bundle.data['city']
+        for key, value in data.items():            
+            loc[key] = value
+        print loc
+        city = City.objects.saveLocation(**loc)
+        setattr(bundle.obj, 'city', city)
+        bundle = self.full_hydrate(bundle)
+        self.is_valid(bundle,request)
+
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+
+        # Save FKs just in case.
+        self.save_related(bundle)
+
+        # Save parent
+        bundle.obj.save()
+
+        # Now pick up the M2M bits.
+        m2m_bundle = self.hydrate_m2m(bundle)
+        self.save_m2m(m2m_bundle)
+        return bundle
 
     def wrap_view(self, view):
         @csrf_exempt
