@@ -18,6 +18,7 @@ from django import forms
 from django.utils.cache import patch_cache_control
 from django.core import serializers
 from django.http import HttpResponse
+from django.conf.urls import url
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
@@ -28,6 +29,8 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
+
+from peoplewings.apps.wings.api import WingsResource
 
 import pprint
 
