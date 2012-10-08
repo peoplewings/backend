@@ -9,7 +9,7 @@ from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError
-from tastypie.utils import dict_strip_unicode_keys
+from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError, transaction
@@ -162,6 +162,44 @@ class UserProfileResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
         validation = FormValidation(form_class=UserProfileForm)
+
+    # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/me/wings%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('list_wings'), name="api_list_wings"),
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('list_wings'), name="api_list_wings"),
+            
+            url(r"^(?P<resource_name>%s)/me/wings/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('detail_wing'), name="api_detail_wing"),
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('detail_wing'), name="api_detail_wing"),
+        
+        ]
+
+    def list_wings(self, request, **kwargs):
+        try:
+            obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
+        except ObjectDoesNotExist:
+            return HttpGone()
+        except MultipleObjectsReturned:
+            return HttpMultipleChoices("More than one resource is found at this URI.")
+
+        wing_resource = WingsResource()
+        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = request.user.pk
+        if request.method == 'GET': return wing_resource.get_list(request, profile_id=kwargs['profile_id'])
+        if request.method == 'POST': return wing_resource.obj_create(request, profile_id=kwargs['profile_id'])
+
+    def detail_wing(self, request, **kwargs):
+        try:
+            obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
+        except ObjectDoesNotExist:
+            return HttpGone()
+        except MultipleObjectsReturned:
+            return HttpMultipleChoices("More than one resource is found at this URI.")
+
+        wing_resource = WingsResource()
+        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = request.user.pk
+        if request.method == 'GET': return wing_resource.get_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
+        if request.method == 'POST': return wing_resource.post_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
+        if request.method == 'PUT': return wing_resource.put_detail(request, profile_id=kwargs['profile_id'], pk=kwargs['wing_id'])
 
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
