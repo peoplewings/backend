@@ -16,18 +16,16 @@ from django.db import IntegrityError, transaction
 from django.forms import ValidationError
 from django import forms
 from django.utils.cache import patch_cache_control
+from django.core import serializers
+from django.http import HttpResponse
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-
-from django.core import serializers
-from django.http import HttpResponse
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.people.forms import UserProfileForm
 from peoplewings.apps.people.authorization import ProfileAuthorization
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
-
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 
