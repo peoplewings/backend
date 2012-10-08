@@ -148,7 +148,7 @@ IMPORTANT!! All urls start with /api/v1/
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
-### View a list of Profiles (Ezequiel) 05/09:
+### View a list of Profiles (Ezequiel):
  * Request:
     /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -161,7 +161,7 @@ IMPORTANT!! All urls start with /api/v1/
         ...
       ]
 
-### View my profile (Eze) 05/09:
+### View my profile (Eze):
  * Request:
     /GET profiles/me/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -193,7 +193,7 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
      * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
-### Update my profile (Eze) 05/09:
+### Update my profile (Eze):
  * Request:
     /POST profiles/me/
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
@@ -235,7 +235,7 @@ IMPORTANT!! All urls start with /api/v1/
    * NO
      * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
-### View another profile (Eze) 05/09:
+### View another profile (Eze):
  * Request:
     /GET profiles/17/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -269,15 +269,15 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Crop image (Joan) (undefined):
 
-### View my wings (Eze) 09/09:
+### View my wings (Eze) 08/09:
 
-### View one of my wings (Eze) 09/09:
+### View one of my wings (Eze) 08/09:
 
-### Create wing (Eze) 09/09:
+### Create wing (Eze) 08/09:
 
-### Update wing (Eze) 09/09:
+### Update wing (Eze) 08/09:
 
-### Search (wings) (undefined):
+### Search wings (undefined):
 
 
 ### Needed environment variables

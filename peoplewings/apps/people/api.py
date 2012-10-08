@@ -384,6 +384,7 @@ class UserProfileResource(ModelResource):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):    
             try:
+                #pprint.pprint(request.__dict__)
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
                 if request.is_ajax():
