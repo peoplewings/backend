@@ -56,7 +56,7 @@ def register(request, backend, success_url=None, form_class=None,
     if not backend.registration_allowed(request):
         return redirect(disallowed_url)
     new_user = backend.register(request, **bundle_data)
-    return   
+    return new_user 
     if extra_context is None:
         extra_context = {}
     context = RequestContext(request)

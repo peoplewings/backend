@@ -39,16 +39,17 @@ class UserSignUpResource(ModelResource):
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = Authentication()
         authorization = Authorization()
-        #always_return_data = True
+        always_return_data = True
         validation = FormValidation(form_class=UserSignUpForm)
 
-    @transaction.commit_on_success
+    #@transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         request.POST = bundle.data
-        self.form_data = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')            
+        bundle.obj = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')      
         return bundle
 
     def dehydrate(self, bundle):
+        print bundle.data
         bundle.data = {}
         if self.form_data and self.form_data._errors:
             bundle.data['status'] = False
@@ -57,7 +58,7 @@ class UserSignUpResource(ModelResource):
         else:
             bundle.data['status'] = True
             bundle.data['code'] = 201
-            bundle.data['data'] = 'Registration complete'        
+            bundle.data['data'] = bundle.obj.email        
         return bundle
 
     def wrap_view(self, view):
@@ -113,7 +114,7 @@ class ActivationResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=ActivationForm)
 
-    @transaction.commit_on_success
+    #@transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
         request.POST = bundle.data
         self.form_data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        

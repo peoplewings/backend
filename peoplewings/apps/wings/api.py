@@ -42,6 +42,11 @@ class AccomodationsResource(ModelResource):
         always_return_data = True
         #validation = FormValidation(form_class=UserSignUpForm)
 
+    def apply_filters(self, request, applicable_filters):
+ 
+        applicable_filters['author'] = UserProfile.objects.get(user=request.user)
+        return self.get_object_list(request).filter(**applicable_filters)
+
     def obj_create(self, bundle, request=None, **kwargs):
 
         bundle.obj = self._meta.object_class()
