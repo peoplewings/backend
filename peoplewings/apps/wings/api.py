@@ -11,19 +11,24 @@ from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpAccepted, HttpResponse
-from tastypie.utils import trailing_slash
+from tastypie.utils import trailing_slash, dict_strip_unicode_keys
 from tastypie.resources import ModelResource
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 from django.utils.cache import *
 from django import http as djangoHttp
 from django.views.decorators.csrf import csrf_exempt
 from django.forms import ValidationError
 
-from peoplewings.apps.registration.authentication import ApiTokenAuthentication
+
 from peoplewings.apps.wings.models import Accomodation
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.apps.locations.models import City, Region, Country
+from peoplewings.apps.people.models import UserProfile
 
-class AccomodationResource(ModelResource):
+from pprint import pprint
+
+class AccomodationsResource(ModelResource):
     
     class Meta:
         object_class = Accomodation
@@ -37,28 +42,66 @@ class AccomodationResource(ModelResource):
         always_return_data = True
         #validation = FormValidation(form_class=UserSignUpForm)
 
-    def get_list(self, request, **kwargs):
-        print "holaaaa"
-        import pprint
+    def obj_create(self, bundle, request=None, **kwargs):
 
-        print request.user.email
-        kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        return super(AccomodationResource, self).get_list(request, **kwargs)
+        bundle.obj = self._meta.object_class()
+
+        for key, value in kwargs.items():
+            setattr(bundle.obj, key, value)
+
+        setattr(bundle.obj, 'author', UserProfile.objects.get(user=request.user))
+        
+        loc = {}
+        data = bundle.data['city']
+        for key, value in data.items():            
+            loc[key] = value
+        print loc
+        city = City.objects.saveLocation(**loc)
+        setattr(bundle.obj, 'city', city)
+        bundle = self.full_hydrate(bundle)
+        self.is_valid(bundle,request)
+
+        if hasattr(bundle, 'errors') and bundle.errors:
+            self.error_response(bundle.errors, request)
+
+        # Save FKs just in case.
+        self.save_related(bundle)
+
+        # Save parent
+        bundle.obj.save()
+
+        # Now pick up the M2M bits.
+        m2m_bundle = self.hydrate_m2m(bundle)
+        self.save_m2m(m2m_bundle)
+        return bundle
 
     def post_detail(self, request, **kwargs):
-        ##TODO
-        print 'hola'
-        return self.create_response(request, bundle, response_class = HttpResponse)
-    
-    def patch_detail(self, request, **kwargs):
-        print 'PATCH DETAIL'        
-        return self.create_response(request, {}, response_class=HttpAccepted)
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
 
-    def post_detail(self, request, **kwargs):
-        if 'HTTP_X_HTTP_METHOD_OVERRIDE' in request.META:
-            print 'PUTA MIERDA'
-        print 'POST DETAIL'        
-        return self.create_response(request, {}, response_class=HttpAccepted)
+        a = Accomodation.objects.get(wing_ptr=kwargs['wing_id'])
+        up = a.author
+        up2 = UserProfile.objects.get(user=request.user)
+        if up.id == up2.id:
+            pprint(bundle.data)
+            for i in bundle.data:
+                if hasattr(a, i): setattr(a, i, bundle.data.get(i))
+            a.save()
+
+
+        updated_bundle = self.dehydrate(bundle)
+        updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
+        return self.create_response(request, updated_bundle, response_class=HttpAccepted) 
+
+    def get_detail(self, request, **kwargs):
+        print kwargs
+        pprint(request)
+        return super(AccomodationsResource, self).get_detail(request, **kwargs)
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
+
 
     def wrap_view(self, view):
         @csrf_exempt
