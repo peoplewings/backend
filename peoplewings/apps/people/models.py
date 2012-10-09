@@ -150,7 +150,7 @@ def createUserProfile(sender, user, request, **kwargs):
     registered_user = User.objects.get(username=user.username)
     registered_user.last_name = kwargs['lastname']
     registered_user.first_name = kwargs['firstname']
-    registered_user.is_active=True
+    registered_user.is_active=False
     registered_user.save()
     data = UserProfile.objects.create(user=user, name_to_show=kwargs['firstname'])
     data.gender = form.data["gender"]
