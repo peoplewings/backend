@@ -243,7 +243,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### View another profile (Eze):
  * Request:
     /GET profiles/17/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
      * 200 OK 
@@ -274,22 +274,113 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Crop image (Joan) (W8 Sergi):
 
-### View my wings (Joan) 09/09:
+### View my accomodations (Joan):
  * Request:
     /GET /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
-     * 200 OK {"code": 200, "data": "Password changed", "status": true}
+     * 200 OK
+        [
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ...
+          },
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ....
+          },
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ...
+          }
+        ]
    * NO 
      * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
-### View one wings (Eze) 09/09:
 
-### Create wing (Eze) 08/09:
+### View one of my accomodations (Eze):
+ * Request:
+    /GET /profiles/me/accomodations/20/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+ * Response:
+   * 200 OK
+      {
+        "about": "",
+        "additionalInformation": "",
+        "address": "",
+        ...
+      }
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
-### Update wing (Eze) 08/09:
+### View an accomodation of another user (Eze):
+ * Request:
+    /GET /profiles/17/accomodations/20/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+ * Response:
+   * 200 OK
+      {
+        "about": "",
+        "additionalInformation": "",
+        "address": "",
+        ...
+      }
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+
+### Create Accomodation (Eze):
+ * Request:
+    /POST /profiles/me/accomodations/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+    {
+      "about": "",
+      "additionalInformation": "",
+      "address": "",
+      ...
+    }
+
+ * Response:
+   * 200 CREATED {"code": 204, "data": "Updated", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+
+### Update accomodation (Eze):
+ * Request:
+    /POST /profiles/me/accomodations/20/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+    {
+      "about": "",
+      "additionalInformation": "",
+      "address": "",
+      ...
+    }
+
+ * Response:
+   * 204 NO CONTENT {"code": 204, "data": "Updated", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+
+### Delete accomodation (Eze):
+ * Request:
+    /DELETE /profiles/me/accomodations/20/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+ * Response:
+   * 204 NO CONTENT {"code": 204, "data": "Wing deleted", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
 ### Search wings (undefined):
 

@@ -19,6 +19,7 @@ from django.utils.cache import patch_cache_control
 from django.core import serializers
 from django.http import HttpResponse
 from django.conf.urls import url
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
@@ -29,6 +30,7 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
+
 
 from peoplewings.apps.wings.api import AccomodationsResource
 
@@ -167,7 +169,7 @@ class UserProfileResource(ModelResource):
         validation = FormValidation(form_class=UserProfileForm)
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
-    def prepend_urls(self):
+    def override_urls(self):
         return [
             ##/profiles/<profile_id>|me/accomodations/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
@@ -179,12 +181,14 @@ class UserProfileResource(ModelResource):
 
     def accomodation_collection(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
-        return accomodation_resource.dispatch_list(request, **kwargs)        
+        return accomodation_resource.dispatch_list(request, **kwargs)  
+
 
     def accomodation_detail(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
         return accomodation_resource.dispatch_detail(request, **kwargs)
 
+    
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
         #print "dehydrate languages "
@@ -377,7 +381,6 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, updated_bundle, response_class=HttpAccepted) 
     
     def post_list(self, request, **kwargs):
-        print "no autorizado el post_list"
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):

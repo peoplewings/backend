@@ -5,7 +5,7 @@ from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from peoplewings.apps.registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
+from peoplewings.apps.people.models import UserProfile, Language, University, SocialNetwork, InstantMessage
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 import datetime
@@ -20,18 +20,6 @@ for i in range(1900, now.year-5, 1):
     BIRTH_YEAR_CHOICES.append(i)
 
 BIRTH_YEAR_CHOICES.reverse()
-
-INTERESTED_IN_CHOICES = (
-      ('M', 'Male'),
-      ('F', 'Female'),
-  )
-
-LANG_LEVEL_CHOICES = [
-      ('E', 'Expert'),
-    ('I', 'Intermediate'),
-    ('B', 'Beginner'),
-  ]
-
 
 class RegisterForm(ModelForm):
   class Meta:
@@ -63,7 +51,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 
 # 1. BASIC INFORMATION
 class BasicInformationForm(ModelForm):
-  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
+  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False)
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'civil_state')

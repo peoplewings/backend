@@ -65,6 +65,7 @@ class CityManager(models.Manager):
         # put nulls in the args
         if regionN is None: regionN = 'No region'
         if regionSN is None: regionSN = 'No region'
+
         # control over the params
         if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
         #Save the country    
