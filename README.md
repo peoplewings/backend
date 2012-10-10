@@ -100,18 +100,23 @@ IMPORTANT!! All urls start with /api/v1/
     
 ### Delete account (Joan):
  * Request:
-    /POST /accounts/me/
-    {"isActive" = false}
+    /DELETE /accounts/me/
+    {}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
      * 204 NO CONTENT
    * NO (Method not allowed and unauthorized)
-     * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
 
-### Update account (Joan) (undefined):
- * Need specifications.
+### Update account (Joan):
+ * Request:
+    /PUT /accounts/me/
+    {"email":"myemail@changed.com", "password":"changeme", "name":"NewName", "lastName":"lol"} All these fields are optional, you can always have 1 field or more
+    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+ * Response:
+   * OK
+     * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
+   * NO (Method not allowed and unauthorized)
 
 ### Request Forgot password (Joan):
  * Request:
@@ -271,8 +276,8 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### View my wings (Joan) 09/09:
  * Request:
-    /GET /wings/me
-    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+    /GET /profiles/me/accomodations/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
      * 200 OK {"code": 200, "data": "Password changed", "status": true}

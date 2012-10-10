@@ -40,7 +40,6 @@ class AccomodationsResource(ModelResource):
         #validation = FormValidation(form_class=UserSignUpForm)
 
     def apply_filters(self, request, applicable_filters):
- 
         applicable_filters['author'] = UserProfile.objects.get(user=request.user)
         return self.get_object_list(request).filter(**applicable_filters)
 
