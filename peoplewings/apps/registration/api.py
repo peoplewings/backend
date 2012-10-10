@@ -476,7 +476,7 @@ class ForgotResource(ModelResource):
             change_password(bundle.data)
             return bundle
 
-    def dehydrate(self, bundle):
+    def full_dehydrate(self, bundle):
         if self.method and self.method == 'POST':
             bundle.data = {}
             bundle.data['status'] = True

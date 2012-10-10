@@ -17,11 +17,12 @@ class ForgotValidation(Validation):
     def is_valid(self, bundle, request=None):
         errors = {}
         ln = len(bundle.data.items())
-        if ln == 1:            
+        if ln == 1:                
             if not self.contains(bundle.data, 'email'):                                
                 errors['email'] = ['This field is required']
-            elif not self.email_validation(bundle.data[0][1]):
+            elif not self.email_validation(bundle.data['email']):
                     errors['email'] = ['Not a valid email']
+                    print bundle.errors
         elif ln == 2:
             if not self.contains(bundle.data, 'forgot_token'):
                 errors['forgot_token'] = ['This field is required']
