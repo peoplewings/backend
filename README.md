@@ -269,22 +269,113 @@ IMPORTANT!! All urls start with /api/v1/
 
 ### Crop image (Joan) (W8 Sergi):
 
-### View my wings (Joan) 09/09:
+### View my accomodations (Joan):
  * Request:
-    /GET /wings/me
-    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
- * Response:
+    /GET /profiles/me/accomodations/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145" * Response:
    * OK
-     * 200 OK {"code": 200, "data": "Password changed", "status": true}
+     * 200 OK
+        [
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ...
+          },
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ....
+          },
+          {
+            "about": "",
+            "additionalInformation": "",
+            "address": "",
+            ...
+          }
+        ]
    * NO 
      * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
      * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
-### View one wings (Eze) 09/09:
 
-### Create wing (Eze) 08/09:
+### View one of my accomodations (Eze):
+ * Request:
+    /GET /profiles/me/accomodations/20/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ * Response:
+   * 200 OK
+      {
+        "about": "",
+        "additionalInformation": "",
+        "address": "",
+        ...
+      }
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
-### Update wing (Eze) 08/09:
+### View an accomodation of another user (Eze):
+ * Request:
+    /GET /profiles/17/accomodations/20/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+ * Response:
+   * 200 OK
+      {
+        "about": "",
+        "additionalInformation": "",
+        "address": "",
+        ...
+      }
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+
+### Create Accomodation (Eze):
+ * Request:
+    /POST /profiles/me/accomodations/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {
+      "about": "",
+      "additionalInformation": "",
+      "address": "",
+      ...
+    }
+
+ * Response:
+   * 200 CREATED {"code": 204, "data": "Updated", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+
+### Update accomodation (Eze):
+ * Request:
+    /POST /profiles/me/accomodations/20/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {
+      "about": "",
+      "additionalInformation": "",
+      "address": "",
+      ...
+    }
+
+ * Response:
+   * 204 NO CONTENT {"code": 204, "data": "Updated", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+
+### Delete accomodation (Eze):
+ * Request:
+    /DELETE /profiles/me/accomodations/20/
+    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+
+ * Response:
+   * 204 NO CONTENT {"code": 204, "data": "Wing deleted", "status": true}
+      
+   * NO 
+     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
 ### Search wings (undefined):
 

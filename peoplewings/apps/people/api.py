@@ -175,13 +175,14 @@ class UserProfileResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_collection'), name="api_list_wings"), 
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
-            url(r"^(?P<resource_name>%s)/(?P<author_id>\w[\w/-]*)/accomodations/(?P<pk>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
-        return accomodation_resource.dispatch_list(request, **kwargs)        
+        return accomodation_resource.dispatch_list(request, **kwargs)  
+
 
     def accomodation_detail(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
@@ -380,7 +381,6 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, updated_bundle, response_class=HttpAccepted) 
     
     def post_list(self, request, **kwargs):
-        print "no autorizado el post_list"
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):

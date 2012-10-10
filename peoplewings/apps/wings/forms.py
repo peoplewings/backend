@@ -1,43 +1,19 @@
 #forms
-from wings.models import Wing, Accomodation
+
 from django.forms import ModelForm, extras
 from django.forms.widgets import TextInput, Textarea
-from people.models import max_long_len, PW_STATE_CHOICES
 from django import forms
 import datetime
 from django.utils.translation import ugettext_lazy as _
 
-from peoplewings.global_vars import max_500_char
+from peoplewings.global_vars import *
+from peoplewings.apps.wings.models import Wing, Accomodation
 
 now = datetime.datetime.now()
 
 FUTURE_DATES = []
 for i in range(now.year, now.year+5, 1):
     FUTURE_DATES.append(i)
-
-WINGS_STATUS = list(PW_STATE_CHOICES)
-WINGS_STATUS.pop()
-WINGS_STATUS.pop()
-WINGS_STATUS.pop()
-
-
-PREFERRED_GENDER_CHOICES = (
-    ('M', 'Man'),
-    ('F', 'Woman'),
-)
-
-PETS_CHOICES = (
-(0, 'I have pet'),
-(1, 'Guests pets allowed'),
-)
-
-TRANSPORT_CHOICES = (
-(0, 'Underground'),
-(1, 'Bus'),
-(2, 'Tram'),
-(3, 'Train'),
-(4, 'Others'),
-)
 
 # WINGS FORM
 class WingForm(ModelForm):
@@ -79,6 +55,33 @@ class WingForm(ModelForm):
       if bloquear:
             self.fields['stat'].widget.attrs['disabled'] = True
 
-  
+class AccomodationForm(forms.Form):
 
+    name = forms.CharField(max_length=max_short_text_len, required=False)
+    status = forms.ChoiceField(choices=WINGS_STATUS, required=False)
+    date_start = forms.DateField(required=False)
+    date_end = forms.DateField(required=False)
+    best_days = forms.ChoiceField(choices=BETTER_DAYS_CHOICES, required=False)
+    is_request = forms.BooleanField(required=False)
 
+    sharing_once = forms.BooleanField(required=False)
+    capacity = forms.ChoiceField(choices=CAPACITY_OPTIONS, required=False)
+    preferred_gender = forms.CharField(max_length=1, required=False)
+    wheelchair = forms.BooleanField(required=False)
+    where_sleeping_type = forms.ChoiceField(choices=WHERE_SLEEPING_CHOICES, required=False)
+    smoking = forms.ChoiceField(choices=SMOKING_CHOICES, required=False)
+    i_have_pet = forms.BooleanField(required=False)
+    pets_allowed = forms.BooleanField(required=False)
+    blankets = forms.BooleanField(required=False)
+    live_center = forms.BooleanField(required=False)
+    underground = forms.BooleanField(required=False)
+    bus = forms.BooleanField(required=False)
+    tram = forms.BooleanField(required=False)
+    train = forms.BooleanField(required=False)
+    others = forms.BooleanField(required=False)
+    about = forms.CharField(max_length=max_text_msg_len, required=False)
+    address = forms.CharField(max_length=max_short_text_len, required=False)
+    number = forms.CharField(max_length=max_ultra_short_len, required=False)
+    additional_information = forms.CharField(max_length=max_text_msg_len, required=False)   
+    postal_code = forms.CharField(max_length=max_short_text_len, required=False)
+    #city = forms.ForeignKey(City, on_delete=models.PROTECT)
