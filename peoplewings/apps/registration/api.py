@@ -445,7 +445,11 @@ class ForgotResource(ModelResource):
 
     @transaction.commit_on_success
     def obj_create(self, bundle, request, **kwargs):
-        
+        self.is_valid(bundle,request)
+        if bundle.errors:
+            bundle.errors = bundle.errors['forgot']
+            self.error_response(bundle.errors, request)
+
         if bundle.data.get('email'):
             self.method = 'POST'
             try:

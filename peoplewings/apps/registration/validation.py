@@ -17,8 +17,8 @@ class ForgotValidation(Validation):
     def is_valid(self, bundle, request=None):
         errors = {}
         ln = len(bundle.data.items())
-        if ln == 1:
-            if not self.contains(bundle.data, 'email'):                
+        if ln == 1:            
+            if not self.contains(bundle.data, 'email'):                                
                 errors['email'] = ['This field is required']
             elif not self.email_validation(bundle.data[0][1]):
                     errors['email'] = ['Not a valid email']
