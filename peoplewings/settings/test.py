@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
+    'peoplewings.libs.customauth',
     #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
