@@ -57,6 +57,7 @@ class AccomodationsResource(ModelResource):
             return bundle
         return super(AccomodationsResource, self).dehydrate(bundle)  
 
+
     def obj_create(self, bundle, request=None, **kwargs):
         if kwargs['profile_id'] != 'me':
             bundle.errors = {"code": 401, "status": False, "errors":"The wing provided does not exist or does not belong to the user given"}

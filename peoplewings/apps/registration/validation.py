@@ -15,7 +15,6 @@ class ForgotValidation(Validation):
         return False
         
     def is_valid(self, bundle, request=None):
-        print bundle.data.items()
         errors = {}
         ln = len(bundle.data.items())
         if ln == 1:
@@ -31,5 +30,8 @@ class ForgotValidation(Validation):
         else:                    
             errors['params']  = ["Bad parameters"]      
         return errors
+ 
+        
+        
         
 

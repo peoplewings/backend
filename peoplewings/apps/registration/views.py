@@ -24,21 +24,9 @@ def activate(request, backend,
     account = backend.activate(request, **kwargs)
     if account:
     ## All OK
-        import pprint
-        print 'Activation OK'
-        pprint.pprint(account)
-        return True
+        return account
     ## Not OK
-    print 'Activation NO'
-    if extra_context is None:
-        extra_context = {}
-    context = RequestContext(request)
-    for key, value in extra_context.items():
-        context[key] = callable(value) and value() or value
-
-    return render_to_response(template_name,
-                              kwargs,
-                              context_instance=context)
+    return
 
 
 def register(request, backend, success_url=None, form_class=None,

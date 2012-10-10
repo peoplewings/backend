@@ -100,18 +100,23 @@ IMPORTANT!! All urls start with /api/v1/
     
 ### Delete account (Joan):
  * Request:
-    /POST /accounts/me/
-    {"isActive" = false}
+    /DELETE /accounts/me/
+    {}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
      * 204 NO CONTENT
    * NO (Method not allowed and unauthorized)
-     * 400 BAD REQUEST {"code": 410, "data": "The account does not exist", "status": false}
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid parameters", "status": false}
 
-### Update account (Joan) (undefined):
- * Need specifications.
+### Update account (Joan):
+ * Request:
+    /PUT /accounts/me/
+    {"email":"myemail@changed.com", "password":"changeme", "name":"NewName", "lastName":"lol"} All these fields are optional, you can always have 1 field or more
+    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+ * Response:
+   * OK
+     * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
+   * NO (Method not allowed and unauthorized)
 
 ### Request Forgot password (Joan):
  * Request:
@@ -238,7 +243,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### View another profile (Eze):
  * Request:
     /GET profiles/17/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
      * 200 OK 
@@ -272,7 +277,8 @@ IMPORTANT!! All urls start with /api/v1/
 ### View my accomodations (Joan):
  * Request:
     /GET /profiles/me/accomodations/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145" * Response:
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+ * Response:
    * OK
      * 200 OK
         [
@@ -303,7 +309,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### View one of my accomodations (Eze):
  * Request:
     /GET /profiles/me/accomodations/20/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
       {
@@ -318,7 +324,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### View an accomodation of another user (Eze):
  * Request:
     /GET /profiles/17/accomodations/20/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
       {
@@ -334,7 +340,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### Create Accomodation (Eze):
  * Request:
     /POST /profiles/me/accomodations/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "about": "",
       "additionalInformation": "",
@@ -352,7 +358,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### Update accomodation (Eze):
  * Request:
     /POST /profiles/me/accomodations/20/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "about": "",
       "additionalInformation": "",
@@ -369,8 +375,7 @@ IMPORTANT!! All urls start with /api/v1/
 ### Delete accomodation (Eze):
  * Request:
     /DELETE /profiles/me/accomodations/20/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
-
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 204 NO CONTENT {"code": 204, "data": "Wing deleted", "status": true}
       

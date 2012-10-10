@@ -145,7 +145,10 @@ class LoginForm(forms.Form):
     password = forms.CharField(max_length=50, required=True)
 
 class AccountForm(forms.Form):
-    is_active = forms.BooleanField(required=False)
+    email = forms.EmailField(required=False)
+    password = forms.CharField(required=False)
+    name = forms.CharField(required=False)
+    last_name = forms.CharField(required=False)
 
 class ForgotForm(forms.Form):
     email = forms.EmailField(required=False)
