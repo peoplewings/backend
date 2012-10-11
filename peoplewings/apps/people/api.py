@@ -10,6 +10,8 @@ from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError
 from tastypie.utils import dict_strip_unicode_keys, trailing_slash
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError, transaction
@@ -169,23 +171,35 @@ class UserProfileResource(ModelResource):
         validation = FormValidation(form_class=UserProfileForm)
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
-    def override_urls(self):
+    def prepend_urls(self):
         return [
+            ##/profiles/accomodations/ 
+            url(r"^(?P<resource_name>%s)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_all_list'), name="api_list_wing"),
             ##/profiles/<profile_id>|me/accomodations/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('accomodation_collection'), name="api_list_wings"), 
+                self.wrap_view('accomodation_collection'), name="api_collection_wings"), 
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
         ]
 
+    def accomodation_all_list(self, request, **kwargs):
+        return self.dispatch_list(request, **kwargs)
+
     def accomodation_collection(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
+        kwargs['author_id'] = kwargs['profile_id']
+        del(kwargs['profile_id'])
         return accomodation_resource.dispatch_list(request, **kwargs)  
 
 
     def accomodation_detail(self, request, **kwargs):
-        accomodation_resource = AccomodationsResource()
+        accomodation_resource = AccomodationsResource()                    
+        kwargs['author_id'] = kwargs['profile_id']
+        kwargs['id'] = kwargs['wing_id']
+        del(kwargs['profile_id'])
+        del(kwargs['wing_id'])
         return accomodation_resource.dispatch_detail(request, **kwargs)
 
     
@@ -290,24 +304,7 @@ class UserProfileResource(ModelResource):
             i.data['city'] = city.name
             i.data['region'] = region.name
             i.data['country'] = country.name
-        return bundle.data['other_locations']
-
-    """
-    def apply_authorization_limits(self, request, object_list=None):
-        if request and request.method in ('POST'):
-            return object_list.get(user=request.user)
-        if request and request.method in ('GET'):
-            if 'from' in request.GET and 'to' in request.GET:
-                initial = request.GET['from']
-                final = request.GET['to']
-                #initial = request.META['HTTP_FROM']
-                #final = request.META['HTTP_TO']
-                return object_list.all()[initial:final]
-            elif 'pk' in request.GET: 
-                return object_list.filter(pk=request.GET['pk'])
-            else: 
-                return object_list.filter(user=request.user)
-    """    
+        return bundle.data['other_locations'] 
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):

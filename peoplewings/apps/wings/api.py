@@ -25,6 +25,7 @@ from peoplewings.apps.wings.forms import *
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
 from peoplewings.apps.people.models import UserProfile
+from peoplewings.apps.wings.exceptions import BadParameters, NotAUser
 
 from pprint import pprint
 
@@ -43,20 +44,11 @@ class AccomodationsResource(ModelResource):
         validation = FormValidation(form_class=AccomodationForm)
 
     def apply_authorization_limits(self, request, object_list=None):
-        if request and request.method in ('POST', "'DELETE'"):
+        if request and request.method in ('POST', 'DELETE'):
             up = UserProfile.objects.get(user=request.user)
             return object_list.filter(author=up)
-        return object_list
-
-    def dehydrate(self, bundle):
-        if hasattr(bundle, 'errors'):
-            bundle.data = {}
-            bundle.data['status'] = bundle.errors['code']
-            bundle.data['code'] = bundle.errors['status']
-            bundle.data['data'] = bundle.errors['errors']
-            return bundle
-        return super(AccomodationsResource, self).dehydrate(bundle)  
-
+        return object_list 
+    
 
     def obj_create(self, bundle, request=None, **kwargs):
         if kwargs['profile_id'] != 'me':
@@ -109,31 +101,26 @@ class AccomodationsResource(ModelResource):
             return self.create_response(request, bundle, response_class = HttpResponse)
 
     def delete_list(self, request=None, **kwargs):
-        return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
+        return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpResponse)
 
-    def get_list(self, request, **kwargs):
-        up = UserProfile.objects.get(user=request.user)
-        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
-        accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
-        objects = []
-        for i in accomodations:
-            bundle = self.build_bundle(obj=i, request=request)
-            bundle = self.full_dehydrate(bundle)
-            objects.append(bundle)
-
-        return self.create_response(request, objects)
+    def get_list(self, request, **kwargs):       
+        try:
+            if 'author_id' in kwargs:
+                if kwargs['author_id'] == 'me': kwargs['author_id'] = UserProfile.objects.get(user=request.user)
+                else: kwargs['author_id'] = UserProfile.objects.get(pk=kwargs['author_id'])
+        except:
+            return self.create_response(request, {"code" : 401, "status" : False, "errors": "Not found"}, response_class=HttpResponse)
+        return super(AccomodationsResource, self).get_list(request, **kwargs)
 
     def get_detail(self, request, **kwargs):
-        up = UserProfile.objects.get(user=request.user)
-        if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
-        try:
-            a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
-            bundle = self.build_bundle(obj=a, request=request)
-            bundle = self.full_dehydrate(bundle)
-        except ObjectDoesNotExist:
-            bundle = {"code": 401, "status": False, "errors":"The wing provided does not exist or does not belong to the user given"}
-            return self.create_response(request, bundle, response_class = HttpResponse)
-        return self.create_response(request, bundle)
+        if 'author_id' not in kwargs: return self.create_response(request, {"code" : 401, "status" : False, "errors": "Not implemented"}, response_class=HttpResponse)
+        try:            
+            if kwargs['author_id'] == 'me': kwargs['author_id'] = UserProfile.objects.get(user=request.user)
+            else: kwargs['author_id'] = UserProfile.objects.get(pk=kwargs['author_id'])
+        except:
+            return self.create_response(request, {"code" : 401, "status" : False, "errors": "Not found"}, response_class=HttpResponse)
+         
+        return super(AccomodationsResource, self).get_detail(request, **kwargs)
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
@@ -201,7 +188,7 @@ class AccomodationsResource(ModelResource):
                     patch_cache_control(response, no_cache=True)
 
                 return response
-            except (BadRequest, fields.ApiFieldError), e:
+            except (BadRequest, fields.ApiFieldError, NotAUser), e:
                 return http.HttpBadRequest(e.args[0])
             except ValidationError, e:
                 return http.HttpBadRequest(', '.join(e.messages))

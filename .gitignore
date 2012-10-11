@@ -8,3 +8,4 @@
 /.idea/
 /settings/__init__.py
 requirements.txt
+testApi.py
