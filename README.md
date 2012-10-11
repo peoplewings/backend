@@ -83,6 +83,38 @@ There are some standard error messages:
      * 200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}
 
+### Request Forgot password (Joan):
+ * Request:
+    /POST /forgot/
+    {"email" = "joan@peoplewings.com"}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "Email sent"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Invalid email"}, "status": false}
+
+### Check if the resetPassword link is valid (Joan):
+ * Request:
+    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
+    {}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "The link is valid"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Not a key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The key has expired"}, "status": false}
+
+### Submit new password (Joan):
+ * Request:
+    /POST /forgot/
+    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "Password changed"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Not a key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The key has expired"}, "status": false}
+
 ### Logout (Joan):
  * Request:
     /POST /noauth/
@@ -90,9 +122,9 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-    * 204 NO CONTENT {"status":True, "code":"204"}
+    * 200 OK {"code": 200, "data": {"msg": "Logout complete"}, "status": true}
    * NO
-    * 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
+    * 200 OK {"code": 400, "error": {"msg": "Can't logout"}, "status": false}
     
 ### View my account (Joan):
  * Request:
@@ -101,8 +133,8 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-    * 200 OK {"status":True, "code":"200", "data":[{"dateJoined": "2012-09-28T10:49:53.497530+00:00", "email": "fr33d4n@gmail.com", "firstName": "Ez", "lastLogin": "2012-10-02T11:35:04.505081+00:00", "lastName": "Pz", "password": "pbkdf2_sha256$10000$t4RMJPP649ZE$bhUiYcVcteTXYcdBDba5AjH9DM6ckBI+SjhGicelWAs="}]}
-   * NO (Method not allowed and unauthorized)
+    * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "Pz", "msg": "Account shown"}, "status": true}
+   * NO 
     
 ### Delete account (Joan):
  * Request:
@@ -123,41 +155,6 @@ There are some standard error messages:
    * OK
      * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
    * NO (Method not allowed and unauthorized)
-
-### Request Forgot password (Joan):
- * Request:
-    /POST /forgot/
-    {"email" = "joan@peoplewings.com"}
- * Response:
-   * OK
-     * 202 CREATED {"code": 202, "data": "Email sent", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid email", "status": false}
-     * 400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}
-
-### Check if the resetPassword link is valid (Joan):
- * Request:
-    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
-    {}
- * Response:
-   * OK
-     * 200 OK {"code": 200, "data": "The link is valid", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid link", "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
-
-### Submit new password (Joan):
- * Request:
-    /POST /forgot/
-    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
- * Response:
-   * OK
-     * 200 OK {"code": 200, "data": "Password changed", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
 ### View a list of Profiles (Ezequiel):
  * Request:
