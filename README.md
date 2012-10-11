@@ -41,7 +41,6 @@ Full reference can be found here:
 * https://devcenter.heroku.com/articles/error-codes
  
 ## API
-
 IMPORTANT!! All urls start with /api/v1/
 ### Register (Joan):
  * Request:
@@ -51,8 +50,8 @@ IMPORTANT!! All urls start with /api/v1/
    * OK
      * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
    * NO 
-     * 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
-     * 400 BAD REQUEST {"code": 813, "error": "The email is already being used", "status": false}
+     * 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
+     * 200 OK {"code": 400, "error": "The email is already being used", "status": false}
 
 ### Activate (Joan):
  * Request:
