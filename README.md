@@ -42,39 +42,46 @@ Full reference can be found here:
  
 ## API
 IMPORTANT!! All urls start with /api/v1/
+
+There are some standard error messages:
+
+* 200 OK {"code": 411, "error": {"msg": "No JSON could be decoded"}, "status": false}
+* 200 OK {"code": 412, "error": {"msg": "Method not allowed"}, "status": false}
+* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
+
 ### Register (Joan):
  * Request:
     POST /newuser/
     {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"joan@peoplewings.com", "repeatEmail":"joan@peoplewings.com", "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}
  * Response:
    * OK
-     * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
-   * NO 
-     * 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
-     * 200 OK {"code": 400, "error": "The email is already being used", "status": false}
+     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "msg": "Account created"}, "status": true}
+   * NO
+     * 200 OK {"code": 400, "error": {"msg": "The email is already being used"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Emails don't match"}, "status": false}
 
 ### Activate (Joan):
  * Request:
     POST /activation/
-    {"activationKey":"asdkjbsjnskn"}
+    {"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}
  * Response:
    * OK 
-     * 201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}
+     * 200 OK {"code": 200, "data": {"msg": "Account activated"}, "status": true}
    * NO
-     * 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
-     * 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
-     * 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
+     * 200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The provided key has expired"}, "status": false}
 
 ### Login (Joan):
  * Request:
     /POST /auth/
-     * 201 CREATED {username = "Joan", password = "asdfasdf"}
+     {username = "Joan", password = "asdfasdf"}
  * Response:
    * OK
-     * 201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+     * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}
    * NO
-     * 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
-     * 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
+     * 200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}
 
 ### Logout (Joan):
  * Request:

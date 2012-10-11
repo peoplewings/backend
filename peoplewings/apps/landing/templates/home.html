@@ -46,6 +46,14 @@
 
 <p>IMPORTANT!! All urls start with /api/v1/</p>
 
+<p>There are some standard error messages:</p>
+
+<ul>
+<li>200 OK {"code": 411, "error": {"msg": "No JSON could be decoded"}, "status": false}</li>
+<li>200 OK {"code": 412, "error": {"msg": "Method not allowed"}, "status": false}</li>
+<li>200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}</li>
+</ul>
+
 <h3>Register (Joan):</h3>
 
 <ul>
@@ -54,10 +62,10 @@ POST /newuser/
 {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"joan@peoplewings.com", "repeatEmail":"joan@peoplewings.com", "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}</li>
 <li>Response:
 <ul><li>OK
-<ul><li>201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}</li></ul></li>
-<li>NO 
-<ul><li>400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}</li>
-<li>400 BAD REQUEST {"code": 813, "error": "The email is already being used", "status": false}</li></ul></li></ul></li>
+<ul><li>200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "msg": "Account created"}, "status": true}</li></ul></li>
+<li>NO
+<ul><li>200 OK {"code": 400, "error": {"msg": "The email is already being used"}, "status": false}</li>
+<li>200 OK {"code": 400, "error": {"msg": "Emails don't match"}, "status": false}</li></ul></li></ul></li>
 </ul>
 
 <h3>Activate (Joan):</h3>
@@ -65,14 +73,14 @@ POST /newuser/
 <ul>
 <li>Request:
 POST /activation/
-{"activationKey":"asdkjbsjnskn"}</li>
+{"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}</li>
 <li>Response:
 <ul><li>OK 
-<ul><li>201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}</li></ul></li>
+<ul><li>200 OK {"code": 200, "data": {"msg": "Account activated"}, "status": true}</li></ul></li>
 <li>NO
-<ul><li>400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}</li>
-<li>400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}</li>
-<li>400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}</li></ul></li></ul></li>
+<ul><li>200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}</li>
+<li>200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}</li>
+<li>200 OK {"code": 400, "error": {"msg": "The provided key has expired"}, "status": false}</li></ul></li></ul></li>
 </ul>
 
 <h3>Login (Joan):</h3>
@@ -80,13 +88,13 @@ POST /activation/
 <ul>
 <li>Request:
 /POST /auth/
-<ul><li>201 CREATED {username = "Joan", password = "asdfasdf"}</li></ul></li>
+ {username = "Joan", password = "asdfasdf"}</li>
 <li>Response:
 <ul><li>OK
-<ul><li>201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}</li></ul></li>
+<ul><li>200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}</li></ul></li>
 <li>NO
-<ul><li>400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}</li>
-<li>400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}</li></ul></li></ul></li>
+<ul><li>200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}</li>
+<li>200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}</li></ul></li></ul></li>
 </ul>
 
 <h3>Logout (Joan):</h3>
@@ -287,7 +295,7 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <ul>
 <li>Request:
 /GET profiles/17/
-"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"</li>
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} </li>
 <li><p>Response:</p>
 
 <ul><li><p>OK</p>
@@ -320,7 +328,7 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 
 <h3>Crop image (Joan) (W8 Sergi):</h3>
 
-<h3>View my wings (Joan) 09/09:</h3>
+<h3>View my accomodations (Joan):</h3>
 
 <ul>
 <li>Request:
@@ -328,17 +336,124 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} </li>
 <li>Response:
 <ul><li>OK
-<ul><li>200 OK {"code": 200, "data": "Password changed", "status": true}</li></ul></li>
+<ul><li>200 OK
+[
+{
+"about": "",
+"additionalInformation": "",
+"address": "",
+...
+},
+{
+"about": "",
+"additionalInformation": "",
+"address": "",
+....
+},
+{
+"about": "",
+"additionalInformation": "",
+"address": "",
+...
+}
+]</li></ul></li>
 <li>NO 
 <ul><li>400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}</li>
 <li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li>
-<li>400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
-<h3>View one wings (Eze) 09/09:</h3></li></ul></li></ul></li>
+<li>400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}</li></ul></li></ul></li>
 </ul>
 
-<h3>Create wing (Eze) 08/09:</h3>
+<h3>View one of my accomodations (Eze):</h3>
 
-<h3>Update wing (Eze) 08/09:</h3>
+<ul>
+<li>Request:
+/GET /profiles/me/accomodations/20/
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} </li>
+<li>Response:
+<ul><li>200 OK
+{
+"about": "",
+"additionalInformation": "",
+"address": "",
+...
+}</li>
+<li>NO 
+<ul><li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li></ul></li></ul></li>
+</ul>
+
+<h3>View an accomodation of another user (Eze):</h3>
+
+<ul>
+<li>Request:
+/GET /profiles/17/accomodations/20/
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} </li>
+<li>Response:
+<ul><li>200 OK
+{
+"about": "",
+"additionalInformation": "",
+"address": "",
+...
+}</li>
+<li>NO 
+<ul><li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li>
+<li>400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}</li></ul></li></ul></li>
+</ul>
+
+<h3>Create Accomodation (Eze):</h3>
+
+<ul>
+<li><p>Request:
+/POST /profiles/me/accomodations/
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+{
+  "about": "",
+  "additionalInformation": "",
+  "address": "",
+  ...
+}</p></li>
+<li><p>Response:</p>
+
+<ul><li><p>200 CREATED {"code": 204, "data": "Updated", "status": true}</p></li>
+<li><p>NO </p>
+
+<ul><li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li>
+<li>400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}</li></ul></li></ul></li>
+</ul>
+
+<h3>Update accomodation (Eze):</h3>
+
+<ul>
+<li><p>Request:
+/POST /profiles/me/accomodations/20/
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+{
+  "about": "",
+  "additionalInformation": "",
+  "address": "",
+  ...
+}</p></li>
+<li><p>Response:</p>
+
+<ul><li><p>204 NO CONTENT {"code": 204, "data": "Updated", "status": true}</p></li>
+<li><p>NO </p>
+
+<ul><li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li></ul></li></ul></li>
+</ul>
+
+<h3>Delete accomodation (Eze):</h3>
+
+<ul>
+<li>Request:
+/DELETE /profiles/me/accomodations/20/
+{"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} </li>
+<li><p>Response:</p>
+
+<ul><li><p>204 NO CONTENT {"code": 204, "data": "Wing deleted", "status": true}</p></li>
+<li><p>NO </p>
+
+<ul><li>400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}</li></ul></li></ul></li>
+</ul>
 
 <h3>Search wings (undefined):</h3>
 

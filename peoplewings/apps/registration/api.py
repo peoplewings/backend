@@ -8,7 +8,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import trailing_slash
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -106,14 +106,23 @@ class UserSignUpResource(ModelResource):
                 content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)                               
             except ImmediateHttpResponse, e:
-                content = {}
-                errors = {}
-                errors['msg'] = "Error in some fields"
-                errors['errors'] = json.loads(e.response)                
-                content['code'] = 410
-                content['status'] = False
-                content['error'] = errors
-                return self.create_response(request, content, response_class = HttpResponse)
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                else: 
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Error in some fields"
+                    errors['errors'] = json.loads(e.response)                
+                    content['code'] = 410
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
             except BadParameters, e:
                 # This exception occurs when the provided key has expired
                 content = {}
@@ -128,7 +137,7 @@ class UserSignUpResource(ModelResource):
                 content = {}
                 errors = {}
                 errors['msg'] = "No JSON could be decoded"               
-                content['code'] = 400
+                content['code'] = 411
                 content['status'] = False
                 content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
@@ -163,8 +172,18 @@ class ActivationResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=ActivationForm)
 
+    def custom_serialize(self, errors):
+        return errors.get('activation')
+
+    def error_response(self, errors, request):
+        serialized = self.custom_serialize(errors)
+        raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
+
     def obj_create(self, bundle, request=None, **kwargs):
         request.POST = bundle.data
+        self.is_valid(bundle,request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
         bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
         return bundle
         
@@ -181,38 +200,93 @@ class ActivationResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
-                # response is a HttpResponse object, so follow Django's instructions
-                # to change it to your needs before you return it.
-                # https://docs.djangoproject.com/en/dev/ref/request-response/
-                return response
+                content = {}
+                data = {}
+                data['msg'] = "Account activated"                
+                content['code'] = 200
+                content['status'] = True
+                content['data'] = data                
+                return self.create_response(request, content, response_class = HttpResponse)
             except BadRequest, e:
-                return HttpResponse({'code': 666, 'message':e.args[0]})
+                content = {}
+                errors = {}
+                errors['msg'] = e.args[0]               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
-                bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Error in some fields"
+                errors['errors'] = json.loads(e.messages)                
+                content['code'] = 410
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ValueError, e:
+                # This exception occurs when the JSON is not a JSON...
+                content = {}
+                errors = {}
+                errors['msg'] = "No JSON could be decoded"               
+                content['code'] = 411
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except ActivationCompleted:
                 # This exception occurs when the account has already been activated
-                bundle = {"code": 810, "status": False, "error": "The activation key has been already used"}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "The activation key has been already used"               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except NotAKey:
                 # This exception occurs when the provided key has not a valid format
-                bundle = {"code": 811, "status": False, "error": "The provided key is not a valid key"}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "The activation key is not a valid key"               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
-                bundle = {"code": 777, "status": False, "error": json.loads(e.response.content)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
-            except IntegrityError, e:               
-                bundle = {"code": 777, "status": False, "error": json.loads(e.response.content)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse) 
+                else:               
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Error in some fields"
+                    errors['errors'] = json.loads(e.response)                
+                    content['code'] = 410
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+            except IntegrityError, e:
+                content = {}
+                errors = {}
+                errors['msg'] = json.loads(e.response.content)                              
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)               
             except KeyExpired:
                 # This exception occurs when the provided key has expired
-                bundle = {"code": 812, "status": False, "error": "The provided key has expired"}
-                return self.create_response(request, bundle, response_class = HttpBadRequest)
+                content = {}
+                errors = {}
+                errors['msg'] = "The provided key has expired"              
+                content['code'] = 410
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
@@ -235,8 +309,17 @@ class LoginResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=LoginForm)
 
-    @transaction.commit_on_success
+    def custom_serialize(self, errors):
+        return errors.get('auth')
+
+    def error_response(self, errors, request):
+        serialized = self.custom_serialize(errors)
+        raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
+
     def obj_create(self, bundle, request=None, **kwargs):
+        self.is_valid(bundle,request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)        
         bundle.data = login(bundle)
         return bundle
         
@@ -259,29 +342,75 @@ class LoginResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
-                # response is a HttpResponse object, so follow Django's instructions
-                # to change it to your needs before you return it.
-                # https://docs.djangoproject.com/en/dev/ref/request-response/
-                return response
+                content = {}
+                data = {}
+                data['msg'] = "Logged in"
+                data['x-auth-token'] = json.loads(response.content)['token']                
+                content['code'] = 200
+                content['status'] = True
+                content['data'] = data                
+                return self.create_response(request, content, response_class = HttpResponse)
             except BadRequest, e:
-                return HttpResponse({'code': 666, 'message':e.args[0]})
+                content = {}
+                errors = {}
+                errors['msg'] = e.args[0]               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
-                bundle = {"code": 777, "status": False, "error": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Error in some fields"
+                errors['errors'] = json.loads(e.messages)                
+                content['code'] = 410
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ValueError, e:
+                # This exception occurs when the JSON is not a JSON...
+                content = {}
+                errors = {}
+                errors['msg'] = "No JSON could be decoded"               
+                content['code'] = 411
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
-                bundle = {"code": 777, "status": False, "error": json.loads(e.response.content)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse) 
+                else:               
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Error in some fields"
+                    errors['errors'] = json.loads(e.response)                
+                    content['code'] = 410
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
             except AuthFail, e:
-                bundle = {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Username/password do not match any user in the system"              
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)               
             except NotActive, e:
-                bundle ={"status":False, "code":"821", "error": "Inactive user"}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Inactive user"              
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)                
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
