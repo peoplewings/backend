@@ -25,7 +25,6 @@ from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
-from peoplewings.apps.people.authorization import ProfileAuthorization
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
@@ -466,28 +465,54 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
+        print "get_detail"
         if kwargs['pk'] == 'me':
             if request.user.is_anonymous(): return self.create_response(request, {}, response_class=HttpForbidden)
             kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         result = UserProfile.objects.get(pk=kwargs['pk'])
         bundle = self.build_bundle(obj=result, request=request)
+        print request.user
         if request.user.is_anonymous():
             bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
             bundle.obj.avatar = "fake"
         bundle.obj.__dict__.pop("_state")
         return self.create_response(request, bundle.obj.__dict__)
 
+    def get_list(self, request, **kwargs):
+        #res = super(UserProfileResource, self).get_list(request, **kwargs)
 
+        res = UserProfile.objects.all()
+        self.apply_authorization_limits(request, res)
 
+        objects = []
+        if request.user.is_anonymous():
+            # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
+            for i in res:
+                bundle = self.build_bundle(obj=i, request=request)
+                bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
+                bundle.obj.avatar = "fake"
+                bundle.obj.__dict__.pop("_state")
+                objects.append(bundle.obj.__dict__)
+        else:
+            for i in res:
+                bundle = self.build_bundle(obj=i, request=request)
+                bundle.obj.__dict__.pop("_state")
+                objects.append(bundle.obj.__dict__)
+        return self.create_response(request, objects)
+
+    """
     def get_object_list(self, request):
+        print "get_object_list"
         results = UserProfile.objects.all()
         objects = []
+        print request.user
         if not request.user.is_anonymous():
             for i in results:
                 bundle = self.build_bundle(obj=i, request=request)
                 bundle.obj.__dict__.pop("_state")
                 objects.append(bundle.obj.__dict__)
         else:
+            print "lelele"
             # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
             for i in results:
                 bundle = self.build_bundle(obj=i, request=request)
@@ -495,7 +520,8 @@ class UserProfileResource(ModelResource):
                 bundle.obj.avatar = "fake"
                 bundle.obj.__dict__.pop("_state")
                 objects.append(bundle.obj.__dict__)
-        return results
+        return self.create_response(request, bundle.obj.__dict__)
+    """
 
     def dehydrate(self, bundle):
         if self.method:
