@@ -69,7 +69,10 @@ def login(bundle):
     ## Checks if the user/pass is valid    
     user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
     ## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
-    api_token = ApiToken.objects.create(user=user)
+    if 'remember' in bundle.data and bundle.data['remember'] == 'on':
+        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M'))
+    else:
+        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now())
     ## Links the user to the token
     api_token.save()
     return api_token.token

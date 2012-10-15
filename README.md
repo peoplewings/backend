@@ -136,15 +136,15 @@ There are some standard error messages:
     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "Pz", "msg": "Account shown"}, "status": true}
    * NO 
     
-### Delete account (Joan):
+### Delete my account (Joan):
  * Request:
     /DELETE /accounts/me/
     {}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 204 NO CONTENT
-   * NO (Method not allowed and unauthorized)
+     * 200 OK {"code": 200, "data": {"msg": "Account deleted"}, "status": true}
+   * NO 
 
 ### Update account (Joan):
  * Request:
@@ -153,10 +153,10 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
-   * NO (Method not allowed and unauthorized)
+     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "DangReGu", "msg": "Account updated"}, "status": true}
+   * NO
 
-### View a list of Profiles (Ezequiel):
+### View a list of Profiles (Ezequiel) REVIEW LATER!!:
  * Request:
     /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -386,7 +386,4 @@ There are some standard error messages:
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
 ### Search wings (undefined):
-
-
-### Needed environment variables
 

@@ -345,7 +345,7 @@ class LoginResource(ModelResource):
                 content = {}
                 data = {}
                 data['msg'] = "Logged in"
-                data['x-auth-token'] = json.loads(response.content)['token']                
+                data['xAuthToken'] = json.loads(response.content)['token']                
                 content['code'] = 200
                 content['status'] = True
                 content['data'] = data                
@@ -552,6 +552,9 @@ class AccountResource(ModelResource):
             return object_list.filter(id = request.user.id)
         return []
 
+    def put_list(self, request, **kwargs):
+        ##DO NOTHING
+        return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
     def get_list(self, request, **kwargs):
         ##DO NOTHING
         return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
@@ -604,10 +607,6 @@ class AccountResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
                 return response
             except BadRequest, e:
                 content = {}

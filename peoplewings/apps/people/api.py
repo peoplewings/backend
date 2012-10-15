@@ -8,7 +8,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 
@@ -383,7 +383,13 @@ class UserProfileResource(ModelResource):
     def get_detail(self, request, **kwargs):
         if 'pk' in kwargs and kwargs['pk'] == 'me':
             kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        return super(UserProfileResource, self).get_detail(request, **kwargs)
+        response = super(UserProfileResource, self).get_detail(request, **kwargs)
+        good_response = {}
+        good_response['status'] = True
+        good_response['code'] = 200
+        good_response['data'] = json.loads(response.content)
+        good_response['data']['msg'] = 'Profile data'
+        return self.create_response(request, good_response, response_class = HttpResponse)
 
 
     def dehydrate(self, bundle):
@@ -404,34 +410,74 @@ class UserProfileResource(ModelResource):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):    
             try:
-                #pprint.pprint(request.__dict__)
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
                 return response
             except BadRequest, e:
-                return HttpResponse({'code': 666, 'message':e.args[0]})
+                content = {}
+                errors = {}
+                errors['msg'] = e.args[0]               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
-                bundle = {"code": 777, "status": False, "errors": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Error in some fields"
+                errors['errors'] = json.loads(e.messages)                
+                content['code'] = 410
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ValueError, e:
+                # This exception occurs when the JSON is not a JSON...
+                content = {}
+                errors = {}
+                print e
+                errors['msg'] = "No JSON could be decoded"               
+                content['code'] = 411
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
-                if (isinstance(e.response, HttpUnauthorized)):
-                    bundle = {"code": 401, "status": False, "errors":"Unauthorized"}
-                    return self.create_response(request, bundle, response_class = HttpResponse)
-                if (isinstance(e.response, HttpApplicationError)):
-                    bundle = {"code": 401, "status": False, "errors":"Error"}
-                    return self.create_response(request, bundle, response_class = HttpResponse)   
-                else:
-                    bundle = {"code": 777, "status": False, "errors": json.loads(e.response.content)}
-                    return self.create_response(request, bundle, response_class = HttpResponse)   
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse) 
+                elif (isinstance(e.response, HttpUnauthorized)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Unauthorized"                               
+                    content['code'] = 413
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                elif (isinstance(e.response, HttpApplicationError)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Can't logout"                               
+                    content['code'] = 400
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                else:               
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Error"               
+                    content['code'] = 400
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
                 # error message.
-
                 return self._handle_500(request, e)
 
         return wrapper
