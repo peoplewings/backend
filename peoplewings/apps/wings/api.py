@@ -27,6 +27,7 @@ from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.locations.api import CityResource
+from peoplewings.apps.wings.exceptions import BadParameters, NotAUser
 
 from pprint import pprint
 
@@ -87,6 +88,7 @@ class AccomodationsResource(ModelResource):
         return super(AccomodationsResource, self).dehydrate(bundle)
     """
 
+
     def obj_create(self, bundle, request=None, **kwargs):
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
@@ -125,6 +127,7 @@ class AccomodationsResource(ModelResource):
         return bundle
 
     def get_list(self, request, **kwargs):
+        print "hola"
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
         
@@ -177,6 +180,7 @@ class AccomodationsResource(ModelResource):
             bundle = {"code": 401, "status": False, "errors":"The wing provided does not exist or does not belong to the user given"}
             return self.create_response(request, bundle, response_class = HttpResponse)
         return self.create_response(request, bundle)
+
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
@@ -248,7 +252,7 @@ class AccomodationsResource(ModelResource):
                     patch_cache_control(response, no_cache=True)
 
                 return response
-            except (BadRequest, fields.ApiFieldError), e:
+            except (BadRequest, fields.ApiFieldError, NotAUser), e:
                 return http.HttpBadRequest(e.args[0])
             except ValidationError, e:
                 return http.HttpBadRequest(', '.join(e.messages))

@@ -2,7 +2,7 @@ You're receiving this e-mail because you requested a password reset for your use
 
 Please go to the following page and choose a new password:
 
-http://{{ site }}/password/reset/confirm/{{ reset_token }}/
+{{ site }}/#/forgot/{{ reset_token }}/
 
 Your username, in case you've forgotten: {{ username }}
 

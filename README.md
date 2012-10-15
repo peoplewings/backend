@@ -41,41 +41,79 @@ Full reference can be found here:
 * https://devcenter.heroku.com/articles/error-codes
  
 ## API
-
 IMPORTANT!! All urls start with /api/v1/
+
+There are some standard error messages:
+
+* 200 OK {"code": 411, "error": {"msg": "No JSON could be decoded"}, "status": false}
+* 200 OK {"code": 412, "error": {"msg": "Method not allowed"}, "status": false}
+* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
+
 ### Register (Joan):
  * Request:
     POST /newuser/
     {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"joan@peoplewings.com", "repeatEmail":"joan@peoplewings.com", "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}
  * Response:
    * OK
-     * 201 CREATED {"status": True, "code":"201", "data":"Your account has been succesfully..."}
-   * NO 
-     * 400 BAD REQUEST {"status": False, "code":"401", "error":{"error1":"aslkjdhkladn", "error2":"kajsdojbn"}}
-     * 400 BAD REQUEST {"code": 813, "error": "The email is already being used", "status": false}
+     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "msg": "Account created"}, "status": true}
+   * NO
+     * 200 OK {"code": 400, "error": {"msg": "The email is already being used"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Emails don't match"}, "status": false}
 
 ### Activate (Joan):
  * Request:
     POST /activation/
-    {"activationKey":"asdkjbsjnskn"}
+    {"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}
  * Response:
    * OK 
-     * 201 CREATED {"status":True, "code":"201", "txt":"Your account has been activated"}
+     * 200 OK {"code": 200, "data": {"msg": "Account activated"}, "status": true}
    * NO
-     * 400 BAD REQUEST {"code": 810, "status": False, "error": "The activation key has been already used"}
-     * 400 BAD REQUEST {"code": 811, "status": False, "error": "The provided key is not a valid key"}
-     * 400 BAD REQUEST {"code": 812, "status": False, "error": "The provided key has expired"}
+     * 200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The provided key has expired"}, "status": false}
 
 ### Login (Joan):
  * Request:
     /POST /auth/
-     * 201 CREATED {username = "Joan", password = "asdfasdf"}
+     {username = "Joan", password = "asdfasdf"}
  * Response:
    * OK
-     * 201 CREATED {"status":True, "code":"201", "token" = "ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
+     * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}
    * NO
-     * 400 BAD REQUEST {"status":False, "code":"820", "error": "Username/password do not match any user in the system"}
-     * 400 BAD REQUEST {"status":False, "code":"821", "error": "Inactive user"}
+     * 200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}
+
+### Request Forgot password (Joan):
+ * Request:
+    /POST /forgot/
+    {"email" = "joan@peoplewings.com"}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "Email sent"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Invalid email"}, "status": false}
+
+### Check if the resetPassword link is valid (Joan):
+ * Request:
+    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
+    {}
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "The link is valid"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Not a key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The key has expired"}, "status": false}
+
+### Submit new password (Joan):
+ * Request:
+    /POST /forgot/
+    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
+ * Response:
+   * OK
+     * 200 OK {"code": 200, "data": {"msg": "Password changed"}, "status": true}
+   * NO 
+     * 200 OK {"code": 400, "error": {"msg": "Not a key"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "The key has expired"}, "status": false}
 
 ### Logout (Joan):
  * Request:
@@ -84,9 +122,9 @@ IMPORTANT!! All urls start with /api/v1/
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-    * 204 NO CONTENT {"status":True, "code":"204"}
+    * 200 OK {"code": 200, "data": {"msg": "Logout complete"}, "status": true}
    * NO
-    * 400 BAD REQUEST {"status":False, "code":"822", "error": "Can\'t logout"}
+    * 200 OK {"code": 400, "error": {"msg": "Can't logout"}, "status": false}
     
 ### View my account (Joan):
  * Request:
@@ -95,8 +133,8 @@ IMPORTANT!! All urls start with /api/v1/
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-    * 200 OK {"status":True, "code":"200", "data":[{"dateJoined": "2012-09-28T10:49:53.497530+00:00", "email": "fr33d4n@gmail.com", "firstName": "Ez", "lastLogin": "2012-10-02T11:35:04.505081+00:00", "lastName": "Pz", "password": "pbkdf2_sha256$10000$t4RMJPP649ZE$bhUiYcVcteTXYcdBDba5AjH9DM6ckBI+SjhGicelWAs="}]}
-   * NO (Method not allowed and unauthorized)
+    * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "Pz", "msg": "Account shown"}, "status": true}
+   * NO 
     
 ### Delete account (Joan):
  * Request:
@@ -117,41 +155,6 @@ IMPORTANT!! All urls start with /api/v1/
    * OK
      * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
    * NO (Method not allowed and unauthorized)
-
-### Request Forgot password (Joan):
- * Request:
-    /POST /forgot/
-    {"email" = "joan@peoplewings.com"}
- * Response:
-   * OK
-     * 202 CREATED {"code": 202, "data": "Email sent", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid email", "status": false}
-     * 400 BAD REQUEST {"code": 777, "error": {"email": ["This field is required."]}, "status": false}
-
-### Check if the resetPassword link is valid (Joan):
- * Request:
-    /GET /forgot/?forgotToken=f27c26f21835e557892970011450962c0331d712
-    {}
- * Response:
-   * OK
-     * 200 OK {"code": 200, "data": "The link is valid", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 400, "data": "Invalid link", "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 412, "data": "The key has expired", "status": false}
-
-### Submit new password (Joan):
- * Request:
-    /POST /forgot/
-    {"forgotToken":"f27c26f21835e557892970011450962c0331d712", "newPassword":"qwerty"} 
- * Response:
-   * OK
-     * 200 OK {"code": 200, "data": "Password changed", "status": true}
-   * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
 
 ### View a list of Profiles (Ezequiel):
  * Request:
