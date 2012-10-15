@@ -3,7 +3,7 @@ from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, 
 import json
 from tastypie import fields
 from tastypie.authentication import *
-from tastypie.resources import ModelResource
+from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
@@ -24,17 +24,19 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
-from peoplewings.apps.people.forms import UserProfileForm
+from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
 from peoplewings.apps.people.authorization import ProfileAuthorization
-from peoplewings.apps.registration.authentication import ApiTokenAuthentication
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
 from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
-
-
 from peoplewings.apps.wings.api import AccomodationsResource
 
-import pprint
+from pprint import pprint
+
+import re
+
+from django.db.models import Q
 
 class InstantMessageResource(ModelResource):
     class Meta:
@@ -92,7 +94,6 @@ class UniversityResource(ModelResource):
         queryset = University.objects.all()
         allowed_methods = []
         include_resource_uri = False
-        #resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
@@ -107,7 +108,6 @@ class UserUniversityResource(ModelResource):
         queryset = UserProfileStudiedUniversity.objects.all()
         allowed_methods = []
         include_resource_uri = False
-        #resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
@@ -119,34 +119,44 @@ class LanguageResource(ModelResource):
         queryset = Language.objects.all()
         allowed_methods = []
         include_resource_uri = False
-        #resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        #validation = FormValidation(form_class=UserProfileForm)
+        filtering = {
+            "name": ['exact'],
+        }
 
 
 class UserLanguageResource(ModelResource):    
     language = fields.ToOneField(LanguageResource, 'language', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserLanguage
         queryset = UserLanguage.objects.all()
         allowed_methods = []
         include_resource_uri = False
-        #resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        #validation = FormValidation(form_class=UserProfileForm)
+        validation = FormValidation(form_class=UserLanguageForm)
+        """
+        filtering = {
+            "level": ['exact'],
+            "language": ALL_WITH_RELATIONS,
+        }
+        """
 
 
 class UserProfileResource(ModelResource):    
     user = fields.ToOneField(AccountResource, 'user')
+
     languages = fields.ToManyField(LanguageResource, 'languages', full=True)
+    #through_query = lambda bundle: UserLanguage.objects.filter(user_profile=bundle.obj)
+    #userlanguages = fields.ToManyField(UserLanguageResource, attribute=through_query, full=True)
+
     education = fields.ToManyField(UniversityResource, 'universities', full=True)
     social_networks = fields.ToManyField(SocialNetworkResource, 'social_networks', full=True)
     instant_messages = fields.ToManyField(InstantMessageResource, 'instant_messages', full=True)
@@ -163,13 +173,105 @@ class UserProfileResource(ModelResource):
         include_resource_uri = False
         resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = ApiTokenAuthentication()
+        authentication = AnonymousApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
         validation = FormValidation(form_class=UserProfileForm)
+        filtering = {
+            "age": ['range'],
+            'gender':['in'],
+            'languages':ALL_WITH_RELATIONS,
+            #'userlanguages': ALL_WITH_RELATIONS,
+        }
+
+    def normalize_query(self, query_string,
+                    findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
+                    normspace=re.compile(r'\s{2,}').sub):
+        ''' Splits the query string in invidual keywords, getting rid of unecessary spaces
+            and grouping quoted words together.
+            Example:
+            
+            >>> normalize_query('  some random  words "with   quotes  " and   spaces')
+            ['some', 'random', 'words', 'with quotes', 'and', 'spaces']
+        
+        '''
+        return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)] 
+
+    def get_query(self, query_string, search_fields):
+        ''' Returns a query, that is a combination of Q objects. That combination
+            aims to search keywords within a model by testing the given search fields.
+        
+        '''
+        query = None # Query to search for every search term        
+        terms = self.normalize_query(query_string)
+        for term in terms:
+            or_query = None # Query to search for a given term in each field
+            for field_name in search_fields:
+                q = Q(**{"%s__icontains" % field_name: term})
+                if or_query is None:
+                    or_query = q
+                else:
+                    or_query = or_query | q
+            if query is None:
+                query = or_query
+            else:
+                query = query & or_query
+        return query
+
+    def apply_filters(self, request, applicable_filters):
+        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        
+        query = request.GET.get('userlanguage__level', None)
+        if query:
+            entry_query = self.get_query(query, ['userlanguage__level'])
+            if request.GET.get('languages__name', None): 
+                base_object_list = base_object_list.filter(entry_query, userlanguage__language__name=request.GET.get('languages__name', None)).distinct()
+            else:
+                base_object_list = base_object_list.filter(entry_query).distinct()
+
+        wing_filter = {}
+
+        ds = None
+        de = None
+
+        if 'date_start__gte' in request.GET.keys():
+            ds = request.GET['date_start__gte']
+            #del request.GET['date_start__gte']
+
+        if 'date_end__lte' in request.GET.keys():
+            de = request.GET['date_end__lte']
+            #del request.GET['date_end__lte']            
+
+        for k, v in request.GET.items():
+            #print "insert key ", k, " with value ", v
+            if k != 'date_start__gte' and k != 'date_end__lte': wing_filter[k] = v            
+
+        ar = AccomodationsResource()
+        wing_filter_2 = ar.build_filters(wing_filter)
+        #for i in wing_filter_2: print i
+        accomodation_list = ar.apply_filters(request, wing_filter_2)
+        if ds is not None:
+            accomodation_list = accomodation_list.filter(
+                Q(date_start__gte=ds) | Q(date_start__isnull=True)
+            )
+        if de is not None:
+            accomodation_list = accomodation_list.filter( 
+                Q(date_end__lte=de) | Q(date_end__isnull=True)
+            )
+        #for i in accomodation_list: print i.name
+        """
+        query = request.GET
+        if query:
+            entry_query = self.get_query(query, ['wings__capacity'])
+            accomodation_list = Accomodation.objects.filter(entry_query).distinct()
+            for i in accomodation_list: pprint(i)
+        """
+        base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
+
+        return base_object_list
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
-    def override_urls(self):
+    def prepend_urls(self):
         return [
             ##/profiles/<profile_id>|me/accomodations/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
@@ -191,67 +293,44 @@ class UserProfileResource(ModelResource):
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
-        #print "dehydrate languages "
-        #id_user = bundle.data['id']
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
         for i in bundle.data['languages']: 
             # i = {id: id_language, name:'Spanish'}
-            lang = Language.objects.get(pk=i.data['id'])
-            ul = UserLanguage.objects.get(language=lang, user_profile=up)
+            lang = i.obj
+            ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
             i.data['level'] = ul.level
             i.data.pop('id')
         return bundle.data['languages']
 
     def dehydrate_education(self, bundle):
-        #print "dehydrate education "
-        #id_user = bundle.data['id']
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
         for i in bundle.data['education']: 
             # i = {id: id_university, name:'University of Reading'}
-            uni = University.objects.get(pk=i.data['id'])
-            upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=up)
+            uni = i.obj
+            upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=bundle.obj)
             i.data['degree'] = upu.degree
             i.data.pop('id')
         return bundle.data['education']
 
     def dehydrate_social_networks(self, bundle):
-        #print "dehydrate social_network "
-        #id_user = bundle.data['id']
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
         for i in bundle.data['social_networks']: 
             # i = {id: id_social_networks, name:'Facebook'}
-            sn = SocialNetwork.objects.get(pk=i.data['id'])
-            usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=up)
+            sn = i.obj
+            usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
             i.data['username'] = usn.social_network_username
             i.data.pop('id')
         return bundle.data['social_networks']
 
     def dehydrate_instant_messages(self, bundle):
-        #print "dehydrate instant_message "
-        #id_user = bundle.data['id']
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
         for i in bundle.data['instant_messages']: 
             # i = {id: id_instant_message, name:'Whatsapp'}
-            im = InstantMessage.objects.get(pk=i.data['id'])
-            uim = UserInstantMessage.objects.get(instant_message=im, user_profile=up)
+            im = i.obj
+            uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
             i.data['username'] = uim.instant_message_username
             i.data.pop('id')
         return bundle.data['instant_messages']
 
     def dehydrate_current(self, bundle):
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
-        city = up.current_city
-        if city is None: return {}
+        if bundle.data['current'] is None: return {} 
+        city = bundle.data['current'].obj
         region = city.region
         country = region.country
         bundle.data['current'] = {}
@@ -261,11 +340,8 @@ class UserProfileResource(ModelResource):
         return bundle.data['current']
 
     def dehydrate_hometown(self, bundle):
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
-        city = up.hometown
-        if city is None: return {}
+        if bundle.data['hometown'] is None: return {} 
+        city = bundle.data['hometown'].obj
         region = city.region
         country = region.country
         bundle.data['hometown'] = {}
@@ -275,15 +351,10 @@ class UserProfileResource(ModelResource):
         return bundle.data['hometown']
 
     def dehydrate_other_locations(self, bundle):
-        #print "dehydrate instant_message "
-        #id_user = bundle.data['id']
-        id_user = UserProfile.objects.get(user_id=bundle.request.user.id).id
-        up = UserProfile.objects.get(pk=id_user)
-
         for i in bundle.data['other_locations']: 
             # tenemos: i.data = {id: id_city, lat, lon, name, resource_uri, short_name}
             # queremos: i.data = {city: nombre_city, region: nombre_region, country: nombre_country}
-            city = City.objects.get(pk=i.data['id'])
+            city = i.obj
             i.data = {}
             region = city.region
             country = region.country
@@ -292,8 +363,14 @@ class UserProfileResource(ModelResource):
             i.data['country'] = country.name
         return bundle.data['other_locations']
 
-    """
+    
     def apply_authorization_limits(self, request, object_list=None):
+        if request.user.is_anonymous() and request.method not in ('GET'):
+            return self.create_response(request, {"error":"capado en authorization limits"}, response_class=HttpForbidden)
+        elif not request.user.is_anonymous() and request.method not in ('GET'):
+            return object_list.filter(user=request.user)
+        return object_list
+    """
         if request and request.method in ('POST'):
             return object_list.get(user=request.user)
         if request and request.method in ('GET'):
@@ -311,12 +388,16 @@ class UserProfileResource(ModelResource):
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
+        if request.user.is_anonymous(): 
+            return self.create_response(request, {}, response_class=HttpForbidden)
 
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
-        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)       
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+
         up = UserProfile.objects.get(user=request.user)
         self.is_valid(bundle, request)
+
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
@@ -375,6 +456,7 @@ class UserProfileResource(ModelResource):
         for i in bundle.data:
             if hasattr(up, i): setattr(up, i, bundle.data.get(i))
         up.save()
+
         self.method = 'POST'
         updated_bundle = self.dehydrate(bundle)
         updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
@@ -384,10 +466,36 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
-        if 'pk' in kwargs and kwargs['pk'] == 'me':
+        if kwargs['pk'] == 'me':
+            if request.user.is_anonymous(): return self.create_response(request, {}, response_class=HttpForbidden)
             kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        return super(UserProfileResource, self).get_detail(request, **kwargs)
+        result = UserProfile.objects.get(pk=kwargs['pk'])
+        bundle = self.build_bundle(obj=result, request=request)
+        if request.user.is_anonymous():
+            bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
+            bundle.obj.avatar = "fake"
+        bundle.obj.__dict__.pop("_state")
+        return self.create_response(request, bundle.obj.__dict__)
 
+
+
+    def get_object_list(self, request):
+        results = UserProfile.objects.all()
+        objects = []
+        if not request.user.is_anonymous():
+            for i in results:
+                bundle = self.build_bundle(obj=i, request=request)
+                bundle.obj.__dict__.pop("_state")
+                objects.append(bundle.obj.__dict__)
+        else:
+            # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
+            for i in results:
+                bundle = self.build_bundle(obj=i, request=request)
+                bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
+                bundle.obj.avatar = "fake"
+                bundle.obj.__dict__.pop("_state")
+                objects.append(bundle.obj.__dict__)
+        return results
 
     def dehydrate(self, bundle):
         if self.method:
@@ -398,7 +506,7 @@ class UserProfileResource(ModelResource):
             self.method = None
             return bundle   
         else:
-             return super(UserProfileResource, self).dehydrate(bundle)  
+            return super(UserProfileResource, self).dehydrate(bundle)  
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]

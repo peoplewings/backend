@@ -37,3 +37,6 @@ class CityResource(ModelResource):
         authentication = ApiTokenAuthentication()
         #authorization = Authorization()
         #always_return_data = True
+        filtering = {
+            "name": ['exact'],
+        }
