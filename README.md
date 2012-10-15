@@ -76,6 +76,7 @@ There are some standard error messages:
  * Request:
     /POST /auth/
      {username = "Joan", password = "asdfasdf"}
+     {username = "joan@peoplewings.com, password = "asdf", remember="on"} (This call keeps you logged in in the system, forever)
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}

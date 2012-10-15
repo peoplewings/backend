@@ -88,7 +88,8 @@ POST /activation/
 <ul>
 <li>Request:
 /POST /auth/
- {username = "Joan", password = "asdfasdf"}</li>
+ {username = "Joan", password = "asdfasdf"}
+ {username = "joan@peoplewings.com, password = "asdf", remember="on"} (This call keeps you logged in in the system, forever)</li>
 <li>Response:
 <ul><li>OK
 <ul><li>200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}</li></ul></li>
@@ -165,7 +166,7 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 <li>NO </li></ul></li>
 </ul>
 
-<h3>Delete account (Joan):</h3>
+<h3>Delete my account (Joan):</h3>
 
 <ul>
 <li>Request:
@@ -174,8 +175,8 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
 <li>Response:
 <ul><li>OK
-<ul><li>204 NO CONTENT</li></ul></li>
-<li>NO (Method not allowed and unauthorized)</li></ul></li>
+<ul><li>200 OK {"code": 200, "data": {"msg": "Account deleted"}, "status": true}</li></ul></li>
+<li>NO </li></ul></li>
 </ul>
 
 <h3>Update account (Joan):</h3>
@@ -187,11 +188,11 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145</li>
 <li>Response:
 <ul><li>OK
-<ul><li>200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object</li></ul></li>
-<li>NO (Method not allowed and unauthorized)</li></ul></li>
+<ul><li>200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "DangReGu", "msg": "Account updated"}, "status": true}</li></ul></li>
+<li>NO</li></ul></li>
 </ul>
 
-<h3>View a list of Profiles (Ezequiel):</h3>
+<h3>View a list of Profiles (Ezequiel) REVIEW LATER!!:</h3>
 
 <ul>
 <li>Request:
@@ -453,7 +454,5 @@ X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2
 </ul>
 
 <h3>Search wings (undefined):</h3>
-
-<h3>Needed environment variables</h3>
 
 
