@@ -88,12 +88,34 @@ class AccomodationsResource(ModelResource):
     """
 
     def obj_create(self, bundle, request=None, **kwargs):
-        if 'profile_id' not in kwargs:
-            return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
+        self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
 
         up = UserProfile.objects.get(user=request.user)
-        kwargs['author_id'] = up.id
 
+        # creamos la ciudad si hace falta
+        data = bundle.data['city']
+        city = City.objects.saveLocation(**data)
+        bundle = self.full_hydrate(bundle)
+
+        # creamos la wing accomodation
+        a = Accomodation.objects.create(city=city, author=up)
+        del bundle.data['city']
+        for key, value in bundle.data.items():
+            if hasattr(a, key): setattr(a, key, value)
+        a.save()
+
+        bundle = self.build_bundle(obj=a, request=request)
+        
+        return bundle
+        """
+        up = UserProfile.objects.get(user=request.user)
+        kwargs['author_id'] = up.id
         bundle.obj = self._meta.object_class()
 
         for key, value in kwargs.items():
@@ -105,6 +127,7 @@ class AccomodationsResource(ModelResource):
         data = bundle.data['city']
         for key, value in data.items():            
             loc[key] = value
+
         city = City.objects.saveLocation(**loc)
         setattr(bundle.obj, 'city', city)
         bundle = self.full_hydrate(bundle)
@@ -123,6 +146,7 @@ class AccomodationsResource(ModelResource):
         m2m_bundle = self.hydrate_m2m(bundle)
         self.save_m2m(m2m_bundle)
         return bundle
+        """
 
     def get_list(self, request, **kwargs):
         if 'profile_id' not in kwargs:
@@ -156,10 +180,13 @@ class AccomodationsResource(ModelResource):
 
         return self.create_response(request, objects)
         """
-    """
+    
     def post_list(self, request, **kwargs):
-        return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
-    """
+        up = UserProfile.objects.get(user=request.user)
+        if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
+            return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
+        return super(AccomodationsResource, self).post_list(request, **kwargs)
+
     def delete_list(self, request=None, **kwargs):
         return self.create_response(request, {"code" : 401, "status" : False, "errors": "Unauthorized"}, response_class=HttpForbidden)
 
@@ -186,7 +213,11 @@ class AccomodationsResource(ModelResource):
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+
         self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+
         try:
             a = Accomodation.objects.get(pk=kwargs['wing_id'], author=UserProfile.objects.get(user=request.user))
         except ObjectDoesNotExist:
@@ -251,7 +282,9 @@ class AccomodationsResource(ModelResource):
             except (BadRequest, fields.ApiFieldError), e:
                 return http.HttpBadRequest(e.args[0])
             except ValidationError, e:
-                return http.HttpBadRequest(', '.join(e.messages))
+                # Or do some JSON wrapping around the standard 500
+                bundle = {"code": 777, "status": False, "errors": json.loads(e.messages)}
+                return self.create_response(request, bundle, response_class = HttpResponse)
             except Exception, e:
                 if hasattr(e, 'response'):
                     return e.response

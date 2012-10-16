@@ -17,9 +17,10 @@ from django.forms import ValidationError
 from django import forms
 from django.utils.cache import patch_cache_control
 from django.core import serializers
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
@@ -48,7 +49,7 @@ class InstantMessageResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
 
-class UserInstantMessageResource(ModelResource):    
+class UserInstantMessageResource(ModelResource):
     instant_message = fields.ToOneField(InstantMessageResource, 'instant_message', full=True)
     user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
 
@@ -73,7 +74,7 @@ class SocialNetworkResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
 
-class UserSocialNetworkResource(ModelResource):    
+class UserSocialNetworkResource(ModelResource):
     social_network = fields.ToOneField(SocialNetworkResource, 'social_network', full=True)
     user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
 
@@ -98,7 +99,7 @@ class UniversityResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
 
-class UserUniversityResource(ModelResource):    
+class UserUniversityResource(ModelResource):
     university = fields.ToOneField(UniversityResource, 'university', full=True)
     user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
 
@@ -127,7 +128,7 @@ class LanguageResource(ModelResource):
         }
 
 
-class UserLanguageResource(ModelResource):    
+class UserLanguageResource(ModelResource):
     language = fields.ToOneField(LanguageResource, 'language', full=True)
     user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
@@ -219,7 +220,7 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
-        
+
         query = request.GET.get('userlanguage__level', None)
         if query:
             entry_query = self.get_query(query, ['userlanguage__level'])
@@ -228,6 +229,7 @@ class UserProfileResource(ModelResource):
             else:
                 base_object_list = base_object_list.filter(entry_query).distinct()
 
+
         wing_filter = {}
 
         ds = None
@@ -235,11 +237,9 @@ class UserProfileResource(ModelResource):
 
         if 'date_start__gte' in request.GET.keys():
             ds = request.GET['date_start__gte']
-            #del request.GET['date_start__gte']
 
         if 'date_end__lte' in request.GET.keys():
             de = request.GET['date_end__lte']
-            #del request.GET['date_end__lte']            
 
         for k, v in request.GET.items():
             #print "insert key ", k, " with value ", v
@@ -247,27 +247,29 @@ class UserProfileResource(ModelResource):
 
         ar = AccomodationsResource()
         wing_filter_2 = ar.build_filters(wing_filter)
-        #for i in wing_filter_2: print i
-        accomodation_list = ar.apply_filters(request, wing_filter_2)
-        if ds is not None:
-            accomodation_list = accomodation_list.filter(
-                Q(date_start__gte=ds) | Q(date_start__isnull=True)
-            )
-        if de is not None:
-            accomodation_list = accomodation_list.filter( 
-                Q(date_end__lte=de) | Q(date_end__isnull=True)
-            )
-        #for i in accomodation_list: print i.name
-        """
-        query = request.GET
-        if query:
-            entry_query = self.get_query(query, ['wings__capacity'])
-            accomodation_list = Accomodation.objects.filter(entry_query).distinct()
-            for i in accomodation_list: pprint(i)
-        """
-        base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
-        return base_object_list
+        #for i in wing_filter_2: print i
+        if len(wing_filter_2) > 0:
+            accomodation_list = ar.apply_filters(request, wing_filter_2)
+
+            if ds is not None:
+                accomodation_list = accomodation_list.filter(
+                    Q(date_start__gte=ds) | Q(date_start__isnull=True)
+                )
+            if de is not None:
+                accomodation_list = accomodation_list.filter( 
+                    Q(date_end__lte=de) | Q(date_end__isnull=True)
+                )
+
+            base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
+
+        paginator = Paginator(base_object_list, 10)
+        try:
+            page = paginator.page(int(request.GET.get('page', 1)))
+        except InvalidPage:
+            raise Http404("Sorry, no results on that page.")
+
+        return page
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
@@ -361,29 +363,13 @@ class UserProfileResource(ModelResource):
             i.data['region'] = region.name
             i.data['country'] = country.name
         return bundle.data['other_locations']
-
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):
             return self.create_response(request, {"error":"capado en authorization limits"}, response_class=HttpForbidden)
         elif not request.user.is_anonymous() and request.method not in ('GET'):
             return object_list.filter(user=request.user)
-        return object_list
-    """
-        if request and request.method in ('POST'):
-            return object_list.get(user=request.user)
-        if request and request.method in ('GET'):
-            if 'from' in request.GET and 'to' in request.GET:
-                initial = request.GET['from']
-                final = request.GET['to']
-                #initial = request.META['HTTP_FROM']
-                #final = request.META['HTTP_TO']
-                return object_list.all()[initial:final]
-            elif 'pk' in request.GET: 
-                return object_list.filter(pk=request.GET['pk'])
-            else: 
-                return object_list.filter(user=request.user)
-    """    
+        return object_list 
 
     @transaction.commit_on_success
     def post_detail(self, request, **kwargs):
@@ -401,26 +387,26 @@ class UserProfileResource(ModelResource):
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
                 #if lang['level'] not in LANGUAGES_LEVEL_CHOICES_KEYS: raise Exception("Incorrect level: it doesn't exist!!")
-                UserLanguage.objects.get_or_create(user_profile_id=up.id, language_id=Language.objects.get(name=lang['name']).id, level=lang['level'])
+                UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name=lang['name']).id, level=lang['level'])
             bundle.data.pop('languages')
         
         if 'education' in bundle.data:
             UserProfileStudiedUniversity.objects.filter(user_profile_id=up.id).delete()
             for e in bundle.data['education']:
-                uni, b = University.objects.get_or_create(name=e['name'])
+                uni, b = University.objects.create(name=e['name'])
                 UserProfileStudiedUniversity.objects.get_or_create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
             bundle.data.pop('education')
 
         if 'instant_messages' in bundle.data:
             UserInstantMessage.objects.filter(user_profile_id=up.id).delete()
             for im in bundle.data['instant_messages']:
-                UserInstantMessage.objects.get_or_create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['name']).id, instant_message_username=im['username'])
+                UserInstantMessage.objects.create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['name']).id, instant_message_username=im['username'])
             bundle.data.pop('instant_messages')
 
         if 'social_networks' in bundle.data:
             UserSocialNetwork.objects.filter(user_profile_id=up.id).delete()
             for sn in bundle.data['social_networks']:
-                UserSocialNetwork.objects.get_or_create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['name']).id, social_network_username=sn['username'])
+                UserSocialNetwork.objects.create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['name']).id, social_network_username=sn['username'])
             bundle.data.pop('social_networks')
 
         if 'current' in bundle.data:
@@ -465,63 +451,23 @@ class UserProfileResource(ModelResource):
         return self.create_response(request, {}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
-        print "get_detail"
         if kwargs['pk'] == 'me':
             if request.user.is_anonymous(): return self.create_response(request, {}, response_class=HttpForbidden)
             kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         result = UserProfile.objects.get(pk=kwargs['pk'])
         bundle = self.build_bundle(obj=result, request=request)
-        print request.user
         if request.user.is_anonymous():
             bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
             bundle.obj.avatar = "fake"
         bundle.obj.__dict__.pop("_state")
         return self.create_response(request, bundle.obj.__dict__)
 
-    def get_list(self, request, **kwargs):
-        #res = super(UserProfileResource, self).get_list(request, **kwargs)
-
-        res = UserProfile.objects.all()
-        self.apply_authorization_limits(request, res)
-
-        objects = []
-        if request.user.is_anonymous():
-            # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
-            for i in res:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
-                bundle.obj.avatar = "fake"
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        else:
-            for i in res:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        return self.create_response(request, objects)
-
-    """
-    def get_object_list(self, request):
-        print "get_object_list"
-        results = UserProfile.objects.all()
-        objects = []
-        print request.user
-        if not request.user.is_anonymous():
-            for i in results:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        else:
-            print "lelele"
-            # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
-            for i in results:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
-                bundle.obj.avatar = "fake"
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        return self.create_response(request, bundle.obj.__dict__)
-    """
+    def full_dehydrate(self, bundle):
+        bundle = super(UserProfileResource, self).full_dehydrate(bundle)
+        if bundle.request.user.is_anonymous():
+            bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
+            bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+        return bundle.data
 
     def dehydrate(self, bundle):
         if self.method:
@@ -541,7 +487,6 @@ class UserProfileResource(ModelResource):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):    
             try:
-                #pprint.pprint(request.__dict__)
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
                 if request.is_ajax():
