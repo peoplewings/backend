@@ -33,13 +33,6 @@ GENDER_CHOICES = (
 )
 GENDER_CHOICES_KEYS, GENDER_CHOICES_VALUES  = zip(*GENDER_CHOICES)
 
-PREFERRED_GENDER_CHOICES = (
-    ('M', 'Male'),
-    ('F', 'Female'),
-    ('B', 'Both'),
-    ('N', 'None'),
-)
-
 CIVIL_STATE_CHOICES = (
     ('','Empty'),
     ('SI', 'Single'),
@@ -70,6 +63,11 @@ PRIVACY_CHOICES = (
     ('M', 'Only me'),
     ('F', 'Friends'),
     ('E', 'Everybody'),
+)
+
+PREFERRED_GENDER_CHOICES = (
+    ('M', 'Man'),
+    ('F', 'Woman'),
 )
 
 PETS_CHOICES = (
