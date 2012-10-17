@@ -45,9 +45,11 @@ IMPORTANT!! All urls start with /api/v1/
 
 There are some standard error messages:
 
+* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
 * 200 OK {"code": 411, "error": {"msg": "No JSON could be decoded"}, "status": false}
 * 200 OK {"code": 412, "error": {"msg": "Method not allowed"}, "status": false}
-* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
+* 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+
 
 ### Register (Joan):
  * Request:
@@ -76,6 +78,7 @@ There are some standard error messages:
  * Request:
     /POST /auth/
      {username = "Joan", password = "asdfasdf"}
+     {username = "joan@peoplewings.com, password = "asdf", remember="on"} (This call keeps you logged in in the system, forever)
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}
@@ -136,15 +139,15 @@ There are some standard error messages:
     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "Pz", "msg": "Account shown"}, "status": true}
    * NO 
     
-### Delete account (Joan):
+### Delete my account (Joan):
  * Request:
     /DELETE /accounts/me/
     {}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 204 NO CONTENT
-   * NO (Method not allowed and unauthorized)
+     * 200 OK {"code": 200, "data": {"msg": "Account deleted"}, "status": true}
+   * NO 
 
 ### Update account (Joan):
  * Request:
@@ -153,10 +156,10 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 200 OK {"code": 202, "email": "fr33d4n@gmail.com", "firstName": "Johnny", "lastName": "Pz", "password": "qwerty", "status": true} It returns the modified object
-   * NO (Method not allowed and unauthorized)
+     * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "DangReGu", "msg": "Account updated"}, "status": true}
+   * NO
 
-### View a list of Profiles (Ezequiel):
+### View a list of Profiles (Ezequiel) REVIEW LATER!!:
  * Request:
     /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -386,7 +389,4 @@ There are some standard error messages:
      * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
 
 ### Search wings (undefined):
-
-
-### Needed environment variables
 

@@ -18,6 +18,7 @@ from django.forms import ValidationError
 from django.utils.cache import patch_cache_control
 from django.contrib.auth.models import User
 from django.conf.urls import url
+from django.contrib.auth import authenticate
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
@@ -56,7 +57,6 @@ class UserSignUpResource(ModelResource):
         self.is_valid(bundle,request)
         if bundle.errors:
             self.error_response(bundle.errors, request)
-
         bundle.obj = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')      
         return bundle
 
@@ -81,7 +81,7 @@ class UserSignUpResource(ModelResource):
                 response = callback(request, *args, **kwargs)
                 content = {}
                 data = {}
-                data['msg'] = "Account created"
+                content['msg'] = "Account created"
                 data['email'] = json.loads(response.content)['data']
                 content['code'] = 200
                 content['status'] = True
@@ -90,16 +90,15 @@ class UserSignUpResource(ModelResource):
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                content['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -109,15 +108,14 @@ class UserSignUpResource(ModelResource):
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
-                    content['status'] = False
-                    content['error'] = errors
+                    content['status'] = False                    
                     return self.create_response(request, content, response_class = HttpResponse)
                 else: 
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"
+                    content['msg'] = "Error in some fields"
                     errors['errors'] = json.loads(e.response)                
                     content['code'] = 410
                     content['status'] = False
@@ -127,28 +125,25 @@ class UserSignUpResource(ModelResource):
                 # This exception occurs when the provided key has expired
                 content = {}
                 errors = {}
-                errors['msg'] = "Emails don't match"               
+                content['msg'] = "Emails don't match"               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ValueError, e:
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ExistingUser, e:
                 # This exception occurs when the provided key has expired
                 content = {}
                 errors = {}
-                errors['msg'] = "The email is already being used"               
+                content['msg'] = "The email is already being used"               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)       
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
@@ -202,24 +197,22 @@ class ActivationResource(ModelResource):
                 response = callback(request, *args, **kwargs)
                 content = {}
                 data = {}
-                data['msg'] = "Account activated"                
+                content['msg'] = "Account activated"                
                 content['code'] = 200
                 content['status'] = True
-                content['data'] = data                
                 return self.create_response(request, content, response_class = HttpResponse)
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                content['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -229,42 +222,38 @@ class ActivationResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ActivationCompleted:
                 # This exception occurs when the account has already been activated
                 content = {}
                 errors = {}
-                errors['msg'] = "The activation key has been already used"               
+                content['msg'] = "The activation key has been already used"               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except NotAKey:
                 # This exception occurs when the provided key has not a valid format
                 content = {}
                 errors = {}
-                errors['msg'] = "The activation key is not a valid key"               
+                content['msg'] = "The activation key is not a valid key"               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse) 
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"
+                    content['msg'] = "Error in some fields"
                     errors['errors'] = json.loads(e.response)                
                     content['code'] = 410
                     content['status'] = False
@@ -273,19 +262,17 @@ class ActivationResource(ModelResource):
             except IntegrityError, e:
                 content = {}
                 errors = {}
-                errors['msg'] = json.loads(e.response.content)                              
+                content['msg'] = json.loads(e.response.content)                              
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)               
             except KeyExpired:
                 # This exception occurs when the provided key has expired
                 content = {}
                 errors = {}
-                errors['msg'] = "The provided key has expired"              
+                content['msg'] = "The provided key has expired"              
                 content['code'] = 410
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
@@ -344,8 +331,8 @@ class LoginResource(ModelResource):
                 response = callback(request, *args, **kwargs)
                 content = {}
                 data = {}
-                data['msg'] = "Logged in"
-                data['x-auth-token'] = json.loads(response.content)['token']                
+                content['msg'] = "Logged in"
+                data['xAuthToken'] = json.loads(response.content)['token']                
                 content['code'] = 200
                 content['status'] = True
                 content['data'] = data                
@@ -353,16 +340,15 @@ class LoginResource(ModelResource):
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                content['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -372,24 +358,22 @@ class LoginResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse) 
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"
+                    content['msg'] = "Error in some fields"
                     errors['errors'] = json.loads(e.response)                
                     content['code'] = 410
                     content['status'] = False
@@ -398,18 +382,16 @@ class LoginResource(ModelResource):
             except AuthFail, e:
                 content = {}
                 errors = {}
-                errors['msg'] = "Username/password do not match any user in the system"              
+                content['msg'] = "Username/password do not match any user in the system"              
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)               
             except NotActive, e:
                 content = {}
                 errors = {}
-                errors['msg'] = "Inactive user"              
+                content['msg'] = "Inactive user"              
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)                
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
@@ -447,24 +429,22 @@ class LogoutResource(ModelResource):
                 response = callback(request, *args, **kwargs)
                 content = {}
                 data = {}
-                data['msg'] = "Logout complete"                
+                content['msg'] = "Logout complete"                
                 content['code'] = 200
                 content['status'] = True
-                content['data'] = data                
                 return self.create_response(request, content, response_class = HttpResponse)
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                content['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -474,44 +454,38 @@ class LogoutResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                print e
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse) 
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Unauthorized"                               
+                    content['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Can't logout"                               
+                    content['msg'] = "Can't logout"                               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error"               
+                    content['msg'] = "Error"               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
@@ -552,6 +526,9 @@ class AccountResource(ModelResource):
             return object_list.filter(id = request.user.id)
         return []
 
+    def put_list(self, request, **kwargs):
+        ##DO NOTHING
+        return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
     def get_list(self, request, **kwargs):
         ##DO NOTHING
         return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
@@ -571,32 +548,59 @@ class AccountResource(ModelResource):
     def get_detail(self, request, **kwargs):
         response = super(AccountResource, self).get_detail(request, **kwargs)    
         data = json.loads(response.content)
-        data['msg'] = 'Account shown'
-        content = {}        
+        content = {}  
+        content['msg'] = 'Account shown'      
         content['status'] = True
         content['code'] = 200
-        content['data'] = data        
+        content['data'] = data
         return self.create_response(request, content, response_class=HttpResponse)
         
-    def put_detail(self, request, **kwargs):        
+    def put_detail(self, request, **kwargs):
+        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+            pass
+        else:
+            errors = {}
+            content = {} 
+            errors['password'] = ['Incorrect password']            
+            content['msg'] = 'Cannot update'       
+            content['status'] = False
+            content['code'] = 200
+            content['errors'] = errors
+            return self.create_response(request, content, response_class=HttpResponse)
+
         response = super(AccountResource, self).patch_detail(request, **kwargs)  
-        data = json.loads(response.content)
-        data['msg'] = 'Account updated'
-        content = {}        
+        content = {} 
+        content['msg'] = 'Account updated'       
         content['status'] = True
         content['code'] = 200
-        content['data'] = data        
         return self.create_response(request, content, response_class=HttpResponse)
 
     def delete_detail(self, request, **kwargs):
+        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+            pass
+        else:
+            errors = {}
+            content = {} 
+            errors['password'] = ['Incorrect password']            
+            content['msg'] = 'Cannot delete'       
+            content['status'] = False
+            content['code'] = 200
+            content['errors'] = errors
+            return self.create_response(request, content, response_class=HttpResponse)
+
         super(AccountResource, self).delete_detail(request, **kwargs)    
         contents = {}
         data = {}       
-        data['msg'] = 'Account deleted'        
+        contents['msg'] = 'Account deleted'        
         contents['status'] = True
         contents['code'] = 200
-        contents['data'] = data
         return self.create_response(request, contents, response_class = HttpResponse)
+
+    def is_valid_password(self, password, request):
+        print authenticate(username=request.user.email, password=password)
+        if (authenticate(username=request.user.email, password=password)):
+            return True
+        return False
 
     def wrap_view(self, view):
         @csrf_exempt
@@ -604,24 +608,19 @@ class AccountResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
                 return response
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                contents['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                contents['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -631,44 +630,46 @@ class AccountResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                print e
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse) 
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Unauthorized"                               
+                    content['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Can't logout"                               
+                    contents['msg'] = "Can't update"                               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
-                else:               
+                elif (isinstance(e.response, HttpBadRequest)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error"               
+                    content['msg'] = "Error"               
                     content['code'] = 400
                     content['status'] = False
+                    errors = json.loads(e.response.content)['accounts']
                     content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                else:
+                    content = {}
+                    content['msg'] = "Error"               
+                    content['code'] = 400
+                    content['status'] = False                                 
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
@@ -772,68 +773,61 @@ class ForgotResource(ModelResource):
                 print response.content
                 content = {}
                 data = {}
-                data['msg'] = json.loads(response.content)['data']                                
+                contents['msg'] = json.loads(response.content)['data']                                
                 content['code'] = 200
                 content['status'] = True
-                content['data'] = data                
                 return self.create_response(request, content, response_class = HttpResponse)
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                contents['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.args[0])               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                contents['msg'] = "Error in some fields"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ValueError, e:
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                contents['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    contents['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Unauthorized"                               
+                    contents['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error"                               
+                    contents['msg'] = "Error"                               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse) 
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"
+                    contents['msg'] = "Error in some fields"
                     errors['errors'] = json.loads(e.response)                
                     content['code'] = 410
                     content['status'] = False
@@ -842,34 +836,30 @@ class ForgotResource(ModelResource):
             except DeletedAccount, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]                               
+                contents['msg'] = e.args[0]                               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except BadParameters, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]['data']                                               
+                contents['msg'] = e.args[0]['data']                                               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except NotAKey:
                 content = {}
                 errors = {}
-                errors['msg'] = "Not a key"                               
+                contents['msg'] = "Not a key"                               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except KeyExpired:
                 content = {}
                 errors = {}
-                errors['msg'] = "The key has expired"                               
+                contents['msg'] = "The key has expired"                               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)                            
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to

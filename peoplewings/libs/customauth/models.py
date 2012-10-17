@@ -18,7 +18,7 @@ if 'django.contrib.auth' in settings.INSTALLED_APPS:
 class ApiToken(models.Model):
     user = models.ForeignKey(User, related_name='api_tokens')
     token = models.CharField(max_length=256, blank=True, default='')
-    last = models.DateTimeField(auto_now_add=True)
+    last = models.DateTimeField()
 
     def __unicode__(self):
         return u"Token %s for %s used at %s" % (
@@ -37,7 +37,6 @@ class ApiToken(models.Model):
     def save(self, *args, **kwargs):
         if not self.token:
             self.token = self.generate_token()
-
         return super(ApiToken, self).save(*args, **kwargs)
 
     #def get_or_create(self, *args, **kwargs):

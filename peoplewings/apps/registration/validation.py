@@ -22,7 +22,6 @@ class ForgotValidation(Validation):
                 errors['email'] = ['This field is required']
             elif not self.email_validation(bundle.data['email']):
                     errors['email'] = ['Not a valid email']
-                    print bundle.errors
         elif ln == 2:
             if not self.contains(bundle.data, 'forgot_token'):
                 errors['forgot_token'] = ['This field is required']

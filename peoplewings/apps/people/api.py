@@ -8,7 +8,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
@@ -365,7 +365,7 @@ class UserProfileResource(ModelResource):
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):
-            return self.create_response(request, {"msg":"Error: anonymous users can only view profiles.", "status":False, "code":401}, response_class=HttpForbidden)
+            return self.create_response(request, {"msg":"Error: anonymous users can only view profiles.", "status":False, "code":413}, response_class=HttpForbidden)
         elif not request.user.is_anonymous() and request.method not in ('GET'):
             return object_list.filter(user=request.user)
         return object_list
@@ -373,7 +373,7 @@ class UserProfileResource(ModelResource):
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
         if request.user.is_anonymous(): 
-            return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":401}, response_class=HttpForbidden)
+            return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":413}, response_class=HttpForbidden)
 
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
@@ -446,13 +446,12 @@ class UserProfileResource(ModelResource):
         return self.create_response(request,{"msg":"Update OK.", "code":200, "status":True, "data":updated_bundle}, response_class=HttpAccepted) 
     
     def post_list(self, request, **kwargs):
-        return self.create_response(request, {"msg":"Error: operation not allowed.", "code":401, "status":False}, response_class=HttpForbidden)
+        return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
-        if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":401, "status":False}, response_class=HttpForbidden)
+        if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
         if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        try: result = UserProfile.objects.get(pk=kwargs['pk'])
-        except Exception, e: return self.create_response(request, {"msg":"Error: uri incorrect.", "status":False, "code":402, "errors":e.messages}, response_class=HttpBadRequest)
+        result = UserProfile.objects.get(pk=kwargs['pk'])
         bundle = self.build_bundle(obj=result, request=request)
         bundle.obj.__dict__.pop("_state")
         return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
@@ -499,9 +498,6 @@ class UserProfileResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                if request.is_ajax():
-                    patch_cache_control(response, no_cache=True)
-
                 return response
             except BadRequest, e:
                 content = {}
@@ -538,21 +534,35 @@ class UserProfileResource(ModelResource):
                     content['code'] = 412
                     content['status'] = False
                     content['error'] = errors
-                    return self.create_response(request, content, response_class = HttpResponse) 
+                    return self.create_response(request, content, response_class = HttpResponse)
+                elif (isinstance(e.response, HttpUnauthorized)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Unauthorized"                               
+                    content['code'] = 413
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                elif (isinstance(e.response, HttpApplicationError)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Can't logout"                               
+                    content['code'] = 400
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"
-                    errors['errors'] = json.loads(e.response)                
-                    content['code'] = 410
+                    errors['msg'] = "Error"               
+                    content['code'] = 400
                     content['status'] = False
                     content['error'] = errors
-                    return self.create_response(request, content, response_class = HttpResponse)   
+                    return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
                 # error message.
-
                 return self._handle_500(request, e)
 
         return wrapper

@@ -102,6 +102,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',)
 
 APPEND_SLASH=False
+TASTYPIE_ALLOW_MISSING_SLASH = True
 # A place for watchers
 """
 print "PROJECT_ROOT: " + PROJECT_ROOT
