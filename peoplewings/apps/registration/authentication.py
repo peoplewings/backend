@@ -18,3 +18,8 @@ class ApiTokenAuthentication(Authentication):
     # Optional but recommended
     def get_identifier(self, request):
         return request.user.username
+
+class AnonymousApiTokenAuthentication(ApiTokenAuthentication):
+        
+    def _unauthorized(self):
+        return True

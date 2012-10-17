@@ -12,13 +12,13 @@ class Wing(models.Model):
     date_start = models.DateField(null=True)
     date_end = models.DateField(null=True)
     best_days = models.CharField(max_length=1, choices=BETTER_DAYS_CHOICES, default='A', verbose_name='Better days to host')
-    is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?')
+    is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
     
 # Accomodation wing class
 class Accomodation(Wing):
     sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
     capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=0)
-    preferred_gender = models.CharField(max_length=1, default='N')
+    preferred_gender = models.CharField(max_length=1, default='B')
     wheelchair = models.BooleanField(default=False, verbose_name='Wheelchair accessible')
     where_sleeping_type = models.CharField(max_length=1, choices=WHERE_SLEEPING_CHOICES, default='C', verbose_name='Sleeping arrangements')
     smoking = models.CharField(max_length=1, choices=SMOKING_CHOICES, default='N')

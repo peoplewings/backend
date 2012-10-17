@@ -346,5 +346,8 @@ class UserProfileForm(forms.Form):
     places_lived_in = forms.CharField(max_length=max_long_len, required=False)
     places_visited = forms.CharField(max_length=max_long_len, required=False)    
     places_gonna_go = forms.CharField(max_length=max_long_len, required=False)
-    places_wanna_go = forms.CharField(max_length=max_long_len, required=False) 
+    places_wanna_go = forms.CharField(max_length=max_long_len, required=False)
+
+class UserLanguageForm(forms.Form):
+  level = forms.ChoiceField(required=False, choices=LANGUAGES_LEVEL_CHOICES)
 
