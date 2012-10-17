@@ -365,30 +365,15 @@ class UserProfileResource(ModelResource):
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):
-            return self.create_response(request, {"error":"capado en authorization limits"}, response_class=HttpForbidden)
+            return self.create_response(request, {"msg":"Error: anonymous users can only view profiles.", "status":False, "code":401}, response_class=HttpForbidden)
         elif not request.user.is_anonymous() and request.method not in ('GET'):
             return object_list.filter(user=request.user)
         return object_list
-    """
-        if request and request.method in ('POST'):
-            return object_list.get(user=request.user)
-        if request and request.method in ('GET'):
-            if 'from' in request.GET and 'to' in request.GET:
-                initial = request.GET['from']
-                final = request.GET['to']
-                #initial = request.META['HTTP_FROM']
-                #final = request.META['HTTP_TO']
-                return object_list.all()[initial:final]
-            elif 'pk' in request.GET: 
-                return object_list.filter(pk=request.GET['pk'])
-            else: 
-                return object_list.filter(user=request.user)
-    """    
 
     @transaction.commit_on_success
-    def post_detail(self, request, **kwargs):
+    def put_detail(self, request, **kwargs):
         if request.user.is_anonymous(): 
-            return self.create_response(request, {}, response_class=HttpForbidden)
+            return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":401}, response_class=HttpForbidden)
 
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
@@ -400,7 +385,6 @@ class UserProfileResource(ModelResource):
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
-                #if lang['level'] not in LANGUAGES_LEVEL_CHOICES_KEYS: raise Exception("Incorrect level: it doesn't exist!!")
                 UserLanguage.objects.get_or_create(user_profile_id=up.id, language_id=Language.objects.get(name=lang['name']).id, level=lang['level'])
             bundle.data.pop('languages')
         
@@ -459,24 +443,19 @@ class UserProfileResource(ModelResource):
         self.method = 'POST'
         updated_bundle = self.dehydrate(bundle)
         updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-        return self.create_response(request, updated_bundle, response_class=HttpAccepted) 
+        return self.create_response(request,{"msg":"Update OK.", "code":200, "status":True, "data":updated_bundle}, response_class=HttpAccepted) 
     
     def post_list(self, request, **kwargs):
-        return self.create_response(request, {}, response_class=HttpForbidden)
+        return self.create_response(request, {"msg":"Error: operation not allowed.", "code":401, "status":False}, response_class=HttpForbidden)
 
     def get_detail(self, request, **kwargs):
-        print "get_detail"
-        if kwargs['pk'] == 'me':
-            if request.user.is_anonymous(): return self.create_response(request, {}, response_class=HttpForbidden)
-            kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        result = UserProfile.objects.get(pk=kwargs['pk'])
+        if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":401, "status":False}, response_class=HttpForbidden)
+        if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        try: result = UserProfile.objects.get(pk=kwargs['pk'])
+        except Exception, e: return self.create_response(request, {"msg":"Error: uri incorrect.", "status":False, "code":402, "errors":e.messages}, response_class=HttpBadRequest)
         bundle = self.build_bundle(obj=result, request=request)
-        print request.user
-        if request.user.is_anonymous():
-            bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
-            bundle.obj.avatar = "fake"
         bundle.obj.__dict__.pop("_state")
-        return self.create_response(request, bundle.obj.__dict__)
+        return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
 
     def get_list(self, request, **kwargs):
         #res = super(UserProfileResource, self).get_list(request, **kwargs)
@@ -498,37 +477,14 @@ class UserProfileResource(ModelResource):
                 bundle = self.build_bundle(obj=i, request=request)
                 bundle.obj.__dict__.pop("_state")
                 objects.append(bundle.obj.__dict__)
-        return self.create_response(request, objects)
-
-    """
-    def get_object_list(self, request):
-        print "get_object_list"
-        results = UserProfile.objects.all()
-        objects = []
-        print request.user
-        if not request.user.is_anonymous():
-            for i in results:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        else:
-            print "lelele"
-            # si el usuario no esta logueado, pasamos nombres de usuarios y avatars "aleatorios"
-            for i in results:
-                bundle = self.build_bundle(obj=i, request=request)
-                bundle.obj.name_to_show = "fake_"+bundle.obj.name_to_show
-                bundle.obj.avatar = "fake"
-                bundle.obj.__dict__.pop("_state")
-                objects.append(bundle.obj.__dict__)
-        return self.create_response(request, bundle.obj.__dict__)
-    """
+        return self.create_response(request, {"msg":"Get list OK.", "status":True, "code":200, "data":objects})
 
     def dehydrate(self, bundle):
         if self.method:
             bundle.data = {}
             bundle.data['status'] = True
             bundle.data['code'] = 204
-            bundle.data['data'] = 'Updated'
+            bundle.data['msg'] = 'Update OK'
             self.method = None
             return bundle   
         else:
@@ -541,7 +497,6 @@ class UserProfileResource(ModelResource):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):    
             try:
-                #pprint.pprint(request.__dict__)
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
                 if request.is_ajax():
@@ -549,21 +504,50 @@ class UserProfileResource(ModelResource):
 
                 return response
             except BadRequest, e:
-                return HttpResponse({'code': 666, 'message':e.args[0]})
+                content = {}
+                errors = {}
+                errors['msg'] = e.args[0]               
+                content['code'] = 400
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
-                bundle = {"code": 777, "status": False, "errors": json.loads(e.messages)}
-                return self.create_response(request, bundle, response_class = HttpResponse)
+                content = {}
+                errors = {}
+                errors['msg'] = "Error in some fields"
+                errors['errors'] = json.loads(e.messages)                
+                content['code'] = 410
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ValueError, e:
+                # This exception occurs when the JSON is not a JSON...
+                content = {}
+                errors = {}
+                errors['msg'] = "No JSON could be decoded"               
+                content['code'] = 411
+                content['status'] = False
+                content['error'] = errors
+                return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
-                if (isinstance(e.response, HttpUnauthorized)):
-                    bundle = {"code": 401, "status": False, "errors":"Unauthorized"}
-                    return self.create_response(request, bundle, response_class = HttpResponse)
-                if (isinstance(e.response, HttpApplicationError)):
-                    bundle = {"code": 401, "status": False, "errors":"Error"}
-                    return self.create_response(request, bundle, response_class = HttpResponse)   
-                else:
-                    bundle = {"code": 777, "status": False, "errors": json.loads(e.response.content)}
-                    return self.create_response(request, bundle, response_class = HttpResponse)   
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse) 
+                else:               
+                    content = {}
+                    errors = {}
+                    errors['msg'] = "Error in some fields"
+                    errors['errors'] = json.loads(e.response)                
+                    content['code'] = 410
+                    content['status'] = False
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)   
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
                 # what Django does. The difference is returning a serialized
