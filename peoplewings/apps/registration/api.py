@@ -18,6 +18,7 @@ from django.forms import ValidationError
 from django.utils.cache import patch_cache_control
 from django.contrib.auth.models import User
 from django.conf.urls import url
+from django.contrib.auth import authenticate
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
@@ -551,11 +552,23 @@ class AccountResource(ModelResource):
         content['msg'] = 'Account shown'      
         content['status'] = True
         content['code'] = 200
+        content['data'] = data
         return self.create_response(request, content, response_class=HttpResponse)
         
-    def put_detail(self, request, **kwargs):        
+    def put_detail(self, request, **kwargs):
+        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+            pass
+        else:
+            errors = {}
+            content = {} 
+            errors['password'] = ['Incorrect password']            
+            content['msg'] = 'Cannot update'       
+            content['status'] = False
+            content['code'] = 200
+            content['errors'] = errors
+            return self.create_response(request, content, response_class=HttpResponse)
+
         response = super(AccountResource, self).patch_detail(request, **kwargs)  
-        data = json.loads(response.content)
         content = {} 
         content['msg'] = 'Account updated'       
         content['status'] = True
@@ -563,6 +576,18 @@ class AccountResource(ModelResource):
         return self.create_response(request, content, response_class=HttpResponse)
 
     def delete_detail(self, request, **kwargs):
+        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+            pass
+        else:
+            errors = {}
+            content = {} 
+            errors['password'] = ['Incorrect password']            
+            content['msg'] = 'Cannot delete'       
+            content['status'] = False
+            content['code'] = 200
+            content['errors'] = errors
+            return self.create_response(request, content, response_class=HttpResponse)
+
         super(AccountResource, self).delete_detail(request, **kwargs)    
         contents = {}
         data = {}       
@@ -570,6 +595,12 @@ class AccountResource(ModelResource):
         contents['status'] = True
         contents['code'] = 200
         return self.create_response(request, contents, response_class = HttpResponse)
+
+    def is_valid_password(self, password, request):
+        print authenticate(username=request.user.email, password=password)
+        if (authenticate(username=request.user.email, password=password)):
+            return True
+        return False
 
     def wrap_view(self, view):
         @csrf_exempt
@@ -599,8 +630,7 @@ class AccountResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                print e
-                contents['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
                 return self.create_response(request, content, response_class = HttpResponse)
@@ -608,30 +638,38 @@ class AccountResource(ModelResource):
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    contents['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
                     return self.create_response(request, content, response_class = HttpResponse) 
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    contents['msg'] = "Unauthorized"                               
+                    content['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    contents['msg'] = "Can't logout"                               
+                    contents['msg'] = "Can't update"                               
                     content['code'] = 400
                     content['status'] = False
                     return self.create_response(request, content, response_class = HttpResponse)
-                else:               
+                elif (isinstance(e.response, HttpBadRequest)):
                     content = {}
                     errors = {}
-                    contents['msg'] = "Error"               
+                    content['msg'] = "Error"               
                     content['code'] = 400
                     content['status'] = False
+                    errors = json.loads(e.response.content)['accounts']
+                    content['error'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+                else:
+                    content = {}
+                    content['msg'] = "Error"               
+                    content['code'] = 400
+                    content['status'] = False                                 
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 # Rather than re-raising, we're going to things similar to
