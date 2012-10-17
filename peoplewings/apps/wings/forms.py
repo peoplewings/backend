@@ -66,7 +66,7 @@ class AccomodationForm(forms.Form):
 
     sharing_once = forms.BooleanField(required=False)
     capacity = forms.ChoiceField(choices=CAPACITY_OPTIONS, required=False)
-    preferred_gender = forms.CharField(max_length=1, required=False)
+    preferred_gender = forms.ChoiceField(choices=PREFERRED_GENDER_CHOICES, required=False)
     wheelchair = forms.BooleanField(required=False)
     where_sleeping_type = forms.ChoiceField(choices=WHERE_SLEEPING_CHOICES, required=False)
     smoking = forms.ChoiceField(choices=SMOKING_CHOICES, required=False)

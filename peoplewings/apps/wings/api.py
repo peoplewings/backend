@@ -37,7 +37,7 @@ class AccomodationsResource(ModelResource):
     class Meta:
         object_class = Accomodation
         queryset = Accomodation.objects.all()
-        allowed_methods = ['get', 'post', 'delete']
+        allowed_methods = ['get', 'post', 'delete', 'put']
         include_resource_uri = False
         resource_name = 'accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -72,12 +72,39 @@ class AccomodationsResource(ModelResource):
         return object_list
 
     def obj_create(self, bundle, request=None, **kwargs):
+
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"msg":"Error: missing profile id." ,"code" : 413, "status" : False}, response_class=HttpForbidden)
+        
+        self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
 
+
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+ 
+        up = UserProfile.objects.get(user=request.user)
+ 
+        # creamos la ciudad si hace falta
+        data = bundle.data['city']
+        city = City.objects.saveLocation(**data)
+        bundle = self.full_hydrate(bundle)
+
+        # creamos la wing accomodation
+        a = Accomodation.objects.create(city=city, author=up)
+        del bundle.data['city']
+        for key, value in bundle.data.items():
+            if hasattr(a, key): setattr(a, key, value)
+        a.save()
+
+        bundle = self.build_bundle(obj=a, request=request)
+        
+        return bundle
+        """
         up = UserProfile.objects.get(user=request.user)
         kwargs['author_id'] = up.id
-
         bundle.obj = self._meta.object_class()
 
         for key, value in kwargs.items():
@@ -89,6 +116,7 @@ class AccomodationsResource(ModelResource):
         data = bundle.data['city']
         for key, value in data.items():            
             loc[key] = value
+
         city = City.objects.saveLocation(**loc)
         setattr(bundle.obj, 'city', city)
         bundle = self.full_hydrate(bundle)
@@ -107,6 +135,7 @@ class AccomodationsResource(ModelResource):
         m2m_bundle = self.hydrate_m2m(bundle)
         self.save_m2m(m2m_bundle)
         return bundle
+        """
 
     def get_list(self, request, **kwargs):
         if 'profile_id' not in kwargs:
@@ -142,6 +171,12 @@ class AccomodationsResource(ModelResource):
 
         return self.create_response(request, objects)
         """
+    
+    def post_list(self, request, **kwargs):
+        up = UserProfile.objects.get(user=request.user)
+        if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
+            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+        return super(AccomodationsResource, self).post_list(request, **kwargs)
 
     def delete_list(self, request=None, **kwargs):
         return self.create_response(request, {"msg":"Error: cannot delete a list of wings.", "code" : 413, "status" : False}, response_class=HttpForbidden)
@@ -157,6 +192,9 @@ class AccomodationsResource(ModelResource):
         bundle = self.full_dehydrate(bundle)
         return self.create_response(request, {"msg":"Get detail OK.", "code":200, "status":True, "data":bundle})
 
+    def patch_detail(self, request, **kwargs):
+        return self.put_detail(request, **kwargs)    
+
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
         if 'profile_id' not in kwargs:
@@ -165,8 +203,11 @@ class AccomodationsResource(ModelResource):
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+
         self.is_valid(bundle, request)
-        a = Accomodation.objects.get(pk=kwargs['wing_id'], author=UserProfile.objects.get(user=request.user))
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+        a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
 
         if 'city' in bundle.data:
             loc = {}
