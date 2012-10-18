@@ -31,6 +31,7 @@ from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
+from datetime import date
 
 from pprint import pprint
 
@@ -169,7 +170,7 @@ class UserProfileResource(ModelResource):
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
-        allowed_methods = ['get', 'post']
+        allowed_methods = ['get', 'post', 'put']
         include_resource_uri = False
         resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -371,6 +372,12 @@ class UserProfileResource(ModelResource):
             return object_list.filter(user=request.user)
         return object_list
 
+    def get_age(self, birthday):
+        today = date.today()
+        age = today.year - birthday.year
+        if today.month < birthday.month or (today.month == birthday.month and today.day < birthday.day): age -= 1
+        return age
+
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
         if request.user.is_anonymous(): 
@@ -382,6 +389,8 @@ class UserProfileResource(ModelResource):
 
         up = UserProfile.objects.get(user=request.user)
         self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
 
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
@@ -437,8 +446,13 @@ class UserProfileResource(ModelResource):
                 up.other_locations.add(city)
             bundle.data.pop('other_locations')
 
+        forbidden_fields_update = ['avatar', 'id', 'userId']
+        not_empty_fields = ['pw_state', "name_to_show", "gender"]
+
         for i in bundle.data:
-            if hasattr(up, i): setattr(up, i, bundle.data.get(i))
+            if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
+        up.age = self.get_age(up.birthday)
+        #if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
         up.save()
 
         self.method = 'POST'
@@ -540,15 +554,12 @@ class UserProfileResource(ModelResource):
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error"               
+                    errors['msg'] = "Error in some fields"               
                     content['code'] = 400
                     content['status'] = False
                     content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
-                # Rather than re-raising, we're going to things similar to
-                # what Django does. The difference is returning a serialized
-                # error message.
                 return self._handle_500(request, e)
 
         return wrapper

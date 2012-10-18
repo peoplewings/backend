@@ -311,7 +311,7 @@ class AccomodationsResource(ModelResource):
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error"               
+                    errors['msg'] = "Error in some fields"               
                     content['code'] = 400
                     content['status'] = False
                     content['error'] = errors
