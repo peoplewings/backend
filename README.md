@@ -136,13 +136,13 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-    * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "Pz", "msg": "Account shown"}, "status": true}
+    * 200 OK {"code": 200, "data": {"email": "fr33d4n@gmail.com", "firstName": "Ez", "lastName": "Pz", "password": "uqdh891288yuaidsbh"}, "msg": "Account shown", "status": true}
    * NO 
     
 ### Delete my account (Joan):
  * Request:
     /DELETE /accounts/me/
-    {}
+    {"current_password":"asdf"}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
@@ -152,12 +152,14 @@ There are some standard error messages:
 ### Update account (Joan):
  * Request:
     /PUT /accounts/me/
-    {"email":"myemail@changed.com", "password":"changeme", "name":"NewName", "lastName":"lol"} All these fields are optional, you can always have 1 field or more
+    {"current_password":"asdf", "resource":{"email":"asdf", "password":"qwert", "lastName":"lol"}} All these minus current_password are optional, you can always have 1 field or more
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "DangReGu", "msg": "Account updated"}, "status": true}
    * NO
+     * 200 OK {"code": 200, "errors": {"password": ["Incorrect current password"]}, "msg": "Cannot update", "status": false}
+
 
 ### View a list of Profiles (Ezequiel):
  * Request:
