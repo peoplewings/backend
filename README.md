@@ -159,7 +159,7 @@ There are some standard error messages:
      * 200 OK {"code": 200, "data": {"email": "joan@peoplewings.com", "firstName": "Ez", "lastName": "DangReGu", "msg": "Account updated"}, "status": true}
    * NO
 
-### View a list of Profiles (Ezequiel) REVIEW LATER!!:
+### View a list of Profiles (Ezequiel):
  * Request:
     /GET profiles/
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
@@ -202,11 +202,11 @@ There are some standard error messages:
           ....
       }
    * NO
-     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+     * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
 
 ### Update my profile (Eze):
  * Request:
-    /POST profiles/me/
+    /PUT profiles/me/
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "allAboutYou": "All about me", 
@@ -242,9 +242,9 @@ There are some standard error messages:
 
  * Response:
    * OK
-     * 202 Accepted {"code": 204, "data": "Updated", "status": true}
+     * 202 Accepted {"code": 200, "msg": "Your profile has been successfully updated.", "status": true}
    * NO
-     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+     * 403 FORBIDDEN {"code": 413, "msg": "Error: anonymous users have no profile.", "status": false}
 
 ### View another profile (Eze):
  * Request:

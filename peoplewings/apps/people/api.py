@@ -165,8 +165,6 @@ class UserProfileResource(ModelResource):
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
 
-    method = None
-
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
@@ -378,6 +376,35 @@ class UserProfileResource(ModelResource):
         if today.month < birthday.month or (today.month == birthday.month and today.day < birthday.day): age -= 1
         return age
 
+    def get_detail(self, request, **kwargs):
+        if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+        #mostrar_para_update = kwargs['pk'] == 'me'
+        #if mostrar_para_update: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        a = super(UserProfileResource, self).get_detail(request, **kwargs)
+        data = json.loads(a.content)
+        """
+        if mostrar_para_update:
+            if data['show_birthday'] == 'P': del data['BYear']
+        elif data['show_birthday'] == 'N': 
+            del data['BYear']
+            del data['BMonth']
+            del data['BDay']
+        """
+        content = {}  
+        content['msg'] = 'Profile retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
+        """
+        result = UserProfile.objects.get(pk=kwargs['pk'])
+        bundle = self.build_bundle(obj=result, request=request)
+        updated_bundle = self.dehydrate(bundle)
+        updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
+        return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
+        """
+
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
         if request.user.is_anonymous(): 
@@ -446,7 +473,7 @@ class UserProfileResource(ModelResource):
                 up.other_locations.add(city)
             bundle.data.pop('other_locations')
 
-        forbidden_fields_update = ['avatar', 'id', 'userId']
+        forbidden_fields_update = ['avatar', 'id', 'user']
         not_empty_fields = ['pw_state', "name_to_show", "gender"]
 
         for i in bundle.data:
@@ -455,42 +482,47 @@ class UserProfileResource(ModelResource):
         #if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
         up.save()
 
-        self.method = 'POST'
         updated_bundle = self.dehydrate(bundle)
         updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-        return self.create_response(request,{"msg":"Update OK.", "code":200, "status":True, "data":updated_bundle}, response_class=HttpAccepted) 
+        return self.create_response(request,{"msg":"Your profile has been successfully updated.", "code":200, "status":True}, response_class=HttpAccepted) 
     
     def post_list(self, request, **kwargs):
         return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
 
-    def get_detail(self, request, **kwargs):
-        if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        return super(UserProfileResource, self).get_detail(request, **kwargs)
-        """
-        result = UserProfile.objects.get(pk=kwargs['pk'])
-        pprint(result.__dict__)
-        bundle = self.build_bundle(obj=result, request=request)
-        bundle.obj.__dict__.pop("_state")
-        return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
-        """
+    def put_list(self, request, **kwargs):
+        return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
+
+    def get_list(self, request, **kwargs):
+        response = super(UserProfileResource, self).get_list(request, **kwargs)
+        data = json.loads(response.content)
+        content = {}  
+        content['msg'] = 'Profiles retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
 
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
+        bundle.data['BDay'] = bundle.obj.birthday.day
+        bundle.data['BMonth'] = bundle.obj.birthday.month
+        bundle.data['BYear'] = bundle.obj.birthday.year
         if bundle.request.user.is_anonymous():
             bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
             bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
         return bundle.data
-
+    
+    """
     def dehydrate(self, bundle):
-        if self.method:
+        
+        if bundle.request.method == 'PUT':
             bundle.data = {}
             bundle.data['status'] = True
             bundle.data['code'] = 204
             bundle.data['msg'] = 'Update OK'
             self.method = None
             return bundle   
-        else:
+        elif bundle.request.method == 'GET':
             b = bundle.data
             bundle.data = {}
             bundle.data['status'] = True
@@ -498,7 +530,8 @@ class UserProfileResource(ModelResource):
             bundle.data['msg'] = 'Update OK'
             bundle.data['data'] = b
             return bundle
-            #return super(UserProfileResource, self).dehydrate(bundle)  
+        return super(UserProfileResource, self).dehydrate(bundle)
+    """
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
