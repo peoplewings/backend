@@ -26,9 +26,9 @@ from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser
 from peoplewings.apps.registration.models import RegistrationProfile
 from peoplewings.apps.registration.views import register, activate, login, logout, delete_account, forgot_password, check_forgot_token, change_password
-from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, AccountForm, ForgotForm
+from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, ForgotForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
-from peoplewings.apps.registration.validation import ForgotValidation
+from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 
 class UserSignUpResource(ModelResource):
     
@@ -506,8 +506,8 @@ class AccountResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        excludes = ['id', 'is_active', 'is_staff', 'is_superuser', 'username', 'password', 'date_joined', 'last_login']
-        validation = FormValidation(form_class=AccountForm)
+        excludes = ['id', 'is_active', 'is_staff', 'is_superuser', 'username', 'date_joined', 'last_login']
+        validation = AccountValidation()
      
     def prepend_urls(self):      
         return [
@@ -554,21 +554,33 @@ class AccountResource(ModelResource):
         content['code'] = 200
         content['data'] = data
         return self.create_response(request, content, response_class=HttpResponse)
-        
-    def put_detail(self, request, **kwargs):
-        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+
+    def dehydrate(self, bundle):
+        if bundle.request.method in ('GET', 'DELETE'):
             pass
+        else:
+            for key, value in json.loads(bundle.request.raw_post_data)['resource'].items():
+                if key in bundle.data:
+                    bundle.data[key] = value       
+        return bundle  
+
+    def put_detail(self, request, **kwargs):
+        if request and 'current_password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['current_password'], request):
+            if 'resource' in request.raw_post_data:                
+                json.loads(json.dumps(json.loads(request.raw_post_data)['resource']))
+            else:
+                raise ValueError()            
         else:
             errors = {}
             content = {} 
-            errors['password'] = ['Incorrect password']            
+            errors['password'] = ['Incorrect current password']            
             content['msg'] = 'Cannot update'       
             content['status'] = False
             content['code'] = 200
             content['errors'] = errors
             return self.create_response(request, content, response_class=HttpResponse)
 
-        response = super(AccountResource, self).patch_detail(request, **kwargs)  
+        response = self.patch_detail(request, **kwargs)  
         content = {} 
         content['msg'] = 'Account updated'       
         content['status'] = True
@@ -576,12 +588,12 @@ class AccountResource(ModelResource):
         return self.create_response(request, content, response_class=HttpResponse)
 
     def delete_detail(self, request, **kwargs):
-        if request and 'password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['password'], request):
+        if request and 'current_password' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['current_password'], request):
             pass
         else:
             errors = {}
             content = {} 
-            errors['password'] = ['Incorrect password']            
+            errors['password'] = ['Incorrect current password']            
             content['msg'] = 'Cannot delete'       
             content['status'] = False
             content['code'] = 200
@@ -597,7 +609,7 @@ class AccountResource(ModelResource):
         return self.create_response(request, contents, response_class = HttpResponse)
 
     def is_valid_password(self, password, request):
-        print authenticate(username=request.user.email, password=password)
+        #print authenticate(username=request.user.email, password=password)
         if (authenticate(username=request.user.email, password=password)):
             return True
         return False
