@@ -11,6 +11,7 @@ from peoplewings.apps.registration.api import UserSignUpResource, ActivationReso
 from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import AccomodationsResource
+from peoplewings.apps.feedback.api import FeedbackResource
 
 
 admin.autodiscover()
@@ -35,6 +36,7 @@ v1_api.register(CityResource())
 v1_api.register(RegionResource())
 v1_api.register(CountryResource())
 v1_api.register(AccomodationsResource())
+v1_api.register(FeedbackResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
