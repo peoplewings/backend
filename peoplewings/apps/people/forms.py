@@ -351,3 +351,4 @@ class UserProfileForm(forms.Form):
 class UserLanguageForm(forms.Form):
   level = forms.ChoiceField(required=False, choices=LANGUAGES_LEVEL_CHOICES)
 
+

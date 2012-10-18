@@ -45,9 +45,11 @@ IMPORTANT!! All urls start with /api/v1/
 
 There are some standard error messages:
 
+* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
 * 200 OK {"code": 411, "error": {"msg": "No JSON could be decoded"}, "status": false}
 * 200 OK {"code": 412, "error": {"msg": "Method not allowed"}, "status": false}
-* 200 OK {"code": 410, "error": {"errors": {"gender": ["This field is required."], "lastName": ["This field is required."]}, "msg": "Error in some fields"}, "status": false}
+* 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+
 
 ### Register (Joan):
  * Request:
