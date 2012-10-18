@@ -466,10 +466,14 @@ class UserProfileResource(ModelResource):
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
         if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        return super(UserProfileResource, self).get_detail(request, **kwargs)
+        """
         result = UserProfile.objects.get(pk=kwargs['pk'])
+        pprint(result.__dict__)
         bundle = self.build_bundle(obj=result, request=request)
         bundle.obj.__dict__.pop("_state")
         return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
+        """
 
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
@@ -487,7 +491,14 @@ class UserProfileResource(ModelResource):
             self.method = None
             return bundle   
         else:
-            return super(UserProfileResource, self).dehydrate(bundle)  
+            b = bundle.data
+            bundle.data = {}
+            bundle.data['status'] = True
+            bundle.data['code'] = 204
+            bundle.data['msg'] = 'Update OK'
+            bundle.data['data'] = b
+            return bundle
+            #return super(UserProfileResource, self).dehydrate(bundle)  
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
