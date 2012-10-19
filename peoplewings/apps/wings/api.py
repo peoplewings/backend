@@ -152,7 +152,7 @@ class AccomodationsResource(ModelResource):
             bundle = self.full_dehydrate(bundle)
             objects.append(bundle)
 
-        return self.create_response(request, {"msg":"List OK.", "code":200, "status":True, "data":objects})
+        return self.create_response(request, {"msg":"Accomodations retrieved successfully.", "code":200, "status":True, "data":objects})
         """
         self.is_anonymous = request.user.is_anonymous()
 
@@ -190,7 +190,7 @@ class AccomodationsResource(ModelResource):
         a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
         bundle = self.build_bundle(obj=a, request=request)
         bundle = self.full_dehydrate(bundle)
-        return self.create_response(request, {"msg":"Get detail OK.", "code":200, "status":True, "data":bundle})
+        return self.create_response(request, {"msg":"Accomodation retrieved successfully.", "code":200, "status":True, "data":bundle})
 
     def patch_detail(self, request, **kwargs):
         return self.put_detail(request, **kwargs)    
@@ -226,7 +226,7 @@ class AccomodationsResource(ModelResource):
         #updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
         a.save()
         self.save_related(bundle)
-        bundle = {"code" : 200, "status" : True, "msg" : "Update OK"}
+        bundle = {"code" : 200, "status" : True, "msg" : "Accomodation updated successfully."}
         return self.create_response(request, bundle, response_class=HttpAccepted)
 
     @transaction.commit_on_success
@@ -236,7 +236,7 @@ class AccomodationsResource(ModelResource):
         up = UserProfile.objects.get(user=request.user)
         a = Accomodation.objects.get(author_id=up.id, pk=kwargs['wing_id'])
         a.delete()
-        bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Delete OK"}, request=request)
+        bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Accomodation deleted successfully."}, request=request)
         return self.create_response(request, bundle, response_class = HttpResponse)
 
     def alter_list_data_to_serialize(self, request, data):

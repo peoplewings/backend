@@ -165,6 +165,8 @@ class UserProfileResource(ModelResource):
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
 
+    mostrar_para_update = False
+
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
@@ -378,19 +380,12 @@ class UserProfileResource(ModelResource):
 
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        #mostrar_para_update = kwargs['pk'] == 'me'
-        #if mostrar_para_update: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        self.mostrar_para_update = kwargs['pk'] == 'me'
+        if self.mostrar_para_update: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        #if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        """
-        if mostrar_para_update:
-            if data['show_birthday'] == 'P': del data['BYear']
-        elif data['show_birthday'] == 'N': 
-            del data['BYear']
-            del data['BMonth']
-            del data['BDay']
-        """
+        up = UserProfile.objects.get(pk=kwargs['pk'])
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -504,9 +499,19 @@ class UserProfileResource(ModelResource):
 
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-        bundle.data['BDay'] = bundle.obj.birthday.day
-        bundle.data['BMonth'] = bundle.obj.birthday.month
-        bundle.data['BYear'] = bundle.obj.birthday.year
+        if not self.mostrar_para_update:
+            if bundle.data['show_birthday'] == 'N':
+                bundle.data['birthday'] = ""
+            elif bundle.data['show_birthday'] == 'P':
+                bday = str.split(str(bundle.data['birthday']),'-')
+                bundle.data['birthday'] = bday[1] + "-" + bday[2]
+            del bundle.data['show_birthday']
+        else:
+            bundle.data['BDay'] = bundle.obj.birthday.day
+            bundle.data['BMonth'] = bundle.obj.birthday.month
+            bundle.data['BYear'] = bundle.obj.birthday.year
+            del bundle.data['birthday']
+            self.mostrar_para_update = False
         if bundle.request.user.is_anonymous():
             bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
             bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
