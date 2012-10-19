@@ -38,7 +38,7 @@ Full reference can be found here:
 * https://devcenter.heroku.com/articles/django
 * https://devcenter.heroku.com/articles/heroku-postgres-dev-plan
 * https://devcenter.heroku.com/articles/procfile
-* https://devcenter.heroku.com/articles/error-codes
+* https://devcenter.heroku.com/articles/error-codesdfg
 sad 
 ## API
 dfds
