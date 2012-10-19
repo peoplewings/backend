@@ -38,10 +38,9 @@ Full reference can be found here:
 * https://devcenter.heroku.com/articles/django
 * https://devcenter.heroku.com/articles/heroku-postgres-dev-plan
 * https://devcenter.heroku.com/articles/procfile
-* https://devcenter.heroku.com/articles/error-codesdfg
-sad 
+* https://devcenter.heroku.com/articles/error-codes
+ 
 ## API
-dfds
 IMPORTANT!! All urls start with /api/v1/
 
 There are some standard error messages:
