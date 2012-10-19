@@ -99,9 +99,12 @@ class AccomodationsResource(ModelResource):
             if hasattr(a, key): setattr(a, key, value)
         a.save()
 
+
+        dic = {"msg":"Accomodation created successfully.", "status":True, "code":200}
         bundle = self.build_bundle(obj=a, request=request)
-        
         return bundle
+
+
         """
         up = UserProfile.objects.get(user=request.user)
         kwargs['author_id'] = up.id
