@@ -63,7 +63,7 @@ class AccountValidation(Validation):
                 else:
                     if len(value) > 50: errors['last_name'] = ['Not a valid field']
             elif key == 'password':
-                if value == '':
+                if value == '!':
                     errors['password'] = ['Empty field is not allowed']
                 else:
                     if len(value) < 8 and len(value) > 20: errors['password'] = ['Not a valid field']
