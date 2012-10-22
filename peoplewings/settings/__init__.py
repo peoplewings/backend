@@ -1,1 +1,1 @@
-from dev2 import *
+from test import *
