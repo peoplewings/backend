@@ -64,6 +64,13 @@ class AccomodationsResource(ModelResource):
             "wheelchair": ['exact'],
         }
 
+    def custom_serialize(self, errors):
+        return errors.get('newuser')
+
+    def error_response(self, errors, request):
+        serialized = self.custom_serialize(errors)
+        raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
+
     def apply_authorization_limits(self, request, object_list=None):
         pprint(request)
         if request.method not in ('GET'):
@@ -100,10 +107,9 @@ class AccomodationsResource(ModelResource):
         a.save()
 
 
-        dic = {"msg":"Accomodation created successfully.", "status":True, "code":200}
-        bundle = self.build_bundle(obj=a, request=request)
+        dic = {"msg":u"Accommodation created successfully.", "status":True, "code":200}
+        bundle = self.build_bundle(obj=a, data=dic, request=request)
         return bundle
-
 
         """
         up = UserProfile.objects.get(user=request.user)
@@ -155,7 +161,7 @@ class AccomodationsResource(ModelResource):
             bundle = self.full_dehydrate(bundle)
             objects.append(bundle)
 
-        return self.create_response(request, {"msg":"Accomodations retrieved successfully.", "code":200, "status":True, "data":objects})
+        return self.create_response(request, {"msg":"Accommodations retrieved successfully.", "code":200, "status":True, "data":objects})
         """
         self.is_anonymous = request.user.is_anonymous()
 
@@ -179,7 +185,9 @@ class AccomodationsResource(ModelResource):
         up = UserProfile.objects.get(user=request.user)
         if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
             return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
-        return super(AccomodationsResource, self).post_list(request, **kwargs)
+        a = super(AccomodationsResource, self).post_list(request, **kwargs)
+        dic = {"msg":"Accommodation created successfully.", "status":True, "code":200}
+        return self.create_response(request, dic)
 
     def delete_list(self, request=None, **kwargs):
         return self.create_response(request, {"msg":"Error: cannot delete a list of wings.", "code" : 413, "status" : False}, response_class=HttpForbidden)
@@ -193,7 +201,7 @@ class AccomodationsResource(ModelResource):
         a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
         bundle = self.build_bundle(obj=a, request=request)
         bundle = self.full_dehydrate(bundle)
-        return self.create_response(request, {"msg":"Accomodation retrieved successfully.", "code":200, "status":True, "data":bundle})
+        return self.create_response(request, {"msg":"Accommodation retrieved successfully.", "code":200, "status":True, "data":bundle})
 
     def patch_detail(self, request, **kwargs):
         return self.put_detail(request, **kwargs)    
@@ -229,7 +237,7 @@ class AccomodationsResource(ModelResource):
         #updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
         a.save()
         self.save_related(bundle)
-        bundle = {"code" : 200, "status" : True, "msg" : "Accomodation updated successfully."}
+        bundle = {"code" : 200, "status" : True, "msg" : "Accommodation updated successfully."}
         return self.create_response(request, bundle, response_class=HttpAccepted)
 
     @transaction.commit_on_success
@@ -239,8 +247,18 @@ class AccomodationsResource(ModelResource):
         up = UserProfile.objects.get(user=request.user)
         a = Accomodation.objects.get(author_id=up.id, pk=kwargs['wing_id'])
         a.delete()
-        bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Accomodation deleted successfully."}, request=request)
+        bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Accommodation deleted successfully."}, request=request)
         return self.create_response(request, bundle, response_class = HttpResponse)
+
+    def dehydrate_city(self, bundle):
+        city = bundle.data['city'].obj
+        region = city.region
+        country = region.country
+        bundle.data['city'] = {}
+        bundle.data['city']['city'] = city.name
+        bundle.data['city']['region'] = region.name
+        bundle.data['city']['country'] = country.name
+        return bundle.data['city']
 
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]

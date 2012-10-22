@@ -423,8 +423,8 @@ class UserProfileResource(ModelResource):
         if 'education' in bundle.data:
             UserProfileStudiedUniversity.objects.filter(user_profile_id=up.id).delete()
             for e in bundle.data['education']:
-                uni, b = University.objects.create(name=e['name'])
-                UserProfileStudiedUniversity.objects.get_or_create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
+                uni, b = University.objects.get_or_create(name=e['name'])
+                UserProfileStudiedUniversity.objects.create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
             bundle.data.pop('education')
 
         if 'instant_messages' in bundle.data:
@@ -507,9 +507,9 @@ class UserProfileResource(ModelResource):
                 bundle.data['birthday'] = bday[1] + "-" + bday[2]
             del bundle.data['show_birthday']
         else:
-            bundle.data['BDay'] = bundle.obj.birthday.day
-            bundle.data['BMonth'] = bundle.obj.birthday.month
-            bundle.data['BYear'] = bundle.obj.birthday.year
+            bundle.data['BirthDay'] = bundle.obj.birthday.day
+            bundle.data['BirthMonth'] = bundle.obj.birthday.month
+            bundle.data['BirthYear'] = bundle.obj.birthday.year
             del bundle.data['birthday']
             self.mostrar_para_update = False
         if bundle.request.user.is_anonymous():
@@ -570,7 +570,7 @@ class UserProfileResource(ModelResource):
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                errors['msg'] = e            
                 content['code'] = 411
                 content['status'] = False
                 content['error'] = errors

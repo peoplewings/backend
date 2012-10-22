@@ -168,11 +168,16 @@ There are some standard error messages:
  * Response:
    * OK
      * 200 OK 
-      [
-        {"age": 22, "allAboutYou": "lalalal", ...},
-        {"age": 24, "allAboutYou": "lelelel", ...},
-        ...
-      ]
+      {
+        "code": 200,
+        "data": [
+          {"age": 22, "allAboutYou": "lalalal", ...},
+          {"age": 24, "allAboutYou": "lelelel", ...},
+          ...
+        ],
+        "msg": "Profiles retrieved successfully.",
+        "status": True
+      }
 
 ### View my profile (Eze):
  * Request:
@@ -182,26 +187,17 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-          "age": 22, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1990-02-01", "civilState": "",
-          "company": "", 
-          "current": 
-            {
-              "city": "Barcelona",
-              "country": "Spain",
-              "region": "Catalonia"
-            },
-          "education": 
-            [
-              {
-                "degree": "Computer Science",
-                "name": "University of Reading"
-              },
-              {
-                "degree": "Artificial Intelligence",
-                "name": "University of London"
-              }
-            ],
-          ....
+        "code": 200,
+        "data": {
+          "BDay": 5,
+          "BMonth": 3,
+          "BYear": 1999,
+          "age": 13,
+          "allAboutYou": "",
+          ...
+        },
+        "msg": "Profile retrieved successfully.",
+        "status": true
       }
    * NO
      * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
@@ -256,26 +252,19 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-        "age": 24, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1988-02-01", "civilState": "",
-        "company": "", 
-        "current": 
-          {
-            "city": "Barcelona",
-            "country": "Spain",
-            "region": "Catalonia"
-          },
-        "education": 
-          [
-            {
-              "degree": "Philosophy",
-              "name": "Universidad de Madrid"
-            }
-          ],
-        ....
+        "code": 200,
+        "data": {
+          "birthday": "1999-03-05",
+          "age": 13,
+          "allAboutYou": "",
+          ...
+        },
+        "msg": "Profile retrieved successfully.",
+        "status": true
       }
           
    * NO
-     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+     * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
 
 
 ### Upload image (Joan) (W8 Sergi):
@@ -284,7 +273,7 @@ There are some standard error messages:
 
 ### View my accomodations (Joan):
  * Request:
-    /GET /profiles/me/accomodations/
+    GET /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -310,13 +299,11 @@ There are some standard error messages:
           }
         ]
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": "Invalid link", "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": {"params": ["Bad parameters"]}, "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
 
 ### View one of my accomodations (Eze):
  * Request:
-    /GET /profiles/me/accomodations/20/
+    GET /profiles/me/accomodations/20/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
@@ -327,11 +314,11 @@ There are some standard error messages:
         ...
       }
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
 
 ### View an accomodation of another user (Eze):
  * Request:
-    /GET /profiles/17/accomodations/20/
+    GET /profiles/17/accomodations/20/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
@@ -342,12 +329,11 @@ There are some standard error messages:
         ...
       }
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
 
 ### Create Accomodation (Eze):
  * Request:
-    /POST /profiles/me/accomodations/
+    POST /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "about": "",
@@ -357,15 +343,15 @@ There are some standard error messages:
     }
 
  * Response:
-   * 200 CREATED {"code": 204, "data": "Updated", "status": true}
+   * 201 CREATED {"code": 200, "msg": "Accomodation created successfully.", "status": true}
       
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
-     * 400 BAD REQUEST {"code": 777, "errors": "Unauthorized", "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Error in some fields"}, "status": false}
 
 ### Update accomodation (Eze):
  * Request:
-    /POST /profiles/me/accomodations/20/
+    PUT /profiles/me/accomodations/20/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "about": "",
@@ -375,20 +361,49 @@ There are some standard error messages:
     }
 
  * Response:
-   * 204 NO CONTENT {"code": 204, "data": "Updated", "status": true}
+   * 202 ACCEPTED 
+      {"code" : 200, "status" : True, "msg" : "Accomodation updated successfully."}
       
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 400, "error": {"msg": "Error in some fields"}, "status": false}
 
 ### Delete accomodation (Eze):
  * Request:
-    /DELETE /profiles/me/accomodations/20/
+    DELETE /profiles/me/accomodations/20/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
-   * 204 NO CONTENT {"code": 204, "data": "Wing deleted", "status": true}
+   * 200 OK 
+      {"code": 200, "status": True, "msg":"Accomodation deleted successfully."}
       
    * NO 
-     * 400 BAD REQUEST {"code": 777, "errors": {"forgotToken": ["This field is required"]}, "status": false}
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
 
-### Search wings (undefined):
+### Search wings (Ezequiel):
+  * Request:
+    GET /profiles/?capacity=4
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
 
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "data": [
+          {
+            "age": 13,
+            "allAboutYou": "",
+            "avatar": "/static/img/blank_avatar.jpg",
+            "birthday": "03-05",
+            "civilState": "",
+            "company": "",
+            "current": {
+              "city": "Barcelona",
+              "country": "Spain",
+              "region": "Catalonia"
+            },
+            ....
+          }
+        ],
+        "msg": "Profiles retrieved successfully.",
+        "status": true
+      }
