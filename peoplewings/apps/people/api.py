@@ -507,9 +507,9 @@ class UserProfileResource(ModelResource):
                 bundle.data['birthday'] = bday[1] + "-" + bday[2]
             del bundle.data['show_birthday']
         else:
-            bundle.data['BirthDay'] = bundle.obj.birthday.day
-            bundle.data['BirthMonth'] = bundle.obj.birthday.month
-            bundle.data['BirthYear'] = bundle.obj.birthday.year
+            bundle.data['birth_day'] = bundle.obj.birthday.day
+            bundle.data['birth_month'] = bundle.obj.birthday.month
+            bundle.data['birth_year'] = bundle.obj.birthday.year
             del bundle.data['birthday']
             self.mostrar_para_update = False
         if bundle.request.user.is_anonymous():
