@@ -31,3 +31,7 @@ class BadParameters(Exception):
 class ExistingUser(Exception):
     def render(self, request):
         return HttpResponse()
+
+class DupplicateEmailException(Exception):
+    def render(self, request):
+        return HttpResponse()
