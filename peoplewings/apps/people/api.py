@@ -320,7 +320,7 @@ class UserProfileResource(ModelResource):
             # i = {id: id_social_networks, name:'Facebook'}
             sn = i.obj
             usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
-            i.data['username'] = usn.social_network_username
+            i.data['sn_username'] = usn.social_network_username
             i.data['social_network'] = i.data['name']
             i.data.pop('name')
             i.data.pop('id')
@@ -331,7 +331,7 @@ class UserProfileResource(ModelResource):
             # i = {id: id_instant_message, name:'Whatsapp'}
             im = i.obj
             uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
-            i.data['username'] = uim.instant_message_username
+            i.data['im_username'] = uim.instant_message_username
             i.data['instant_message'] = i.data['name']
             i.data.pop('name')
             i.data.pop('id')
