@@ -168,16 +168,11 @@ There are some standard error messages:
  * Response:
    * OK
      * 200 OK 
-      {
-        "code": 200,
-        "data": [
-          {"age": 22, "allAboutYou": "lalalal", ...},
-          {"age": 24, "allAboutYou": "lelelel", ...},
-          ...
-        ],
-        "msg": "Profiles retrieved successfully.",
-        "status": True
-      }
+      [
+        {"age": 22, "allAboutYou": "lalalal", ...},
+        {"age": 24, "allAboutYou": "lelelel", ...},
+        ...
+      ]
 
 ### View my profile (Eze):
  * Request:
@@ -187,17 +182,26 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-        "code": 200,
-        "data": {
-          "BDay": 5,
-          "BMonth": 3,
-          "BYear": 1999,
-          "age": 13,
-          "allAboutYou": "",
-          ...
-        },
-        "msg": "Profile retrieved successfully.",
-        "status": true
+          "age": 22, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1990-02-01", "civilState": "",
+          "company": "", 
+          "current": 
+            {
+              "city": "Barcelona",
+              "country": "Spain",
+              "region": "Catalonia"
+            },
+          "education": 
+            [
+              {
+                "degree": "Computer Science",
+                "name": "University of Reading"
+              },
+              {
+                "degree": "Artificial Intelligence",
+                "name": "University of London"
+              }
+            ],
+          ....
       }
    * NO
      * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
@@ -252,19 +256,26 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-        "code": 200,
-        "data": {
-          "birthday": "1999-03-05",
-          "age": 13,
-          "allAboutYou": "",
-          ...
-        },
-        "msg": "Profile retrieved successfully.",
-        "status": true
+        "age": 24, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1988-02-01", "civilState": "",
+        "company": "", 
+        "current": 
+          {
+            "city": "Barcelona",
+            "country": "Spain",
+            "region": "Catalonia"
+          },
+        "education": 
+          [
+            {
+              "degree": "Philosophy",
+              "name": "Universidad de Madrid"
+            }
+          ],
+        ....
       }
           
    * NO
-     * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
+     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
 
 
 ### Upload image (Joan) (W8 Sergi):
@@ -407,3 +418,4 @@ There are some standard error messages:
         "msg": "Profiles retrieved successfully.",
         "status": true
       }
+
