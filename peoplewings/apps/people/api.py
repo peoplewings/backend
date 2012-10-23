@@ -424,7 +424,7 @@ class UserProfileResource(ModelResource):
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
-                UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name=lang['name']).id, level=lang['level'])
+                UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name__iexact=lang['name']).id, level=lang['level'])
             bundle.data.pop('languages')
         
         if 'education' in bundle.data:
