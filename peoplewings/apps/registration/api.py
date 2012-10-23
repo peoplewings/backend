@@ -23,7 +23,7 @@ from django.contrib.auth import authenticate
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 
-from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser
+from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser, DupplicateEmailException
 from peoplewings.apps.registration.models import RegistrationProfile
 from peoplewings.apps.registration.views import register, activate, login, logout, delete_account, forgot_password, check_forgot_token, change_password
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, ForgotForm
@@ -623,6 +623,13 @@ class AccountResource(ModelResource):
             user = request.user
             user.set_password(password)
             new_data['password'] = user.password
+        if 'email' in new_data:
+            try:
+                existing_user = User.objects.get(email = new_data['email'])
+            except:
+                existing_user = None
+            if existing_user and existing_user != request.user:
+                raise DupplicateEmailException()
         obj = super(AccountResource, self).update_in_place(request, original_bundle, new_data)
         return obj
 
@@ -694,6 +701,12 @@ class AccountResource(ModelResource):
                 else:
                     content = {}
                     content['msg'] = "Error"               
+                    content['code'] = 400
+                    content['status'] = False                                 
+                    return self.create_response(request, content, response_class = HttpResponse)
+            except DupplicateEmailException, e:
+                    content = {}
+                    content['msg'] = "The new email is already being used"               
                     content['code'] = 400
                     content['status'] = False                                 
                     return self.create_response(request, content, response_class = HttpResponse)
