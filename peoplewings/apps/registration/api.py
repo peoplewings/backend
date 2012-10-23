@@ -627,7 +627,7 @@ class AccountResource(ModelResource):
             try:
                 existing_user = User.objects.get(email = new_data['email'])
             except:
-                pass
+                existing_user = None
             if existing_user and existing_user != request.user:
                 raise DupplicateEmailException()
         obj = super(AccountResource, self).update_in_place(request, original_bundle, new_data)
