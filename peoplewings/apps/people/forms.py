@@ -306,7 +306,7 @@ class UserProfileForm(forms.Form):
     birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=False)
     show_birthday = forms.ChoiceField(choices=SHOW_BIRTHDAY_CHOICES, required=False)
     gender = forms.ChoiceField(choices=GENDER_CHOICES, required=False)
-    interested_in = forms.CharField(max_length=1, required=False)
+    interested_in = forms.ChoiceField(choices=PREFERRED_GENDER_CHOICES, required=False)
     civil_state = forms.ChoiceField(choices=CIVIL_STATE_CHOICES, required=False)
     #languages = forms.ManyToManyField(Language, through='UserLanguage', required=False)
 
