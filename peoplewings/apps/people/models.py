@@ -55,7 +55,8 @@ class UserProfileStudiedUniversity(models.Model):
     university = models.ForeignKey('University')
     degree = models.CharField(max_length=max_medium_len, blank=True)
 
-
+class Interests(models.Model):
+    gender = models.CharField(max_length = 6, choices = GENDER_CHOICES, unique = True)
 
 class UserProfile(models.Model):
 
@@ -80,7 +81,7 @@ class UserProfile(models.Model):
     birthday = models.DateField(verbose_name='birthday', null=True) #Don't know why!
     show_birthday = models.CharField(verbose_name='', max_length=100, choices=SHOW_BIRTHDAY_CHOICES, default='F')
     gender = models.CharField(verbose_name='I am', max_length=6, choices=GENDER_CHOICES, default='Male')
-    interested_in = models.CharField(max_length=1, blank=True) # he tret el null=True
+    interested_in = models.ManyToManyField(Interests, null=True, default = None)
     civil_state = models.CharField(verbose_name="Relationship status", max_length=2, choices=CIVIL_STATE_CHOICES, default='', blank=True, null=True)
     languages = models.ManyToManyField(Language, through='UserLanguage', null=True)
 

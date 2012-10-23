@@ -149,7 +149,16 @@ class UserLanguageResource(ModelResource):
             "language": ALL_WITH_RELATIONS,
         }
         """
-
+class InterestsResource(ModelResource):
+    class Meta:
+        object_class = Interests
+        queryset = Interests.objects.all()
+        allowed_methods = []
+        include_resource_uri = False
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True
 
 class UserProfileResource(ModelResource):    
     user = fields.ToOneField(AccountResource, 'user')
@@ -164,7 +173,7 @@ class UserProfileResource(ModelResource):
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
-
+    interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
     mostrar_para_update = False
 
     class Meta:
