@@ -4,8 +4,8 @@ import dj_database_url
 
 DATABASES = {'default': dj_database_url.config(default='postgres://localhost')}
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__)) # The Django project
-PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The genral project
+PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')) # The Django project
+PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The general project
 
 TIME_ZONE = 'Europe/Madrid'
 
@@ -73,6 +73,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'peoplewings.libs.middlewares.django-crossdomainxhr-middleware.XsSharing',
 )
 
 ROOT_URLCONF = 'peoplewings.urls'
@@ -100,6 +101,8 @@ AUTHENTICATION_BACKENDS = (
     'peoplewings.apps.people.backends.default.AuthMailBackend',
     'django.contrib.auth.backends.ModelBackend',)
 
+APPEND_SLASH=False
+TASTYPIE_ALLOW_MISSING_SLASH = True
 # A place for watchers
 """
 print "PROJECT_ROOT: " + PROJECT_ROOT

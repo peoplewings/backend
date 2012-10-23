@@ -4,11 +4,13 @@ from django.forms import ModelForm, extras, Textarea
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
-from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from models import UserProfile, Language, University, SocialNetwork, InstantMessage, max_long_len, max_short_len, max_medium_len
+from peoplewings.apps.registration.forms import RegistrationForm, RegistrationFormUniqueEmail
+from peoplewings.apps.people.models import UserProfile, Language, University, SocialNetwork, InstantMessage
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 import datetime
+
+from peoplewings.global_vars import *
 
 # Prepare birthdate year choices
 now = datetime.datetime.now()
@@ -18,18 +20,6 @@ for i in range(1900, now.year-5, 1):
     BIRTH_YEAR_CHOICES.append(i)
 
 BIRTH_YEAR_CHOICES.reverse()
-
-INTERESTED_IN_CHOICES = (
-      ('M', 'Male'),
-      ('F', 'Female'),
-  )
-
-LANG_LEVEL_CHOICES = [
-      ('E', 'Expert'),
-    ('I', 'Intermediate'),
-    ('B', 'Beginner'),
-  ]
-
 
 class RegisterForm(ModelForm):
   class Meta:
@@ -61,7 +51,7 @@ class CustomRegisterForm(RegistrationFormUniqueEmail):
 
 # 1. BASIC INFORMATION
 class BasicInformationForm(ModelForm):
-  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=INTERESTED_IN_CHOICES, required=False)
+  interested_in = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=GENDER_CHOICES, required=False)
   class Meta:
     model = UserProfile
     fields = ('birthday', 'show_birthday', 'gender', 'civil_state')
@@ -304,3 +294,61 @@ def customize_register_form():
     
 
 customize_register_form()
+
+### New Forms ####
+
+class UserProfileForm(forms.Form):
+    pw_state = forms.ChoiceField(choices=PW_STATE_CHOICES, required=False)
+    avatar = forms.CharField(max_length=max_long_len, required=False)
+    #Basic Information
+    birthday_day = forms.IntegerField(min_value=1, max_value=31, required=False)
+    birthday_month = forms.IntegerField(min_value=1, max_value=12, required=False)
+    birthday_year = forms.IntegerField(min_value=1900, max_value=2100, required=False)
+    show_birthday = forms.ChoiceField(choices=SHOW_BIRTHDAY_CHOICES, required=False)
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=False)
+    interested_in = forms.ChoiceField(choices=PREFERRED_GENDER_CHOICES, required=False)
+    civil_state = forms.ChoiceField(choices=CIVIL_STATE_CHOICES, required=False)
+    #languages = forms.ManyToManyField(Language, through='UserLanguage', required=False)
+
+    # Locations
+    #current_city = forms.ForeignKey(City, related_name='cc+', required=False)
+    #hometown = forms.ForeignKey(City, related_name='ht+', required=False)
+    #other_locations = forms.ManyToManyField(City, related_name='ol+', required=False)
+
+    # Contact info
+    emails = forms.EmailField(required=False)
+    phone = forms.CharField(max_length=max_short_len, required=False)
+    #social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
+    #instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
+
+    # About me
+    all_about_you = forms.CharField(max_length=max_long_len, required=False)
+    main_mission = forms.CharField(max_length=max_long_len, required=False)
+    occupation = forms.CharField(max_length=max_short_len, required=False)
+    company = forms.CharField(max_length=max_short_len, required=False)
+    #universities = forms.ManyToManyField(University, through='UserProfileStudiedUniversity', required=False)
+    personal_philosophy = forms.CharField(max_length=max_long_len, required=False)
+    political_opinion = forms.CharField(max_length=max_short_len, required=False)
+    religion = forms.CharField(max_length=max_short_len, required=False)
+
+    # Likes
+    enjoy_people = forms.CharField(max_length=max_long_len, required=False)
+    movies = forms.CharField(max_length=max_long_len, required=False)
+    sports = forms.CharField(max_length=max_long_len, required=False)
+    other_pages = forms.CharField(max_length=max_long_len, required=False)    
+    sharing = forms.CharField(max_length=max_long_len, required=False)
+    incredible = forms.CharField(max_length=max_long_len, required=False)
+    inspired_by = forms.CharField(max_length=max_long_len, required=False)
+    quotes = forms.CharField(max_length=max_long_len, required=False)
+    pw_opinion = forms.CharField(max_length=max_long_len, required=False) 
+
+    # Trips
+    places_lived_in = forms.CharField(max_length=max_long_len, required=False)
+    places_visited = forms.CharField(max_length=max_long_len, required=False)    
+    places_gonna_go = forms.CharField(max_length=max_long_len, required=False)
+    places_wanna_go = forms.CharField(max_length=max_long_len, required=False)
+
+class UserLanguageForm(forms.Form):
+  level = forms.ChoiceField(required=False, choices=LANGUAGES_LEVEL_CHOICES)
+
+

@@ -5,4 +5,7 @@
 !/media/*.jpg
 !/media/*.png
 !/media/*.md
-peoplewings/settings_ezequiel.py
+/.idea/
+/settings/__init__.py
+requirements.txt
+testApi.py

@@ -8,16 +8,20 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'UserProfile.campo_extra'
-        db.add_column('people_userprofile', 'campo_extra',
-                      self.gf('django.db.models.fields.CharField')(default='/static/img/blank_avatar.jpg', max_length=250),
-                      keep_default=False)
 
+        # Changing field 'UserProfile.pw_state'
+        db.alter_column('people_userprofile', 'pw_state', self.gf('django.db.models.fields.CharField')(max_length=100))
+
+        # Changing field 'UserProfile.gender'
+        db.alter_column('people_userprofile', 'gender', self.gf('django.db.models.fields.CharField')(max_length=6))
 
     def backwards(self, orm):
-        # Deleting field 'UserProfile.campo_extra'
-        db.delete_column('people_userprofile', 'campo_extra')
 
+        # Changing field 'UserProfile.pw_state'
+        db.alter_column('people_userprofile', 'pw_state', self.gf('django.db.models.fields.CharField')(max_length=1))
+
+        # Changing field 'UserProfile.gender'
+        db.alter_column('people_userprofile', 'gender', self.gf('django.db.models.fields.CharField')(max_length=1))
 
     models = {
         'auth.group': {
@@ -56,13 +60,31 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'people.city': {
+        'locations.city': {
             'Meta': {'object_name': 'City'},
-            'cid': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '40'}),
-            'country': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'state': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+            'lat': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '11', 'decimal_places': '9'}),
+            'lon': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '12', 'decimal_places': '9'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.Region']"}),
+            'short_name': ('django.db.models.fields.CharField', [], {'default': "'NoName'", 'max_length': '200'})
+        },
+        'locations.country': {
+            'Meta': {'object_name': 'Country'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'lat': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '11', 'decimal_places': '9'}),
+            'lon': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '12', 'decimal_places': '9'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'short_name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '200'})
+        },
+        'locations.region': {
+            'Meta': {'object_name': 'Region'},
+            'country': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.Country']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'lat': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '11', 'decimal_places': '9'}),
+            'lon': ('django.db.models.fields.DecimalField', [], {'default': '0.0', 'max_digits': '12', 'decimal_places': '9'}),
+            'name': ('django.db.models.fields.CharField', [], {'default': "'NoName'", 'max_length': '200'}),
+            'short_name': ('django.db.models.fields.CharField', [], {'default': "'NoName'", 'max_length': '200'})
         },
         'people.instantmessage': {
             'Meta': {'object_name': 'InstantMessage'},
@@ -95,7 +117,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'UserLanguage'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.Language']"}),
-            'level': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
+            'level': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'user_profile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"})
         },
         'people.userprofile': {
@@ -104,25 +126,24 @@ class Migration(SchemaMigration):
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'avatar': ('django.db.models.fields.CharField', [], {'default': "'/static/img/blank_avatar.jpg'", 'max_length': '250'}),
             'birthday': ('django.db.models.fields.DateField', [], {'null': 'True'}),
-            'campo_extra': ('django.db.models.fields.CharField', [], {'default': "'/static/img/blank_avatar.jpg'", 'max_length': '250'}),
-            'civil_state': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
+            'civil_state': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '2', 'null': 'True', 'blank': 'True'}),
             'company': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'current_city': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'cc+'", 'null': 'True', 'to': "orm['people.City']"}),
+            'current_city': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'cc+'", 'null': 'True', 'to': "orm['locations.City']"}),
             'emails': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'enjoy_people': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
-            'gender': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
-            'hometown': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ht+'", 'null': 'True', 'to': "orm['people.City']"}),
+            'gender': ('django.db.models.fields.CharField', [], {'default': "'M'", 'max_length': '6'}),
+            'hometown': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ht+'", 'null': 'True', 'to': "orm['locations.City']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'incredible': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'inspired_by': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'instant_messages': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.InstantMessage']", 'through': "orm['people.UserInstantMessage']", 'symmetrical': 'False'}),
             'interested_in': ('django.db.models.fields.CharField', [], {'max_length': '1', 'blank': 'True'}),
-            'languages': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.Language']", 'through': "orm['people.UserLanguage']", 'symmetrical': 'False'}),
+            'languages': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.Language']", 'null': 'True', 'through': "orm['people.UserLanguage']", 'symmetrical': 'False'}),
             'main_mission': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'movies': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'name_to_show': ('django.db.models.fields.CharField', [], {'default': "'name_to_show'", 'max_length': '20'}),
             'occupation': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'other_locations': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "'ol+'", 'null': 'True', 'to': "orm['people.City']"}),
+            'other_locations': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "'ol+'", 'null': 'True', 'to': "orm['locations.City']"}),
             'other_pages': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'personal_philosophy': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'phone': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
@@ -132,11 +153,11 @@ class Migration(SchemaMigration):
             'places_wanna_go': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'political_opinion': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'pw_opinion': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
-            'pw_state': ('django.db.models.fields.CharField', [], {'default': "'N'", 'max_length': '1'}),
+            'pw_state': ('django.db.models.fields.CharField', [], {'default': "'W'", 'max_length': '100'}),
             'quotes': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'religion': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'sharing': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
-            'show_birthday': ('django.db.models.fields.CharField', [], {'default': "'N'", 'max_length': '1'}),
+            'show_birthday': ('django.db.models.fields.CharField', [], {'default': "'F'", 'max_length': '1'}),
             'social_networks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.SocialNetwork']", 'through': "orm['people.UserSocialNetwork']", 'symmetrical': 'False'}),
             'sports': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'universities': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.University']", 'through': "orm['people.UserProfileStudiedUniversity']", 'symmetrical': 'False'}),

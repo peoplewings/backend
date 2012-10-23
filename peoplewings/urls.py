@@ -3,33 +3,47 @@ from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib import admin, auth
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from apps.people.forms import CustomRegisterForm
+from django.conf.urls.defaults import *
+from tastypie.api import Api
+
+
+from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource
+from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource
+from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
+from peoplewings.apps.wings.api import AccomodationsResource
+from peoplewings.apps.feedback.api import FeedbackResource
+
 
 admin.autodiscover()
 
+v1_api=Api(api_name='v1')
+v1_api.register(UserSignUpResource())
+v1_api.register(ActivationResource())
+v1_api.register(UserProfileResource())
+v1_api.register(LoginResource())
+v1_api.register(LogoutResource())
+v1_api.register(AccountResource())
+v1_api.register(ForgotResource())
+v1_api.register(UserLanguageResource())
+v1_api.register(LanguageResource())
+v1_api.register(UserUniversityResource())
+v1_api.register(UniversityResource())
+v1_api.register(UserSocialNetworkResource())
+v1_api.register(SocialNetworkResource())
+v1_api.register(UserInstantMessageResource())
+v1_api.register(InstantMessageResource())
+v1_api.register(CityResource())
+v1_api.register(RegionResource())
+v1_api.register(CountryResource())
+v1_api.register(AccomodationsResource())
+v1_api.register(FeedbackResource())
+
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
-
-    # Authentication patterns:
-    url(r'^register/$', 'peoplewings.apps.locations.views.register',    {'form_class':CustomRegisterForm, 'backend':'peoplewings.apps.people.backends.default.DefaultBackend'}, name='registration_register'),
-    #url(r'^login/$','django.contrib.auth.views.login',{'template_name':'registration/login.html'}),
-    #url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
-    #url(r'^activate/complete/$', 'landing.views.welcome', name='home'),
-    #url(r'^', include('registration.backends.default.urls')),
-
-    # Apps patterns
-    #url(r'^users/', include('peoplewings.apps.people.urls')),
-    #url(r'^ajax/', include('peoplewings.apps.ajax.urls')),
-    #url(r'^wings/', include('peoplewings.apps.wings.urls')),
-
-    #url('^cropper/', include('peoplewings.apps.cropper.urls')),
-    #url(r'^search/', include('peoplewings.apps.search.urls')),
-
-    # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-	# Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
+    url(r'^accounts/', include('peoplewings.apps.registration.backends.custom.urls')),
+    # API resources here...
+    (r'^api/', include(v1_api.urls)),	
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Static files patterns for development:

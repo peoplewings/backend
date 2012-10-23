@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic.edit import FormView, BaseDetailView
 from django.conf import settings
 from models import Original
-from forms import CroppedForm, OriginalForm
+from cropper.forms import CroppedForm, OriginalForm
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.ajax.utils import json_response, json_success_response
 import Image

@@ -14,10 +14,10 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'd9v8pn437eoleu',        # Or path to database file if using sqlite3.
-        'USER': 'tbkwhgpiyhvhnv',        # Not used with sqlite3.
-        'PASSWORD': 'rGxtOjErcyAxNbEJZx4RNjUw3T',           # Not used with sqlite3.
-        'HOST': 'ec2-23-21-85-197.compute-1.amazonaws.com', # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': 'd9pbbsnim1gjsp',        # Or path to database file if using sqlite3.
+        'USER': 'nfenprhinmldea',        # Not used with sqlite3.
+        'PASSWORD': 'gHuzd0OaRweLLV8WUDUJ3TFAfH',           # Not used with sqlite3.
+        'HOST': 'ec2-54-243-218-23.compute-1.amazonaws.com', # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -48,11 +48,14 @@ INSTALLED_APPS = (
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
-    'peoplewings.apps.notifications',
+    'peoplewings.apps.feedback',
+    'peoplewings.libs.customauth',
+    #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-
+#SITE
+SITE = 'http://peoplewings-frontend.herokuapp.com'
 # SMTP settings
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'

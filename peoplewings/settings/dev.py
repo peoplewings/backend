@@ -39,8 +39,8 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
-    'registration',
     # Project custom apps
+    'peoplewings.apps.registration',
     'peoplewings.apps.landing',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
@@ -49,9 +49,13 @@ INSTALLED_APPS = (
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
     'peoplewings.apps.notifications',
+    'peoplewings.apps.feedback',
+    'peoplewings.libs.customauth',    
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+SITE = 'http://peoplewings-frontend.herokuapp.com'
 
 # SMTP settings
 EMAIL_HOST = 'smtp.gmail.com'
