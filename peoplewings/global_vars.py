@@ -55,15 +55,15 @@ CIVIL_STATE_CHOICES = (
 CIVIL_STATE_CHOICES_KEYS, CIVIL_STATE_CHOICES_VALUES  = zip(*CIVIL_STATE_CHOICES)
 
 LANGUAGES_LEVEL_CHOICES = (
-    ('Beginner', 'Beginner'),
-    ('Intermediate', 'Intermediate'),
-    ('Expert', 'Expert'),
+    ('beginner', 'beginner'),
+    ('intermediate', 'intermediate'),
+    ('expert', 'expert'),
 )
 LANGUAGES_LEVEL_CHOICES_KEYS, LANGUAGES_LEVEL_CHOICES_VALUES  = zip(*LANGUAGES_LEVEL_CHOICES)
 LANG_LEVEL_CHOICES = [
-    ('E', 'Expert'),
-    ('I', 'Intermediate'),
-    ('B', 'Beginner'),
+    ('E', 'expert'),
+    ('I', 'intermediate'),
+    ('B', 'beginner'),
 ]
 
 PRIVACY_CHOICES = (

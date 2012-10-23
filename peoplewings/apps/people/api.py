@@ -299,34 +299,44 @@ class UserProfileResource(ModelResource):
             # i = {id: id_language, name:'Spanish'}
             lang = i.obj
             ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
-            i.data['level'] = ul.level
+            i.data['level'] = str(ul.level).lower()
+            i.data['name'] = str(i.data['name']).lower()
             i.data.pop('id')
         return bundle.data['languages']
 
     def dehydrate_education(self, bundle):
         for i in bundle.data['education']: 
             # i = {id: id_university, name:'University of Reading'}
+            pprint(i)
             uni = i.obj
             upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=bundle.obj)
             i.data['degree'] = upu.degree
+            i.data['institution'] = i.data['name']
             i.data.pop('id')
+            i.data.pop('name')
         return bundle.data['education']
 
     def dehydrate_social_networks(self, bundle):
         for i in bundle.data['social_networks']: 
             # i = {id: id_social_networks, name:'Facebook'}
+            pprint(i)
             sn = i.obj
             usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
             i.data['username'] = usn.social_network_username
+            i.data['social_network'] = i.data['name']
+            i.data.pop('name')
             i.data.pop('id')
         return bundle.data['social_networks']
 
     def dehydrate_instant_messages(self, bundle):
         for i in bundle.data['instant_messages']: 
             # i = {id: id_instant_message, name:'Whatsapp'}
+            pprint(i)
             im = i.obj
             uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
             i.data['username'] = uim.instant_message_username
+            i.data['instant_message'] = i.data['name']
+            i.data.pop('name')
             i.data.pop('id')
         return bundle.data['instant_messages']
 
@@ -423,23 +433,26 @@ class UserProfileResource(ModelResource):
         if 'education' in bundle.data:
             UserProfileStudiedUniversity.objects.filter(user_profile_id=up.id).delete()
             for e in bundle.data['education']:
-                uni, b = University.objects.get_or_create(name=e['name'])
+                uni, b = University.objects.get_or_create(name=e['institution'])
                 UserProfileStudiedUniversity.objects.create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
             bundle.data.pop('education')
 
         if 'instant_messages' in bundle.data:
             UserInstantMessage.objects.filter(user_profile_id=up.id).delete()
             for im in bundle.data['instant_messages']:
-                UserInstantMessage.objects.create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['name']).id, instant_message_username=im['username'])
+                UserInstantMessage.objects.create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['instant_message']).id, instant_message_username=im['im_username'])
             bundle.data.pop('instant_messages')
 
         if 'social_networks' in bundle.data:
             UserSocialNetwork.objects.filter(user_profile_id=up.id).delete()
             for sn in bundle.data['social_networks']:
-                UserSocialNetwork.objects.create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['name']).id, social_network_username=sn['username'])
+                UserSocialNetwork.objects.create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['social_network']).id, social_network_username=sn['sn_username'])
             bundle.data.pop('social_networks')
 
         if 'current' in bundle.data:
+            city = City.objects.saveLocation(**bundle.data['current'])
+            up.current_city = city
+            """
             if 'city' in bundle.data['current'] and 'region' in bundle.data['current'] and 'country' in bundle.data['current']:
                 country, b = Country.objects.get_or_create(name=bundle.data['current']['country'])
                 region, b = Region.objects.get_or_create(name=bundle.data['current']['region'], country=country)
@@ -447,9 +460,13 @@ class UserProfileResource(ModelResource):
                 up.current_city = city
             else:
                 up.current_city = None
+            """
             bundle.data.pop('current')
 
         if 'hometown' in bundle.data:
+            city = City.objects.saveLocation(**bundle.data['hometown'])
+            up.hometown = city
+            """
             if 'city' in bundle.data['hometown'] and 'region' in bundle.data['hometown'] and 'country' in bundle.data['hometown']:
                 country, b = Country.objects.get_or_create(name=bundle.data['hometown']['country'])
                 region, b = Region.objects.get_or_create(name=bundle.data['hometown']['region'], country=country)
@@ -457,14 +474,18 @@ class UserProfileResource(ModelResource):
                 up.hometown = city
             else:
                 up.hometown = None
+            """
             bundle.data.pop('hometown')
 
         if 'other_locations' in bundle.data:
             up.other_locations = []
             for ol in bundle.data['other_locations']:
+                city = City.objects.saveLocation(**ol)
+                """
                 country, b = Country.objects.get_or_create(name=ol['country'])
                 region, b = Region.objects.get_or_create(name=ol['region'], country=country)
                 city, b = City.objects.get_or_create(name=ol['city'], region=region)
+                """
                 up.other_locations.add(city)
             bundle.data.pop('other_locations')
 

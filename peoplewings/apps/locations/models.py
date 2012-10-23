@@ -72,10 +72,8 @@ class CityManager(models.Manager):
         #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
         #Save the country  
         country, b = Country.objects.get_or_create(name=countryN, short_name=countrySN)
-        countryId = country.pk
         #Save the region, if any. Else save it like "no region"
         region, b = Region.objects.get_or_create(name=regionN, short_name=regionSN, country = country)
-        regionId = region.pk
         #Save the city
         city, b = City.objects.get_or_create(name=cityN, short_name=citySN, lat=cityLat, lon=cityLon, region=region)
         return city
