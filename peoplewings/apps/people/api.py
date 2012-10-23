@@ -307,7 +307,6 @@ class UserProfileResource(ModelResource):
     def dehydrate_education(self, bundle):
         for i in bundle.data['education']: 
             # i = {id: id_university, name:'University of Reading'}
-            pprint(i)
             uni = i.obj
             upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=bundle.obj)
             i.data['degree'] = upu.degree
@@ -319,7 +318,6 @@ class UserProfileResource(ModelResource):
     def dehydrate_social_networks(self, bundle):
         for i in bundle.data['social_networks']: 
             # i = {id: id_social_networks, name:'Facebook'}
-            pprint(i)
             sn = i.obj
             usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
             i.data['username'] = usn.social_network_username
@@ -331,7 +329,6 @@ class UserProfileResource(ModelResource):
     def dehydrate_instant_messages(self, bundle):
         for i in bundle.data['instant_messages']: 
             # i = {id: id_instant_message, name:'Whatsapp'}
-            pprint(i)
             im = i.obj
             uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
             i.data['username'] = uim.instant_message_username
