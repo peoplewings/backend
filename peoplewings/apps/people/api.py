@@ -496,11 +496,11 @@ class UserProfileResource(ModelResource):
                 region, b = Region.objects.get_or_create(name=ol['region'], country=country)
                 city, b = City.objects.get_or_create(name=ol['city'], region=region)
                 """
-                up.other_locations.add(city)
+                if city is not None: up.other_locations.add(city)
             bundle.data.pop('other_locations')
 
         forbidden_fields_update = ['avatar', 'id', 'user']
-        not_empty_fields = ['pw_state', "name_to_show", "gender"]
+        #not_empty_fields = ['pw_state', "name_to_show", "gender"]
 
         for i in bundle.data:
             if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
