@@ -346,43 +346,35 @@ class UserProfileResource(ModelResource):
             i.data.pop('name')
             i.data.pop('id')
         return bundle.data['instant_messages']
-    """
+    
     def dehydrate_current(self, bundle):
         if bundle.data['current'] is None: return {} 
         city = bundle.data['current'].obj
         region = city.region
         country = region.country
-        bundle.data['current'] = {}
-        bundle.data['current']['city'] = city.name
-        bundle.data['current']['region'] = region.name
-        bundle.data['current']['country'] = country.name
-        return bundle.data['current']
-
+        bundle.data['current'].data['region'] = region.name
+        bundle.data['current'].data['country'] = country.name
+        return bundle.data['current'].data
 
     def dehydrate_hometown(self, bundle):
         if bundle.data['hometown'] is None: return {} 
         city = bundle.data['hometown'].obj
         region = city.region
         country = region.country
-        bundle.data['hometown'] = {}
-        bundle.data['hometown']['city'] = city.name
-        bundle.data['hometown']['region'] = region.name
-        bundle.data['hometown']['country'] = country.name
-        return bundle.data['hometown']
+        bundle.data['hometown'].data['region'] = region.name
+        bundle.data['hometown'].data['country'] = country.name
+        return bundle.data['hometown'].data
 
     def dehydrate_other_locations(self, bundle):
         for i in bundle.data['other_locations']: 
-            # tenemos: i.data = {id: id_city, lat, lon, name, resource_uri, short_name}
-            # queremos: i.data = {city: nombre_city, region: nombre_region, country: nombre_country}
-            city = i.obj
-            i.data = {}
+            # tenemos: i.data = {id: lat, lon, name}
+            # queremos: i.data = {name, lat, lon, country, region}
+            city = i.obj            
             region = city.region
             country = region.country
-            i.data['city'] = city.name
             i.data['region'] = region.name
             i.data['country'] = country.name
         return bundle.data['other_locations']
-    """
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):

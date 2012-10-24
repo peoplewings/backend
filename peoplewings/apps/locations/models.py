@@ -14,13 +14,10 @@ class CountryManager(models.Manager):
         return country
 
 class Country(models.Model):
-    short_name = models.CharField(max_length=max_short_len, unique=True)  
     name = models.CharField(max_length=max_short_len, unique=True)
-    lat = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
-    lon = models.DecimalField(max_digits=12, decimal_places=9, default=0.0)
     objects = CountryManager()
 
-# REGION +`MANAGER
+# REGION + MANAGER
 class RegionManager(models.Manager):
     def create(self, **kwargs):
         try:
@@ -32,9 +29,6 @@ class RegionManager(models.Manager):
 
 class Region(models.Model):
     name = models.CharField(max_length=max_short_len, unique=False, default='NoName')
-    short_name = models.CharField(max_length=max_short_len, unique=False, default='NoName')  
-    lat = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
-    lon = models.DecimalField(max_digits=12, decimal_places=9, default=0.0)
     country = models.ForeignKey('Country')
     objects = RegionManager()
 
@@ -55,32 +49,25 @@ class CityManager(models.Manager):
     def saveLocation(self, **kwargs):
     # countryN, countrySN, regionN='No region', regionSN='No region', cityN, citySN, cityLat, cityLon, locationType
         # define args
-        countryN = kwargs.get('country_n', None)
-        countrySN = kwargs.get('country_sN', None)
-        regionN = kwargs.get('region_n', None)
-        regionSN = kwargs.get('region_sN', None)
-        cityN = kwargs.get('city_n', None)
-        citySN = kwargs.get('city_sN', None)
-        cityLat = kwargs.get('city_lat', None)
-        cityLon = kwargs.get('city_lon', None)
-        locationType = kwargs.get('location_type', None)
+        countryN = kwargs.get('country', None)
+        regionN = kwargs.get('region', None)
+        cityN = kwargs.get('name', None)
+        cityLat = kwargs.get('lat', None)
+        cityLon = kwargs.get('lon', None)
+        #locationType = kwargs.get('location_type', None)
         # put nulls in the args
-        if regionN is None: regionN = 'No region'
-        if regionSN is None: regionSN = 'No region'
-
         # control over the params
         #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
         #Save the country  
-        country, b = Country.objects.get_or_create(name=countryN, short_name=countrySN)
+        country, b = Country.objects.get_or_create(name=countryN)
         #Save the region, if any. Else save it like "no region"
-        region, b = Region.objects.get_or_create(name=regionN, short_name=regionSN, country = country)
+        region, b = Region.objects.get_or_create(name=regionN, country = country)
         #Save the city
-        city, b = City.objects.get_or_create(name=cityN, short_name=citySN, lat=cityLat, lon=cityLon, region=region)
+        city, b = City.objects.get_or_create(name=cityN, lat=cityLat, lon=cityLon, region=region)
         return city
 
 class City(models.Model):
     name = models.CharField(max_length=max_short_len, unique=False)
-    short_name = models.CharField(max_length=max_short_len, unique=False, default='NoName')
     lat = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
     lon = models.DecimalField(max_digits=12, decimal_places=9, default=0.0)
     region = models.ForeignKey('Region')
