@@ -110,5 +110,19 @@
     "fields": {
       "name": "french"
     }
+  },
+  {
+    "pk": 1, 
+    "model": "people.interests", 
+    "fields": {
+      "gender": "Male"
+    }
+  },
+  {
+    "pk": 2, 
+    "model": "people.interests", 
+    "fields": {
+      "gender": "Female"
+    }
   }
 ]
