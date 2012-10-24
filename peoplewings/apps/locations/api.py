@@ -32,11 +32,12 @@ class CityResource(ModelResource):
         object_class = City
         queryset = City.objects.all()
         allowed_methods = []
-        #include_resource_uri = False
+        include_resource_uri = False
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         #authorization = Authorization()
         #always_return_data = True
+        excludes = ['id']
         filtering = {
             "name": ['exact'],
         }

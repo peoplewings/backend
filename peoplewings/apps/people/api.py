@@ -159,6 +159,7 @@ class InterestsResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
+        fields = ['gender']
 
 class UserProfileResource(ModelResource):    
     user = fields.ToOneField(AccountResource, 'user')
@@ -345,7 +346,7 @@ class UserProfileResource(ModelResource):
             i.data.pop('name')
             i.data.pop('id')
         return bundle.data['instant_messages']
-
+    """
     def dehydrate_current(self, bundle):
         if bundle.data['current'] is None: return {} 
         city = bundle.data['current'].obj
@@ -356,6 +357,7 @@ class UserProfileResource(ModelResource):
         bundle.data['current']['region'] = region.name
         bundle.data['current']['country'] = country.name
         return bundle.data['current']
+
 
     def dehydrate_hometown(self, bundle):
         if bundle.data['hometown'] is None: return {} 
@@ -380,6 +382,7 @@ class UserProfileResource(ModelResource):
             i.data['region'] = region.name
             i.data['country'] = country.name
         return bundle.data['other_locations']
+    """
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):
@@ -397,11 +400,13 @@ class UserProfileResource(ModelResource):
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
         self.mostrar_para_update = kwargs['pk'] == 'me'
+        b = self.mostrar_para_update
         if self.mostrar_para_update: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         #if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        up = UserProfile.objects.get(pk=kwargs['pk'])
+        if b: data['id'] = 'me'
+        #up = UserProfile.objects.get(pk=kwargs['pk'])
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -418,6 +423,7 @@ class UserProfileResource(ModelResource):
 
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
+        print "----- in put detail -----"
         if request.user.is_anonymous(): 
             return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":413}, response_class=HttpForbidden)
 
@@ -429,6 +435,13 @@ class UserProfileResource(ModelResource):
         self.is_valid(bundle, request)
         if bundle.errors:
             self.error_response(bundle.errors, request)
+
+        if 'interested_in' in bundle.data:
+            up.interested_in = []
+            for i in bundle.data['interested_in']:
+                interest = Interests.objects.get(gender=i['gender'])
+                up.interested_in.add(interest)
+            bundle.data.pop('interested_in')
 
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
