@@ -38,12 +38,13 @@ class AccomodationsResource(ModelResource):
         object_class = Accomodation
         queryset = Accomodation.objects.all()
         allowed_methods = ['get', 'post', 'delete', 'put']
-        include_resource_uri = False
+        #include_resource_uri = False
         resource_name = 'accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
+        include_resource_uri = True
         validation = FormValidation(form_class=AccomodationForm)
         filtering = {
             "city": ALL_WITH_RELATIONS,
@@ -159,6 +160,10 @@ class AccomodationsResource(ModelResource):
         for i in accomodations:
             bundle = self.build_bundle(obj=i, request=request)
             bundle = self.full_dehydrate(bundle)
+            dic = {}
+            dic['name'] = bundle.data['name']
+            dic['uri'] = bundle.data['resource_uri']
+            bundle.data = dic
             objects.append(bundle)
 
         return self.create_response(request, {"msg":"Accommodations retrieved successfully.", "code":200, "status":True, "data":objects})
