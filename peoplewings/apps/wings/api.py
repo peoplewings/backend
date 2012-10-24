@@ -73,7 +73,6 @@ class AccomodationsResource(ModelResource):
         raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
 
     def apply_authorization_limits(self, request, object_list=None):
-        pprint(request)
         if request.method not in ('GET'):
             up = UserProfile.objects.get(user=request.user)
             return object_list.filter(author=up)

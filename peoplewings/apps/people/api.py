@@ -423,7 +423,6 @@ class UserProfileResource(ModelResource):
 
     @transaction.commit_on_success
     def put_detail(self, request, **kwargs):
-        print "----- in put detail -----"
         if request.user.is_anonymous(): 
             return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":413}, response_class=HttpForbidden)
 
