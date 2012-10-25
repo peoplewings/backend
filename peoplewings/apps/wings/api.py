@@ -30,6 +30,8 @@ from peoplewings.apps.locations.api import CityResource
 
 from pprint import pprint
 
+import json
+
 class AccomodationsResource(ModelResource):
     is_anonymous = False
     city = fields.ToOneField(CityResource, 'city', full=True, null=True)
@@ -44,7 +46,7 @@ class AccomodationsResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        include_resource_uri = True
+        #include_resource_uri = True
         validation = FormValidation(form_class=AccomodationForm)
         filtering = {
             "city": ALL_WITH_RELATIONS,
@@ -104,11 +106,12 @@ class AccomodationsResource(ModelResource):
         del bundle.data['city']
         for key, value in bundle.data.items():
             if hasattr(a, key): setattr(a, key, value)
+
+        if 'name' not in bundle.data:
+            a.name = "Accommodation in " + a.city.name
         a.save()
 
-
-        dic = {"msg":u"Accommodation created successfully.", "status":True, "code":200}
-        bundle = self.build_bundle(obj=a, data=dic, request=request)
+        bundle = self.build_bundle(obj=a, request=request)
         return bundle
 
         """
@@ -190,6 +193,8 @@ class AccomodationsResource(ModelResource):
         if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
             return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
         a = super(AccomodationsResource, self).post_list(request, **kwargs)
+
+        #result = json.loads(a.content)['id']
         dic = {"msg":"Accommodation created successfully.", "status":True, "code":200}
         return self.create_response(request, dic)
 
