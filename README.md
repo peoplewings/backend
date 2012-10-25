@@ -282,7 +282,7 @@ There are some standard error messages:
 
 ### Crop image (Joan) (W8 Sergi):
 
-### View my accomodations (Joan):
+### View my accomodations (Eze):
  * Request:
     GET /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
@@ -291,22 +291,46 @@ There are some standard error messages:
      * 200 OK
         [
           {
-            "about": "",
-            "additionalInformation": "",
-            "address": "",
-            ...
-          },
+            "code": 200,
+            "data": [
+              {
+                "name": "my accomodation in Buenos Aires",
+                "uri": "/api/v1/accomodations/97"
+              },
+              {
+                "name": "my accomodation in Madrid",
+                "uri": "/api/v1/accomodations/96"
+              }
+            ],
+            "msg": "Accommodations retrieved successfully.",
+            "status": true
+          }
+        ]
+   * NO 
+     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+
+### View another user's accomodations (Eze):
+ * Request:
+    GET /profiles/2/accomodations/
+    {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
+ * Response:
+   * OK
+     * 200 OK
+        [
           {
-            "about": "",
-            "additionalInformation": "",
-            "address": "",
-            ....
-          },
-          {
-            "about": "",
-            "additionalInformation": "",
-            "address": "",
-            ...
+            "code": 200,
+            "data": [
+              {
+                "name": "my accomodation in Buenos Aires",
+                "uri": "/api/v1/accomodations/97"
+              },
+              {
+                "name": "my accomodation in Madrid",
+                "uri": "/api/v1/accomodations/96"
+              }
+            ],
+            "msg": "Accommodations retrieved successfully.",
+            "status": true
           }
         ]
    * NO 
@@ -314,30 +338,58 @@ There are some standard error messages:
 
 ### View one of my accomodations (Eze):
  * Request:
-    GET /profiles/me/accomodations/20/
+    GET /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
       {
-        "about": "",
-        "additionalInformation": "",
-        "address": "",
-        ...
+        "code": 200,
+        "data": {
+          "about": "",
+          "additionalInformation": "",
+          "address": "",
+          "bestDays": "A",
+          "blankets": false,
+          "bus": false,
+          "capacity": "2",
+          "city": {
+            "city": "Buenos Aires",
+            "country": "Argentina",
+            "region": "Bs As"
+          },
+          ...
+        },
+        "msg": "Accommodation retrieved successfully.",
+        "status": true
       }
    * NO 
      * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
 
 ### View an accomodation of another user (Eze):
  * Request:
-    GET /profiles/17/accomodations/20/
+    GET /profiles/17/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
       {
-        "about": "",
-        "additionalInformation": "",
-        "address": "",
-        ...
+        "code": 200,
+        "data": {
+          "about": "",
+          "additionalInformation": "",
+          "address": "",
+          "bestDays": "A",
+          "blankets": false,
+          "bus": false,
+          "capacity": "2",
+          "city": {
+            "city": "Madrid",
+            "country": "Spain",
+            "region": "Madrid"
+          },
+          ...
+        },
+        "msg": "Accommodation retrieved successfully.",
+        "status": true
       }
    * NO 
      * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
@@ -362,7 +414,7 @@ There are some standard error messages:
 
 ### Update accomodation (Eze):
  * Request:
-    PUT /profiles/me/accomodations/20/
+    PUT /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "about": "",
@@ -381,7 +433,7 @@ There are some standard error messages:
 
 ### Delete accomodation (Eze):
  * Request:
-    DELETE /profiles/me/accomodations/20/
+    DELETE /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK 
@@ -392,7 +444,7 @@ There are some standard error messages:
 
 ### Search wings (Ezequiel):
   * Request:
-    GET /profiles/?capacity=4
+    GET /profiles/?capacity=4&date_start__gte=2012-12-12&date_end__lte=2012-12-15
     {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
 
   *Response:
@@ -408,12 +460,28 @@ There are some standard error messages:
             "civilState": "",
             "company": "",
             "current": {
-              "city": "Barcelona",
-              "country": "Spain",
-              "region": "Catalonia"
+              "country": "Argentina",
+              "lat": "0E-9",
+              "lon": "0E-9",
+              "name": "Buenos Aires",
+              "region": "Bs As"
             },
             ....
-          }
+          },
+          {
+            "age": 13,
+            "allAboutYou": "",
+            "avatar": "/static/img/blank_avatar.jpg",
+            "birthday": "03-05",
+            "civilState": "",
+            "company": "",
+            "current": {},
+            "education": [],
+            "emails": "asdf",
+            "enjoyPeople": "",
+            "gender": "Male",
+          },
+          ....
         ],
         "msg": "Profiles retrieved successfully.",
         "status": true
