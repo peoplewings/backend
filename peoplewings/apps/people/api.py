@@ -175,7 +175,6 @@ class UserProfileResource(ModelResource):
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
     interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
-    mostrar_para_update = False
 
     class Meta:
         object_class = UserProfile
@@ -391,14 +390,12 @@ class UserProfileResource(ModelResource):
 
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        self.mostrar_para_update = kwargs['pk'] == 'me'
-        b = self.mostrar_para_update
-        if self.mostrar_para_update: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        b = kwargs['pk'] == 'me'
+        if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         #if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        if b: data['id'] = 'me'
-        #up = UserProfile.objects.get(pk=kwargs['pk'])
+        #if b: data['id'] = kwargs['pk']
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -526,7 +523,8 @@ class UserProfileResource(ModelResource):
         - del modelo User: first_name, last_name, last_login
         - de UserProfile: avatar, age, languages + levels, occupation, all_about_you, uri, current_city
 
-        + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas
+        + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
+        + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
@@ -537,44 +535,54 @@ class UserProfileResource(ModelResource):
 
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-        if not self.mostrar_para_update:
-            if bundle.data['show_birthday'] == 'N':
-                bundle.data['birthday'] = ""
-            elif bundle.data['show_birthday'] == 'P':
-                bday = str.split(str(bundle.data['birthday']),'-')
-                bundle.data['birthday'] = bday[1] + "-" + bday[2]
-            del bundle.data['show_birthday']
-        else:
-            bundle.data['birth_day'] = bundle.obj.birthday.day
-            bundle.data['birth_month'] = bundle.obj.birthday.month
-            bundle.data['birth_year'] = bundle.obj.birthday.year
-            del bundle.data['birthday']
-            self.mostrar_para_update = False
-        if bundle.request.user.is_anonymous():
-            bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-            bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+
+        if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
+            # venimos de get_list => solamente devolver los campos requeridos
+            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user']
+            '''
+            De user:
+            bundle.data['first_name'] = bundle.obj.user.first_name
+            bundle.data['last_name'] = bundle.obj.user.last_name
+            bundle.data['last_login'] = bundle.obj.user.last_login
+            De user profile:
+            bundle.data['avatar'] = bundle.obj.avatar
+            bundle.data['age'] = bundle.obj.age
+            bundle.data['languages'] = bundle.obj.languages
+            bundle.data['languages'] = self.dehydrate_languages(bundle)
+            bundle.data['occupation'] = bundle.obj.occupation
+            bundle.data['all_about_you'] = bundle.obj.all_about_you
+            bundle.data['current_city'] = bundle.obj.current_city
+            #bundle.data['user'] = bundle.obj.current_city
+            '''
+            for key, value in bundle.data.items():
+                if key not in permitted_fields: del bundle.data[key]
+            bundle.data['first_name'] = bundle.obj.user.first_name
+            bundle.data['last_name'] = bundle.obj.user.last_name
+            bundle.data['last_login'] = bundle.obj.user.last_login
+            if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
+            if 'lon' in bundle.data['current']: del bundle.data['current']['lon']
+
+            if bundle.request.user.is_anonymous():
+                bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
+                #bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+        else:  
+            # venimos de get_detail y ademas el usuario esta logueado
+            bundle = super(UserProfileResource, self).full_dehydrate(bundle)
+
+            if bundle.request.path != u'/api/v1/profiles/me':
+                if bundle.data['show_birthday'] == 'N':
+                    bundle.data['birthday'] = ""
+                elif bundle.data['show_birthday'] == 'P':
+                    bday = str.split(str(bundle.data['birthday']),'-')
+                    bundle.data['birthday'] = bday[1] + "-" + bday[2]
+                del bundle.data['show_birthday']
+            else:
+                bundle.data['birth_day'] = bundle.obj.birthday.day
+                bundle.data['birth_month'] = bundle.obj.birthday.month
+                bundle.data['birth_year'] = bundle.obj.birthday.year
+                del bundle.data['birthday']
+
         return bundle.data
-    
-    """
-    def dehydrate(self, bundle):
-        
-        if bundle.request.method == 'PUT':
-            bundle.data = {}
-            bundle.data['status'] = True
-            bundle.data['code'] = 204
-            bundle.data['msg'] = 'Update OK'
-            self.method = None
-            return bundle   
-        elif bundle.request.method == 'GET':
-            b = bundle.data
-            bundle.data = {}
-            bundle.data['status'] = True
-            bundle.data['code'] = 204
-            bundle.data['msg'] = 'Update OK'
-            bundle.data['data'] = b
-            return bundle
-        return super(UserProfileResource, self).dehydrate(bundle)
-    """
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
