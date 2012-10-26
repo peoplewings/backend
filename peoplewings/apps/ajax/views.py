@@ -8,7 +8,7 @@ from datetime import datetime
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from cropper.models import Original
+#from cropper.models import Original
 import os
 
 def search_university(request):
@@ -35,7 +35,7 @@ def search_university(request):
     response_data['code'] = HttpResponse.status_code
 
     return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
-
+"""
 @csrf_protect
 def delete_image(request, original_id):
     response = {'success':False}
@@ -47,7 +47,7 @@ def delete_image(request, original_id):
     #response = {'success': True, 'filename': request.FILES['processed_image']._name, 'fid': photo.pk}
     js = simplejson.dumps(response)
     return HttpResponse(js, mimetype='application/json')
-
+"""
 
 """
 @csrf_protect
