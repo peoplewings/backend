@@ -521,6 +521,13 @@ class UserProfileResource(ModelResource):
     def get_list(self, request, **kwargs):
         response = super(UserProfileResource, self).get_list(request, **kwargs)
         data = json.loads(response.content)
+        '''
+        El get_list deberia devolver:
+        - del modelo User: first_name, last_name, last_login
+        - de UserProfile: avatar, age, languages + levels, occupation, all_about_you, uri, current_city
+
+        + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas
+        '''
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
