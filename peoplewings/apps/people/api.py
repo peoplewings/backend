@@ -31,6 +31,7 @@ from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
+from peoplewings.libs.customauth.models import ApiToken
 from datetime import date
 
 from pprint import pprint
@@ -374,6 +375,14 @@ class UserProfileResource(ModelResource):
             i.data['region'] = region.name
             i.data['country'] = country.name
         return bundle.data['other_locations']
+
+    """
+    def dehydrate_birthday(self, bundle):
+        bundle.data['birth_day'] = bundle.obj.birthday.day
+        bundle.data['birth_month'] = bundle.obj.birthday.month
+        bundle.data['birth_year'] = bundle.obj.birthday.year
+        return bundle.data['birthday']
+    """
     
     def apply_authorization_limits(self, request, object_list=None):
         if request.user.is_anonymous() and request.method not in ('GET'):
@@ -498,6 +507,10 @@ class UserProfileResource(ModelResource):
 
         forbidden_fields_update = ['avatar', 'id', 'user']
         #not_empty_fields = ['pw_state', "name_to_show", "gender"]
+        if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
+        if 'birth_month' in bundle.data: up.birthday = up.birthday.replace(month=int(bundle.data['birth_month']))
+        if 'birth_year' in bundle.data: up.birthday = up.birthday.replace(year=int(bundle.data['birth_year']))
+        if 'birthday' in bundle.data: del bundle.data['birthday']
 
         for i in bundle.data:
             if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
@@ -558,9 +571,17 @@ class UserProfileResource(ModelResource):
                 if key not in permitted_fields: del bundle.data[key]
             bundle.data['first_name'] = bundle.obj.user.first_name
             bundle.data['last_name'] = bundle.obj.user.last_name
-            bundle.data['last_login'] = bundle.obj.user.last_login
+
+            from datetime import timedelta, datetime
+            d = timedelta(hours=1)
+            online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
+            if online: bundle.data['last_login'] = "Online"
+            else: bundle.data['last_login'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
+            #print bundle.obj.user.last_login
+            #print datetime.now().timetz()
+
             if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
-            if 'lon' in bundle.data['current']: del bundle.data['current']['lon']
+            if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
                 bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
@@ -577,9 +598,9 @@ class UserProfileResource(ModelResource):
                     bundle.data['birthday'] = bday[1] + "-" + bday[2]
                 del bundle.data['show_birthday']
             else:
-                bundle.data['birth_day'] = bundle.obj.birthday.day
-                bundle.data['birth_month'] = bundle.obj.birthday.month
-                bundle.data['birth_year'] = bundle.obj.birthday.year
+                bundle.data['birth_day'] = str(bundle.obj.birthday.day)
+                bundle.data['birth_month'] = str(bundle.obj.birthday.month)
+                bundle.data['birth_year'] = str(bundle.obj.birthday.year)
                 del bundle.data['birthday']
 
         return bundle.data
