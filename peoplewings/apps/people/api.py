@@ -169,7 +169,7 @@ class UserProfileResource(ModelResource):
     #through_query = lambda bundle: UserLanguage.objects.filter(user_profile=bundle.obj)
     #userlanguages = fields.ToManyField(UserLanguageResource, attribute=through_query, full=True)
 
-    education = fields.ToManyField(UniversityResource, 'universities', full=True)
+    education = fields.ToManyField(UniversityResource, 'universities' , full=True)
     social_networks = fields.ToManyField(SocialNetworkResource, 'social_networks', full=True)
     instant_messages = fields.ToManyField(InstantMessageResource, 'instant_messages', full=True)
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
@@ -306,7 +306,7 @@ class UserProfileResource(ModelResource):
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
         for i in bundle.data['languages']: 
-            # i = {id: id_language, name:'Spanish'}
+            # i.data = {id: id_language, name:'Spanish'}
             lang = i.obj
             ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
             i.data['level'] = str(ul.level).lower()
@@ -315,8 +315,17 @@ class UserProfileResource(ModelResource):
         return bundle.data['languages']
 
     def dehydrate_education(self, bundle):
+        upu = UserProfileStudiedUniversity.objects.filter(user_profile=bundle.obj)
+        res = []
+        for u in upu:
+            d = {}
+            d['institution'] = u.university.name
+            d['degree'] = u.degree
+            res.append(d)
+        return res
+        """
         for i in bundle.data['education']: 
-            # i = {id: id_university, name:'University of Reading'}
+            # i.data = {id: id_university, name:'University of Reading'}
             uni = i.obj
             upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=bundle.obj)
             i.data['degree'] = upu.degree
@@ -324,10 +333,20 @@ class UserProfileResource(ModelResource):
             i.data.pop('id')
             i.data.pop('name')
         return bundle.data['education']
+        """
 
     def dehydrate_social_networks(self, bundle):
+        usn = UserSocialNetwork.objects.filter(user_profile=bundle.obj)
+        res = []
+        for u in usn:
+            d = {}
+            d['social_network'] = u.social_network.name
+            d['sn_username'] = u.social_network_username
+            res.append(d)
+        return res
+        """
         for i in bundle.data['social_networks']: 
-            # i = {id: id_social_networks, name:'Facebook'}
+            # i.data = {id: id_social_networks, name:'Facebook'}
             sn = i.obj
             usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
             i.data['sn_username'] = usn.social_network_username
@@ -335,10 +354,20 @@ class UserProfileResource(ModelResource):
             i.data.pop('name')
             i.data.pop('id')
         return bundle.data['social_networks']
+        """
 
     def dehydrate_instant_messages(self, bundle):
+        uim = UserInstantMessage.objects.filter(user_profile=bundle.obj)
+        res = []
+        for u in uim:
+            d = {}
+            d['instant_message'] = u.instant_message.name
+            d['im_username'] = u.instant_message_username
+            res.append(d)
+        return res
+        """
         for i in bundle.data['instant_messages']: 
-            # i = {id: id_instant_message, name:'Whatsapp'}
+            # i.data = {id: id_instant_message, name:'Whatsapp'}
             im = i.obj
             uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
             i.data['im_username'] = uim.instant_message_username
@@ -346,6 +375,7 @@ class UserProfileResource(ModelResource):
             i.data.pop('name')
             i.data.pop('id')
         return bundle.data['instant_messages']
+        """
     
     def dehydrate_current(self, bundle):
         if bundle.data['current'] is None: return {} 
@@ -367,7 +397,7 @@ class UserProfileResource(ModelResource):
 
     def dehydrate_other_locations(self, bundle):
         for i in bundle.data['other_locations']: 
-            # tenemos: i.data = {id: lat, lon, name}
+            # tenemos: i.data = {id, lat, lon, name}
             # queremos: i.data = {name, lat, lon, country, region}
             city = i.obj            
             region = city.region
@@ -401,10 +431,9 @@ class UserProfileResource(ModelResource):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
         b = kwargs['pk'] == 'me'
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
-        #if kwargs['pk'] == 'me': kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        #if b: data['id'] = kwargs['pk']
+        if b: data['id'] = 'me'
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -588,7 +617,7 @@ class UserProfileResource(ModelResource):
                 #bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
-            bundle = super(UserProfileResource, self).full_dehydrate(bundle)
+            #bundle = super(UserProfileResource, self).full_dehydrate(bundle)
 
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
