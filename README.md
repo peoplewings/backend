@@ -182,26 +182,67 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-          "age": 22, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1990-02-01", "civilState": "",
-          "company": "", 
-          "current": 
-            {
-              "city": "Barcelona",
-              "country": "Spain",
-              "region": "Catalonia"
+          "code":200,
+          "data": {
+            "age":13,
+            "allAboutYou": "say whaaaaat!!",
+            "avatar": "/static/img/blank_avatar.jpg",
+            ...
+            "current": {
+                  "country": "Argentina",
+                  "lat": "0E-9",
+                  "lon": "0E-9",
+                  "name": "Buenos Aires",
+                  "region": "Bs As"
             },
-          "education": 
-            [
-              {
-                "degree": "Computer Science",
-                "name": "University of Reading"
-              },
-              {
-                "degree": "Artificial Intelligence",
-                "name": "University of London"
-              }
+            "education": [
+                {
+                  "degree": "Master of Lords",
+                  "institution": "University of Reading"
+                },
+                {
+                  "degree": "Master in Chemistry",
+                  "institution": "University of Waterloo"
+                }
             ],
-          ....
+            ...
+            "instantMessages": [
+                {
+                  "imUsername": "zek.skype",
+                  "instantMessage": "Skype"
+                }
+              ],
+              "interestedIn": [
+                {
+                  "gender": "Female"
+                }
+            ],
+            "languages": [
+                {
+                  "level": "intermediate",
+                  "name": "english"
+                },
+                {
+                  "level": "expert",
+                  "name": "spanish"
+                },
+                {
+                  "level": "beginner",
+                  "name": "german"
+                }
+            ],
+            ...
+            "socialNetworks": [
+                {
+                  "snUsername": "lola.facebook",
+                  "socialNetwork": "Facebook"
+                }
+            ],
+            "sports": "swimming",
+            "user": "/api/v1/accounts/2"
+          },
+          "msg":"Profile retrieved successfully.",
+          "status":true
       }
    * NO
      * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
@@ -211,35 +252,8 @@ There are some standard error messages:
     /PUT profiles/me/
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
-      "allAboutYou": "All about me", 
-      "current": {"city": "Barcelona", "country": "Spain", "region": "Catalonia"}, 
-      "education": 
-        [
-          {"degree": "Computer Science", "name": "University of Reading"}, 
-          {"degree": "Artificial Intelligence", "name": "University of London"}
-        ], 
-      "hometown": {"city": "Bilbao",  "country": "Spain", "region": "Pais Vasco"},
-      "instantMessages": 
-        [
-          {"name": "Skype", "username": "My IM Username"}, 
-          {"name": "Whatsapp", "username": "My IM Username 2"}
-        ], 
-      "languages": 
-        [
-          {"level": "Expert", "name": "English"}, 
-          {"level": "Beginner", "name": "Spanish"}
-        ],
-      "otherLocations": 
-      [
-        {"city": "Barcelona", "country": "Spain", "region": "Catalunya"}, 
-        {"city": "Madrid", "country": "Spain", "region": "Madrid"}, 
-        {"city": "Alava", "country": "Spain", "region": "Pais Vasco"}
-      ], 
-      "socialNetworks": 
-      [
-        {"name": "Facebook", "username": "Facebook Username"}, 
-        {"name": "Twitter", "username": "Twitter Username"}
-      ]
+      "age": 23,
+      ...
     }
 
  * Response:
@@ -247,6 +261,7 @@ There are some standard error messages:
      * 202 Accepted {"code": 200, "msg": "Your profile has been successfully updated.", "status": true}
    * NO
      * 403 FORBIDDEN {"code": 413, "msg": "Error: anonymous users have no profile.", "status": false}
+     * 200 OK {"code": 400, "errors": {"emails": ["Enter a valid e-mail address."]}, "msg": "Error in some fields.", "status": false}
 
 ### View another profile (Eze):
  * Request:
@@ -256,87 +271,76 @@ There are some standard error messages:
    * OK
      * 200 OK 
       {
-        "age": 24, "allAboutYou": "ASDF", "avatar": "ASDF", "birthday": "1988-02-01", "civilState": "",
-        "company": "", 
-        "current": 
-          {
-            "city": "Barcelona",
-            "country": "Spain",
-            "region": "Catalonia"
+          "code":200,
+          "data": {
+            "age":13,
+            "allAboutYou": "say whaaaaat!!",
+            ...
+            "user": "/api/v1/accounts/2"
           },
-        "education": 
-          [
-            {
-              "degree": "Philosophy",
-              "name": "Universidad de Madrid"
-            }
-          ],
-        ....
+          "msg":"Profile retrieved successfully.",
+          "status":true
       }
           
    * NO
-     * 401 UNAUTHORIZED {"status":False, "code":"401", "error": "Unauthorized"}
+     * 403 FORBIDDEN {"code": 413, "msg": "Error: operation not allowed", "status": false}
 
 
 ### Upload image (Joan) (W8 Sergi):
 
 ### Crop image (Joan) (W8 Sergi):
 
-### View my accomodations (Eze):
+### View my accommodations (Eze):
  * Request:
     GET /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
      * 200 OK
-        [
-          {
-            "code": 200,
-            "data": [
-              {
-                "name": "my accomodation in Buenos Aires",
-                "uri": "/api/v1/accomodations/97"
-              },
-              {
-                "name": "my accomodation in Madrid",
-                "uri": "/api/v1/accomodations/96"
-              }
-            ],
-            "msg": "Accommodations retrieved successfully.",
-            "status": true
-          }
-        ]
+        {
+          "code": 200,
+          "data": [
+            {
+              "name": "my accomodation in Buenos Aires",
+              "uri": "/api/v1/accomodations/97"
+            },
+            {
+              "name": "my accomodation in Madrid",
+              "uri": "/api/v1/accomodations/96"
+            }
+          ],
+          "msg": "Accommodations retrieved successfully.",
+          "status": true
+        }
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 413, "msg": "Unauthorized", "status": false}
 
-### View another user's accomodations (Eze):
+### View another user's accommodations (Eze):
  * Request:
     GET /profiles/2/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
      * 200 OK
-        [
-          {
-            "code": 200,
-            "data": [
-              {
-                "name": "my accomodation in Buenos Aires",
-                "uri": "/api/v1/accomodations/97"
-              },
-              {
-                "name": "my accomodation in Madrid",
-                "uri": "/api/v1/accomodations/96"
-              }
-            ],
-            "msg": "Accommodations retrieved successfully.",
-            "status": true
-          }
-        ]
+        {
+          "code": 200,
+          "data": [
+            {
+              "name": "my accomodation in Buenos Aires",
+              "uri": "/api/v1/accomodations/97"
+            },
+            {
+              "name": "my accomodation in Madrid",
+              "uri": "/api/v1/accomodations/96"
+            }
+          ],
+          "msg": "Accommodations retrieved successfully.",
+          "status": true
+        }
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 413, "msg": "Unauthorized", "status": false}
 
-### View one of my accomodations (Eze):
+### View one of my accommodations (Eze):
  * Request:
     GET /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
@@ -363,9 +367,9 @@ There are some standard error messages:
         "status": true
       }
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
 
-### View an accomodation of another user (Eze):
+### View an accommodation of another user (Eze):
  * Request:
     GET /profiles/17/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
@@ -392,9 +396,9 @@ There are some standard error messages:
         "status": true
       }
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
 
-### Create Accomodation (Eze):
+### Create Accommodation (Eze):
  * Request:
     POST /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
@@ -406,13 +410,13 @@ There are some standard error messages:
     }
 
  * Response:
-   * 201 CREATED {"code": 200, "msg": "Accomodation created successfully.", "status": true}
+   * 201 CREATED {"code": 200, "msg": "Accommodation created successfully.", "status": true}
       
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
-     * 200 OK {"code": 400, "error": {"msg": "Error in some fields"}, "status": false}
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 400, "errors": {"capacity": ["Select a valid choice. ml is not one of the available choices."]}, "msg": "Error in some fields.", "status": false}
 
-### Update accomodation (Eze):
+### Update accommodation (Eze):
  * Request:
     PUT /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
@@ -425,22 +429,22 @@ There are some standard error messages:
 
  * Response:
    * 202 ACCEPTED 
-      {"code" : 200, "status" : True, "msg" : "Accomodation updated successfully."}
+      {"code" : 200, "status" : True, "msg" : "Accommodation updated successfully."}
       
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
-     * 200 OK {"code": 400, "error": {"msg": "Error in some fields"}, "status": false}
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 400, "errors": {"capacity": ["Select a valid choice. ml is not one of the available choices."]}, "msg": "Error in some fields.", "status": false}
 
-### Delete accomodation (Eze):
+### Delete accommodation (Eze):
  * Request:
     DELETE /profiles/me/accomodations/20
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK 
-      {"code": 200, "status": True, "msg":"Accomodation deleted successfully."}
+      {"code": 200, "status": True, "msg":"Accommodation deleted successfully."}
       
    * NO 
-     * 200 OK {"code": 413, "error": {"msg": "Unauthorized"}, "status": false}
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
 
 ### Search wings (Ezequiel):
   * Request:
@@ -456,32 +460,32 @@ There are some standard error messages:
             "age": 13,
             "allAboutYou": "",
             "avatar": "/static/img/blank_avatar.jpg",
-            "birthday": "03-05",
-            "civilState": "",
-            "company": "",
             "current": {
               "country": "Argentina",
-              "lat": "0E-9",
-              "lon": "0E-9",
               "name": "Buenos Aires",
               "region": "Bs As"
             },
-            ....
+            "firstName": "Kim",
+            "languages": [
+              {
+                "level": "intermediate",
+                "name": "english"
+              },
+              {
+                "level": "expert",
+                "name": "spanish"
+              },
+              {
+                "level": "beginner",
+                "name": "german"
+              }
+            ],
+            "lastLogin": "Mon Oct 29 17:01:49 2012",
+            "lastName": "Lorelei",
+            "occupation": "tocar los huevos",
+            "user": "/api/v1/accounts/3"
           },
-          {
-            "age": 13,
-            "allAboutYou": "",
-            "avatar": "/static/img/blank_avatar.jpg",
-            "birthday": "03-05",
-            "civilState": "",
-            "company": "",
-            "current": {},
-            "education": [],
-            "emails": "asdf",
-            "enjoyPeople": "",
-            "gender": "Male",
-          },
-          ....
+          ...
         ],
         "msg": "Profiles retrieved successfully.",
         "status": true
