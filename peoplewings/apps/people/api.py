@@ -647,54 +647,48 @@ class UserProfileResource(ModelResource):
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields validation"
-                errors['errors'] = json.loads(e.messages)                
+                content['msg'] = "Error in some fields validation"
                 content['code'] = 410
                 content['status'] = False
-                content['error'] = errors
+                content['errors'] = json.loads(e.messages)
                 return self.create_response(request, content, response_class = HttpResponse)
             except ValueError, e:
                 # This exception occurs when the JSON is not a JSON...
                 content = {}
                 errors = {}
-                errors['msg'] = e            
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
+                content['msg'] = e
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Unauthorized"                               
+                    content['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Can't logout"                               
+                    content['msg'] = "Can't logout"                               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}

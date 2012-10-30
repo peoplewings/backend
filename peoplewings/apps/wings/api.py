@@ -287,60 +287,55 @@ class AccomodationsResource(ModelResource):
             except BadRequest, e:
                 content = {}
                 errors = {}
-                errors['msg'] = e.args[0]               
+                content['msg'] = e.args[0]               
                 content['code'] = 400
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse) 
             except ValidationError, e:
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
-                errors['errors'] = json.loads(e.messages)                
+                content['msg'] = "Error in some fields"
                 content['code'] = 410
                 content['status'] = False
-                content['error'] = errors
+                content['errors'] = json.loads(e.messages)
                 return self.create_response(request, content, response_class = HttpResponse)
             except ValueError, e:
                 content = {}
                 errors = {}
-                errors['msg'] = "No JSON could be decoded"               
+                content['msg'] = "No JSON could be decoded"               
                 content['code'] = 411
                 content['status'] = False
-                content['error'] = errors
                 return self.create_response(request, content, response_class = HttpResponse)
             except ImmediateHttpResponse, e:
                 if (isinstance(e.response, HttpMethodNotAllowed)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Method not allowed"                               
+                    content['msg'] = "Method not allowed"                               
                     content['code'] = 412
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpUnauthorized)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Unauthorized"                               
+                    content['msg'] = "Unauthorized"                               
                     content['code'] = 413
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 elif (isinstance(e.response, HttpApplicationError)):
                     content = {}
                     errors = {}
-                    errors['msg'] = "Can't logout"                               
+                    content['msg'] = "Can't logout"                               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"               
+                    content['msg'] = "Error in some fields."               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
+                    errors = json.loads(e.response.content)['accomodations']
+                    content['errors'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 return self._handle_500(request, e)
