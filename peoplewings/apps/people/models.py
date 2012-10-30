@@ -73,12 +73,13 @@ class UserProfile(models.Model):
     
     user = models.ForeignKey(User, unique=True)
     age = models.IntegerField(default=0)
-    name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
+    #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
     avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
+    relationships = models.ManyToManyField("self", symmetrical=True, through='Relationship')
 
     # In Basic Information
-    birthday = models.DateField(verbose_name='birthday', null=True) #Don't know why!
+    birthday = models.DateField(verbose_name='birthday')
     show_birthday = models.CharField(verbose_name='', max_length=100, choices=SHOW_BIRTHDAY_CHOICES, default='F')
     gender = models.CharField(verbose_name='I am', max_length=6, choices=GENDER_CHOICES, default='Male')
     interested_in = models.ManyToManyField(Interests, null=True, default = None)
@@ -129,22 +130,13 @@ class UserProfile(models.Model):
     places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
     places_wanna_go = models.TextField(max_length=max_long_len, blank=True) 
 
-    # a anyadir en el futuro
-    #relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
+class Relationship(models.Model):    
+    sender = models.ForeignKey('UserProfile', related_name='sender')
+    receiver = models.ForeignKey('UserProfile', related_name='receiver')
+    relationship_type = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES)
 
-"""
-class Relationship(models.Model):
-
-    RELATIONSHIP_CHOICES = (
-        ('F', 'Friend'),
-        ('P', 'Pendent'),
-        ('B', 'Blocked'),
-        ('R', 'Rejected'),
-    )
-    relationship_type = models.CharField(max_length=1, choices=RELATIONSHIP_CHOICES, null=True)
-    user1 = models.ForeignKey('UserProfile', related_name='r1')
-    user2 = models.ForeignKey('UserProfile', related_name='r2')
-"""
+    class Meta:
+        unique_together = ("sender", "receiver")
 
 def createUserProfile(sender, user, request, **kwargs):  
     form = RegistrationForm(request.POST)

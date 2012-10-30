@@ -1,6 +1,8 @@
 #People API
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests
 import json
+import re
+from datetime import date
+from pprint import pprint
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
@@ -13,6 +15,7 @@ from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.forms import ValidationError
 from django import forms
 from django.utils.cache import patch_cache_control
@@ -22,23 +25,35 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-from peoplewings.apps.registration.api import AccountResource
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
+from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
+from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
-from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.libs.customauth.models import ApiToken
-from datetime import date
 
-from pprint import pprint
+class RelationshipResource(ModelResource):
+    class Meta:
+        object_class = Relationship
+        list_allowed_methods = ['get', 'post']
+        detail_allowed_methods = ['put', 'delete']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
 
-import re
+    def obj_create(self, bundle, request=None, **kwargs):
+        pprint(bundle.__dict__)
 
-from django.db.models import Q
+    def obj_update(self, bundle, request=None, **kwargs):
+        pprint(bundle.__dict__)
+
+    def obj_delete(self, request=None, **kwargs):
+        pprint(bundle.__dict__)
+
+    def obj_get_list(self, request=None, **kwargs):
+        pprint(bundle.__dict__)
 
 class InstantMessageResource(ModelResource):
     class Meta:
@@ -292,16 +307,29 @@ class UserProfileResource(ModelResource):
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # /profiles/<profile_id>|me/relationships/
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships/%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('relationship_collection'), name="api_list_relationships"),
+            # /profiles/me/relationships/<relationship_id>
+            url(r"^(?P<resource_name>%s)/me/relationships/(?P<relationship_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('relationship_detail'), name="api_detail_relationships"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
         return accomodation_resource.dispatch_list(request, **kwargs)  
 
-
     def accomodation_detail(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
         return accomodation_resource.dispatch_detail(request, **kwargs)
+
+    def relationship_collection(self, request, **kwargs):
+        rr = RelationshipResource()
+        return rr.dispatch_list(request, **kwargs)  
+
+    def relationship_detail(self, request, **kwargs):
+        rr = RelationshipResource()
+        return rr.dispatch_detail(request, **kwargs)
 
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
@@ -536,7 +564,6 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('other_locations')
 
         forbidden_fields_update = ['avatar', 'id', 'user']
-        #not_empty_fields = ['pw_state', "name_to_show", "gender"]
         if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
         if 'birth_month' in bundle.data: up.birthday = up.birthday.replace(month=int(bundle.data['birth_month']))
         if 'birth_year' in bundle.data: up.birthday = up.birthday.replace(year=int(bundle.data['birth_year']))
@@ -615,7 +642,8 @@ class UserProfileResource(ModelResource):
 
             if bundle.request.user.is_anonymous():
                 bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                #bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
+                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
             #bundle = super(UserProfileResource, self).full_dehydrate(bundle)
