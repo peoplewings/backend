@@ -656,7 +656,7 @@ class UserProfileResource(ModelResource):
                 # Or do some JSON wrapping around the standard 500
                 content = {}
                 errors = {}
-                errors['msg'] = "Error in some fields"
+                errors['msg'] = "Error in some fields validation"
                 errors['errors'] = json.loads(e.messages)                
                 content['code'] = 410
                 content['status'] = False
@@ -699,10 +699,12 @@ class UserProfileResource(ModelResource):
                 else:               
                     content = {}
                     errors = {}
-                    errors['msg'] = "Error in some fields"               
+                    content['msg'] = "Error in some fields."               
                     content['code'] = 400
                     content['status'] = False
-                    content['error'] = errors
+                    if 'profiles' in e.response.content: errors = json.loads(e.response.content)['profiles']
+                    else: errors = json.loads(e.response.content)['accomodations']
+                    content['errors'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
                 return self._handle_500(request, e)

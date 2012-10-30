@@ -70,10 +70,6 @@ class AccomodationsResource(ModelResource):
     def custom_serialize(self, errors):
         return errors.get('newuser')
 
-    def error_response(self, errors, request):
-        serialized = self.custom_serialize(errors)
-        raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
-
     def apply_authorization_limits(self, request, object_list=None):
         if request.method not in ('GET'):
             up = UserProfile.objects.get(user=request.user)
