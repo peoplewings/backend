@@ -194,6 +194,7 @@ class UserProfileResource(ModelResource):
             'languages':ALL_WITH_RELATIONS,
             #'userlanguages': ALL_WITH_RELATIONS,
         }
+        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go']
 
     def normalize_query(self, query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,

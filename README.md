@@ -161,19 +161,6 @@ There are some standard error messages:
      * 200 OK {"code": 200, "errors": {"password": ["Incorrect current password"]}, "msg": "Cannot update", "status": false}
 
 
-### View a list of Profiles (Ezequiel):
- * Request:
-    /GET profiles/
-    "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
- * Response:
-   * OK
-     * 200 OK 
-      [
-        {"age": 22, "allAboutYou": "lalalal", ...},
-        {"age": 24, "allAboutYou": "lelelel", ...},
-        ...
-      ]
-
 ### View my profile (Eze):
  * Request:
     /GET profiles/me/
