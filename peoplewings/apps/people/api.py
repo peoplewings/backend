@@ -433,7 +433,7 @@ class UserProfileResource(ModelResource):
         b = kwargs['pk'] == 'me'
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
-        data = json.loads(a.content)    
+        data = json.loads(a.content)
         if b: data['id'] = 'me'
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
@@ -496,8 +496,8 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('social_networks')
 
         if 'current' in bundle.data:
-            city = City.objects.saveLocation(**bundle.data['current'])
-            up.current_city = city
+            ccity = City.objects.saveLocation(**bundle.data['current'])
+            up.current_city = ccity
             """
             if 'city' in bundle.data['current'] and 'region' in bundle.data['current'] and 'country' in bundle.data['current']:
                 country, b = Country.objects.get_or_create(name=bundle.data['current']['country'])
