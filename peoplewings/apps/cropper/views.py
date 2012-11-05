@@ -3,11 +3,12 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic.edit import FormView, BaseDetailView
 from django.conf import settings
 from models import Original
-from cropper.forms import CroppedForm, OriginalForm
+from forms import CroppedForm, OriginalForm
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.ajax.utils import json_response, json_success_response
 import Image
 import os
+from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
 
 class UploadView(FormView):
     """
@@ -15,6 +16,10 @@ class UploadView(FormView):
     """
     form_class = OriginalForm
     template_name = 'cropper/upload.html'
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(UploadView, self).dispatch(*args, **kwargs)
 
     def success(self, request, form, original):
         #print original.__dict__
@@ -36,13 +41,16 @@ class UploadView(FormView):
                 })
         
 
-
 class CropView(FormView):
     """
     Crop picture and save result into model
     """
     form_class = CroppedForm
     template_name = 'cropper/crop.html'
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(CropView, self).dispatch(*args, **kwargs)
 
     def get_object(self):
         """
@@ -70,7 +78,7 @@ class CropView(FormView):
         cropped = form.save(commit=False)
         cropped.save()
         up = UserProfile.objects.get(pk=self.request.user.get_profile().id)
-        up.avatar = settings.MEDIA_URL + cropped.image.name
+        up.avatar = settings.STATIC_URL + cropped.image.name
         up.save()
         return self.success(request  = self.request,
                             form     = form,
@@ -94,7 +102,7 @@ class CropView(FormView):
 
 def resize_image(filename, size):
         ext = filename.rsplit('.', 1)[-1]
-        path = os.path.join(settings.MEDIA_ROOT, filename)
+        path = os.path.join(settings.STATIC_URL, filename)
         im = Image.open(path)
         im.thumbnail(size, Image.ANTIALIAS)
         im.save(path, ext)

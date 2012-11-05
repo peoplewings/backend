@@ -1,6 +1,6 @@
 from django.conf import settings
 
-ROOT = getattr(settings, 'CROPPER_ROOT', '').rstrip('/')
+ROOT = getattr(settings, 'STATIC_ROOT', '').rstrip('/')
 MAX_WIDTH  = getattr(settings, 'CROPPER_MAX_WIDTH',  4680)
 MAX_HEIGHT = getattr(settings, 'CROPPER_MAX_HEIGHT', 4024)
 MIN_WIDTH  = getattr(settings, 'CROPPER_MIN_WIDTH',  256)
