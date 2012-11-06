@@ -478,3 +478,24 @@ There are some standard error messages:
         "status": true
       }
 
+### Add a relationship (Ezequiel):
+  * Request:
+    POST /profiles/me/relationships
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+    {
+      "receiver": "/api/v1/profiles/23",
+      "type": "pending"
+    }
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "Relationship created successfully.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 400, "errors": {"type": ["Select a valid choice. asdf is not one of the available choices."]}, "msg": "Error in some fields.", "status": false}
+
