@@ -91,4 +91,21 @@ LOGGING = {
         },
     }
 }
+#IMG
+STATIC_URL = 'https://peoplewings-test-media.s3.amazonaws.com/'
+AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+# Compressor IMG
+COMPRESS_ENABLED = True
+if COMPRESS_ENABLED:
+    COMPRESS_CSS_FILTERS = [
+        'compressor.filters.css_default.CssAbsoluteFilter',
+        'compressor.filters.cssmin.CSSMinFilter',
+    ]
+    COMPRESS_STORAGE = 'fisio.storage.CachedS3BotoStorage'
+    COMPRESS_URL = STATIC_URL
+    COMPRESS_OFFLINE = True
 
+# Storages IMG
+STATICFILES_STORAGE = 'fisio.storage.CachedS3BotoStorage'
