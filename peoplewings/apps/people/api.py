@@ -315,6 +315,11 @@ class UserProfileResource(ModelResource):
             i.data.pop('id')
         return bundle.data['languages']
 
+    def hydrate_languages(self, bundle):
+        #bundle.data['title'] = bundle.data['title'].lower()
+        print "hola languages"
+        return bundle
+
     def dehydrate_education(self, bundle):
         upu = UserProfileStudiedUniversity.objects.filter(user_profile=bundle.obj)
         res = []
