@@ -9,6 +9,7 @@ from peoplewings.apps.ajax.utils import json_response, json_success_response
 import Image
 import os
 from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
+from urllib import unquote
 
 class UploadView(FormView):
     """
@@ -23,7 +24,7 @@ class UploadView(FormView):
 
     def success(self, request, form, original):
         #print original.__dict__
-        response = {'id': original.id, 'image': original.image.path.split('/')[-1], 'width': original.image_width, 'height': original.image_height}
+        response = {'id': original.id, 'image': unquote(original.image.url).split('?')[0], 'width': original.image_width, 'height': original.image_height}
         return json_success_response(response)
         #return redirect(original)
 

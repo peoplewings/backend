@@ -25,8 +25,7 @@ def dimension_validator(image):
 
 class Original(models.Model):
     def upload_image(self, filename):
-        return u'{path}/{name}.{ext}'.format(
-            path = os.path.join(settings.ROOT, str(self.owner_id)),
+        return u'{name}.{ext}'.format(            
             name = uuid.uuid4().hex,
             ext  = os.path.splitext(filename)[1].strip('.')
         )
@@ -60,6 +59,7 @@ class Cropped(models.Model):
 
     def save(self, *args, **kwargs): #force_insert=False, force_update=False, using=None):
         source = self.original.image.path
+        
         target = self.upload_image(os.path.basename(source))
 
         Image.open(source).crop([
