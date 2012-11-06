@@ -37,7 +37,7 @@ from peoplewings.libs.customauth.models import ApiToken
 
 class RelationshipResource(ModelResource):
     class Meta:
-        object_class = Relationship
+        object_class = UserProfile
         list_allowed_methods = ['get', 'post']
         detail_allowed_methods = ['put', 'delete']
         serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -52,8 +52,42 @@ class RelationshipResource(ModelResource):
     def obj_delete(self, request=None, **kwargs):
         pprint(bundle.__dict__)
 
+    """
     def obj_get_list(self, request=None, **kwargs):
-        pprint(bundle.__dict__)
+        u = request.user
+        rels = Relationship.objects.filter(Q(sender=u) | Q(receiver=u))
+        res = []
+        for r in rels:
+            if r.sender == u: res.append(r.receiver)
+            else: res.append(r.sender)
+
+        return res
+    """
+    def get_list(self, request, **kwargs):
+        u = request.user
+        rels = Relationship.objects.filter(Q(sender=u) | Q(receiver=u))
+        res = []
+        for r in rels:
+            if r.sender == u: bundle = self.build_bundle(obj=r.receiver, request=request)
+            else: bundle = self.build_bundle(obj=r.sender, request=request)
+            bundle.data = bundle.obj.__dict__
+            del bundle.data["_state"]
+            res.append(bundle)
+
+        content = {}  
+        content['msg'] = 'Profiles retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = res
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    """
+    def apply_authorization_limits(self, request, object_list=None):
+        return object_list.filter(Q(sender=request.user) | Q(receiver=request.user))
+    """
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data['objects']
 
 class InstantMessageResource(ModelResource):
     class Meta:
@@ -308,7 +342,7 @@ class UserProfileResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
             # /profiles/<profile_id>|me/relationships/
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships/%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_collection'), name="api_list_relationships"),
             # /profiles/me/relationships/<relationship_id>
             url(r"^(?P<resource_name>%s)/me/relationships/(?P<relationship_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 

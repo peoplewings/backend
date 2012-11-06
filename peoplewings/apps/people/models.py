@@ -76,10 +76,10 @@ class UserProfile(models.Model):
     #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
     avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
-    relationships = models.ManyToManyField("self", symmetrical=True, through='Relationship')
+    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
     # In Basic Information
-    birthday = models.DateField(verbose_name='birthday')
+    birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
     show_birthday = models.CharField(verbose_name='', max_length=100, choices=SHOW_BIRTHDAY_CHOICES, default='F')
     gender = models.CharField(verbose_name='I am', max_length=6, choices=GENDER_CHOICES, default='Male')
     interested_in = models.ManyToManyField(Interests, null=True, default = None)

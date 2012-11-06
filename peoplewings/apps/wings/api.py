@@ -67,9 +67,6 @@ class AccomodationsResource(ModelResource):
             "wheelchair": ['exact'],
         }
 
-    def custom_serialize(self, errors):
-        return errors.get('newuser')
-
     def apply_authorization_limits(self, request, object_list=None):
         if request.method not in ('GET'):
             up = UserProfile.objects.get(user=request.user)
