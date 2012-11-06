@@ -315,11 +315,6 @@ class UserProfileResource(ModelResource):
             i.data.pop('id')
         return bundle.data['languages']
 
-    def hydrate_languages(self, bundle):
-        #bundle.data['title'] = bundle.data['title'].lower()
-        print "hola languages"
-        return bundle
-
     def dehydrate_education(self, bundle):
         upu = UserProfileStudiedUniversity.objects.filter(user_profile=bundle.obj)
         res = []
@@ -478,7 +473,10 @@ class UserProfileResource(ModelResource):
         if 'languages' in bundle.data:
             UserLanguage.objects.filter(user_profile_id=up.id).delete()
             for lang in bundle.data['languages']:
-                UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name__iexact=lang['name']).id, level=lang['level'])
+                try:
+                    UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name__iexact=lang['name']).id, level=lang['level'])
+                except:
+                    return self.create_response(request, {"msg":"Error: repeated languages.", "status":False, "code":413}, response_class=HttpForbidden)
             bundle.data.pop('languages')
         
         if 'education' in bundle.data:
