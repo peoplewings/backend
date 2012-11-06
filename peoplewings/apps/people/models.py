@@ -47,6 +47,9 @@ class UserLanguage(models.Model):
     language = models.ForeignKey('Language')
     level = models.CharField(max_length=100, choices=LANGUAGES_LEVEL_CHOICES)
 
+    class Meta:
+        unique_together = ("user_profile", "language")
+
 # UNIVERSITY
 class University(models.Model):
   name = models.CharField(max_length=max_medium_len, unique=True)
