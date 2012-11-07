@@ -25,7 +25,7 @@ def dimension_validator(image):
 
 class Original(models.Model):
     def upload_image(self, filename):
-        return u'{name}.{ext}'.format(            
+        return u'avatar/{name}.{ext}'.format(            
             name = uuid.uuid4().hex,
             ext  = os.path.splitext(filename)[1].strip('.')
         )
@@ -50,12 +50,59 @@ class Original(models.Model):
         editable = False,
         default = 0)
 
+    def _resize_image(self, size):
+        try:
+            import urllib2 as urllib
+            from PIL import Image            
+            from cStringIO import StringIO
+            from django.core.files.uploadedfile import SimpleUploadedFile
+            from boto.s3.connection import S3Connection
+            from boto.s3.key import Key
+            from boto.s3.bucket import Bucket            
+            from django.conf import settings
+            '''Open original photo which we want to resize using PIL's Image object'''
+            name_original = self.image.url.split('?')[0].split('/')[-1]
+            img_file = urllib.urlopen(self.image.url)
+            im = StringIO(img_file.read())
+            resized_image = Image.open(im)
+            
+            '''We use our PIL Image object to create the resized image, which already
+            has a thumbnail() convenicne method that constrains proportions.
+            Additionally, we use Image.ANTIALIAS to make the image look better.
+            Without antialiasing the image pattern artificats may reulst.'''
+            resized_image.thumbnail(size, Image.ANTIALIAS)
+
+            '''Save the resized image'''
+            temp_handle = StringIO()
+            ext = self.image.url.rsplit('.', 1)[-1].split('?')[0]
+            resized_image.save(temp_handle, ext)
+            temp_handle.seek(0)
+
+            
+            ''' Save to the image field'''
+            print os.path.split(self.image.name)[-1].split('.')[0]
+            print os.path.split(self.image.name)
+            suf = SimpleUploadedFile(os.path.split(self.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
+            self.image.save('%s.%s' % (suf.name, ext), suf, save=True)
+            self.image_width = self.image.width
+            self.image_height = self.image.height     
+            
+            conn = S3Connection(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+            b = Bucket(conn, settings.AWS_STORAGE_BUCKET_NAME)
+            k = Key(b)           
+            k.key = 'avatar/%s' % name_original
+            b.delete_key(k)
+        except ImportError:
+            print 'FUCK YOU'
+            pass
+            
+
 class Cropped(models.Model):
     def __unicode__(self):
         return u'%s-%sx%s' % (self.original, self.w, self.h)
 
     def upload_image(self, filename):
-        return '%s/crop-%s' % (os.path.join(settings.ROOT, str(self.original.owner.id)), filename)
+        return 'avatar/crop-%s' % filename
 
     def save(self, *args, **kwargs): #force_insert=False, force_update=False, using=None):
         source = self.original.image.path

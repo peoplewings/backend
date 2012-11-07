@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.locations',
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
+    'peoplewings.libs.S3Custom',
     #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -119,3 +120,4 @@ if COMPRESS_ENABLED:
 # Storages IMG
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+AWS_QUERYSTRING_AUTH = False

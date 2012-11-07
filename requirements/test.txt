@@ -4,3 +4,4 @@ django-compressor==1.2
 django-extensions==1.0.0
 boto==2.6.0
 
+

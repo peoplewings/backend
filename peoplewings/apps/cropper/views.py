@@ -10,6 +10,7 @@ import Image
 import os
 from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
 from urllib import unquote
+from peoplewings.libs.S3Custom import S3Custom
 
 class UploadView(FormView):
     """
@@ -29,10 +30,15 @@ class UploadView(FormView):
         #return redirect(original)
 
     def form_valid(self, form):
+        s3 = S3Custom()
+        #print s3.length_keys('avatar/')
         original = form.save()
+        #print s3.length_keys('avatar/')
         if original.image_width > 600: 
-            original.image_width, original.image_height = resize_image(original.image.name, (600, 600))
+            original._resize_image((600, 600))
+            #print s3.length_keys('avatar/')
             original.save()
+            #print s3.length_keys('avatar/')
         return self.success(self.request, form, original)
 
     def form_invalid(self, form):
@@ -40,7 +46,6 @@ class UploadView(FormView):
                 'success': False,
                 'errors': dict(form.errors.items()),
                 })
-        
 
 class CropView(FormView):
     """
