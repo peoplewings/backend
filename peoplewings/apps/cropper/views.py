@@ -30,15 +30,10 @@ class UploadView(FormView):
         #return redirect(original)
 
     def form_valid(self, form):
-        s3 = S3Custom()
-        #print s3.length_keys('avatar/')
         original = form.save()
-        #print s3.length_keys('avatar/')
         if original.image_width > 600: 
             original._resize_image((600, 600))
-            #print s3.length_keys('avatar/')
             original.save()
-            #print s3.length_keys('avatar/')
         return self.success(self.request, form, original)
 
     def form_invalid(self, form):
@@ -96,7 +91,7 @@ class CropView(FormView):
         Default success crop handler
         """
         return HttpResponse(json_success_response({'image': {
-                'url'    : cropped.image.url,
+                'url'    : unquote(cropped.image.url).split('?')[0],
                 'width'  : cropped.w,
                 'height' : cropped.h,
             }}), mimetype='application/x-json') if request.is_ajax() else render(request, 'cropper/crop.html',

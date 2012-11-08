@@ -434,7 +434,6 @@ class UserProfileResource(ModelResource):
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        if b: data['id'] = 'me'
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True

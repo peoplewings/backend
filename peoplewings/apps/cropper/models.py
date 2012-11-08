@@ -80,8 +80,6 @@ class Original(models.Model):
 
             
             ''' Save to the image field'''
-            print os.path.split(self.image.name)[-1].split('.')[0]
-            print os.path.split(self.image.name)
             suf = SimpleUploadedFile(os.path.split(self.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
             self.image.save('%s.%s' % (suf.name, ext), suf, save=True)
             self.image_width = self.image.width
@@ -93,7 +91,6 @@ class Original(models.Model):
             k.key = 'avatar/%s' % name_original
             b.delete_key(k)
         except ImportError:
-            print 'FUCK YOU'
             pass
             
 
@@ -105,16 +102,38 @@ class Cropped(models.Model):
         return 'avatar/crop-%s' % filename
 
     def save(self, *args, **kwargs): #force_insert=False, force_update=False, using=None):
-        source = self.original.image.path
-        
-        target = self.upload_image(os.path.basename(source))
+        from PIL import Image            
+        from cStringIO import StringIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from boto.s3.connection import S3Connection
+        from boto.s3.key import Key
+        from boto.s3.bucket import Bucket            
+        from django.conf import settings
+       
+        print 'Original name ', original.image.name
+        print 'Url ', original.image.url
+        print 'Unq url ', unquote(original.image.url).split('?')[0]
+        print 'ext ', unquote(original.image.url).split('?')[0].rsplit('.', 1)[-1]
+        target = self.upload_image(original.image.name)
 
-        Image.open(source).crop([
+        '''Open the original img'''
+        source = unquote(original.image.url).split('?')[0]
+        img_file = urllib.urlopen(source)
+        im = StringIO(img_file.read())
+
+        '''Cropp it'''
+        Image.open(im).crop([
             self.x,             # Left
             self.y,             # Top
             self.x + self.w,    # Right
             self.y + self.h     # Bottom
-        ]).save(django_settings.MEDIA_ROOT + os.sep + target)
+        ])
+
+        '''Save the resized image'''
+        temp_handle = StringIO()
+        ext = source.rsplit('.', 1)[-1]
+        resized_image.save(temp_handle, ext)
+        temp_handle.seek(0)
 
         self.image = target        
         super(Cropped, self).save(*args, **kwargs)
