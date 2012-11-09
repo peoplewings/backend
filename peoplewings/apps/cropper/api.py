@@ -51,17 +51,18 @@ class CroppedResource(ModelResource):
      
         cropped_img = Cropped()
         try:
-            cropped_img.original = Original.objects.get(pk=kwargs['id'])
-            cropped_img.x = bundle.data['x']
-            cropped_img.y = bundle.data['y']
-            cropped_img.w = bundle.data['w']
-            cropped_img.h = bundle.data['h']
+            cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
+            cropped_img.x = int(bundle.data['x'])
+            cropped_img.y = int(bundle.data['y'])
+            cropped_img.w = int(bundle.data['w'])
+            cropped_img.h = int(bundle.data['h'])
             cropped_img.save()
             up = UserProfile.objects.get(pk = cropped_img.original.owner_id)
             up.avatar = cropped_img.image.url
             up.save()
             return self.create_response(request, {"status":True, "data":"Avatar cropped and updated", "code":"200"}, response_class = HttpResponse)
-        except Exception, e:
+        except Exception, e: 
+            print e           
             return self.create_response(request, {"status":False, "data":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
         
 

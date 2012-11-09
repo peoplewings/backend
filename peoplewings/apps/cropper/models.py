@@ -120,7 +120,7 @@ class Cropped(models.Model):
         source = self.original.image.url
         img_file = urllib.urlopen(source)
         im = StringIO(img_file.read())
-
+        
         '''Cropp it'''
         resized_image = Image.open(im).crop([
             self.x,             # Left
@@ -134,7 +134,7 @@ class Cropped(models.Model):
         ext = source.rsplit('.', 1)[-1]
         resized_image.save(temp_handle, ext)
         temp_handle.seek(0)
-
+ 
         ''' Save to the image field'''
         suf = SimpleUploadedFile(os.path.split(self.original.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
         print 'Final ', os.path.split(self.original.image.name)[-1].split('.')[0]
