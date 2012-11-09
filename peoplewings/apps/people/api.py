@@ -584,7 +584,7 @@ class UserProfileResource(ModelResource):
 
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user']
+            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas']
             '''
             De user:
             bundle.data['first_name'] = bundle.obj.user.first_name
@@ -604,6 +604,11 @@ class UserProfileResource(ModelResource):
                 if key not in permitted_fields: del bundle.data[key]
             bundle.data['first_name'] = bundle.obj.user.first_name
             bundle.data['last_name'] = bundle.obj.user.last_name
+            bundle.data['verified'] = True
+            bundle.data['num_friends'] = 0
+            bundle.data['num_references'] = 0
+            bundle.data['pending'] = "Pending"
+            bundle.data['tasa_respuestas'] = 0
 
             from datetime import timedelta, datetime
             d = timedelta(hours=1)
@@ -618,11 +623,10 @@ class UserProfileResource(ModelResource):
 
             if bundle.request.user.is_anonymous():
                 bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                #bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
+                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
-            #bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
