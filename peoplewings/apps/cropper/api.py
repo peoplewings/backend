@@ -6,29 +6,41 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed
+from tastypie.utils import trailing_slash
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import simplejson
+from django.db import IntegrityError, transaction
+from django.forms import ValidationError
+from django.utils.cache import patch_cache_control
+from django.contrib.auth.models import User
+from django.conf.urls import url
+from django.contrib.auth import authenticate
 from django.http import HttpResponse
 
 from peoplewings.apps.cropper.models import Cropped, Original
-from peoplewings.apps.cropper.form import CropperForm
+from peoplewings.apps.cropper.forms import CroppedForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
 
+from peoplewings.apps.ajax.utils import json_response
+from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from tastypie.utils import dict_strip_unicode_keys
 
-class CropperResource(Resource):
+class CroppedResource(ModelResource):
     
     
     class Meta:
-        object_class = Cropper
-        queryset = Cropper.objects.all()
+        object_class = Cropped
+        queryset = Cropped.objects.all()
         allowed_methods = ['post']
         include_resource_uri = False
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        validation = FormValidation(form_class=CropperForm)
+        validation = FormValidation(form_class=CroppedForm)
   
     def post_detail(self, request, **kwargs):
         #kwargs = id de la original
@@ -37,7 +49,7 @@ class CropperResource(Resource):
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
      
-        cropped_img = Cropper()
+        cropped_img = Cropped()
         try:
             cropped_img.original = Original.objects.get(pk=kwargs['id'])
             cropped_img.x = bundle.data['x']
@@ -54,23 +66,11 @@ class CropperResource(Resource):
         
 
     def wrap_view(self, view):
-
+        @csrf_exempt
         def wrapper(request, *args, **kwargs):
             try:
                 callback = getattr(self, view)
-                response = callback(request, *args, **kwargs)
-
-                varies = getattr(self._meta.cache, "varies", [])
-
-                if varies:
-                    patch_vary_headers(response, varies)
-
-                if self._meta.cache.cacheable(request, response):
-                    if self._meta.cache.cache_control():
-                        patch_cache_control(response, **self._meta.cache.cache_control())
-
-                if request.is_ajax() and not response.has_header("Cache-Control"):
-                    patch_cache_control(response, no_cache=True)
+                response = callback(request, *args, **kwargs)              
 
                 return response
             except (BadRequest, fields.ApiFieldError), e:
