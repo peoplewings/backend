@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.conf import settings as django_settings
 import settings
-
+from peoplewings.libs.S3Custom import S3Custom
 import Image
 import os
 import uuid
@@ -99,49 +99,7 @@ class Cropped(models.Model):
         return u'%s-%sx%s' % (self.original, self.w, self.h)
 
     def upload_image(self, filename):
-        return 'avatar/crop-%s' % filename
-
-    def save(self, *args, **kwargs): #force_insert=False, force_update=False, using=None):
-        from PIL import Image            
-        from cStringIO import StringIO
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        from boto.s3.connection import S3Connection
-        from boto.s3.key import Key
-        from boto.s3.bucket import Bucket            
-        from django.conf import settings
-        import urllib2 as urllib
-       
-        print 'Original name ', self.original.image.name
-        print 'Url ', self.original.image.url
-        #print 'Unq url ', unquote(self.original.image.url).split('?')[0]
-        print 'ext ', self.original.image.url.rsplit('.', 1)[-1]                        
-
-        '''Open the original img'''
-        source = self.original.image.url
-        img_file = urllib.urlopen(source)
-        im = StringIO(img_file.read())
-        
-        '''Cropp it'''
-        resized_image = Image.open(im).crop([
-            self.x,             # Left
-            self.y,             # Top
-            self.x + self.w,    # Right
-            self.y + self.h     # Bottom
-        ])
-
-        '''Save the resized image'''
-        temp_handle = StringIO()
-        ext = source.rsplit('.', 1)[-1]
-        resized_image.save(temp_handle, ext)
-        temp_handle.seek(0)
- 
-        ''' Save to the image field'''
-        suf = SimpleUploadedFile(os.path.split(self.original.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
-        print 'Final ', os.path.split(self.original.image.name)[-1].split('.')[0]
-        self.image.save('%s.%s' % (suf.name, ext), suf, save=True)
-        #self.image = target        
-        
-        super(Cropped, self).save(*args, **kwargs)
+        return u'avatar/crop-%s' % filename
 
     original = models.ForeignKey(Original,
         related_name = 'cropped',
@@ -155,6 +113,43 @@ class Cropped(models.Model):
     y = models.PositiveIntegerField(_('offset Y'), default = 0)
     w = models.PositiveIntegerField(_('cropped area width'), blank = True, null = True)
     h = models.PositiveIntegerField(_('cropped area height'), blank = True, null = True)
+
+    def cropit(self):
+        from PIL import Image
+        from cStringIO import StringIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from boto.s3.connection import S3Connection
+        from boto.s3.key import Key
+        from boto.s3.bucket import Bucket            
+        from django.conf import settings
+        import urllib2 as urllib
+        if self.original and self.x and self.y and self.w and self.h:
+            s3 = S3Custom()
+            '''Open the original img'''
+            source = self.original.image.url
+            img_file = urllib.urlopen(source)
+            im = StringIO(img_file.read())
+            
+            '''Cropp it'''
+            resized_image = Image.open(im).crop([
+                self.x,             # Left
+                self.y,             # Top
+                self.x + self.w,    # Right
+                self.y + self.h     # Bottom
+            ])
+            '''Save the resized image'''
+            temp_handle = StringIO()
+            ext = source.rsplit('.', 1)[-1]
+            resized_image.save(temp_handle, ext)
+            temp_handle.seek(0)
+            
+            ''' Save to the image field'''        
+            crop_name = s3.make_name()
+            suf = SimpleUploadedFile(crop_name, temp_handle.read(), content_type='image/%s' % ext)
+            print 'Final ', crop_name
+            self.image.save('%s.%s' % (crop_name, ext), suf, save=True)
+            s3.delete_file('avatar/%s' % os.path.split(self.original.image.name)[-1].split('.')[0])
+        else: self = None
 
     class Meta:
         verbose_name = _('cropped image')

@@ -56,10 +56,15 @@ class CroppedResource(ModelResource):
             cropped_img.y = int(bundle.data['y'])
             cropped_img.w = int(bundle.data['w'])
             cropped_img.h = int(bundle.data['h'])
-            cropped_img.save()
-            up = UserProfile.objects.get(pk = cropped_img.original.owner_id)
-            up.avatar = cropped_img.image.url
-            up.save()
+            cropped_img.cropit()
+            if cropped_img is not None:
+                cropped_img.save()
+                up = UserProfile.objects.get(pk = cropped_img.original.owner_id)
+                up.avatar = cropped_img.image.url
+
+                up.save()
+            else:
+                return self.create_response(request, {"status":False, "data":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
             return self.create_response(request, {"status":True, "data":"Avatar cropped and updated", "code":"200"}, response_class = HttpResponse)
         except Exception, e: 
             print e           
