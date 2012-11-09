@@ -76,6 +76,7 @@ class CropView(FormView):
         }
 
     def form_valid(self, form):
+        #print form.__dict__
         cropped = form.save(commit=False)
         cropped.save()
         up = UserProfile.objects.get(pk=self.request.user.get_profile().id)
@@ -94,12 +95,13 @@ class CropView(FormView):
                 'url'    : unquote(cropped.image.url).split('?')[0],
                 'width'  : cropped.w,
                 'height' : cropped.h,
-            }}), mimetype='application/x-json') if request.is_ajax() else render(request, 'cropper/crop.html',
-            {
-                'form'     : form,
-                'cropped'  : cropped,
-                'original' : original
-            })
+            }}), mimetype='application/json') 
+            
+    def form_invalid(self, form):
+        return json_response({
+                'success': False,
+                'errors': dict(form.errors.items()),
+                })
 
 def resize_image(filename, size):
         ext = filename.rsplit('.', 1)[-1]

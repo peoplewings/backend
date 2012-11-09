@@ -109,20 +109,20 @@ class Cropped(models.Model):
         from boto.s3.key import Key
         from boto.s3.bucket import Bucket            
         from django.conf import settings
+        import urllib2 as urllib
        
-        print 'Original name ', original.image.name
-        print 'Url ', original.image.url
-        print 'Unq url ', unquote(original.image.url).split('?')[0]
-        print 'ext ', unquote(original.image.url).split('?')[0].rsplit('.', 1)[-1]
-        target = self.upload_image(original.image.name)
+        print 'Original name ', self.original.image.name
+        print 'Url ', self.original.image.url
+        #print 'Unq url ', unquote(self.original.image.url).split('?')[0]
+        print 'ext ', self.original.image.url.rsplit('.', 1)[-1]                        
 
         '''Open the original img'''
-        source = unquote(original.image.url).split('?')[0]
+        source = self.original.image.url
         img_file = urllib.urlopen(source)
         im = StringIO(img_file.read())
 
         '''Cropp it'''
-        Image.open(im).crop([
+        resized_image = Image.open(im).crop([
             self.x,             # Left
             self.y,             # Top
             self.x + self.w,    # Right
@@ -135,7 +135,12 @@ class Cropped(models.Model):
         resized_image.save(temp_handle, ext)
         temp_handle.seek(0)
 
-        self.image = target        
+        ''' Save to the image field'''
+        suf = SimpleUploadedFile(os.path.split(self.original.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
+        print 'Final ', os.path.split(self.original.image.name)[-1].split('.')[0]
+        self.image.save('%s.%s' % (suf.name, ext), suf, save=True)
+        #self.image = target        
+        
         super(Cropped, self).save(*args, **kwargs)
 
     original = models.ForeignKey(Original,
@@ -146,16 +151,10 @@ class Cropped(models.Model):
     image = models.ImageField(_('Image'),
         upload_to = upload_image,
         editable  = False)
-    x = models.PositiveIntegerField(_('offset X'),
-        default = 0)
-    y = models.PositiveIntegerField(_('offset Y'),
-        default = 0)
-    w = models.PositiveIntegerField(_('cropped area width'),
-        blank = True,
-        null = True)
-    h = models.PositiveIntegerField(_('cropped area height'),
-        blank = True,
-        null = True)
+    x = models.PositiveIntegerField(_('offset X'), default = 0)
+    y = models.PositiveIntegerField(_('offset Y'), default = 0)
+    w = models.PositiveIntegerField(_('cropped area width'), blank = True, null = True)
+    h = models.PositiveIntegerField(_('cropped area height'), blank = True, null = True)
 
     class Meta:
         verbose_name = _('cropped image')
