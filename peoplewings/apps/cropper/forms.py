@@ -67,3 +67,9 @@ class CroppedForm(forms.ModelForm):
 
     class Meta:
         model = Cropped
+
+class CropperForm(forms.Form):
+    x = forms.IntegerField(required=True)
+    y = forms.IntegerField(required=True)
+    w = forms.IntegerField(required=True)
+    h = forms.IntegerField(required=True)
