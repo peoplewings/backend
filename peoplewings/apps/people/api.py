@@ -27,6 +27,7 @@ from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
+from peoplewings.apps.people.exceptions import FriendYourselfError, CannotAcceptOrRejectError, InvalidAcceptRejectError
 from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
@@ -42,15 +43,80 @@ class RelationshipResource(ModelResource):
         detail_allowed_methods = ['put', 'delete']
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        include_resource_uri = True
+        fields = ['avatar']
 
+    def post_list(self, request, **kwargs):
+        if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
+            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+        try:
+            super(RelationshipResource, self).post_list(request, **kwargs)
+        except IntegrityError:
+            return self.create_response(request, {"msg":"The relationship already exists." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        except FriendYourselfError:
+            return self.create_response(request, {"msg":"Cannot be friend of yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"Invitation sent. Pending to be accepted.", "status":True, "code":200}
+        return self.create_response(request, dic)
+
+    @transaction.commit_on_success
     def obj_create(self, bundle, request=None, **kwargs):
-        pprint(bundle.__dict__)
+        sender = UserProfile.objects.get(user=request.user)
+        receiver = UserProfile.objects.get(pk=int(bundle.data['receiver'].split('/')[-1]))
+        if sender.id == receiver.id: raise FriendYourselfError()
+        if Relationship.objects.filter((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver))).exists():
+            raise IntegrityError()
+        rel = Relationship.objects.create(sender=sender, receiver=receiver, relationship_type="Pending")     
+        return bundle
 
+    def put_detail(self, request, **kwargs):
+        try:
+            super(RelationshipResource, self).put_detail(request, **kwargs)
+        except CannotAcceptOrRejectError:
+            return self.create_response(request, {"msg":"That relationship is not pending." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        except InvalidAcceptRejectError:
+            return self.create_response(request, {"msg":"Invalid type." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+        tipo = bundle.data['type']
+        if tipo == "Accepted": txt = "Invitation accepted."
+        else: txt = "Invitation rejected."
+        dic = {"msg":txt, "status":True, "code":200}
+        return self.create_response(request, dic)        
+
+    @transaction.commit_on_success
     def obj_update(self, bundle, request=None, **kwargs):
-        pprint(bundle.__dict__)
+        receiver = UserProfile.objects.get(user=request.user)
+        sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        if not Relationship.objects.filter(sender=sender, receiver=receiver, relationship_type="Pending").exists(): 
+            raise CannotAcceptOrRejectError()
+        tipo = bundle.data['type']
+        if tipo == "Accepted":
+            rel = Relationship.objects.get(sender=sender, receiver=receiver)
+            rel.relationship_type = tipo
+            rel.save()
+        elif tipo == "Rejected":
+            Relationship.objects.get(sender=sender, receiver=receiver).delete()
+        else:
+            raise InvalidAcceptRejectError()
+        return bundle
+
+    def delete_detail(self, request, **kwargs):
+        try:
+            super(RelationshipResource, self).delete_detail(request, **kwargs)
+        except ObjectDoesNotExist, e:
+            return self.create_response(request, {"msg":"That relationship doesn't exist." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"You are not friend of that user anymore.", "status":True, "code":200}
+        return self.create_response(request, dic)  
 
     def obj_delete(self, request=None, **kwargs):
-        pprint(bundle.__dict__)
+        receiver = UserProfile.objects.get(user=request.user)
+        sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        Relationship.objects.get((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver)), relationship_type="Accepted").delete()
 
     """
     def obj_get_list(self, request=None, **kwargs):
@@ -64,22 +130,35 @@ class RelationshipResource(ModelResource):
         return res
     """
     def get_list(self, request, **kwargs):
-        u = request.user
-        rels = Relationship.objects.filter(Q(sender=u) | Q(receiver=u))
+        up = UserProfile.objects.get(user=request.user)
+        # miramos si el cliente quiere listar las invitaciones pendientes o los amigos
+        status = request.GET['status']
+        if status == 'friends':
+            rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Accepted")
+        elif status == 'pendings':
+            rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
+        else:
+            return self.create_response(request, {'msg':"Status not valid, must be either 'friends' or 'pendings' ", 'status':False, 'code':200}, response_class=HttpResponse)
         res = []
         for r in rels:
-            if r.sender == u: bundle = self.build_bundle(obj=r.receiver, request=request)
+            if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
             else: bundle = self.build_bundle(obj=r.sender, request=request)
-            bundle.data = bundle.obj.__dict__
-            del bundle.data["_state"]
+            bundle = self.full_dehydrate(bundle)
             res.append(bundle)
 
         content = {}  
-        content['msg'] = 'Profiles retrieved successfully.'      
+        if status == 'friends': content['msg'] = 'Friends retrieved successfully.'
+        else: content['msg'] = 'Invitations retrieved successfully.'
         content['status'] = True
         content['code'] = 200
         content['data'] = res
         return self.create_response(request, content, response_class=HttpResponse)
+
+    def dehydrate(self, bundle):
+        bundle.data['first_name'] = bundle.obj.user.first_name
+        bundle.data['last_name'] = bundle.obj.user.last_name
+        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace('relationship', 'profiles')
+        return bundle
 
     """
     def apply_authorization_limits(self, request, object_list=None):
@@ -345,7 +424,7 @@ class UserProfileResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_collection'), name="api_list_relationships"),
             # /profiles/me/relationships/<relationship_id>
-            url(r"^(?P<resource_name>%s)/me/relationships/(?P<relationship_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
         ]
 
@@ -645,8 +724,7 @@ class UserProfileResource(ModelResource):
             permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user']
             '''
             De user:
-            bundle.data['first_name'] = bundle.obj.user.first_name
-            bundle.data['last_name'] = bundle.obj.user.last_name
+            
             bundle.data['last_login'] = bundle.obj.user.last_login
             De user profile:
             bundle.data['avatar'] = bundle.obj.avatar

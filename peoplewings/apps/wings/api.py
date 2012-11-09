@@ -40,7 +40,6 @@ class AccomodationsResource(ModelResource):
         object_class = Accomodation
         queryset = Accomodation.objects.all()
         allowed_methods = ['get', 'post', 'delete', 'put']
-        #include_resource_uri = False
         resource_name = 'accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
