@@ -40,7 +40,6 @@ class AccomodationsResource(ModelResource):
         object_class = Accomodation
         queryset = Accomodation.objects.all()
         allowed_methods = ['get', 'post', 'delete', 'put']
-        #include_resource_uri = False
         resource_name = 'accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
@@ -66,9 +65,6 @@ class AccomodationsResource(ModelResource):
             "live_center": ['exact'],
             "wheelchair": ['exact'],
         }
-
-    def custom_serialize(self, errors):
-        return errors.get('newuser')
 
     def apply_authorization_limits(self, request, object_list=None):
         if request.method not in ('GET'):

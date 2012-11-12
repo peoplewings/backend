@@ -478,3 +478,97 @@ There are some standard error messages:
         "status": true
       }
 
+### View my friends (Ezequiel):
+  * Request:
+    GET /profiles/me/relationships/?status=pendings
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "data": [
+            {
+              "avatar": "/static/img/blank_avatar.jpg",
+              "first_name": "Pepe",
+              "last_name": "Ramirez",
+              "uri": "/api/v1/profiles/25"
+            },
+            {
+              "avatar": "/static/img/blank_avatar.jpg",
+              "first_name": "Carmen",
+              "last_name": "Sanchez",
+              "uri": "/api/v1/profiles/28"
+            }
+        ],
+        "msg": "Friends retrieved successfully.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+
+    Notes:
+      - "status" must be either "friends" or "pendings"
+
+### Send Invitation (Ezequiel):
+  * Request:
+    POST /profiles/me/relationships
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+    {
+      "receiver": "/api/v1/profiles/23"
+    }
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "Invitation sent. Pending to be accepted.",
+        "status": true
+      }
+
+    * NO 
+     * 403 FORBIDDEN {"code": 413, "msg":"Unauthorized", "status": false}
+     * 403 FORBIDDEN {"code": 410, "msg":"Cannot be friend of yourself", "status": false}
+     * 403 FORBIDDEN {"code": 410, "msg":"The relationship already exists.", "status": false}
+
+### Accept/reject invitation (Ezequiel):
+  * Request:
+    PUT /profiles/me/relationships/<id_profile>
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+    {
+      "type": "Accepted"
+    }
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "The invitation has been accepted.",
+        "status": true
+      }
+
+    * NO 
+     * 403 FORBIDDEN {"code": 413, "msg":"Unauthorized", "status": false}
+     * 403 FORBIDDEN {"code": 410, "msg":"That friendship doesn't exist.", "status": false}
+
+  Notes:
+    - "type" must be either "Accepted" or "Rejected"
+
+### Leave friend (Ezequiel):
+  * Request:
+    DELETE /profiles/me/relationships/<id_profile>
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "You are not friend of that user anymore.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 410, "msg":"That friendship doesn't exist.", "status": false}
+
