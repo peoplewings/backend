@@ -59,7 +59,7 @@ class CroppedResource(ModelResource):
             cropped_img.cropit()
             if cropped_img is not None:
                 cropped_img.save()
-                up = UserProfile.objects.get(pk = cropped_img.original.owner_id)
+                up = UserProfile.objects.get(user = request.user.pk)
                 up.avatar = cropped_img.image.url
 
                 up.save()
