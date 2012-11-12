@@ -572,3 +572,26 @@ There are some standard error messages:
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
      * 200 OK {"code": 410, "msg":"That friendship doesn't exist.", "status": false}
 
+### Add reference (Ezequiel):
+  * Request:
+    POST /profiles/<id>/references/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+    {
+      "title": "This guy is awesome",
+      "text": "I had really fun with him, he brought me to the Ramblas, the Cathedral and Paseo Colon :-)",
+      "punctuation": "Positive"
+    }
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "Your reference has been posted.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+
+    Notes:
+      - "punctuation" must be either "Positive", "Negative" or "Neutral"
