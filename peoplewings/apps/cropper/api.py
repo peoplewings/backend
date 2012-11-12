@@ -71,7 +71,7 @@ class CroppedResource(ModelResource):
             data['width'] = cropped_img.w
             data['height'] = cropped_img.h
             return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
-        except Exception, e: 
+        except Exception, e:             
             print e           
             return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
         

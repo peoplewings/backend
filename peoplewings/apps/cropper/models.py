@@ -114,7 +114,7 @@ class Cropped(models.Model):
     w = models.PositiveIntegerField(_('cropped area width'), blank = True, null = True)
     h = models.PositiveIntegerField(_('cropped area height'), blank = True, null = True)
 
-    def cropit(self):
+    def cropit(self):        
         from PIL import Image
         from cStringIO import StringIO
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -123,12 +123,14 @@ class Cropped(models.Model):
         from boto.s3.bucket import Bucket            
         from django.conf import settings
         import urllib2 as urllib
-        if self.original and self.x and self.y and self.w and self.h:
+
+        if self.original is not None and self.x is not None and self.y is not None and self.w and self.h is not None:            
             s3 = S3Custom()
-            '''Open the original img'''
+            '''Open the original img'''            
             source = self.original.image.url
             img_file = urllib.urlopen(source)
             im = StringIO(img_file.read())
+            print 'cropping...'
             
             '''Cropp it'''
             resized_image = Image.open(im).crop([
@@ -149,7 +151,9 @@ class Cropped(models.Model):
             print 'Final ', crop_name
             self.image.save('%s.%s' % (crop_name, ext), suf, save=True)
             s3.delete_file('avatar/%s' % os.path.split(self.original.image.name)[-1].split('.')[0])
-        else: self = None
+        else:
+            print 'not cropped' 
+            self = None
 
     class Meta:
         verbose_name = _('cropped image')
