@@ -118,16 +118,32 @@ class UserUniversityResource(ModelResource):
 class LanguageResource(ModelResource):
     class Meta:
         object_class = Language
+        resource_name = 'languages'
         queryset = Language.objects.all()
-        allowed_methods = []
+        list_allowed_methods = ['get']
         include_resource_uri = False
+        fields = ['name']
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = ApiTokenAuthentication()
+        #authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
         filtering = {
             "name": ['exact'],
         }
+
+    def get_list(self, request, **kwargs):
+        response = super(LanguageResource, self).get_list(request, **kwargs)
+        data = json.loads(response.content)
+        content = {}  
+        content['msg'] = 'Languages retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
+
 
 
 class UserLanguageResource(ModelResource):
@@ -312,7 +328,7 @@ class UserProfileResource(ModelResource):
             ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
             i.data['level'] = str(ul.level).lower()
             i.data['name'] = str(i.data['name']).lower()
-            i.data.pop('id')
+            #i.data.pop('id')
         return bundle.data['languages']
 
     def dehydrate_education(self, bundle):
@@ -539,7 +555,7 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('other_locations')
 
         forbidden_fields_update = ['avatar', 'id', 'user']
-        #not_empty_fields = ['pw_state', "name_to_show", "gender"]
+        #not_empty_fields = ['pw_state', 'gender']
         if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
         if 'birth_month' in bundle.data: up.birthday = up.birthday.replace(month=int(bundle.data['birth_month']))
         if 'birth_year' in bundle.data: up.birthday = up.birthday.replace(year=int(bundle.data['birth_year']))

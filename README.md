@@ -469,8 +469,13 @@ There are some standard error messages:
             ],
             "lastLogin": "Mon Oct 29 17:01:49 2012",
             "lastName": "Lorelei",
+            "numFriends": 0,
+            "numReferences": 0,
             "occupation": "tocar los huevos",
-            "user": "/api/v1/accounts/3"
+            "pending": "Pending",
+            "tasaRespuestas": 0,
+            "user": "/api/v1/accounts/2",
+            "verified": true
           },
           ...
         ],
@@ -478,3 +483,28 @@ There are some standard error messages:
         "status": true
       }
 
+### List languages (Ezequiel):
+  * Request:
+    GET /languages
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "data": [
+          {
+            "name": "english"
+          },
+          {
+            "name": "spanish"
+          },
+          {
+            "name": "german"
+          },
+          {
+            "name": "french"
+          }
+        ],
+        "msg": "Languages retrieved successfully.",
+        "status": true
+      }

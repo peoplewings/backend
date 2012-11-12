@@ -76,7 +76,7 @@ class UserProfile(models.Model):
     
     user = models.ForeignKey(User, unique=True)
     age = models.IntegerField(default=0)
-    name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
+    #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
     avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
 
