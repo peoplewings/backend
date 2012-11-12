@@ -42,6 +42,7 @@ class CroppedResource(ModelResource):
         always_return_data = True
         validation = FormValidation(form_class=CroppedForm)
   
+
     def post_detail(self, request, **kwargs):
         #kwargs = id de la original
         #raw_post_data = x, y, w, h   
@@ -64,11 +65,15 @@ class CroppedResource(ModelResource):
 
                 up.save()
             else:
-                return self.create_response(request, {"status":False, "data":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
-            return self.create_response(request, {"status":True, "data":"Avatar cropped and updated", "code":"200"}, response_class = HttpResponse)
+                return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
+            data = dict()
+            data['url'] = cropped_img.image.url
+            data['width'] = cropped_img.w
+            data['height'] = cropped_img.h
+            return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
         except Exception, e: 
             print e           
-            return self.create_response(request, {"status":False, "data":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
+            return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
         
 
     def wrap_view(self, view):
