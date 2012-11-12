@@ -8,6 +8,7 @@ from peoplewings.apps.registration.forms import RegistrationForm
 from peoplewings.apps.cropper.models import Cropped
 from peoplewings.apps.locations.models import City
 from peoplewings.global_vars import *
+from django.conf import settings as django_settings
 
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
@@ -78,9 +79,10 @@ class UserProfile(models.Model):
     age = models.IntegerField(default=0)
     #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
-    avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
-    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
+    avatar = models.CharField(max_length=max_long_len, default= '%sblank_avatar.jpg' % django_settings.MEDIA_URL)
+    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
+    
     # In Basic Information
     birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
     show_birthday = models.CharField(verbose_name='', max_length=100, choices=SHOW_BIRTHDAY_CHOICES, default='F')

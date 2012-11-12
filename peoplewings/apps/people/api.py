@@ -591,7 +591,8 @@ class UserProfileResource(ModelResource):
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        if b: data['id'] = 'me'
+        data['pid'] = kwargs['pk']
+        data['id'] = 'me'
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -656,8 +657,8 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('social_networks')
 
         if 'current' in bundle.data:
-            city = City.objects.saveLocation(**bundle.data['current'])
-            up.current_city = city
+            ccity = City.objects.saveLocation(**bundle.data['current'])
+            up.current_city = ccity
             """
             if 'city' in bundle.data['current'] and 'region' in bundle.data['current'] and 'country' in bundle.data['current']:
                 country, b = Country.objects.get_or_create(name=bundle.data['current']['country'])
@@ -670,8 +671,8 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('current')
 
         if 'hometown' in bundle.data:
-            city = City.objects.saveLocation(**bundle.data['hometown'])
-            up.hometown = city
+            hcity = City.objects.saveLocation(**bundle.data['hometown'])
+            up.hometown = hcity
             """
             if 'city' in bundle.data['hometown'] and 'region' in bundle.data['hometown'] and 'country' in bundle.data['hometown']:
                 country, b = Country.objects.get_or_create(name=bundle.data['hometown']['country'])
@@ -686,13 +687,13 @@ class UserProfileResource(ModelResource):
         if 'other_locations' in bundle.data:
             up.other_locations = []
             for ol in bundle.data['other_locations']:
-                city = City.objects.saveLocation(**ol)
+                ocity = City.objects.saveLocation(**ol)
                 """
                 country, b = Country.objects.get_or_create(name=ol['country'])
                 region, b = Region.objects.get_or_create(name=ol['region'], country=country)
                 city, b = City.objects.get_or_create(name=ol['city'], region=region)
                 """
-                if city is not None: up.other_locations.add(city)
+                if ocity is not None: up.other_locations.add(ocity)
             bundle.data.pop('other_locations')
 
         forbidden_fields_update = ['avatar', 'id', 'user']
