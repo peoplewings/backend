@@ -79,7 +79,8 @@ class UserProfile(models.Model):
     age = models.IntegerField(default=0)
     #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
-    avatar = models.CharField(max_length=max_long_len, default=django_settings.STATIC_URL + 'blank_avatar.jpg')
+
+    avatar = models.CharField(max_length=max_long_len, default= '%sblank_avatar.jpg' % django_settings.MEDIA_URL)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 
     # In Basic Information

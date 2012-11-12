@@ -9,6 +9,8 @@ from peoplewings.apps.ajax.utils import json_response, json_success_response
 import Image
 import os
 from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
+from urllib import unquote
+from peoplewings.libs.S3Custom import S3Custom
 
 class UploadView(FormView):
     """
@@ -23,14 +25,14 @@ class UploadView(FormView):
 
     def success(self, request, form, original):
         #print original.__dict__
-        response = {'id': original.id, 'image': original.image.path.split('/')[-1], 'width': original.image_width, 'height': original.image_height}
+        response = {'id': original.id, 'image': unquote(original.image.url).split('?')[0], 'width': original.image_width, 'height': original.image_height}
         return json_success_response(response)
         #return redirect(original)
 
     def form_valid(self, form):
         original = form.save()
         if original.image_width > 600: 
-            original.image_width, original.image_height = resize_image(original.image.name, (600, 600))
+            original._resize_image((600, 600))
             original.save()
         return self.success(self.request, form, original)
 
@@ -39,7 +41,6 @@ class UploadView(FormView):
                 'success': False,
                 'errors': dict(form.errors.items()),
                 })
-        
 
 class CropView(FormView):
     """
@@ -75,6 +76,7 @@ class CropView(FormView):
         }
 
     def form_valid(self, form):
+        #print form.__dict__
         cropped = form.save(commit=False)
         cropped.save()
         up = UserProfile.objects.get(pk=self.request.user.get_profile().id)
@@ -90,15 +92,16 @@ class CropView(FormView):
         Default success crop handler
         """
         return HttpResponse(json_success_response({'image': {
-                'url'    : cropped.image.url,
+                'url'    : unquote(cropped.image.url).split('?')[0],
                 'width'  : cropped.w,
                 'height' : cropped.h,
-            }}), mimetype='application/x-json') if request.is_ajax() else render(request, 'cropper/crop.html',
-            {
-                'form'     : form,
-                'cropped'  : cropped,
-                'original' : original
-            })
+            }}), mimetype='application/json') 
+            
+    def form_invalid(self, form):
+        return json_response({
+                'success': False,
+                'errors': dict(form.errors.items()),
+                })
 
 def resize_image(filename, size):
         ext = filename.rsplit('.', 1)[-1]

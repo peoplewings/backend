@@ -39,6 +39,8 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
+    'storages',
+    'compressor',
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -50,6 +52,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.locations',
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
+    'peoplewings.libs.S3Custom',
     #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -92,10 +95,17 @@ LOGGING = {
     }
 }
 #IMG
-STATIC_URL = 'https://peoplewings-test-media.s3.amazonaws.com/'
+MEDIA_ROOT = '/data/media/'
+STATIC_ROOT = '/data/static/'
+
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+
+S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
+STATIC_URL = S3_URL
+MEDIA_URL = S3_URL
+"""
 # Compressor IMG
 COMPRESS_ENABLED = True
 if COMPRESS_ENABLED:
@@ -103,9 +113,11 @@ if COMPRESS_ENABLED:
         'compressor.filters.css_default.CssAbsoluteFilter',
         'compressor.filters.cssmin.CSSMinFilter',
     ]
-    COMPRESS_STORAGE = 'fisio.storage.CachedS3BotoStorage'
+    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     COMPRESS_URL = STATIC_URL
     COMPRESS_OFFLINE = True
-
+"""
 # Storages IMG
-STATICFILES_STORAGE = 'fisio.storage.CachedS3BotoStorage'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+AWS_QUERYSTRING_AUTH = False
