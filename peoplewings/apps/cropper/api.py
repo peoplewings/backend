@@ -58,6 +58,7 @@ class CroppedResource(ModelResource):
             cropped_img.w = int(bundle.data['w'])
             cropped_img.h = int(bundle.data['h'])
             cropped_img.cropit()
+            cropped_img.thumbnail((246, 246), Image.ANTIALIAS)
             if cropped_img is not None:
                 cropped_img.save()
                 up = UserProfile.objects.get(user = request.user.pk)
