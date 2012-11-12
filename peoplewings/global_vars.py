@@ -106,3 +106,10 @@ SMOKING_CHOICES = (
 
 CAPACITY_OPTIONS=[(str(i), str(i)) for i in range(1, 10)]
 CAPACITY_OPTIONS.append(('m', '+9'))
+
+RELATIONSHIP_CHOICES = (
+    ('Pending', 'Pending'),
+    ('Accepted', 'Accepted'),
+    ('Rejected', 'Rejected'),
+    ('Blocked', 'Blocked'),
+)
