@@ -63,7 +63,6 @@ class CroppedResource(ModelResource):
                 cropped_img.save()
                 up = UserProfile.objects.get(user = request.user.pk)
                 up.avatar = cropped_img.image.url
-
                 up.save()
             else:
                 return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
