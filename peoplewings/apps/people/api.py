@@ -1,6 +1,8 @@
 #People API
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests
 import json
+import re
+from datetime import date
+from pprint import pprint
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
@@ -13,6 +15,7 @@ from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.forms import ValidationError
 from django import forms
 from django.utils.cache import patch_cache_control
@@ -22,23 +25,148 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-from peoplewings.apps.registration.api import AccountResource
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
+from peoplewings.apps.people.exceptions import FriendYourselfError, CannotAcceptOrRejectError, InvalidAcceptRejectError
+from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
+from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
-from peoplewings.global_vars import LANGUAGES_LEVEL_CHOICES_KEYS
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.libs.customauth.models import ApiToken
-from datetime import date
 
-from pprint import pprint
+class RelationshipResource(ModelResource):
+    class Meta:
+        object_class = UserProfile
+        list_allowed_methods = ['get', 'post']
+        detail_allowed_methods = ['put', 'delete']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        include_resource_uri = True
+        fields = ['avatar']
 
-import re
+    def post_list(self, request, **kwargs):
+        if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
+            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+        try:
+            super(RelationshipResource, self).post_list(request, **kwargs)
+        except IntegrityError:
+            return self.create_response(request, {"msg":"The relationship already exists." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        except FriendYourselfError:
+            return self.create_response(request, {"msg":"Cannot be friend of yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"Invitation sent. Pending to be accepted.", "status":True, "code":200}
+        return self.create_response(request, dic)
 
-from django.db.models import Q
+    @transaction.commit_on_success
+    def obj_create(self, bundle, request=None, **kwargs):
+        sender = UserProfile.objects.get(user=request.user)
+        receiver = UserProfile.objects.get(pk=int(bundle.data['receiver'].split('/')[-1]))
+        if sender.id == receiver.id: raise FriendYourselfError()
+        if Relationship.objects.filter((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver))).exists():
+            raise IntegrityError()
+        rel = Relationship.objects.create(sender=sender, receiver=receiver, relationship_type="Pending")     
+        return bundle
+
+    def put_detail(self, request, **kwargs):
+        try:
+            super(RelationshipResource, self).put_detail(request, **kwargs)
+        except CannotAcceptOrRejectError:
+            return self.create_response(request, {"msg":"That relationship is not pending." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        except InvalidAcceptRejectError:
+            return self.create_response(request, {"msg":"Invalid type." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+        tipo = bundle.data['type']
+        if tipo == "Accepted": txt = "Invitation accepted."
+        else: txt = "Invitation rejected."
+        dic = {"msg":txt, "status":True, "code":200}
+        return self.create_response(request, dic)        
+
+    @transaction.commit_on_success
+    def obj_update(self, bundle, request=None, **kwargs):
+        receiver = UserProfile.objects.get(user=request.user)
+        sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        if not Relationship.objects.filter(sender=sender, receiver=receiver, relationship_type="Pending").exists(): 
+            raise CannotAcceptOrRejectError()
+        tipo = bundle.data['type']
+        if tipo == "Accepted":
+            rel = Relationship.objects.get(sender=sender, receiver=receiver)
+            rel.relationship_type = tipo
+            rel.save()
+        elif tipo == "Rejected":
+            Relationship.objects.get(sender=sender, receiver=receiver).delete()
+        else:
+            raise InvalidAcceptRejectError()
+        return bundle
+
+    def delete_detail(self, request, **kwargs):
+        try:
+            super(RelationshipResource, self).delete_detail(request, **kwargs)
+        except ObjectDoesNotExist, e:
+            return self.create_response(request, {"msg":"That relationship doesn't exist." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"You are not friend of that user anymore.", "status":True, "code":200}
+        return self.create_response(request, dic)  
+
+    def obj_delete(self, request=None, **kwargs):
+        receiver = UserProfile.objects.get(user=request.user)
+        sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        Relationship.objects.get((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver)), relationship_type="Accepted").delete()
+
+    """
+    def obj_get_list(self, request=None, **kwargs):
+        u = request.user
+        rels = Relationship.objects.filter(Q(sender=u) | Q(receiver=u))
+        res = []
+        for r in rels:
+            if r.sender == u: res.append(r.receiver)
+            else: res.append(r.sender)
+
+        return res
+    """
+    def get_list(self, request, **kwargs):
+        up = UserProfile.objects.get(user=request.user)
+        # miramos si el cliente quiere listar las invitaciones pendientes o los amigos
+        status = request.GET['status']
+        if status == 'friends':
+            rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Accepted")
+        elif status == 'pendings':
+            rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
+        else:
+            return self.create_response(request, {'msg':"Status not valid, must be either 'friends' or 'pendings' ", 'status':False, 'code':200}, response_class=HttpResponse)
+        res = []
+        for r in rels:
+            if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
+            else: bundle = self.build_bundle(obj=r.sender, request=request)
+            bundle = self.full_dehydrate(bundle)
+            res.append(bundle)
+
+        content = {}  
+        if status == 'friends': content['msg'] = 'Friends retrieved successfully.'
+        else: content['msg'] = 'Invitations retrieved successfully.'
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = res
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    def dehydrate(self, bundle):
+        bundle.data['first_name'] = bundle.obj.user.first_name
+        bundle.data['last_name'] = bundle.obj.user.last_name
+        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace('relationship', 'profiles')
+        return bundle
+
+    """
+    def apply_authorization_limits(self, request, object_list=None):
+        return object_list.filter(Q(sender=request.user) | Q(receiver=request.user))
+    """
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data['objects']
 
 class InstantMessageResource(ModelResource):
     class Meta:
@@ -118,16 +246,32 @@ class UserUniversityResource(ModelResource):
 class LanguageResource(ModelResource):
     class Meta:
         object_class = Language
+        resource_name = 'languages'
         queryset = Language.objects.all()
-        allowed_methods = []
+        list_allowed_methods = ['get']
         include_resource_uri = False
+        fields = ['name']
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = ApiTokenAuthentication()
+        #authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
         filtering = {
             "name": ['exact'],
         }
+
+    def get_list(self, request, **kwargs):
+        response = super(LanguageResource, self).get_list(request, **kwargs)
+        data = json.loads(response.content)
+        content = {}  
+        content['msg'] = 'Languages retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
+
 
 
 class UserLanguageResource(ModelResource):
@@ -292,16 +436,29 @@ class UserProfileResource(ModelResource):
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # /profiles/<profile_id>|me/relationships/
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('relationship_collection'), name="api_list_relationships"),
+            # /profiles/me/relationships/<profile_id>
+            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('relationship_detail'), name="api_detail_relationships"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
         return accomodation_resource.dispatch_list(request, **kwargs)  
 
-
     def accomodation_detail(self, request, **kwargs):
         accomodation_resource = AccomodationsResource()
         return accomodation_resource.dispatch_detail(request, **kwargs)
+
+    def relationship_collection(self, request, **kwargs):
+        rr = RelationshipResource()
+        return rr.dispatch_list(request, **kwargs)  
+
+    def relationship_detail(self, request, **kwargs):
+        rr = RelationshipResource()
+        return rr.dispatch_detail(request, **kwargs)
 
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
@@ -312,7 +469,7 @@ class UserProfileResource(ModelResource):
             ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
             i.data['level'] = str(ul.level).lower()
             i.data['name'] = str(i.data['name']).lower()
-            i.data.pop('id')
+            #i.data.pop('id')
         return bundle.data['languages']
 
     def dehydrate_education(self, bundle):
@@ -539,7 +696,8 @@ class UserProfileResource(ModelResource):
             bundle.data.pop('other_locations')
 
         forbidden_fields_update = ['avatar', 'id', 'user']
-        #not_empty_fields = ['pw_state', "name_to_show", "gender"]
+        #not_empty_fields = ['pw_state', 'gender']
+
         if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
         if 'birth_month' in bundle.data: up.birthday = up.birthday.replace(month=int(bundle.data['birth_month']))
         if 'birth_year' in bundle.data: up.birthday = up.birthday.replace(year=int(bundle.data['birth_year']))
@@ -584,11 +742,10 @@ class UserProfileResource(ModelResource):
 
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user']
+            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas']
             '''
             De user:
-            bundle.data['first_name'] = bundle.obj.user.first_name
-            bundle.data['last_name'] = bundle.obj.user.last_name
+            
             bundle.data['last_login'] = bundle.obj.user.last_login
             De user profile:
             bundle.data['avatar'] = bundle.obj.avatar
@@ -604,6 +761,11 @@ class UserProfileResource(ModelResource):
                 if key not in permitted_fields: del bundle.data[key]
             bundle.data['first_name'] = bundle.obj.user.first_name
             bundle.data['last_name'] = bundle.obj.user.last_name
+            bundle.data['verified'] = True
+            bundle.data['num_friends'] = 0
+            bundle.data['num_references'] = 0
+            bundle.data['pending'] = "Pending"
+            bundle.data['tasa_respuestas'] = 0
 
             from datetime import timedelta, datetime
             d = timedelta(hours=1)
@@ -618,11 +780,10 @@ class UserProfileResource(ModelResource):
 
             if bundle.request.user.is_anonymous():
                 bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                #bundle.data['name_to_show'] = 'fake_' + bundle.data['name_to_show']
+                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
+                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
-            #bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
