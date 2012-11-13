@@ -574,7 +574,7 @@ There are some standard error messages:
 
 ### Add reference (Ezequiel):
   * Request:
-    POST /profiles/<id>/references/
+    POST /profiles/<profile_id>/references/
     {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
     {
       "title": "This guy is awesome",
@@ -595,3 +595,37 @@ There are some standard error messages:
 
     Notes:
       - "punctuation" must be either "Positive", "Negative" or "Neutral"
+
+### View another user's references (Ezequiel):
+  * Request:
+    GET /profiles/<profile_id>/references/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "data": [
+          {
+            "title": "This guy is awesome",
+            "text": "I had really fun with him, he brought me to the Ramblas, the Cathedral and Paseo Colon :-)",
+            "punctuation": "Positive"
+          },
+          {
+            "title": "This guy is mean!",
+            "text": "This guy is a pervert :-(",
+            "punctuation": "Negative"
+          },
+          {
+            "title": "This guy is regular",
+            "text": "The visit was OK but many things were left unvisited :-S",
+            "punctuation": "Neutral"
+          }
+        ]
+        "msg": "References retrieved successfully.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+

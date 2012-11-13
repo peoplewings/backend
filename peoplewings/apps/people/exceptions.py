@@ -11,3 +11,7 @@ class CannotAcceptOrRejectError(Exception):
 class InvalidAcceptRejectError(Exception):
     def render(self, request):
         return HttpResponse()
+
+class CommentYourselfError(Exception):
+    def render(self, request):
+        return HttpResponse()

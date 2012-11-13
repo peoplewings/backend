@@ -79,7 +79,8 @@ class UserProfile(models.Model):
     #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
     avatar = models.CharField(max_length=max_long_len, default='/static/img/blank_avatar.jpg')
-    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
+    relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship', related_name="relationships+")
+    references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
 
     # In Basic Information
     birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
@@ -140,6 +141,13 @@ class Relationship(models.Model):
 
     class Meta:
         unique_together = ("sender", "receiver")
+
+class Reference(models.Model):    
+    author = models.ForeignKey('UserProfile', related_name='author')
+    commented = models.ForeignKey('UserProfile', related_name='commented')
+    title = models.CharField(max_length=max_medium_len)
+    text = models.TextField(max_length=max_500_char)
+    punctuation = models.CharField(max_length=8, choices=PUNCTUATION_CHOICES)
 
 def createUserProfile(sender, user, request, **kwargs):  
     form = RegistrationForm(request.POST)
