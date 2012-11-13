@@ -36,6 +36,7 @@ MEDIA_URL = '/media/'
 
 # Static content is saved to here --
 STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_ROOT,'staticfiles')) # this folder is used to collect static files in production. not used in development
+STATIC_ROOT = '/'
 STATIC_URL =  "/static/"
 
 # Additional locations of static files

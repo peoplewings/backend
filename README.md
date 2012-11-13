@@ -509,6 +509,9 @@ There are some standard error messages:
         "status": true
       }
 
+    * NO 
+     * 403 FORBIDDEN {"code": 413, "msg":"Unauthorized", "status": false}
+
 
 ### View my friends (Ezequiel):
   * Request:

@@ -1,1 +1,0 @@
-# A place to store user's uploaded media files ouh yeah

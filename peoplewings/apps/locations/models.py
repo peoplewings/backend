@@ -34,17 +34,18 @@ class Region(models.Model):
 
 # CITY + MANAGER
 class CityManager(models.Manager):
-    """
-    def create(self, **kwargs):
+    
+    def get_or_create(self, **kwargs):
         try:
-            city = City.objects.get(short_name=kwargs['short_name'])
+            city = City.objects.get(name=kwargs['name'], region_id=kwargs['region'])
             city.lat = kwargs['lat']
             city.lon = kwargs['lon']            
-        except:
-            city = City(name=kwargs['name'], short_name=kwargs['short_name'], lat=kwargs['lat'], lon=kwargs['lon'], region = kwargs['region'])
+        except Exception, e:
+            print 'city.get_or_create ', e
+            city = City(name=kwargs['name'], lat=kwargs['lat'], lon=kwargs['lon'], region = kwargs['region'])
         city.save()
         return city
-    """
+    
 
     def saveLocation(self, **kwargs):
     # countryN, countrySN, regionN='No region', regionSN='No region', cityN, citySN, cityLat, cityLon, locationType
@@ -60,13 +61,14 @@ class CityManager(models.Manager):
         #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
         try:
             #Save the country  
-            country, b = Country.objects.get_or_create(name=countryN)
+            country, b = Country.objects.get_or_create(name=countryN)            
             #Save the region, if any. Else save it like "no region"
             region, b = Region.objects.get_or_create(name=regionN, country = country)
             #Save the city
-            city, b = City.objects.get_or_create(name=cityN, lat=cityLat, lon=cityLon, region=region)
+            city = City.objects.get_or_create(name=cityN, lat=cityLat, lon=cityLon, region=region)         
             return city
-        except: 
+        except Exception, e: 
+            print e
             return None
 
 class City(models.Model):
