@@ -252,21 +252,25 @@ class LanguageResource(ModelResource):
         include_resource_uri = False
         fields = ['name']
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        #authentication = ApiTokenAuthentication()
-        authorization = Authorization()
+        authentication = AnonymousApiTokenAuthentication()
+        authorization = ReadOnlyAuthorization()
         always_return_data = True
         filtering = {
             "name": ['exact'],
         }
 
     def get_list(self, request, **kwargs):
+        if request.user.is_anonymous():
+            return self.create_response(request, {"msg":"Unauthorized.", "code":413, "status":False}, response_class=HttpForbidden)
         response = super(LanguageResource, self).get_list(request, **kwargs)
         data = json.loads(response.content)
         content = {}  
         content['msg'] = 'Languages retrieved successfully.'      
         content['status'] = True
         content['code'] = 200
-        content['data'] = data
+        content['data'] = []
+        for lang in data:
+            content['data'].append(lang['name'])
         return self.create_response(request, content, response_class=HttpResponse)
 
     def alter_list_data_to_serialize(self, request, data):
