@@ -89,7 +89,7 @@ There are some standard error messages:
 ### Request Forgot password (Joan):
  * Request:
     /POST /forgot/
-    {"email" = "joan@peoplewings.com"}
+    {"email" : "joan@peoplewings.com"}
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"msg": "Email sent"}, "status": true}
@@ -121,8 +121,7 @@ There are some standard error messages:
 ### Logout (Joan):
  * Request:
     /POST /noauth/
-    {}
-    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+    {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
     * 200 OK {"code": 200, "data": {"msg": "Logout complete"}, "status": true}
@@ -132,8 +131,7 @@ There are some standard error messages:
 ### View my account (Joan):
  * Request:
     /GET /accounts/me
-    {}
-    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+    {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
     * 200 OK {"code": 200, "data": {"email": "fr33d4n@gmail.com", "firstName": "Ez", "lastName": "Pz", "password": "uqdh891288yuaidsbh"}, "msg": "Account shown", "status": true}
