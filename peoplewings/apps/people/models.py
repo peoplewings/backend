@@ -12,35 +12,25 @@ from django.conf import settings as django_settings
 
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
-    name = models.CharField(max_length=max_short_len, unique=True)  
+    name = models.CharField(max_length=max_medium_len, unique=True)  
 
 class UserSocialNetwork(models.Model):
     user_profile = models.ForeignKey('UserProfile')
     social_network = models.ForeignKey('SocialNetwork')
-    social_network_username = models.CharField(max_length=max_short_len)
+    social_network_username = models.CharField(max_length=max_medium_len)
 
 # INSTANT MESSAGE
 class InstantMessage(models.Model):
-    name = models.CharField(max_length=max_short_len, unique=True)  
+    name = models.CharField(max_length=max_medium_len, unique=True)  
 
 class UserInstantMessage(models.Model):
     user_profile = models.ForeignKey('UserProfile')
     instant_message = models.ForeignKey('InstantMessage')
-    instant_message_username = models.CharField(max_length=max_short_len)
-"""
-# CITY (old version)
-class City(models.Model):
-    #latitude = models.DecimalField(max_digits=11, decimal_places=9)
-    #longitude = models.DecimalField(max_digits=12, decimal_places=9)
-    country = models.CharField(max_length=max_medium_len)
-    state = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    cid = models.CharField(max_length=40, unique=True)
-"""
+    instant_message_username = models.CharField(max_length=max_medium_len)
 
 # LANGUAGE
 class Language(models.Model):
-    name = models.CharField(max_length=max_short_len, unique=True)  
+    name = models.CharField(max_length=max_medium_len, unique=True)  
 
 class UserLanguage(models.Model):
     user_profile = models.ForeignKey('UserProfile')
@@ -81,6 +71,8 @@ class UserProfile(models.Model):
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
 
     avatar = models.CharField(max_length=max_long_len, default= '%sblank_avatar.jpg' % django_settings.MEDIA_URL)
+    medium_avatar = models.CharField(max_length=max_long_len, default= '%smed-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
+    thumb_avatar = models.CharField(max_length=max_long_len, default= '%sthumb-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
     
     # In Basic Information
@@ -98,19 +90,19 @@ class UserProfile(models.Model):
 
     # Contact info
     emails = models.EmailField(blank=True)
-    phone = models.CharField(max_length=max_short_len, blank=True)
+    phone = models.CharField(max_length=max_medium_len, blank=True)
     social_networks = models.ManyToManyField(SocialNetwork, through='UserSocialNetwork')
     instant_messages = models.ManyToManyField(InstantMessage, through='UserInstantMessage')
 
     # About me
     all_about_you = models.TextField(max_length=max_long_len, blank=True)
     main_mission = models.TextField(max_length=max_long_len, blank=True, verbose_name='Current mission')
-    occupation = models.CharField(max_length=max_short_len, blank=True)
-    company = models.CharField(max_length=max_short_len, blank=True, verbose_name='Companies')
+    occupation = models.CharField(max_length=max_medium_len, blank=True)
+    company = models.CharField(max_length=max_medium_len, blank=True, verbose_name='Companies')
     universities = models.ManyToManyField(University, through='UserProfileStudiedUniversity')
     personal_philosophy = models.TextField(max_length=max_long_len, blank=True)
-    political_opinion = models.CharField(max_length=max_short_len, blank=True, verbose_name='Political views')
-    religion = models.CharField(max_length=max_short_len, blank=True)
+    political_opinion = models.CharField(max_length=max_medium_len, blank=True, verbose_name='Political views')
+    religion = models.CharField(max_length=max_medium_len, blank=True)
 
     # Likes
     enjoy_people = models.TextField(verbose_name="People I enjoy", max_length=max_long_len, blank=True)
