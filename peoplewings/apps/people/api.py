@@ -25,9 +25,9 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship
-from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
-from peoplewings.apps.people.exceptions import FriendYourselfError, CannotAcceptOrRejectError, InvalidAcceptRejectError
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference
+from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
+from peoplewings.apps.people.exceptions import *
 from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
@@ -169,6 +169,70 @@ class RelationshipResource(ModelResource):
     def alter_list_data_to_serialize(self, request, data):
         return data['objects']
 
+class ReferenceResource(ModelResource):
+    author = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'author', full=True, null=True)
+
+    class Meta:
+        object_class = Reference
+        list_allowed_methods = ['get', 'post']
+        #detail_allowed_methods = ['get']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        include_resource_uri = True
+        excludes = ['id']
+        validation = FormValidation(form_class=ReferenceForm)
+        
+    def dehydrate_author(self, bundle):
+        return_fields = ['avatar', 'first_name', 'last_name']
+        res = {}
+        for i in return_fields:
+            res[i] = bundle.data['author'][i]
+        return res
+
+    def post_list(self, request, **kwargs):
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+        self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+
+        try:
+            super(ReferenceResource, self).post_list(request, **kwargs)
+        except CommentYourselfError:
+            return self.create_response(request, {"msg":"Cannot comment yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"Your reference has been posted.", "status":True, "code":200}
+        return self.create_response(request, dic)
+
+    @transaction.commit_on_success
+    def obj_create(self, bundle, request=None, **kwargs):
+        author = UserProfile.objects.get(user=request.user)
+        commented = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        if author.id == commented.id: raise CommentYourselfError()
+        ref = Reference.objects.create(author=author, commented=commented, title=bundle.data['title'], text=bundle.data['text'], punctuation=bundle.data['punctuation'])     
+        return bundle
+
+    def get_list(self, request, **kwargs):
+        up = UserProfile.objects.get(user=request.user)
+        refs = Reference.objects.filter(commented=up)
+        res = []
+        for r in refs:
+            bundle = self.build_bundle(obj=r, request=request)
+            bundle = self.full_dehydrate(bundle)
+            res.append(bundle)
+
+        content = {}  
+        content['msg'] = 'References retrieved successfully.'
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = res
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data['objects']
+
 class InstantMessageResource(ModelResource):
     class Meta:
         object_class = InstantMessage
@@ -182,7 +246,7 @@ class InstantMessageResource(ModelResource):
 
 class UserInstantMessageResource(ModelResource):
     instant_message = fields.ToOneField(InstantMessageResource, 'instant_message', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserInstantMessage
@@ -207,7 +271,7 @@ class SocialNetworkResource(ModelResource):
 
 class UserSocialNetworkResource(ModelResource):
     social_network = fields.ToOneField(SocialNetworkResource, 'social_network', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserSocialNetwork
@@ -232,7 +296,7 @@ class UniversityResource(ModelResource):
 
 class UserUniversityResource(ModelResource):
     university = fields.ToOneField(UniversityResource, 'university', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserProfileStudiedUniversity
@@ -499,6 +563,8 @@ class UserProfileResource(ModelResource):
             # /profiles/me/relationships/<profile_id>
             url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('reference_collection'), name="api_list_references"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -517,6 +583,9 @@ class UserProfileResource(ModelResource):
         rr = RelationshipResource()
         return rr.dispatch_detail(request, **kwargs)
 
+    def reference_collection(self, request, **kwargs):
+        rr = ReferenceResource()
+        return rr.dispatch_list(request, **kwargs)
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -823,8 +892,9 @@ class UserProfileResource(ModelResource):
             bundle.data['first_name'] = bundle.obj.user.first_name
             bundle.data['last_name'] = bundle.obj.user.last_name
             bundle.data['verified'] = True
+            #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
             bundle.data['num_friends'] = 0
-            bundle.data['num_references'] = 0
+            bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
             bundle.data['pending'] = "Pending"
             bundle.data['tasa_respuestas'] = 0
 
@@ -842,7 +912,7 @@ class UserProfileResource(ModelResource):
             if bundle.request.user.is_anonymous():
                 # borroneo
                 from django.conf import settings as django_settings
-                bundle.data['avatar'] = '%sblank_avatar.jpg' % django_settings.MEDIA_URL
+                bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
 
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
@@ -933,7 +1003,8 @@ class UserProfileResource(ModelResource):
                     content['code'] = 400
                     content['status'] = False
                     if 'profiles' in e.response.content: errors = json.loads(e.response.content)['profiles']
-                    else: errors = json.loads(e.response.content)['accomodations']
+                    elif 'accomodations' in e.response.content: errors = json.loads(e.response.content)['accomodations']
+                    else: errors = json.loads(e.response.content)['reference']
                     content['errors'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:
