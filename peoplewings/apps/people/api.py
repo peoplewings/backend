@@ -1,7 +1,7 @@
 #People API
 import json
 import re
-from datetime import date
+from datetime import date, datetime
 from pprint import pprint
 from tastypie import fields
 from tastypie.authentication import *
@@ -35,6 +35,7 @@ from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.libs.customauth.models import ApiToken
+from peoplewings.apps.wings.models import Accomodation
 
 class RelationshipResource(ModelResource):
     class Meta:
@@ -338,7 +339,7 @@ class UserProfileResource(ModelResource):
         validation = FormValidation(form_class=UserProfileForm)
         filtering = {
             "age": ['range'],
-            'gender':['in'],
+            'gender':['exact'],
             'languages':ALL_WITH_RELATIONS,
             #'userlanguages': ALL_WITH_RELATIONS,
         }
@@ -380,7 +381,60 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        # capacity, start age, end age, language and type are OBLIGATORY        
+        city = request.GET.get('wings', None)
+        start_date = request.GET.get('startDate', None)
+        end_date = request.GET.get('endDate', None)
+        capacity = request.GET.get('capacity', None)
+        start_age = request.GET.get('startAge', None)
+        end_age = request.GET.get('endAge', None)
+        language = request.GET.get('language', None)
+        gender = request.GET.get('gender', None)
+        tipo = request.GET.get('type', None)
+        
+        # QuerySets are lazy. This means that we can stack filters and there will be no database activity
+        # until the queryset is evaluated.
+        
+        # filter by profile's parameters: start age, end age, language, gender
+        if language and language != 'all':
+            entry_query = self.get_query(language, ['userlanguage__language__name'])
+            base_object_list = base_object_list.filter(entry_query).distinct()
 
+        if start_age and end_age:
+            base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
+
+        if gender:
+            entry_query = self.get_query(gender, ['gender'])
+            base_object_list = base_object_list.filter(entry_query).distinct()
+
+        # filter by wings' parameters: city, start date, end date, capacity, type
+        if capacity or start_date or end_date or city or tipo:
+            accomodation_list = Accomodation.objects.all()
+            if capacity:
+                accomodation_list = accomodation_list.filter(capacity__gte=capacity)
+            if start_date:
+                start_date = datetime.strptime(start_date, '%m-%d-%Y')
+                accomodation_list = accomodation_list.exclude(date_end__isnull=False, date_end__lt=start_date)
+            if end_date:
+                end_date = datetime.strptime(end_date, '%m-%d-%Y')
+                accomodation_list = accomodation_list.exclude(date_start__isnull=False, date_start__gt=end_date)
+            if city:
+                accomodation_list = accomodation_list.filter(city__name__iexact=city)
+            if tipo:
+                is_request = tipo == 'applicant'
+                accomodation_list = accomodation_list.filter(is_request=is_request)
+            base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
+
+        paginator = Paginator(base_object_list, 10)
+        try:
+            page = paginator.page(int(request.GET.get('page', 1)))
+        except InvalidPage:
+            raise Http404("Sorry, no results on that page.")
+
+        return page
+        """
+        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        pprint(request.GET)
         query = request.GET.get('userlanguage__level', None)
         if query:
             entry_query = self.get_query(query, ['userlanguage__level'])
@@ -430,6 +484,7 @@ class UserProfileResource(ModelResource):
             raise Http404("Sorry, no results on that page.")
 
         return page
+        """
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
@@ -597,6 +652,9 @@ class UserProfileResource(ModelResource):
         data = json.loads(a.content)
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
+        if b:
+            up = UserProfile.objects.get(user=request.user)
+            data['pw_state'] = up.pw_state
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -619,12 +677,11 @@ class UserProfileResource(ModelResource):
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-
-        up = UserProfile.objects.get(user=request.user)
         self.is_valid(bundle, request)
         if bundle.errors:
             self.error_response(bundle.errors, request)
 
+        up = UserProfile.objects.get(user=request.user)
         if 'interested_in' in bundle.data:
             up.interested_in = []
             for i in bundle.data['interested_in']:
@@ -735,11 +792,12 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
+        objects = {'count':len(data), 'profiles':data}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
         content['code'] = 200
-        content['data'] = data
+        content['data'] = objects
         return self.create_response(request, content, response_class=HttpResponse)
 
     def full_dehydrate(self, bundle):
@@ -772,7 +830,7 @@ class UserProfileResource(ModelResource):
             bundle.data['pending'] = "Pending"
             bundle.data['tasa_respuestas'] = 0
 
-            from datetime import timedelta, datetime
+            from datetime import timedelta
             d = timedelta(hours=1)
             online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
             if online: bundle.data['last_login'] = "Online"
@@ -784,9 +842,19 @@ class UserProfileResource(ModelResource):
             if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
-                bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
-                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
+                # borroneo
+                from django.conf import settings as django_settings
+                bundle.data['avatar'] = '%sblank_avatar.jpg' % django_settings.MEDIA_URL
+
+                long_first = len(bundle.obj.user.first_name)
+                long_last = len(bundle.obj.user.last_name)
+                import string, random
+                ran_name = [random.choice(string.ascii_letters) for n in xrange(long_first)]
+                ran_last = [random.choice(string.ascii_letters) for n in xrange(long_last)]
+                ran_name = "".join(ran_name)
+                ran_last = "".join(ran_last)
+                bundle.data['first_name'] = ran_name
+                bundle.data['last_name'] = ran_last
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
             if bundle.request.path != u'/api/v1/profiles/me':

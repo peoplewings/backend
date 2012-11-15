@@ -433,53 +433,64 @@ There are some standard error messages:
 
 ### Search wings (Ezequiel):
   * Request:
-    GET /profiles/?capacity=4&date_start__gte=2012-12-12&date_end__lte=2012-12-15
+    GET /profiles/?wings=Buenos%20Aires&startDate=12-21-2012&endDate=12-26-2012&capacity=4&startAge=20&endAge=23&language=english&gender=Male&type=host&page=1
     {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
-
+    
   *Response:
     * 200 OK
       {
         "code": 200,
-        "data": [
+        "data": 
           {
-            "age": 13,
-            "allAboutYou": "",
-            "avatar": "/static/img/blank_avatar.jpg",
-            "current": {
-              "country": "Argentina",
-              "name": "Buenos Aires",
-              "region": "Bs As"
-            },
-            "firstName": "Kim",
-            "languages": [
-              {
-                "level": "intermediate",
-                "name": "english"
-              },
-              {
-                "level": "expert",
-                "name": "spanish"
-              },
-              {
-                "level": "beginner",
-                "name": "german"
-              }
-            ],
-            "lastLogin": "Mon Oct 29 17:01:49 2012",
-            "lastName": "Lorelei",
-            "numFriends": 0,
-            "numReferences": 0,
-            "occupation": "tocar los huevos",
-            "pending": "Pending",
-            "tasaRespuestas": 0,
-            "user": "/api/v1/accounts/2",
-            "verified": true
+              "count": 56,
+              "profiles": 
+              [
+                      {
+                        "age": 13,
+                        "allAboutYou": "",
+                        "avatar": "/static/img/blank_avatar.jpg",
+                        "current": {
+                          "country": "Argentina",
+                          "name": "Buenos Aires",
+                          "region": "Bs As"
+                        },
+                        "firstName": "Kim",
+                        "languages": [
+                          {
+                            "level": "intermediate",
+                            "name": "english"
+                          },
+                          {
+                            "level": "expert",
+                            "name": "spanish"
+                          },
+                          {
+                            "level": "beginner",
+                            "name": "german"
+                          }
+                        ],
+                        "lastLogin": "Mon Oct 29 17:01:49 2012",
+                        "lastName": "Lorelei",
+                        "numFriends": 0,
+                        "numReferences": 0,
+                        "occupation": "tocar los huevos",
+                        "pending": "Pending",
+                        "tasaRespuestas": 0,
+                        "user": "/api/v1/accounts/2",
+                        "verified": true
+                      },
+                      ...
+              ]
           },
-          ...
-        ],
         "msg": "Profiles retrieved successfully.",
         "status": true
       }
+
+    Notes:
+      - "X-Auth-Token" is optional: if one valid is provided, the first names, last names and avatars will be the originals; otherwise, they will be faked (blurred)
+      - "capacity", "startAge", "endAge", "language" and "type" parameters will always be passed in the uri, the rest are optional
+      - "startDate" and "endDate" are in format mm-dd-yyyy
+      - "type" must be either "host" or "applicant"
 
 ### List languages (Ezequiel):
   * Request:
