@@ -1,0 +1,816 @@
+[
+  {
+    "model": "people.SocialNetwork",
+    "pk": 1,
+    "fields": {
+        "name" : "Facebook"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 2,
+    "fields": {
+        "name" : "Twitter"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 3,
+    "fields": {
+        "name" : "Tuenti"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 4,
+    "fields": {
+        "name" : "Badoo"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 5,
+    "fields": {
+        "name" : "Meeting"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 6,
+    "fields": {
+        "name" : "Coach Surfing"
+    }
+  },
+{
+    "model": "people.SocialNetwork",
+    "pk": 7,
+    "fields": {
+        "name" : "LinkedIn"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 1,
+    "fields": {
+        "name" : "Whatsap"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 2,
+    "fields": {
+        "name" : "Skype"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 3,
+    "fields": {
+        "name" : "Facetime"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 4,
+    "fields": {
+        "name" : "BB Messenger"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 5,
+    "fields": {
+        "name" : "Messenger"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 1,
+    "fields": {
+        "name" : "English"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 2,
+    "fields": {
+        "name" : "Spanish"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 3,
+    "fields": {
+        "name" : "Catalan"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 4,
+    "fields": {
+        "name" : "French"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 5,
+    "fields": {
+        "name" : "German"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 6,
+    "fields": {
+        "name" : "Japanese"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 7,
+    "fields": {
+        "name" : "Chinese"
+    }
+  },
+{
+    "model": "people.Language",
+    "pk": 8,
+    "fields": {
+        "name" : "Armenian"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 1,
+    "fields": {
+        "name" : "Universitat Politècnica de Catalunya"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 2,
+    "fields": {
+        "name" : "Universitat de Barcelona"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 3,
+    "fields": {
+        "name" : "Universitat Oberta de Catalunya"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 4,
+    "fields": {
+        "name" : "Universitat Internacional de Catalunya"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 5,
+    "fields": {
+        "name" : "Universitat Pompeu Fabra"
+    }
+  },
+{
+    "model": "people.University",
+    "pk": 6,
+    "fields": {
+        "name" : "Massachusets Institute of Technology"
+    }
+  },
+{
+    "model": "people.Interests",
+    "pk": 1,
+    "fields": {
+        "gender" : "Male"
+    }
+  },
+{
+    "model": "people.Interests",
+    "pk": 2,
+    "fields": {
+        "gender" : "Female"
+    }
+  },
+{
+    "model": "people.UserProfile",
+    "pk": 1,
+    "fields": {
+        "user" : 1,
+        "age" : 25,
+        "pw_state" : "Y",
+        "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+        "thumb_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "birthday" : "1987-02-01",
+        "show_birthday" : "F",
+        "gender" : "Male",
+        "civil_state" : "IC",
+        "current_city" : 1,
+        "hometown" : 3,
+        "emails" : "eze_ano@gmail.com",
+        "phone" : "609826937",
+        "all_about_you" : "I'm a nice man from Argentina. I have Armenian roots and an exotic look on me. I'm an expert IT guy, not like the ones in 'The IT crowd' but more like 'BBT'.",
+        "main_mission" : "Internationalize Alioli",
+        "occupation" : "Software Engineer",
+        "company" : "PeopleWings",
+        "personal_philosophy" : "Take your time while eating. And drink lots of water!",
+        "political_opinion" : "I don't believe in politics",
+        "religion" : "Atheist",
+        "enjoy_people" : "People who makes me spend a lot of money in plane tickets",
+        "movies" : "AlaBalaNica",
+        "sports" : "Rollerblade",
+        "other_pages" : "http://www.petardas.com",
+        "sharing" : "Time",
+        "incredible" : "Plane accident",
+        "inspired_by" : "Steve Jobs",
+        "quotes" :"YOLO (You only live once)",
+        "pw_opinion" : "It's very far from home",
+        "places_lived_in" : "Barcelona, Buenos Aires",
+        "places_visited" : "Jerez de la Frontera" ,   
+        "places_gonna_go" : "Yerevan",
+        "places_wanna_go" : "New Zealand"
+    }
+  },
+{
+    "model": "people.UserProfile",
+    "pk": 2,
+    "fields": {
+        "user" : 2,
+        "age" : 26,
+        "pw_state" : "C",
+        "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+        "thumb_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "birthday" : "1985-12-20",
+        "show_birthday" : "P",
+        "gender" : "Male",
+        "civil_state" : "IR",
+        "current_city" : 1,
+        "hometown" : 1,
+        "emails" : "fr33d4n@gmail.com",
+        "phone" : "616162696",
+        "all_about_you" : "I'm a nerd guy. From Barcelona. I like to play videogames and party rock.",
+        "main_mission" : "Promote electronic sports.",
+        "occupation" : "Software Engineer",
+        "company" : "PeopleWings",
+        "personal_philosophy" : "Be yourself and try to live happyly. But before all, be yourself.",
+        "political_opinion" : "Politicians are the cancer of my coutry.",
+        "religion" : "Atheist",
+        "enjoy_people" : "I like being alone",
+        "movies" : "Princess Mononoke",
+        "sports" : "Starcraft",
+        "other_pages" : "http://mangareader.com",
+        "sharing" : "My humble place, and some of my time as well",
+        "incredible" : "The rise of internet",
+        "inspired_by" : "No real inspiration",
+        "quotes" :"Hakuna Matata",
+        "pw_opinion" : "Sergi se estresa mucho",
+        "places_lived_in" : "Barcelona",
+        "places_visited" : "Boston, New York"  ,  
+        "places_gonna_go" : "London",
+        "places_wanna_go" : "New Zealand"
+    }
+  },
+{
+    "model": "people.UserProfile",
+    "pk": 3,
+    "fields": {
+        "user" : 3,
+        "age" : 27,
+        "pw_state" : "M",
+        "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+        "thumb_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "birthday" : "1985-09-11",
+        "show_birthday" : "N",
+        "gender" : "Male",
+        "civil_state" : "IO",
+        "current_city" : 1,
+        "hometown" : 2,
+        "emails" : "gimeno.sergio@gmail.com",
+        "phone" : "616262676",
+        "all_about_you" : "PUNK!",
+        "main_mission" : "Punkify the world.",
+        "occupation" : "Punk Engineer",
+        "company" : "PeopleWings",
+        "personal_philosophy" : "Anti-all.",
+        "political_opinion" : "The only good polotitian is the dead one.",
+        "religion" : "Chris Hannah-ism",
+        "enjoy_people" : "People who wear mohawks",
+        "movies" : "El padrino",
+        "sports" : "Wall of dead",
+        "other_pages" : "http://epitaph-records.com",
+        "sharing" : "Good music, some of my beer and all my piercings",
+        "incredible" : "The rise of the 'lol' word",
+        "inspired_by" : "George Soros",
+        "quotes" :"Stick your flag up your goddamm ass, you son of a bitch",
+        "pw_opinion" : "Good riddance",
+        "places_lived_in" : "Barcelona, Paris",
+        "places_visited" : "Morocco"    ,
+        "places_gonna_go" : "Estraperlo",
+        "places_wanna_go" : "Seattle (USA)"
+    }
+  },
+{
+    "model": "people.UserProfile",
+    "pk": 4,
+    "fields": {
+        "user" : 4,
+        "age" : 32,
+        "pw_state" : "T",
+        "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+        "thumb_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "birthday" : "1979-11-30",
+        "show_birthday" : "N",
+        "gender" : "Male",
+        "civil_state" : "IR",
+        "current_city" : 1,
+        "hometown" : 6,
+        "emails" : "vv@gmail.com",
+        "phone" : "616202676",
+        "all_about_you" : "Graphic designer. Comunity manager and industrial designer. Coffe makes me nervous",
+        "main_mission" : "Bully my employees.",
+        "occupation" : "Graphic designer and boss",
+        "company" : "PeopleWings",
+        "personal_philosophy" : "Wear ugly sneakers",
+        "political_opinion" : "I'm support Partido Popular",
+        "religion" : "Atheist",
+        "enjoy_people" : "People I can bully",
+        "movies" : "James Bond: Skyfall",
+        "sports" : "Jogging",
+        "other_pages" : "",
+        "sharing" : "Some rooms in my flat",
+        "incredible" : "a four-leaf cloverleaf",
+        "inspired_by" : "Pau Gomez",
+        "quotes" :"Calm down, Sergi",
+        "pw_opinion" : "Best company in the world",
+        "places_lived_in" : "Barcelona, Bristol",
+        "places_visited" : "London"    ,
+        "places_gonna_go" : "Home",
+        "places_wanna_go" : "Tailand"
+    }
+  },
+{
+    "model": "people.UserProfile",
+    "pk": 5,
+    "fields": {
+        "user" : 5,
+        "age" : 33,
+        "pw_state" : "W",
+        "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+        "thumb_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "birthday" : "1978-02-12",
+        "show_birthday" : "F",
+        "gender" : "Male",
+        "civil_state" : "SI",
+        "current_city" : 1,
+        "hometown" : 5,
+        "emails" : "pau.gomez@hotmail.com",
+        "phone" : "611202676",
+        "all_about_you" : "Professional womanizer. I'm a cool guy. I go to the gym. I have a Harley Davison. Wanna ride? Come with me.",
+        "main_mission" : "Learn Python",
+        "occupation" : "Project manager and wannabe programmer.",
+        "company" : "PeopleWings",
+        "personal_philosophy" : "Be cool my friend",
+        "political_opinion" : "Catalanist and Barca supporter till death.",
+        "religion" : "Apple-ism",
+        "enjoy_people" : "That are females",
+        "movies": "Terminator 2",
+        "sports" : "Soccer",
+        "other_pages" : "http://codeacademy.com",
+        "sharing" : "My bed, baby!",
+        "incredible" : "Me",
+        "inspired_by" : "Me",
+        "quotes" :"This feature is in the beta as well",
+        "pw_opinion" : "Best company in the world",
+        "places_lived_in" : "Barcelona, Rayidh",
+        "places_visited" : "Afganistan",
+        "places_gonna_go" : "San Francisco",
+        "places_wanna_go" : "Eastern countrys, Tailand"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 1,
+    "fields": {
+        "user_profile" : 1,
+        "social_network" : 2,
+        "social_network_username" : "Ese_Eze"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 2,
+    "fields": {
+        "user_profile" : 1,
+        "social_network" : 3,
+        "social_network_username" : "Soy_el_amo87"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 3,
+    "fields": {
+        "user_profile" : 2,
+        "social_network" : 1,
+        "social_network_username" : "fr33d4n"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 4,
+    "fields": {
+        "user_profile" : 3,
+        "social_network" : 1,
+        "social_network_username" : "Punk_con_perro"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 5,
+    "fields": {
+        "user_profile" : 3,
+        "social_network" : 4,
+        "social_network_username" : "Punk_con_perro"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 6,
+    "fields": {
+        "user_profile" : 3,
+        "social_network" : 6,
+        "social_network_username" : "Punk_con_perro"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 7,
+    "fields": {
+        "user_profile" : 3,
+        "social_network" : 7,
+        "social_network_username" : "El_puto_punki"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 8,
+    "fields": {
+        "user_profile" : 4,
+        "social_network" : 2,
+        "social_network_username" : "VictoorV"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 9,
+    "fields": {
+        "user_profile" : 4,
+        "social_network" : 5,
+        "social_network_username" : "Victribell"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 10,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 1,
+        "social_network_username" : "Yo_si_que_molo"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 11,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 2,
+        "social_network_username" : "Python_mastah"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 12,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 3,
+        "social_network_username" : "CSS_mastah"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 13,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 4,
+        "social_network_username" : "HTML_mastah"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 14,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 5,
+        "social_network_username" : "JS_mastah"
+    }
+  },
+{
+    "model": "people.UserSocialNetwork",
+    "pk": 15,
+    "fields": {
+        "user_profile" : 5,
+        "social_network" : 6,
+        "social_network_username" : "El_tiburon_se_la_llevo"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 1,
+    "fields": {
+        "user_profile" : 1,
+        "instant_message" : 1,
+        "instant_message_username" : "EzeAnoki"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 2,
+    "fields": {
+        "user_profile" : 1,
+        "instant_message" : 3,
+        "instant_message_username" : "Ezeq87"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 3,
+    "fields": {
+        "user_profile" : 2,
+        "instant_message" : 3,
+        "instant_message_username" : "fr33d4n"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 4,
+    "fields": {
+        "user_profile" : 3,
+        "instant_message" : 5,
+        "instant_message_username" : "punk_fingers"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 5,
+    "fields": {
+        "user_profile" : 4,
+        "instant_message" : 4,
+        "instant_message_username" : "la_v_es_de_victory"
+    }
+  },
+{
+    "model": "people.UserInstantMessage",
+    "pk": 6,
+    "fields": {
+        "user_profile" : 5,
+        "instant_message" : 3,
+        "instant_message_username" : "iharley"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 1,
+    "fields": {
+        "user_profile" : 1,
+        "language" : 1,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 2,
+    "fields": {
+        "user_profile" : 1,
+        "language" : 2,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 3,
+    "fields": {
+        "user_profile" : 1,
+        "language" : 3,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 4,
+    "fields": {
+        "user_profile" : 2,
+        "language" : 1,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 5,
+    "fields": {
+        "user_profile" : 2,
+        "language" : 2,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 6,
+    "fields": {
+        "user_profile" : 2,
+        "language" : 3,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 7,
+    "fields": {
+        "user_profile" : 3,
+        "language" : 1,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 8,
+    "fields": {
+        "user_profile" : 3,
+        "language" : 2,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 9,
+    "fields": {
+        "user_profile" : 3,
+        "language" : 3,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 10,
+    "fields": {
+        "user_profile" : 4,
+        "language" : 1,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 11,
+    "fields": {
+        "user_profile" : 4,
+        "language" : 2,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 12,
+    "fields": {
+        "user_profile" : 4,
+        "language" : 3,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 13,
+    "fields": {
+        "user_profile" : 5,
+        "language" : 1,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 14,
+    "fields": {
+        "user_profile" : 5,
+        "language" : 2,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 15,
+    "fields": {
+        "user_profile" : 5,
+        "language" : 3,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 16,
+    "fields": {
+        "user_profile" : 1,
+        "language" : 8,
+        "level" : "intermediate"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 17,
+    "fields": {
+        "user_profile" : 2,
+        "language" : 6,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserLanguage",
+    "pk": 18,
+    "fields": {
+        "user_profile" : 3,
+        "language" : 4,
+        "level" : "expert"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 1,
+    "fields": {
+        "user_profile" : 1,
+        "university" : 1,
+        "degree" : "Licensed"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 2,
+    "fields": {
+        "user_profile" : 2,
+        "university" : 1,
+        "degree" : "Licensed"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 3,
+    "fields": {
+        "user_profile" : 3,
+        "university" : 1,
+        "degree" : "Licensed"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 4,
+    "fields": {
+        "user_profile" : 4,
+        "university" : 2,
+        "degree" : "Diplomat"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 5,
+    "fields": {
+        "user_profile" : 4,
+        "university" : 3,
+        "degree" : "Master"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 6,
+    "fields": {
+        "user_profile" : 5,
+        "university" : 2,
+        "degree" : "Diplomat"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 7,
+    "fields": {
+        "user_profile" : 5,
+        "university" : 4,
+        "degree" : "Master"
+    }
+  },
+{
+    "model": "people.UserProfileStudiedUniversity",
+    "pk": 8,
+    "fields": {
+        "user_profile" : 5,
+        "university" : 5,
+        "degree" : "Diplomat"
+    }
+  }
+]
