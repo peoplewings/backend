@@ -842,9 +842,19 @@ class UserProfileResource(ModelResource):
             if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
-                bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
-                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
+                # borroneo
+                from django.conf import settings as django_settings
+                bundle.data['avatar'] = '%sblank_avatar.jpg' % django_settings.MEDIA_URL
+
+                long_first = len(bundle.obj.user.first_name)
+                long_last = len(bundle.obj.user.last_name)
+                import string, random
+                ran_name = [random.choice(string.ascii_letters) for n in xrange(long_first)]
+                ran_last = [random.choice(string.ascii_letters) for n in xrange(long_last)]
+                ran_name = "".join(ran_name)
+                ran_last = "".join(ran_last)
+                bundle.data['first_name'] = ran_name
+                bundle.data['last_name'] = ran_last
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
             if bundle.request.path != u'/api/v1/profiles/me':
