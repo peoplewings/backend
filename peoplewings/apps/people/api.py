@@ -892,8 +892,8 @@ class UserProfileResource(ModelResource):
             bundle.data['first_name'] = bundle.obj.user.first_name
             bundle.data['last_name'] = bundle.obj.user.last_name
             bundle.data['verified'] = True
-            bundle.data['num_friends'] = 0
-            bundle.data['num_references'] = 0
+            bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
+            bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
             bundle.data['pending'] = "Pending"
             bundle.data['tasa_respuestas'] = 0
 
