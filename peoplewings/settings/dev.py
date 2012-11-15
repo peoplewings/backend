@@ -104,6 +104,8 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
 MEDIA_URL = S3_URL
+
+ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 """
 # Compressor IMG
 COMPRESS_ENABLED = True
