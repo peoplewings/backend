@@ -57,7 +57,7 @@ class WingForm(ModelForm):
 
 class AccomodationForm(forms.Form):
 
-    name = forms.CharField(max_length=max_short_text_len, required=False)
+    name = forms.CharField(max_length=max_short_text_len, required=True)
     status = forms.ChoiceField(choices=WINGS_STATUS, required=False)
     date_start = forms.DateField(required=False)
     date_end = forms.DateField(required=False)
@@ -66,7 +66,8 @@ class AccomodationForm(forms.Form):
 
     sharing_once = forms.BooleanField(required=False)
     capacity = forms.ChoiceField(choices=CAPACITY_OPTIONS, required=False)
-    preferred_gender = forms.ChoiceField(choices=PREFERRED_GENDER_CHOICES, required=False)
+    preferred_male = forms.BooleanField(required=False)
+    preferred_female = forms.BooleanField(required=False)
     wheelchair = forms.BooleanField(required=False)
     where_sleeping_type = forms.ChoiceField(choices=WHERE_SLEEPING_CHOICES, required=False)
     smoking = forms.ChoiceField(choices=SMOKING_CHOICES, required=False)
@@ -80,8 +81,8 @@ class AccomodationForm(forms.Form):
     train = forms.BooleanField(required=False)
     others = forms.BooleanField(required=False)
     about = forms.CharField(max_length=max_text_msg_len, required=False)
-    address = forms.CharField(max_length=max_short_text_len, required=False)
-    number = forms.CharField(max_length=max_ultra_short_len, required=False)
+    address = forms.CharField(max_length=max_short_text_len, required=True)
+    number = forms.CharField(max_length=max_ultra_short_len, required=True)
     additional_information = forms.CharField(max_length=max_text_msg_len, required=False)   
-    postal_code = forms.CharField(max_length=max_short_text_len, required=False)
+    postal_code = forms.CharField(max_length=max_short_text_len, required=True)
     #city = forms.ForeignKey(City, on_delete=models.PROTECT)

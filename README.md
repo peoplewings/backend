@@ -392,6 +392,9 @@ There are some standard error messages:
       "additionalInformation": "",
       "address": "",
       ...
+      "preferredMale": True,
+      "preferredFemale": True,
+      ...
     }
 
  * Response:
@@ -517,10 +520,6 @@ There are some standard error messages:
         "msg": "Languages retrieved successfully.",
         "status": true
       }
-
-    * NO 
-     * 403 FORBIDDEN {"code": 413, "msg":"Unauthorized", "status": false}
-
 
 ### View my friends (Ezequiel):
   * Request:

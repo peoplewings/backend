@@ -51,7 +51,7 @@ class CityManager(models.Manager):
     # countryN, countrySN, regionN='No region', regionSN='No region', cityN, citySN, cityLat, cityLon, locationType
         # define args
         countryN = kwargs.get('country', None)
-        regionN = kwargs.get('region', None)
+        regionN = kwargs.get('region', 'NoName')
         cityN = kwargs.get('name', None)
         cityLat = kwargs.get('lat', None)
         cityLon = kwargs.get('lon', None)
