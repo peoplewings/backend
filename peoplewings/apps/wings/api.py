@@ -8,6 +8,7 @@ from django import http as djangoHttp
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.contrib.auth.models import AnonymousUser
+from datetime import date, datetime
 
 from tastypie import fields
 from tastypie import *
@@ -286,6 +287,15 @@ class AccomodationsResource(ModelResource):
         bundle.data['city']['lon'] = city.lon
         return bundle.data['city']
 
+    
+    def full_dehydrate(self, bundle):
+        format = '%Y-%m-%d'
+        if bundle.obj.date_start is not None and type(bundle.obj.date_start) == unicode:
+            bundle.obj.date_start = datetime.datetime.strptime(bundle.obj.date_start, format)
+        if bundle.obj.date_end is not None and type(bundle.obj.date_end) == unicode:
+            bundle.obj.date_end = datetime.datetime.strptime(bundle.obj.date_end, format)
+        return super(AccomodationsResource, self).full_dehydrate(bundle)
+    
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
 
