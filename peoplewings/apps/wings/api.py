@@ -33,7 +33,7 @@ from pprint import pprint
 import json
 
 class AccomodationsResource(ModelResource):
-    is_anonymous = False
+    #is_anonymous = False
     city = fields.ToOneField(CityResource, 'city', full=True, null=True)
 
     class Meta:
@@ -94,14 +94,21 @@ class AccomodationsResource(ModelResource):
         city = City.objects.saveLocation(**data)
         bundle = self.full_hydrate(bundle)
 
+        name = bundle.data['name']
+        address = bundle.data['address']
+        number = bundle.data['number']
+        postal_code = bundle.data['postal_code']
+
         # creamos la wing accomodation
-        a = Accomodation.objects.create(city=city, author=up)
+        a = Accomodation.objects.create(city=city, author=up, name=name, address=address, number=number, postal_code=postal_code)
         del bundle.data['city']
+        del bundle.data['address']
+        del bundle.data['name']
+        del bundle.data['number']
+        del bundle.data['postal_code']
         for key, value in bundle.data.items():
             if hasattr(a, key): setattr(a, key, value)
 
-        if 'name' not in bundle.data:
-            a.name = "Accommodation in " + a.city.name
         a.save()
 
         bundle = self.build_bundle(obj=a, request=request)
@@ -238,7 +245,14 @@ class AccomodationsResource(ModelResource):
 
         if 'author_id' in bundle.data: bundle.data.pop('author_id')
         for i in bundle.data:
-            if hasattr(a, i): setattr(a, i, bundle.data.get(i))
+            if hasattr(a, i):
+                """               
+                if i == 'dateStart' or i == 'dateEnd':
+                    aux = datetime.strptime(bundle.data.get(i), '%Y-%m-%d')
+                    setattr(a, i, aux)
+                else: setattr(a, i, bundle.data.get(i))
+                """
+                setattr(a, i, bundle.data.get(i))
         
         #updated_bundle = self.dehydrate(bundle)
         #updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
@@ -268,6 +282,8 @@ class AccomodationsResource(ModelResource):
         bundle.data['city']['name'] = city.name
         bundle.data['city']['region'] = region.name
         bundle.data['city']['country'] = country.name
+        bundle.data['city']['lat'] = city.lat
+        bundle.data['city']['lon'] = city.lon
         return bundle.data['city']
 
     def alter_list_data_to_serialize(self, request, data):
