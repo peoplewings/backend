@@ -487,7 +487,7 @@ class UserProfileResource(ModelResource):
                 accomodation_list = accomodation_list.filter(is_request=is_request)
             base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
-        paginator = Paginator(base_object_list, 10)
+        paginator = Paginator(base_object_list, 20)
         try:
             page = paginator.page(int(request.GET.get('page', 1)))
         except InvalidPage:
