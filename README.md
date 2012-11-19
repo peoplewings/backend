@@ -382,6 +382,7 @@ There are some standard error messages:
       }
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Create Accommodation (Eze):
  * Request:
@@ -422,6 +423,7 @@ There are some standard error messages:
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
      * 200 OK {"code": 400, "errors": {"capacity": ["Select a valid choice. ml is not one of the available choices."]}, "msg": "Error in some fields.", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Delete accommodation (Eze):
  * Request:
@@ -433,6 +435,7 @@ There are some standard error messages:
       
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Search wings (Ezequiel):
   * Request:

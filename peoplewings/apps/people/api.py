@@ -998,13 +998,20 @@ class UserProfileResource(ModelResource):
                     return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}
-                    errors = {}
+                    errors = []
                     content['msg'] = "Error in some fields."               
                     content['code'] = 400
                     content['status'] = False
+                    #for i in e.response.content: print i
+                    for k, v in json.loads(e.response.content).items():
+                        errors.append(v)
+                    """
+                    print json.loads(e.response.content)['profiles/me/accomodations']
+                    print e.response.content
                     if 'profiles' in e.response.content: errors = json.loads(e.response.content)['profiles']
                     elif 'accomodations' in e.response.content: errors = json.loads(e.response.content)['accomodations']
                     else: errors = json.loads(e.response.content)['reference']
+                    """
                     content['errors'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:

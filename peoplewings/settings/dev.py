@@ -59,8 +59,8 @@ SITE = 'http://peoplewings-frontend.herokuapp.com'
 
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
-EMAIL_HOST_USER = 'developers@peoplewings.com'
-EMAIL_HOST_PASSWORD = 'EzeSer2&'
+EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
+EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'developers@peoplewings.com'
