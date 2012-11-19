@@ -39,8 +39,9 @@ class AccomodationsResource(ModelResource):
     class Meta:
         object_class = Accomodation
         queryset = Accomodation.objects.all()
-        allowed_methods = ['get', 'post', 'delete', 'put']
-        resource_name = 'accomodations'
+        detail_allowed_methods = ['get', 'delete', 'put']
+        list_allowed_methods = ['get', 'post']
+        resource_name = 'profiles/me/accomodations'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
@@ -148,15 +149,18 @@ class AccomodationsResource(ModelResource):
         up = UserProfile.objects.get(user=request.user)        
         if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
 
-        accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
-
+        try:
+            accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
+        except:
+            return self.create_response(request, {"msg":"Error: User not found.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+        
         objects = []
         for i in accomodations:
             bundle = self.build_bundle(obj=i, request=request)
             bundle = self.full_dehydrate(bundle)
             dic = {}
             dic['name'] = bundle.data['name']
-            dic['uri'] = bundle.data['resource_uri']
+            dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
             bundle.data = dic
             objects.append(bundle)
 
@@ -190,16 +194,16 @@ class AccomodationsResource(ModelResource):
         dic = {"msg":"Accommodation created successfully.", "status":True, "code":200}
         return self.create_response(request, dic)
 
-    def delete_list(self, request=None, **kwargs):
-        return self.create_response(request, {"msg":"Error: cannot delete a list of wings.", "code" : 413, "status" : False}, response_class=HttpForbidden)
-
     def get_detail(self, request, **kwargs):
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"msg":"Error: the uri provided is not correct: missing profile id", "code" : 413, "status" : False}, response_class=HttpForbidden)
 
         up = UserProfile.objects.get(user=request.user)
         if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
-        a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
+        try:
+            a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
+        except:
+            return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
         bundle = self.build_bundle(obj=a, request=request)
         bundle = self.full_dehydrate(bundle)
         return self.create_response(request, {"msg":"Accommodation retrieved successfully.", "code":200, "status":True, "data":bundle})
@@ -219,8 +223,10 @@ class AccomodationsResource(ModelResource):
         self.is_valid(bundle, request)
         if bundle.errors:
             self.error_response(bundle.errors, request)
-        a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
-
+        try:
+            a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
+        except:
+            return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
         if 'city' in bundle.data:
             loc = {}
             data = bundle.data['city']
@@ -246,7 +252,10 @@ class AccomodationsResource(ModelResource):
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"msg":"Error: uri incorrect: profile id is missing." , "code" : 413, "status" : False}, response_class=HttpForbidden)
         up = UserProfile.objects.get(user=request.user)
-        a = Accomodation.objects.get(author_id=up.id, pk=kwargs['wing_id'])
+        try:
+            a = Accomodation.objects.get(author_id=up.id, pk=kwargs['wing_id'])
+        except:
+            return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
         a.delete()
         bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Accommodation deleted successfully."}, request=request)
         return self.create_response(request, bundle, response_class = HttpResponse)
@@ -256,7 +265,7 @@ class AccomodationsResource(ModelResource):
         region = city.region
         country = region.country
         bundle.data['city'] = {}
-        bundle.data['city']['city'] = city.name
+        bundle.data['city']['name'] = city.name
         bundle.data['city']['region'] = region.name
         bundle.data['city']['country'] = country.name
         return bundle.data['city']
