@@ -14,13 +14,13 @@ TYPE_CHOICES = (
 # Notifications class
 class Notifications(models.Model):
     receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)
-    sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)
-    title = models.CharField(max_length = 100, blank=False)
+    sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
     created = models.DateTimeField(auto_now_add=True)
     reference = models.CharField(max_length=36, blank=False)
 
 # Request class
 class Requests(Notifications):    
+    title = models.CharField(max_length = 100, blank=False)
     num_people = models.IntegerField(default=1)
     read = models.BooleanField(default=False)   
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
@@ -31,6 +31,7 @@ class Requests(Notifications):
 
 # Invite class
 class Invites(Notifications):
+    title = models.CharField(max_length = 100, blank=False)
     num_people = models.IntegerField(default=1)
     read = models.BooleanField(default=False)    
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
@@ -41,6 +42,9 @@ class Invites(Notifications):
 class Messages(Notifications): 
     private_message = models.TextField(blank=True)
     read = models.BooleanField(default=False)
+
+class Friendship(Notifications):
+    message = 
 
 # AditionalInformation class
 class AditionalInformation(models.Model):
