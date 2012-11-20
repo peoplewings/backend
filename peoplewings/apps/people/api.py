@@ -487,13 +487,8 @@ class UserProfileResource(ModelResource):
                 accomodation_list = accomodation_list.filter(is_request=is_request)
             base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
-        paginator = Paginator(base_object_list, 20)
-        try:
-            page = paginator.page(int(request.GET.get('page', 1)))
-        except InvalidPage:
-            raise Http404("Sorry, no results on that page.")
-
-        return page
+        return base_object_list
+        
         """
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
         pprint(request.GET)
@@ -859,7 +854,12 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        objects = {'count':len(data), 'profiles':data}
+        paginator = Paginator(data, 2)
+        try:
+            page = paginator.page(int(request.GET.get('page', 1)))
+        except InvalidPage:
+            return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
+        objects = {'count':len(data), 'profiles':page.object_list}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True

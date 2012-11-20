@@ -492,10 +492,13 @@ There are some standard error messages:
         "status": true
       }
 
+    * NO 
+     * 200 OK {"code": 413, "msg":"Sorry: no results on that page.", "status": false}
+
     Notes:
       - "X-Auth-Token" is optional: if one valid is provided, the first names, last names and avatars will be the originals; otherwise, they will be faked (blurred)
       - "capacity", "startAge", "endAge", "language" and "type" parameters will always be passed in the uri, the rest are optional
-      - "startDate" and "endDate" are in format mm-dd-yyyy
+      - "startDate" and "endDate" are in format yyyy-mm-dd
       - "type" must be either "host" or "applicant"
 
 ### List languages (Ezequiel):
