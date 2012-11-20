@@ -439,7 +439,7 @@ There are some standard error messages:
 
 ### Search wings (Ezequiel):
   * Request:
-    GET /profiles/?wings=Buenos%20Aires&startDate=12-21-2012&endDate=12-26-2012&capacity=4&startAge=20&endAge=23&language=english&gender=Male&type=host&page=1
+    GET /profiles/?wings=Buenos%20Aires&startDate=2012-12-09&endDate=2012-12-11&capacity=4&startAge=20&endAge=23&language=english&gender=Male&type=Host&page=1
     {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
     
   *Response:
@@ -499,7 +499,8 @@ There are some standard error messages:
       - "X-Auth-Token" is optional: if one valid is provided, the first names, last names and avatars will be the originals; otherwise, they will be faked (blurred)
       - "capacity", "startAge", "endAge", "language" and "type" parameters will always be passed in the uri, the rest are optional
       - "startDate" and "endDate" are in format yyyy-mm-dd
-      - "type" must be either "host" or "applicant"
+      - "type" must be either "Host" or "Applicant"
+      - seleccionar los dos sexos tiene el mismo efecto que no seleccionar ninguno => "gender" solo se enviara por parametro cuando uno y solo un sexo se ha seleccionado, y ha de valer o "Male" o "Female".
 
 ### List languages (Ezequiel):
   * Request:

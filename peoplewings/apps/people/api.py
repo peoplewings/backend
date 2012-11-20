@@ -475,15 +475,15 @@ class UserProfileResource(ModelResource):
             if capacity:
                 accomodation_list = accomodation_list.filter(capacity__gte=capacity)
             if start_date:
-                start_date = datetime.strptime(start_date, '%m-%d-%Y')
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 accomodation_list = accomodation_list.exclude(date_end__isnull=False, date_end__lt=start_date)
             if end_date:
-                end_date = datetime.strptime(end_date, '%m-%d-%Y')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
                 accomodation_list = accomodation_list.exclude(date_start__isnull=False, date_start__gt=end_date)
             if city:
                 accomodation_list = accomodation_list.filter(city__name__iexact=city)
             if tipo:
-                is_request = tipo == 'applicant'
+                is_request = tipo == 'Applicant'
                 accomodation_list = accomodation_list.filter(is_request=is_request)
             base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
