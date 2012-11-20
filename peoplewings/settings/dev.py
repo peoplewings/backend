@@ -63,8 +63,8 @@ EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
 EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'developers@peoplewings.com'
-SERVER_EMAIL = 'developers@peoplewings.com'
+DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
+SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 """
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'

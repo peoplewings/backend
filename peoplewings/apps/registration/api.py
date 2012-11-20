@@ -809,7 +809,6 @@ class ForgotResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                print response.content
                 content = {}
                 data = {}
                 content['msg'] = json.loads(response.content)['data']                                
