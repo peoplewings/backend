@@ -1,10 +1,12 @@
-max_500_char = 500
+max_ultra_short_len = 10
 max_short_len = 20
 max_medium_len = 50
-max_long_len = 250
-max_text_msg_len = 1000
 max_short_text_len = 200
-max_ultra_short_len = 10
+max_long_len = 250
+max_500_char = 500
+max_text_msg_len = 1000
+
+
 
 PW_STATE_CHOICES = (
     ('Y', 'Yes'),
@@ -112,4 +114,10 @@ RELATIONSHIP_CHOICES = (
     ('Accepted', 'Accepted'),
     ('Rejected', 'Rejected'),
     ('Blocked', 'Blocked'),
+)
+
+PUNCTUATION_CHOICES = (
+    ('Positive', 'Positive'),
+    ('Negative', 'Negative'),
+    ('Neutral', 'Neutral'),
 )

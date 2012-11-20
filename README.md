@@ -89,7 +89,7 @@ There are some standard error messages:
 ### Request Forgot password (Joan):
  * Request:
     /POST /forgot/
-    {"email" = "joan@peoplewings.com"}
+    {"email" : "joan@peoplewings.com"}
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"msg": "Email sent"}, "status": true}
@@ -121,8 +121,7 @@ There are some standard error messages:
 ### Logout (Joan):
  * Request:
     /POST /noauth/
-    {}
-    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+    {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
     * 200 OK {"code": 200, "data": {"msg": "Logout complete"}, "status": true}
@@ -132,8 +131,7 @@ There are some standard error messages:
 ### View my account (Joan):
  * Request:
     /GET /accounts/me
-    {}
-    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+    {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
     * 200 OK {"code": 200, "data": {"email": "fr33d4n@gmail.com", "firstName": "Ez", "lastName": "Pz", "password": "uqdh891288yuaidsbh"}, "msg": "Account shown", "status": true}
@@ -384,6 +382,7 @@ There are some standard error messages:
       }
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Create Accommodation (Eze):
  * Request:
@@ -393,6 +392,9 @@ There are some standard error messages:
       "about": "",
       "additionalInformation": "",
       "address": "",
+      ...
+      "preferredMale": True,
+      "preferredFemale": True,
       ...
     }
 
@@ -421,6 +423,7 @@ There are some standard error messages:
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
      * 200 OK {"code": 400, "errors": {"capacity": ["Select a valid choice. ml is not one of the available choices."]}, "msg": "Error in some fields.", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Delete accommodation (Eze):
  * Request:
@@ -432,56 +435,68 @@ There are some standard error messages:
       
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+     * 200 OK {"code": 413, "msg":"Error: Wing not found for that user.", "status": false}
 
 ### Search wings (Ezequiel):
   * Request:
-    GET /profiles/?capacity=4&date_start__gte=2012-12-12&date_end__lte=2012-12-15
+    GET /profiles/?wings=Buenos%20Aires&startDate=12-21-2012&endDate=12-26-2012&capacity=4&startAge=20&endAge=23&language=english&gender=Male&type=host&page=1
     {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
-
+    
   *Response:
     * 200 OK
       {
         "code": 200,
-        "data": [
+        "data": 
           {
-            "age": 13,
-            "allAboutYou": "",
-            "avatar": "/static/img/blank_avatar.jpg",
-            "current": {
-              "country": "Argentina",
-              "name": "Buenos Aires",
-              "region": "Bs As"
-            },
-            "firstName": "Kim",
-            "languages": [
-              {
-                "level": "intermediate",
-                "name": "english"
-              },
-              {
-                "level": "expert",
-                "name": "spanish"
-              },
-              {
-                "level": "beginner",
-                "name": "german"
-              }
-            ],
-            "lastLogin": "Mon Oct 29 17:01:49 2012",
-            "lastName": "Lorelei",
-            "numFriends": 0,
-            "numReferences": 0,
-            "occupation": "tocar los huevos",
-            "pending": "Pending",
-            "tasaRespuestas": 0,
-            "user": "/api/v1/accounts/2",
-            "verified": true
+              "count": 56,
+              "profiles": 
+              [
+                      {
+                        "age": 13,
+                        "allAboutYou": "",
+                        "avatar": "/static/img/blank_avatar.jpg",
+                        "current": {
+                          "country": "Argentina",
+                          "name": "Buenos Aires",
+                          "region": "Bs As"
+                        },
+                        "firstName": "Kim",
+                        "languages": [
+                          {
+                            "level": "intermediate",
+                            "name": "english"
+                          },
+                          {
+                            "level": "expert",
+                            "name": "spanish"
+                          },
+                          {
+                            "level": "beginner",
+                            "name": "german"
+                          }
+                        ],
+                        "lastLogin": "Mon Oct 29 17:01:49 2012",
+                        "lastName": "Lorelei",
+                        "numFriends": 0,
+                        "numReferences": 0,
+                        "occupation": "tocar los huevos",
+                        "pending": "Pending",
+                        "tasaRespuestas": 0,
+                        "user": "/api/v1/accounts/2",
+                        "verified": true
+                      },
+                      ...
+              ]
           },
-          ...
-        ],
         "msg": "Profiles retrieved successfully.",
         "status": true
       }
+
+    Notes:
+      - "X-Auth-Token" is optional: if one valid is provided, the first names, last names and avatars will be the originals; otherwise, they will be faked (blurred)
+      - "capacity", "startAge", "endAge", "language" and "type" parameters will always be passed in the uri, the rest are optional
+      - "startDate" and "endDate" are in format mm-dd-yyyy
+      - "type" must be either "host" or "applicant"
 
 ### List languages (Ezequiel):
   * Request:
@@ -508,10 +523,6 @@ There are some standard error messages:
         "msg": "Languages retrieved successfully.",
         "status": true
       }
-
-    * NO 
-     * 403 FORBIDDEN {"code": 413, "msg":"Unauthorized", "status": false}
-
 
 ### View my friends (Ezequiel):
   * Request:
@@ -606,3 +617,60 @@ There are some standard error messages:
     * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
      * 200 OK {"code": 410, "msg":"That friendship doesn't exist.", "status": false}
+
+### Add reference (Ezequiel):
+  * Request:
+    POST /profiles/<profile_id>/references/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+    {
+      "title": "This guy is awesome",
+      "text": "I had really fun with him, he brought me to the Ramblas, the Cathedral and Paseo Colon :-)",
+      "punctuation": "Positive"
+    }
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg": "Your reference has been posted.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+
+    Notes:
+      - "punctuation" must be either "Positive", "Negative" or "Neutral"
+
+### View another user's references (Ezequiel):
+  * Request:
+    GET /profiles/<profile_id>/references/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "data": [
+          {
+            "title": "This guy is awesome",
+            "text": "I had really fun with him, he brought me to the Ramblas, the Cathedral and Paseo Colon :-)",
+            "punctuation": "Positive"
+          },
+          {
+            "title": "This guy is mean!",
+            "text": "This guy is a pervert :-(",
+            "punctuation": "Negative"
+          },
+          {
+            "title": "This guy is regular",
+            "text": "The visit was OK but many things were left unvisited :-S",
+            "punctuation": "Neutral"
+          }
+        ]
+        "msg": "References retrieved successfully.",
+        "status": true
+      }
+
+    * NO 
+     * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}

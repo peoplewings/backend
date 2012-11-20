@@ -60,11 +60,13 @@ INSTALLED_APPS = (
 #SITE
 SITE = 'http://peoplewings-frontend.herokuapp.com'
 # SMTP settings
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
+EMAIL_HOST = 'smtp.1and1.es' #probar con .com
+EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
 EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'developers@peoplewings.com'
+SERVER_EMAIL = 'developers@peoplewings.com'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -105,6 +107,8 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
 MEDIA_URL = S3_URL
+
+ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 """
 # Compressor IMG
 COMPRESS_ENABLED = True
