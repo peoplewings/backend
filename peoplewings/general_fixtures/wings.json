@@ -18,7 +18,8 @@
     "fields": {
         "sharing_once" : false,
         "capacity" : 3,
-        "preferred_gender" : "B",
+        "preferred_male" : true,
+        "preferred_female" : true,
         "wheelchair" : true,
         "where_sleeping_type" : "C",
         "smoking" : "N",
@@ -58,7 +59,8 @@
     "fields": {
         "sharing_once" : false,
         "capacity" : 2,
-        "preferred_gender" : "F",
+        "preferred_male" : false,
+        "preferred_female" : true,
         "wheelchair" : true,
         "where_sleeping_type" : "P",
         "smoking" : "S",
