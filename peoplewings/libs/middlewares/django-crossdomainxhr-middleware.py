@@ -42,11 +42,9 @@ class XsSharing(object):
         # Avoid unnecessary work
         if type(response) == str: response = HttpResponseRedirect(response)
         if response.has_header('Access-Control-Allow-Origin'):
-            print '1- ', response
             return response
 
         response['Access-Control-Allow-Origin']  = XS_SHARING_ALLOWED_ORIGINS 
         response['Access-Control-Allow-Methods'] = ",".join( XS_SHARING_ALLOWED_METHODS )
         response['Access-Control-Allow-Headers'] = ",".join( XS_SHARING_ALLOWED_HEADERS ) 
-         print '2- ', response
         return response
