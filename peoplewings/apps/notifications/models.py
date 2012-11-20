@@ -17,12 +17,12 @@ class Notifications(models.Model):
     sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
     created = models.DateTimeField(auto_now_add=True)
     reference = models.CharField(max_length=36, blank=False)
+    read = models.BooleanField(default=False)
 
 # Request class
 class Requests(Notifications):    
     title = models.CharField(max_length = 100, blank=False)
-    num_people = models.IntegerField(default=1)
-    read = models.BooleanField(default=False)   
+    num_people = models.IntegerField(default=1)  
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
     public_message = models.TextField(blank=True)
     private_message = models.TextField(blank=True)
@@ -33,7 +33,6 @@ class Requests(Notifications):
 class Invites(Notifications):
     title = models.CharField(max_length = 100, blank=False)
     num_people = models.IntegerField(default=1)
-    read = models.BooleanField(default=False)    
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
     private_message = models.TextField(blank=True)
     wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
@@ -41,10 +40,10 @@ class Invites(Notifications):
 # Messages class
 class Messages(Notifications): 
     private_message = models.TextField(blank=True)
-    read = models.BooleanField(default=False)
 
+# Friendship class
 class Friendship(Notifications):
-    message = 
+    message = models.TextField(blank=True)
 
 # AditionalInformation class
 class AditionalInformation(models.Model):
