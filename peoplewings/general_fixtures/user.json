@@ -1,0 +1,82 @@
+[
+  {
+    "model": "auth.User",
+    "pk": 1,
+    "fields": {
+        "username" : "Ez.23112",
+        "first_name" : "Ez",
+        "last_name" : "Mate",
+        "email" : "ezequiel@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$WBT4WX94E7yD$tLqMnpKwwOCJt26ol3lBNv39AcNnVWgFPBSciDjhxNY=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
+  },
+{
+    "model": "auth.User",
+    "pk": 2,
+    "fields": {
+        "username" : "Choni.23482",
+        "first_name" : "Choni",
+        "last_name" : "Pichoni",
+        "email" : "joan@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$j7D5ujAqkyc1$B3wpeZqa7jiu8/AGZylxsX2sXSc6GRUH7X8KMoIYxgM=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
+  },
+{
+    "model": "auth.User",
+    "pk": 3,
+    "fields": {
+        "username" : "Punk.66600",
+        "first_name" : "Punk",
+        "last_name" : "Legend",
+        "email" : "sergio@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$DdgmEUQwp5Sa$SZD/FvHo0jkIl8gHI+e69KMVKYnyXSMa3qTZediv64U=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
+  },
+{
+    "model": "auth.User",
+    "pk": 4,
+    "fields": {
+        "username" : "Victory.23112",
+        "first_name" : "Victory",
+        "last_name" : "or Death",
+        "email" : "victor@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$Wx5F7xSYILNJ$AMNFKiB003D4MYp1nb09mRIzRRqwChw1ummX1g8e4jg=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
+  },
+{
+    "model": "auth.User",
+    "pk": 5,
+    "fields": {
+        "username" : "Poser.23112",
+        "first_name" : "Poser",
+        "last_name" : "Russian",
+        "email" : "pau@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$oamODDXVZUsr$jUQ1N0IIlELfMrCypxXBAxk+txvO4qljfRwTSoLhHMY=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
+  }
+]
