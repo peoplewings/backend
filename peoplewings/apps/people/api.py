@@ -475,25 +475,20 @@ class UserProfileResource(ModelResource):
             if capacity:
                 accomodation_list = accomodation_list.filter(capacity__gte=capacity)
             if start_date:
-                start_date = datetime.strptime(start_date, '%m-%d-%Y')
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 accomodation_list = accomodation_list.exclude(date_end__isnull=False, date_end__lt=start_date)
             if end_date:
-                end_date = datetime.strptime(end_date, '%m-%d-%Y')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
                 accomodation_list = accomodation_list.exclude(date_start__isnull=False, date_start__gt=end_date)
             if city:
                 accomodation_list = accomodation_list.filter(city__name__iexact=city)
             if tipo:
-                is_request = tipo == 'applicant'
+                is_request = tipo == 'Applicant'
                 accomodation_list = accomodation_list.filter(is_request=is_request)
             base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
-        paginator = Paginator(base_object_list, 20)
-        try:
-            page = paginator.page(int(request.GET.get('page', 1)))
-        except InvalidPage:
-            raise Http404("Sorry, no results on that page.")
-
-        return page
+        return base_object_list
+        
         """
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
         pprint(request.GET)
@@ -859,7 +854,12 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        objects = {'count':len(data), 'profiles':data}
+        paginator = Paginator(data, 20)
+        try:
+            page = paginator.page(int(request.GET.get('page', 1)))
+        except InvalidPage:
+            return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
+        objects = {'count':len(data), 'profiles':page.object_list}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
@@ -917,10 +917,12 @@ class UserProfileResource(ModelResource):
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
                 import string, random
-                ran_name = [random.choice(string.ascii_letters) for n in xrange(long_first)]
-                ran_last = [random.choice(string.ascii_letters) for n in xrange(long_last)]
+                ran_name = [random.choice(string.ascii_lowercase) for n in xrange(long_first)]
+                ran_last = [random.choice(string.ascii_lowercase) for n in xrange(long_last)]
                 ran_name = "".join(ran_name)
                 ran_last = "".join(ran_last)
+                ran_name = ran_name.capitalize()
+                ran_last = ran_last.capitalize()
                 bundle.data['first_name'] = ran_name
                 bundle.data['last_name'] = ran_last
         else:  
