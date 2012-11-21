@@ -854,7 +854,7 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        paginator = Paginator(data, 2)
+        paginator = Paginator(data, 20)
         try:
             page = paginator.page(int(request.GET.get('page', 1)))
         except InvalidPage:
@@ -917,10 +917,12 @@ class UserProfileResource(ModelResource):
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
                 import string, random
-                ran_name = [random.choice(string.ascii_letters) for n in xrange(long_first)]
-                ran_last = [random.choice(string.ascii_letters) for n in xrange(long_last)]
+                ran_name = [random.choice(string.ascii_lowercase) for n in xrange(long_first)]
+                ran_last = [random.choice(string.ascii_lowercase) for n in xrange(long_last)]
                 ran_name = "".join(ran_name)
                 ran_last = "".join(ran_last)
+                ran_name = ran_name.capitalize()
+                ran_last = ran_last.capitalize()
                 bundle.data['first_name'] = ran_name
                 bundle.data['last_name'] = ran_last
         else:  
