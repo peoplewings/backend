@@ -103,8 +103,8 @@ LOGGING = {
 }
 
 #IMG
-MEDIA_ROOT = '/data/media/'
-STATIC_ROOT = '/data/static/'
+STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
+MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
 
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
@@ -112,22 +112,9 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = S3_URL
+MEDIA_URL = '/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
-"""
-# Compressor IMG
-COMPRESS_ENABLED = True
-if COMPRESS_ENABLED:
-    COMPRESS_CSS_FILTERS = [
-        'compressor.filters.css_default.CssAbsoluteFilter',
-        'compressor.filters.cssmin.CSSMinFilter',
-    ]
-    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-    COMPRESS_URL = STATIC_URL
-    COMPRESS_OFFLINE = True
-"""
+
 # Storages IMG
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 AWS_QUERYSTRING_AUTH = False

@@ -4,24 +4,11 @@ from django.core.exceptions import ValidationError
 from django.conf import settings as django_settings
 import settings
 from peoplewings.libs.S3Custom import S3Custom
-import Image
+from PIL import Image
+from cStringIO import StringIO
+from django.core.files.uploadedfile import SimpleUploadedFile
 import os
 import uuid
-
-def dimension_validator(image):
-    """
-    """
-    if settings.MAX_WIDTH != 0 and image.width > settings.MAX_WIDTH:
-        raise ValidationError, _('Image width greater then allowed. </br><small> Maximum width is: ' + str(settings.MAX_WIDTH) + ".</small>")
-
-    if settings.MAX_HEIGHT != 0 and image.height > settings.MAX_HEIGHT:
-        raise ValidationError, _('Image height greater then allowed. </br><small> Maximum height is: ' + str(settings.MAX_HEIGHT) + ".</small>")
-
-    if settings.MIN_WIDTH != 0 and image.width < settings.MIN_WIDTH:
-        raise ValidationError, _('Image width is too narrow . </br><small> Minimum width is: ' + str(settings.MIN_WIDTH) + ".</small>")
-
-    if settings.MIN_HEIGHT != 0 and image.height < settings.MIN_HEIGHT:
-        raise ValidationError, _('Image height is too short. </br><small> Minimum height is: ' + str(settings.MIN_HEIGHT) + ".</small>")
 
 class Original(models.Model):
     def upload_image(self, filename):
@@ -33,128 +20,94 @@ class Original(models.Model):
     def __unicode__(self):
         return unicode(self.image)
 
-    @models.permalink
-    def get_absolute_url(self):
-        return 'cropper_crop', [self.pk]    
-
     owner = models.ForeignKey('people.UserProfile')
-    image = models.ImageField(_('Original image'),
-        upload_to    = upload_image,
-        width_field  = 'image_width',
-        height_field = 'image_height',
-        validators   = [dimension_validator])
-    image_width = models.PositiveIntegerField(_('Image width'),
-        editable = False,
-        default = 0)
-    image_height = models.PositiveIntegerField(_('Image height'),
-        editable = False,
-        default = 0)
-
-    def _resize_image(self, size):
-        try:
-            import urllib2 as urllib
-            from PIL import Image            
-            from cStringIO import StringIO
-            from django.core.files.uploadedfile import SimpleUploadedFile
-            from boto.s3.connection import S3Connection
-            from boto.s3.key import Key
-            from boto.s3.bucket import Bucket            
-            from django.conf import settings
-            '''Open original photo which we want to resize using PIL's Image object'''
-            name_original = self.image.url.split('?')[0].split('/')[-1]
-            img_file = urllib.urlopen(self.image.url)
-            im = StringIO(img_file.read())
-            resized_image = Image.open(im)
-            
-            '''We use our PIL Image object to create the resized image, which already
-            has a thumbnail() convenicne method that constrains proportions.
-            Additionally, we use Image.ANTIALIAS to make the image look better.
-            Without antialiasing the image pattern artificats may reulst.'''
-            resized_image.thumbnail(size, Image.ANTIALIAS)
-
-            '''Save the resized image'''
+    image = models.ImageField(upload_to = upload_image, width_field  = 'image_width', height_field = 'image_height')
+    image_width = models.PositiveIntegerField(editable = False, default = 0)
+    image_height = models.PositiveIntegerField(editable = False, default = 0)  
+    
+    def resize(self, size):
+        if self.image is None or self.image_width is None or self.image_height is None:
+            print 'Cannot resize None things'
+        else:
+            IMG_TYPE = os.path.splitext(self.image.name)[1].strip('.')
+            if IMG_TYPE == 'jpeg':
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpg'
+            elif IMG_TYPE == 'jpg':
+                PIL_TYPE = 'jpg'
+                FILE_EXTENSION = 'jpg'
+            elif IMG_TYPE == 'png':
+                PIL_TYPE = 'png'
+                FILE_EXTENSION = 'png'
+            elif IMG_TYPE == 'gif':
+                PIL_TYPE = 'gif'
+                FILE_EXTENSION = 'gif'
+            else:
+                print 'Not a valid format'
+                self.image = None
+                return
+            #Open the image from the ImageField
+            self.image.open()
+            im = Image.open(StringIO(self.image.read()))
+            #Resize the image
+            im.thumbnail(size, Image.ANTIALIAS)
+            #Save the image
             temp_handle = StringIO()
-            ext = self.image.url.rsplit('.', 1)[-1].split('?')[0]
-            resized_image.save(temp_handle, ext)
+            im.save(temp_handle, PIL_TYPE)
             temp_handle.seek(0)
-
-            
-            ''' Save to the image field'''
-            suf = SimpleUploadedFile(os.path.split(self.image.name)[-1].split('.')[0], temp_handle.read(), content_type='image/%s' % ext)
-            self.image.save('%s.%s' % (suf.name, ext), suf, save=True)
-            self.image_width = self.image.width
-            self.image_height = self.image.height     
-            
-            conn = S3Connection(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-            b = Bucket(conn, settings.AWS_STORAGE_BUCKET_NAME)
-            k = Key(b)           
-            k.key = 'avatar/%s' % name_original
-            b.delete_key(k)
-        except ImportError:
-            pass
-            
+            #Save image to a SimpleUploadedFile which can be saved into ImageField
+            suf = SimpleUploadedFile(os.path.split(self.image.name)[-1], temp_handle.read(), content_type=IMG_TYPE)
+            #Save SimpleUploadedFile into image field
+            self.image.save('%s.%s' % (os.path.splitext(suf.name)[0],FILE_EXTENSION), suf, save=False)
+            #Save other fields
+            self.image_width = im.size[0]
+            self.image_height = im.size[1]
+        return
+                    
 
 class Cropped(models.Model):
-    def __unicode__(self):
-        return u'%s-%sx%s' % (self.original, self.w, self.h)
-
     def upload_image(self, filename):
-        return u'avatar/crop-%s' % filename
+        return u'avatar/%s' % filename
 
-    original = models.ForeignKey(Original,
-        related_name = 'cropped',
-        verbose_name = _('Original image'),
-		on_delete = models.SET_NULL,
-		null=True)
-    image = models.ImageField(_('Image'),
-        upload_to = upload_image,
-        editable  = False)
-    x = models.PositiveIntegerField(_('offset X'), default = 0)
-    y = models.PositiveIntegerField(_('offset Y'), default = 0)
-    w = models.PositiveIntegerField(_('cropped area width'), blank = True, null = True)
-    h = models.PositiveIntegerField(_('cropped area height'), blank = True, null = True)
-
-    def cropit(self):        
-        from PIL import Image
-        from cStringIO import StringIO
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        from boto.s3.connection import S3Connection
-        from boto.s3.key import Key
-        from boto.s3.bucket import Bucket            
-        from django.conf import settings
-        import urllib2 as urllib
-
-        if self.original is not None and self.x is not None and self.y is not None and self.w and self.h is not None:            
-            s3 = S3Custom()
-            '''Open the original img'''            
-            source = self.original.image.url
-            img_file = urllib.urlopen(source)
-            im = StringIO(img_file.read())
-            print 'cropping...'
-            
-            '''Cropp it'''
-            resized_image = Image.open(im).crop([
-                self.x,             # Left
-                self.y,             # Top
-                self.x + self.w,    # Right
-                self.y + self.h     # Bottom
-            ])
-            '''Save the resized image'''
-            temp_handle = StringIO()
-            ext = source.rsplit('.', 1)[-1]
-            resized_image.save(temp_handle, ext)
-            temp_handle.seek(0)
-            
-            ''' Save to the image field'''        
-            crop_name = s3.make_name()
-            suf = SimpleUploadedFile(crop_name, temp_handle.read(), content_type='image/%s' % ext)
-            print 'Final ', crop_name
-            self.image.save('%s.%s' % (crop_name, ext), suf, save=True)
-            s3.delete_file('avatar/%s' % os.path.split(self.original.image.name)[-1].split('.')[0])
+    original = models.ForeignKey(Original, related_name = 'cropped', on_delete = models.SET_NULL, null=True)
+    image = models.ImageField(upload_to = upload_image, editable = False)
+    x = models.PositiveIntegerField(default = 0)
+    y = models.PositiveIntegerField(default = 0)
+    w = models.PositiveIntegerField(blank = True, null = True)
+    h = models.PositiveIntegerField(blank = True, null = True)
+    def cropit(self):
+        if self.original is None or self.original.image is None or self.x is None or self.y is None or self.w is None or self.h is None:
+            print 'Cannot crop None things'
+            self.image = None
         else:
-            print 'not cropped' 
-            self = None
-
-    class Meta:
-        verbose_name = _('cropped image')
-        verbose_name_plural = _('cropped images')
+            IMG_TYPE = os.path.splitext(self.original.image.name)[1].strip('.')
+            if IMG_TYPE == 'jpeg':
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpg'
+            elif IMG_TYPE == 'jpg':
+                PIL_TYPE = 'jpg'
+                FILE_EXTENSION = 'jpg'
+            elif IMG_TYPE == 'png':
+                PIL_TYPE = 'png'
+                FILE_EXTENSION = 'png'
+            elif IMG_TYPE == 'gif':
+                PIL_TYPE = 'gif'
+                FILE_EXTENSION = 'gif'
+            else:
+                print 'Not a valid format'
+                self.original.image = None
+                return
+            #Open the image from the ImageField
+            self.original.image.open()
+            im = Image.open(StringIO(self.original.image.read()))
+            #Crop the image
+            im.crop((self.x,self.y,self.x+self.w,self.y+self.h))
+            #Save the image
+            temp_handle = StringIO()
+            im.save(temp_handle, PIL_TYPE)
+            temp_handle.seek(0)
+            #Save image to a SimpleUploadedFile which can be saved into ImageField
+            suf = SimpleUploadedFile('crop-%s' % os.path.split(self.original.image.name)[-1], temp_handle.read(), content_type=IMG_TYPE)
+            #Save SimpleUploadedFile into image field
+            self.image.save('%s.%s' % (os.path.splitext(suf.name)[0],FILE_EXTENSION), suf, save=False)  
+        return                                            
