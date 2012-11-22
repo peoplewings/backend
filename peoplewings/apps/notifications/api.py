@@ -1,3 +1,4 @@
+##API for Notifications
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -5,9 +6,10 @@ from tastypie.resources import ModelResource
 from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
-from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
+from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import trailing_slash
+
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
@@ -19,66 +21,56 @@ from django.conf.urls import url
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 
-from peoplewings.apps.cropper.models import Cropped, Original
-from peoplewings.apps.cropper.forms import CroppedForm
-from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
+from models import Notifications, Requests, Invites, Messages, NotificationsAlarm
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from tastypie.utils import dict_strip_unicode_keys
 
-class CroppedResource(ModelResource):
-    
+class NotificationsResource(ModelResource):
     
     class Meta:
-        object_class = Cropped
-        queryset = Cropped.objects.all()
-        allowed_methods = ['post']
+        object_class = Notifications
+        queryset = Notifications.objects.all()
+        allowed_methods = ['get']
         include_resource_uri = False
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        validation = FormValidation(form_class=CroppedForm)
+        #validation = FormValidation(form_class=CroppedForm)
   
-
-    def post_detail(self, request, **kwargs):
-        #kwargs = id de la original
-        #raw_post_data = x, y, w, h   
-        deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        deserialized = self.alter_deserialized_detail_data(request, deserialized)
-        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-     
-        cropped_img = Cropped()
-        try:
-            cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
-            cropped_img.x = int(bundle.data['x'])
-            cropped_img.y = int(bundle.data['y'])
-            cropped_img.w = int(bundle.data['w'])
-            cropped_img.h = int(bundle.data['h'])
-            cropped_img.cropit()
+    def prepend_urls(self):      
+        return [
+            ## notifications/me (get_detail and post_detail and delete_detail)
+            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('api_notifications_detail'), name="api_account_detail"),
+        ] 
+    
+    def api_notifications_detail(self, request, **kwargs):
+        return self.dipatch_detail(request, **kwargs)
             
-            if cropped_img is not None:
-                cropped_img.thumbnail((246, 246), Image.ANTIALIAS)
-                cropped_img.w = 246
-                cropped_img.h = 246
-                cropped_img.save()
-                up = UserProfile.objects.get(user = request.user.pk)
-                up.avatar = cropped_img.image.url
-                up.save()
-            else:
-                return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
-            data = dict()
-            data['url'] = cropped_img.image.url
-            data['width'] = cropped_img.w
-            data['height'] = cropped_img.h
-            return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
-        except Exception, e:             
-            print e           
-            return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
-        
+    def apply_authorization_limits(self, request, object_list=None):
+        if request and request.method in ('GET'):  # 1.
+            prof = UserProfile.objects.get(user = request.user)
+            return object_list.filter(receiver = prof)
+        return []    
 
+    def get_list(self, request, **kwargs):
+        ##DO NOTHING
+        return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
+    
+    def get_detail(self, request, **kwargs):
+        response = super(NotificationsResource, self).get_detail(request, **kwargs)    
+        data = json.loads(response.content)
+        content = {}  
+        content['msg'] = 'Notifications shown'      
+        content['status'] = True
+        content['code'] = 200        
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
+    
     def wrap_view(self, view):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):
@@ -112,4 +104,3 @@ class CroppedResource(ModelResource):
                 return self._handle_500(request, e)
 
         return wrapper
-    

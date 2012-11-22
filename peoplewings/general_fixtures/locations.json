@@ -1,0 +1,152 @@
+[
+  {
+    "model": "locations.Country",
+    "pk": 1,
+    "fields": {
+        "name" : "Spain"
+    }
+  },
+{
+    "model": "locations.Country",
+    "pk": 2,
+    "fields": {
+        "name" : "France"
+    }
+  },
+{
+    "model": "locations.Country",
+    "pk": 3,
+    "fields": {
+        "name" : "Argentina"
+    }
+  },
+{
+    "model": "locations.Country",
+    "pk": 4,
+    "fields": {
+        "name" : "Armenia"
+    }
+  },
+{
+    "model": "locations.Country",
+    "pk": 5,
+    "fields": {
+        "name" : "Saudi Arabia"
+    }
+  },
+{
+    "model": "locations.Country",
+    "pk": 6,
+    "fields": {
+        "name" : "Great Britain"
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 1,
+    "fields": {
+        "name" : "Catalonia",
+        "country" : 1
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 2,
+    "fields": {
+        "name" : "Île-de-France",
+        "country" : 2
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 3,
+    "fields": {
+        "name" : "Buenos Aires Province",
+        "country" : 3
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 4,
+    "fields": {
+        "name" : "Yerevan",
+        "country" : 4
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 5,
+    "fields": {
+        "name" : "Riyadh Province",
+        "country" : 5
+    }
+  },
+{
+    "model": "locations.Region",
+    "pk": 6,
+    "fields": {
+        "name" : "South West England",
+        "country" : 6
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 1,
+    "fields": {
+        "name" : "Barcelona",
+        "lat" : 41.387917,
+        "lon" : 2.169919,
+        "region" : 1
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 2,
+    "fields": {
+        "name" : "Paris",
+        "lat" : 48.856614,
+        "lon" : 2.352222,
+        "region" : 2
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 3,
+    "fields": {
+        "name" : "Buenos Aires",
+        "lat" : -34.603723,
+        "lon" : -58.381593,
+        "region" : 3
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 4,
+    "fields": {
+        "name" : "Yerevan",
+        "lat" : 40.183333,
+        "lon" : 44.516667,
+        "region" : 4
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 5,
+    "fields": {
+        "name" : "Riyadh",
+        "lat" : 24.711667,
+        "lon" : 46.724167,
+        "region" : 5
+    }
+  },
+{
+    "model": "locations.City",
+    "pk": 6,
+    "fields": {
+        "name" : "Bristol",
+        "lat" : 51.454513,
+        "lon" : -2.587910,
+        "region" : 6
+    }
+  }
+]

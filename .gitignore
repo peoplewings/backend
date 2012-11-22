@@ -1,10 +1,5 @@
 *.pyc
-/media/*
-!/media/*.jpeg
-!/media/*.gif
-!/media/*.jpg
-!/media/*.png
-!/media/*.md
+/data/media/avatar/*
 /.idea/
 /settings/__init__.py
 requirements.txt

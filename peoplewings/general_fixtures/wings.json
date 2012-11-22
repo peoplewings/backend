@@ -1,0 +1,84 @@
+[
+  {
+    "model": "wings.Wing",
+    "pk": 1,
+    "fields": {
+        "author" : 1,
+        "name" : "Eze's houz",
+        "status" : "Y",
+        "date_start" : null,
+        "date_end" : null,
+        "best_days" : "W",
+        "is_request" : false
+    }
+  },
+  {
+    "model": "wings.Accomodation",
+    "pk": 1,
+    "fields": {
+        "sharing_once" : false,
+        "capacity" : 3,
+        "preferred_male" : true,
+        "preferred_female" : true,
+        "wheelchair" : true,
+        "where_sleeping_type" : "C",
+        "smoking" : "N",
+        "i_have_pet" : false,
+        "pets_allowed" : false,
+        "blankets" : true,
+        "live_center" : false,
+        "underground" : true,
+        "bus" : true,
+        "tram" : false,
+        "train" : false,
+        "others" : false,
+        "about" : "It's a nice place in upper east side of Barcelona. Not really far from the center.",
+        "address" : "Josep Baladi Street",
+        "number" : 23,
+        "additional_information" : "", 
+        "postal_code" : "08024",
+        "city" : 1
+    }
+  },
+  {
+    "model": "wings.Wing",
+    "pk": 2,
+    "fields": {
+        "author" : 2,
+        "name" : "fr33d4n's houz",
+        "status" : "M",
+        "date_start" : null,
+        "date_end" : null,
+        "best_days" : "F",
+        "is_request" : false
+    }
+  },
+  {
+    "model": "wings.Accomodation",
+    "pk": 2,
+    "fields": {
+        "sharing_once" : false,
+        "capacity" : 2,
+        "preferred_male" : false,
+        "preferred_female" : true,
+        "wheelchair" : true,
+        "where_sleeping_type" : "P",
+        "smoking" : "S",
+        "i_have_pet" : false,
+        "pets_allowed" : false,
+        "blankets" : true,
+        "live_center" : false,
+        "underground" : true,
+        "bus" : true,
+        "tram" : true,
+        "train" : false,
+        "others" : false,
+        "about" : "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.",
+        "address" : "Deu i Mata Street",
+        "number" : 12,
+        "additional_information" : "The house has a nice terrace" ,  
+        "postal_code" : "08028",
+        "city" : 1
+    }
+  } 
+]

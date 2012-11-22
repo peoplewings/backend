@@ -1,0 +1,119 @@
+[
+  {
+    "model": "notifications.Notifications",
+    "pk": 1,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "title" : "Just looking for accomodation in Barcelona",
+        "created" : "2012-10-01 15:00",
+        "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+  {
+    "model": "notifications.Notifications",
+    "pk": 2,
+    "fields": {
+        "receiver" : 1,
+        "sender" : 2,
+        "created" : "2012-10-01 15:31",
+        "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+  {
+    "model": "notifications.Notifications",
+    "pk": 3,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "created" : "2012-10-01 16:00",
+        "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+  {
+    "model": "notifications.Notifications",
+    "pk": 4,
+    "fields": {
+        "receiver" : 1,
+        "sender" : 2,
+        "created" : "2012-10-01 17:00",
+        "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 5,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "title" : "Accomodation in Barcelona (Barcelona)",
+        "created" : "2012-10-04 20:00",
+        "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 6,
+    "fields": {
+        "receiver" : 1,
+        "sender" : 2,
+        "created" : "2012-10-05 20:00",
+        "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 7,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "created" : "2012-10-05 21:00",
+        "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 8,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 3,
+        "title" : "Hi Joan!",
+        "created" : "2012-10-03 21:00",
+        "reference" : "130772e6-2e48-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 9,
+    "fields": {
+        "receiver" : 3,
+        "sender" : 2,
+        "created" : "2012-10-03 21:04",
+        "reference" : "130772e6-2e48-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Notifications",
+    "pk": 10,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 3,
+        "created" : "2012-10-04 10:00",
+        "reference" : "130772e6-2e48-11e2-8f1a-e4d53dbee5a0"
+    }
+  },
+{
+    "model": "notifications.Requests",
+    "pk": 1,
+    "fields": {
+        "num_people" : 2,
+        "read" : false,   
+        "state" : "A",
+        "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
+        "private_message" : "Hi Joan! I've just saw your accomodation wing in Barcelona. Can I go?",
+        "make_public" : true,
+        "wing" : 2
+    }
+  },
+
+]
