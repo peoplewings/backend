@@ -317,19 +317,19 @@ class UserProfileForm(forms.Form):
 
     # Contact info
     emails = forms.EmailField(required=False)
-    phone = forms.CharField(max_length=max_short_len, required=False)
+    phone = forms.CharField(max_length=max_medium_len, required=False)
     #social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
     #instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
 
     # About me
     all_about_you = forms.CharField(max_length=max_long_len, required=False)
     main_mission = forms.CharField(max_length=max_long_len, required=False)
-    occupation = forms.CharField(max_length=max_short_len, required=False)
-    company = forms.CharField(max_length=max_short_len, required=False)
+    occupation = forms.CharField(max_length=max_medium_len, required=False)
+    company = forms.CharField(max_length=max_medium_len, required=False)
     #universities = forms.ManyToManyField(University, through='UserProfileStudiedUniversity', required=False)
     personal_philosophy = forms.CharField(max_length=max_long_len, required=False)
-    political_opinion = forms.CharField(max_length=max_short_len, required=False)
-    religion = forms.CharField(max_length=max_short_len, required=False)
+    political_opinion = forms.CharField(max_length=max_medium_len, required=False)
+    religion = forms.CharField(max_length=max_medium_len, required=False)
 
     # Likes
     enjoy_people = forms.CharField(max_length=max_long_len, required=False)
