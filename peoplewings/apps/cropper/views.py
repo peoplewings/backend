@@ -24,11 +24,10 @@ class UploadView(FormView):
         return super(UploadView, self).dispatch(*args, **kwargs)
 
     def success(self, request, form, original):
-        #print original.__dict__
         if original:
             response = {'id': original.id, 'image': original.image.url, 'width': original.image_width, 'height': original.image_height}
         else :
-            response = {'id': -1, 'image': '', 'width': -1, 'height': -1}
+            return json_response({'success': False, 'errors': 'Error while uploading the image'})
         return json_success_response(response)
 
     def form_valid(self, form):
@@ -37,7 +36,7 @@ class UploadView(FormView):
             original.resize((600, 600))
             if not original.image:
                 return self.success(self.request, form, None)
-            original.save()
+            original.save()        
         return self.success(self.request, form, original)
 
     def form_invalid(self, form):
