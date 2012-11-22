@@ -62,7 +62,6 @@ class UserSignUpResource(ModelResource):
         return bundle
 
     def dehydrate(self, bundle):
-        print bundle.data
         bundle.data = {}
         if self.form_data and self.form_data._errors:
             bundle.data['status'] = False
@@ -660,7 +659,6 @@ class AccountResource(ModelResource):
             
             except ValueError, e:
                 # This exception occurs when the JSON is not a JSON...
-                print e
                 content = {}
                 errors = {}
                 content['msg'] = "No JSON could be decoded"               
@@ -809,7 +807,6 @@ class ForgotResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)
-                print response.content
                 content = {}
                 data = {}
                 content['msg'] = json.loads(response.content)['data']                                
