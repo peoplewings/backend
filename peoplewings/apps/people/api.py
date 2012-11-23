@@ -872,7 +872,7 @@ class UserProfileResource(ModelResource):
 
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas']
+            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'medium_avatar', 'thumb_avatar', 'blur_avatar']
             '''
             De user:
             
@@ -911,8 +911,13 @@ class UserProfileResource(ModelResource):
 
             if bundle.request.user.is_anonymous():
                 # borroneo
+                """
                 from django.conf import settings as django_settings
                 bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
+                """
+                del bundle.data['avatar']
+                del bundle.data['medium_avatar']
+                del bundle.data['thumb_avatar']
 
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
@@ -925,6 +930,8 @@ class UserProfileResource(ModelResource):
                 ran_last = ran_last.capitalize()
                 bundle.data['first_name'] = ran_name
                 bundle.data['last_name'] = ran_last
+            else:
+                del bundle.data['blur_avatar']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
             if bundle.request.path != u'/api/v1/profiles/me':
@@ -944,6 +951,12 @@ class UserProfileResource(ModelResource):
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
+
+    def alter_detail_data_to_serialize(self, request, data):
+        del data['blur_avatar']
+        del data['medium_avatar']
+        del data['thumb_avatar']
+        return data
 
     def wrap_view(self, view):
         @csrf_exempt

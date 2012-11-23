@@ -73,6 +73,7 @@ class UserProfile(models.Model):
     avatar = models.CharField(max_length=max_long_len, default= '%sblank_avatar.jpg' % django_settings.MEDIA_URL)
     medium_avatar = models.CharField(max_length=max_long_len, default= '%smed-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
     thumb_avatar = models.CharField(max_length=max_long_len, default= '%sthumb-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
+    blur_avatar = models.CharField(max_length=max_long_len, default= '%smed-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
     references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
     
