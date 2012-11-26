@@ -115,4 +115,9 @@ STATIC_URL = S3_URL
 MEDIA_URL = 'http://0.0.0.0:5000/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
+ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
+
+# Storages IMG
 AWS_QUERYSTRING_AUTH = False
