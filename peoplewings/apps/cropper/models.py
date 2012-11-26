@@ -32,10 +32,10 @@ class Original(models.Model):
             IMG_TYPE = os.path.splitext(self.image.name)[1].strip('.')
             if IMG_TYPE == 'jpeg':
                 PIL_TYPE = 'jpeg'
-                FILE_EXTENSION = 'jpg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'jpg':
-                PIL_TYPE = 'jpg'
-                FILE_EXTENSION = 'jpg'
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'png':
                 PIL_TYPE = 'png'
                 FILE_EXTENSION = 'png'
@@ -91,10 +91,10 @@ class Cropped(models.Model):
             IMG_TYPE = os.path.splitext(self.original.image.name)[1].strip('.')
             if IMG_TYPE == 'jpeg':
                 PIL_TYPE = 'jpeg'
-                FILE_EXTENSION = 'jpg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'jpg':
-                PIL_TYPE = 'jpg'
-                FILE_EXTENSION = 'jpg'
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'png':
                 PIL_TYPE = 'png'
                 FILE_EXTENSION = 'png'
