@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings as django_settings
 import settings
 from peoplewings.libs.S3Custom import S3Custom
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 from cStringIO import StringIO
 from django.core.files.uploadedfile import SimpleUploadedFile
 import os
@@ -109,8 +109,8 @@ class Cropped(models.Model):
             original_path = self.original.image.path
             fp = open(self.original.image.path, 'rb')
             im = Image.open(StringIO(fp.read()))
-            #Crop the image                 
-            im = im.crop((self.x,self.y,self.x+self.w,self.y+self.h))
+            #Crop the image 
+            im = im.crop((self.x,self.y,self.x+self.w,self.y+self.h))                   
             #Save the image
             temp_handle = StringIO()
             im.save(temp_handle, PIL_TYPE)
@@ -165,11 +165,13 @@ class Cropped(models.Model):
             im_big.thumbnail(size_big, Image.ANTIALIAS)
             im_med.thumbnail(size_med, Image.ANTIALIAS)
             im_small.thumbnail(size_small, Image.ANTIALIAS)
-            im_med_blur.thumbnail(size_med, Image.ANTIALIAS)
+            im_med_blur.thumbnail(size_med, Image.ANTIALIAS)   
             #Blur the image
             im_med_blur = im_med_blur.convert('RGB')
+            im_med_blur = self.pre_blur(size_med, im_med_blur)
             for i in range(10):
                 im_med_blur = im_med_blur.filter(ImageFilter.BLUR)
+            im_med_blur = self.post_blur(size_med, im_med_blur)           
             #Save the images
             temp_handle_big = StringIO()
             im_big.save(temp_handle_big, PIL_TYPE)
@@ -212,3 +214,23 @@ class Cropped(models.Model):
         if self.image_small is not None: os.remove(self.image_small.path)
         if self.image_med_blur is not None: os.remove(self.image_med_blur.path)
         return
+    def pre_blur(self, size, photo):
+        edge = 20
+        im_blank = Image.new('RGB',((size[0] + edge*2), (size[1] + edge*2)), (0, 0, 0, 0))
+        center_copy = photo.copy()
+        im_top = photo.copy()
+        im_bot = photo.copy()
+        im_right = photo.copy()
+        im_left = photo.copy()
+        im_top = im_top.crop((0, 0, size[0], edge))
+        im_bot = im_top.crop((0, size[1] - edge, size[0], edge))
+        im_right = im_top.crop((size[0] - edge, 0, edge, size[1]))
+        im_left = im_top.crop((0, 0, edge, size[1]))
+        im_blank.paste(center_copy, (edge, edge, size[0] + edge, size[1] + edge))
+        return im_blank
+    def post_blur(self, size, photo):
+        edge = 20
+        im = photo.crop((edge,edge,size[0] + edge,size[1] + edge))
+        return im 
+        
+        
