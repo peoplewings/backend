@@ -854,7 +854,7 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        paginator = Paginator(data, 20)
+        paginator = Paginator(data, 10)
         try:
             page = paginator.page(int(request.GET.get('page', 1)))
         except InvalidPage:
@@ -952,11 +952,13 @@ class UserProfileResource(ModelResource):
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
 
+    """
     def alter_detail_data_to_serialize(self, request, data):
-        del data['blur_avatar']
-        del data['medium_avatar']
-        del data['thumb_avatar']
-        return data
+        if 'blur_avatar' in data.data: del data.data['blur_avatar']
+        if 'medium_avatar' in data.data: del data.data['medium_avatar']
+        if 'thumb_avatar' in data.data: del data.data['thumb_avatar']
+        return self
+    """
 
     def wrap_view(self, view):
         @csrf_exempt
