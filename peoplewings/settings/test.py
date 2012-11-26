@@ -96,6 +96,7 @@ LOGGING = {
         },
     }
 }
+
 #IMG
 STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
 MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
@@ -109,4 +110,9 @@ STATIC_URL = S3_URL
 MEDIA_URL = 'http://peoplewings-backend.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
+ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
+
+# Storages IMG
 AWS_QUERYSTRING_AUTH = False

@@ -91,3 +91,22 @@ LOGGING = {
     }
 }
 
+#IMG
+STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
+MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
+
+AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+
+S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
+STATIC_URL = S3_URL
+MEDIA_URL = 'http://0.0.0.0:5000/media/'
+
+ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
+ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
+
+# Storages IMG
+AWS_QUERYSTRING_AUTH = False
