@@ -139,7 +139,7 @@ There are some standard error messages:
     
 ### Delete my account (Joan):
  * Request:
-    /DELETE /accounts/me/
+    /DELETE /accounts/me
     {"current_password":"asdf"}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -149,7 +149,7 @@ There are some standard error messages:
 
 ### Update account (Joan):
  * Request:
-    /PUT /accounts/me/
+    /PUT /accounts/me
     {"current_password":"asdf", "resource":{"email":"asdf", "password":"qwert", "lastName":"lol"}} All these minus current_password are optional, you can always have 1 field or more
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -161,7 +161,7 @@ There are some standard error messages:
 
 ### View my profile (Eze):
  * Request:
-    /GET profiles/me/
+    /GET /profiles/me
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  * Response:
    * OK
@@ -171,8 +171,12 @@ There are some standard error messages:
           "data": {
             "age":13,
             "allAboutYou": "say whaaaaat!!",
-            "avatar": "/static/img/blank_avatar.jpg",
-            ...
+            "avatar": "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+            "birthDay": "5",
+            "birthMonth": "3",
+            "birthYear": "1999",
+            "civilState": "",
+            "company": "",
             "current": {
                   "country": "Argentina",
                   "lat": "0E-9",
@@ -190,17 +194,23 @@ There are some standard error messages:
                   "institution": "University of Waterloo"
                 }
             ],
-            ...
+            "emails": "",
+            "enjoyPeople": "",
+            "gender": "Male",
+            "hometown": {},
+            "id": "me",
+            "incredible": "",
+            "inspiredBy": "",
             "instantMessages": [
-                {
-                  "imUsername": "zek.skype",
-                  "instantMessage": "Skype"
-                }
-              ],
-              "interestedIn": [
-                {
-                  "gender": "Female"
-                }
+              {
+                "imUsername": "zek.skype",
+                "instantMessage": "Skype"
+              }
+            ],
+            "interestedIn": [
+              {
+                "gender": "Female"
+              }
             ],
             "languages": [
                 {
@@ -216,7 +226,22 @@ There are some standard error messages:
                   "name": "german"
                 }
             ],
-            ...
+            "mainMission": "",
+            "movies": "",
+            "occupation": "",
+            "otherLocations": [],
+            "otherPages": "",
+            "personalPhilosophy": "",
+            "phone": "",
+            "pid": 4,
+            "politicalOpinion": "",
+            "pwOpinion": "",
+            "pwState": "",
+            "quotes": "",
+            "religion": "",
+            "resourceUri": "/api/v1/profiles/4",
+            "sharing": "",
+            "showBirthday": "F",
             "socialNetworks": [
                 {
                   "snUsername": "lola.facebook",
@@ -224,7 +249,6 @@ There are some standard error messages:
                 }
             ],
             "sports": "swimming",
-            "user": "/api/v1/accounts/2"
           },
           "msg":"Profile retrieved successfully.",
           "status":true
@@ -234,7 +258,7 @@ There are some standard error messages:
 
 ### Update my profile (Eze):
  * Request:
-    /PUT profiles/me/
+    /PUT /profiles/me
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "age": 23,
@@ -250,7 +274,7 @@ There are some standard error messages:
 
 ### View another profile (Eze):
  * Request:
-    /GET profiles/17/
+    /GET /profiles/17
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -258,10 +282,11 @@ There are some standard error messages:
       {
           "code":200,
           "data": {
-            "age":13,
+            "age":23,
             "allAboutYou": "say whaaaaat!!",
+            "avatar": "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+            "birthday": "1989-03-05",
             ...
-            "user": "/api/v1/accounts/2"
           },
           "msg":"Profile retrieved successfully.",
           "status":true
@@ -454,7 +479,7 @@ There are some standard error messages:
                       {
                         "age": 13,
                         "allAboutYou": "",
-                        "avatar": "/static/img/blank_avatar.jpg",
+                        "avatar": "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
                         "current": {
                           "country": "Argentina",
                           "name": "Buenos Aires",
@@ -481,8 +506,8 @@ There are some standard error messages:
                         "numReferences": 0,
                         "occupation": "tocar los huevos",
                         "pending": "Pending",
+                        "resourceUri": "/api/v1/profiles/1",
                         "tasaRespuestas": 0,
-                        "user": "/api/v1/accounts/2",
                         "verified": true
                       },
                       ...
