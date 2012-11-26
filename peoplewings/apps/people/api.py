@@ -392,7 +392,7 @@ class UserProfileResource(ModelResource):
         object_class = UserProfile
         queryset = UserProfile.objects.all()
         allowed_methods = ['get', 'post', 'put']
-        include_resource_uri = False
+        include_resource_uri = True
         resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = AnonymousApiTokenAuthentication()
@@ -405,7 +405,7 @@ class UserProfileResource(ModelResource):
             'languages':ALL_WITH_RELATIONS,
             #'userlanguages': ALL_WITH_RELATIONS,
         }
-        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go']
+        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go', 'user']
 
     def normalize_query(self, query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
@@ -442,7 +442,7 @@ class UserProfileResource(ModelResource):
         return query
 
     def apply_filters(self, request, applicable_filters):
-        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters).exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
         city = request.GET.get('wings', None)
         start_date = request.GET.get('startDate', None)
@@ -712,6 +712,7 @@ class UserProfileResource(ModelResource):
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
+        del data['user']
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
         if b:
@@ -854,7 +855,7 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        paginator = Paginator(data, 20)
+        paginator = Paginator(data, 10)
         try:
             page = paginator.page(int(request.GET.get('page', 1)))
         except InvalidPage:
@@ -872,7 +873,7 @@ class UserProfileResource(ModelResource):
 
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'medium_avatar', 'thumb_avatar', 'blur_avatar']
+            permitted_fields = ['medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             '''
             De user:
             
@@ -915,10 +916,7 @@ class UserProfileResource(ModelResource):
                 from django.conf import settings as django_settings
                 bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
                 """
-                del bundle.data['avatar']
-                del bundle.data['medium_avatar']
-                del bundle.data['thumb_avatar']
-
+                bundle.data['avatar'] = bundle.data['blur_avatar']
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
                 import string, random
@@ -931,9 +929,14 @@ class UserProfileResource(ModelResource):
                 bundle.data['first_name'] = ran_name
                 bundle.data['last_name'] = ran_last
             else:
-                del bundle.data['blur_avatar']
+                bundle.data['avatar'] = bundle.data['medium_avatar']
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
+            del bundle.data['thumb_avatar']
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
@@ -952,11 +955,13 @@ class UserProfileResource(ModelResource):
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
 
+    """
     def alter_detail_data_to_serialize(self, request, data):
-        del data['blur_avatar']
-        del data['medium_avatar']
-        del data['thumb_avatar']
-        return data
+        if 'blur_avatar' in data.data: del data.data['blur_avatar']
+        if 'medium_avatar' in data.data: del data.data['medium_avatar']
+        if 'thumb_avatar' in data.data: del data.data['thumb_avatar']
+        return self
+    """
 
     def wrap_view(self, view):
         @csrf_exempt

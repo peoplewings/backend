@@ -70,10 +70,10 @@ class UserProfile(models.Model):
     #name_to_show = models.CharField(max_length=max_short_len, default='name_to_show')
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
 
-    avatar = models.CharField(max_length=max_long_len, default= '%sblank_avatar.jpg' % django_settings.MEDIA_URL)
-    medium_avatar = models.CharField(max_length=max_long_len, default= '%smed-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
-    thumb_avatar = models.CharField(max_length=max_long_len, default= '%sthumb-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
-    blur_avatar = models.CharField(max_length=max_long_len, default= '%smed-blank_avatar.jpg' % django_settings.MEDIA_URL, blank = True)
+    avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
+    medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
+    thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
+    blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True)
     relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
     references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
     
