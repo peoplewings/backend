@@ -13,9 +13,6 @@ from urllib import unquote
 from peoplewings.libs.S3Custom import S3Custom
 
 class UploadView(FormView):
-    """
-    Upload picture to future cropping
-    """
     form_class = OriginalForm
     template_name = 'cropper/upload.html'
 
@@ -23,20 +20,23 @@ class UploadView(FormView):
     def dispatch(self, *args, **kwargs):
         return super(UploadView, self).dispatch(*args, **kwargs)
 
-    def success(self, request, form, original):
+    def success(self, request, form, original, errors=None):
         if original:
             response = {'id': original.id, 'image': original.image.url, 'width': original.image_width, 'height': original.image_height}
         else :
-            return json_response({'success': False, 'errors': 'Error while uploading the image'})
+            return json_response({'success': False, 'errors': errors})
         return json_success_response(response)
 
     def form_valid(self, form):
         original = form.save()
-        if original.image_width > 600 or original.image_height > 600: 
-            original.resize((600, 600))
-            if not original.image:
-                return self.success(self.request, form, None)
-            original.save()        
+        if  original.image_width > 280 or original.image_height > 281:
+            if original.image_width > 600 or original.image_height > 600:
+                original.resize((600, 600))
+                if not original.image:
+                    return self.success(self.request, form, None, errors = 'Error while uploading the image')
+                original.save() 
+        else:
+            return self.success(self.request, form, None, errors = 'The image is too small')       
         return self.success(self.request, form, original)
 
     def form_invalid(self, form):
