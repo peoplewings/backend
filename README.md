@@ -474,6 +474,7 @@ There are some standard error messages:
         "data": 
           {
               "count": 56,
+              "endResult": 10,
               "profiles": 
               [
                       {
@@ -511,7 +512,8 @@ There are some standard error messages:
                         "verified": true
                       },
                       ...
-              ]
+              ],
+              "startResult": 1
           },
         "msg": "Profiles retrieved successfully.",
         "status": true
