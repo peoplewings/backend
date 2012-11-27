@@ -93,7 +93,7 @@ class CroppedResource(ModelResource):
             return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
         except Exception, e:             
             print e           
-            return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
+            return self.create_response(request, {"status":False, "error":e, "code":"403"}, response_class = HttpResponse)
         
 
     def wrap_view(self, view):
