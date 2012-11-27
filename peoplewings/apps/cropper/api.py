@@ -92,7 +92,6 @@ class CroppedResource(ModelResource):
         data['height'] = cropped_img.h
         return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
 
-
     def wrap_view(self, view):
         @csrf_exempt
         def wrapper(request, *args, **kwargs):

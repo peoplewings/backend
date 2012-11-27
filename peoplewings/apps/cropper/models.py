@@ -226,7 +226,7 @@ class Cropped(models.Model):
         im_bot = im_top.crop((0, size[1] - edge, size[0], edge))
         im_right = im_top.crop((size[0] - edge, 0, edge, size[1]))
         im_left = im_top.crop((0, 0, edge, size[1]))
-        im_blank.paste(center_copy, (edge, edge, size[0] + edge, size[1] + edge))
+        im_blank.paste(center_copy, (edge, edge))
         return im_blank
     def post_blur(self, size, photo):
         edge = 20
