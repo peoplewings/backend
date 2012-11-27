@@ -856,12 +856,17 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        paginator = Paginator(data, 10)
+        page_size = 10
+        count = len(data)
+        num_page = int(request.GET.get('page', 1))
+        startResult = (num_page - 1) * page_size + 1
+        endResult = min(num_page * page_size, count)
+        paginator = Paginator(data, page_size)
         try:
-            page = paginator.page(int(request.GET.get('page', 1)))
+            page = paginator.page(num_page)
         except InvalidPage:
             return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-        objects = {'count':len(data), 'profiles':page.object_list}
+        objects = {'count':count, 'startResult': startResult, 'endResult': endResult, 'profiles':page.object_list}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
