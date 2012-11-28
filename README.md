@@ -169,86 +169,99 @@ There are some standard error messages:
       {
           "code":200,
           "data": {
-            "age":13,
-            "allAboutYou": "say whaaaaat!!",
+            "age": 25,
+            "allAboutYou": "I'm a nice man from Argentina. I have Armenian roots and an exotic look on me. I'm an expert IT guy, not like the ones in 'The IT crowd' but more like 'BBT'.",
             "avatar": "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-            "birthDay": "5",
-            "birthMonth": "3",
-            "birthYear": "1999",
-            "civilState": "",
-            "company": "",
+            "birthDay": "1",
+            "birthMonth": "2",
+            "birthYear": "1987",
+            "civilState": "IC",
+            "company": "PeopleWings",
             "current": {
-                  "country": "Argentina",
-                  "lat": "0E-9",
-                  "lon": "0E-9",
-                  "name": "Buenos Aires",
-                  "region": "Bs As"
+              "country": "Spain",
+              "lat": "41.387917000",
+              "lon": "2.169919000",
+              "name": "Barcelona",
+              "region": "Catalonia"
             },
             "education": [
-                {
-                  "degree": "Master of Lords",
-                  "institution": "University of Reading"
-                },
-                {
-                  "degree": "Master in Chemistry",
-                  "institution": "University of Waterloo"
-                }
+              {
+                "degree": "Licensed",
+                "institution": "Universitat Politècnica de Catalunya"
+              }
             ],
-            "emails": "",
-            "enjoyPeople": "",
+            "emails": "eze_ano@gmail.com",
+            "enjoyPeople": "People who makes me spend a lot of money in plane tickets",
+            "firstName": "Ez",
             "gender": "Male",
-            "hometown": {},
+            "hometown": {
+              "country": "Argentina",
+              "lat": "-34.603723000",
+              "lon": "-58.381593000",
+              "name": "Buenos Aires",
+              "region": "Buenos Aires Province"
+            },
             "id": "me",
-            "incredible": "",
-            "inspiredBy": "",
+            "incredible": "Plane accident",
+            "inspiredBy": "Steve Jobs",
             "instantMessages": [
               {
-                "imUsername": "zek.skype",
-                "instantMessage": "Skype"
-              }
-            ],
-            "interestedIn": [
+                "imUsername": "EzeAnoki",
+                "instantMessage": "Whatsap"
+              },
               {
-                "gender": "Female"
+                "imUsername": "Ezeq87",
+                "instantMessage": "Facetime"
               }
             ],
+            "interestedIn": [],
             "languages": [
-                {
-                  "level": "intermediate",
-                  "name": "english"
-                },
-                {
-                  "level": "expert",
-                  "name": "spanish"
-                },
-                {
-                  "level": "beginner",
-                  "name": "german"
-                }
+              {
+                "level": "expert",
+                "name": "english"
+              }
             ],
-            "mainMission": "",
-            "movies": "",
-            "occupation": "",
+            "lastLogin": {
+              "country": "England",
+              "lat": "0E-9",
+              "lon": "0E-9",
+              "name": "London",
+              "region": "NoName"
+            },
+            "lastLoginDate": "Online",
+            "lastName": "Mate",
+            "mainMission": "Internationalize Alioli",
+            "movies": "AlaBalaNica",
+            "numFriends": 0,
+            "numReferences": 0,
+            "occupation": "Software Engineer",
             "otherLocations": [],
-            "otherPages": "",
-            "personalPhilosophy": "",
-            "phone": "",
-            "pid": 4,
-            "politicalOpinion": "",
-            "pwOpinion": "",
-            "pwState": "",
-            "quotes": "",
-            "religion": "",
-            "resourceUri": "/api/v1/profiles/4",
-            "sharing": "",
+            "otherPages": "http://www.petardas.com",
+            "pending": "Pending",
+            "personalPhilosophy": "Take your time while eating. And drink lots of water!",
+            "phone": "609826937",
+            "pid": 1,
+            "politicalOpinion": "I don't believe in politics",
+            "pwOpinion": "It's very far from home",
+            "pwState": "Y",
+            "quotes": "YOLO (You only live once)",
+            "religion": "Atheist",
+            "resourceUri": "/api/v1/profiles/1",
+            "sharing": "Time",
             "showBirthday": "F",
             "socialNetworks": [
-                {
-                  "snUsername": "lola.facebook",
-                  "socialNetwork": "Facebook"
-                }
+              {
+                "snUsername": "Ese_Eze",
+                "socialNetwork": "Twitter"
+              },
+              {
+                "snUsername": "Soy_el_amo87",
+                "socialNetwork": "Tuenti"
+              }
             ],
-            "sports": "swimming",
+            "sports": "Rollerblade",
+            "tasaRespuestas": 0,
+            "verified": true
           },
           "msg":"Profile retrieved successfully.",
           "status":true
@@ -263,6 +276,7 @@ There are some standard error messages:
     {
       "age": 23,
       ...
+      "last_login":{"name":"London", "country":"England", "lat":"0.0", "lon":"0.0"}
     }
 
  * Response:

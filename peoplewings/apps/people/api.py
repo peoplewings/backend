@@ -386,6 +386,7 @@ class UserProfileResource(ModelResource):
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
+    last_login = fields.ToOneField(CityResource, 'last_login', full=True, null=True)
     interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
 
     class Meta:
@@ -686,6 +687,15 @@ class UserProfileResource(ModelResource):
             i.data['country'] = country.name
         return bundle.data['other_locations']
 
+    def dehydrate_last_login(self, bundle):
+        if bundle.data['last_login'] is None: return {}
+        city = bundle.data['last_login'].obj
+        region = city.region
+        country = region.country
+        bundle.data['last_login'].data['region'] = region.name
+        bundle.data['last_login'].data['country'] = country.name
+        return bundle.data['last_login'].data
+
     """
     def dehydrate_birthday(self, bundle):
         bundle.data['birth_day'] = bundle.obj.birthday.day
@@ -809,6 +819,11 @@ class UserProfileResource(ModelResource):
             """
             bundle.data.pop('hometown')
 
+        if 'last_login' in bundle.data:
+            llcity = City.objects.saveLocation(**bundle.data['last_login'])
+            up.last_login = llcity
+            bundle.data.pop('last_login')
+
         if 'other_locations' in bundle.data:
             up.other_locations = []
             for ol in bundle.data['other_locations']:
@@ -877,47 +892,35 @@ class UserProfileResource(ModelResource):
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
 
+        bundle.data['first_name'] = bundle.obj.user.first_name
+        bundle.data['last_name'] = bundle.obj.user.last_name
+        bundle.data['verified'] = True
+        #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
+        bundle.data['num_friends'] = 0
+        bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
+        bundle.data['pending'] = "Pending"
+        bundle.data['tasa_respuestas'] = 0
+
+        from datetime import timedelta
+        d = timedelta(hours=1)
+        online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
+        if online: bundle.data['last_login_date'] = "Online"
+        else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
+        #print bundle.obj.user.last_login
+        #print datetime.now().timetz()
+
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
             permitted_fields = ['medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
-            '''
-            De user:
             
-            bundle.data['last_login'] = bundle.obj.user.last_login
-            De user profile:
-            bundle.data['avatar'] = bundle.obj.avatar
-            bundle.data['age'] = bundle.obj.age
-            bundle.data['languages'] = bundle.obj.languages
-            bundle.data['languages'] = self.dehydrate_languages(bundle)
-            bundle.data['occupation'] = bundle.obj.occupation
-            bundle.data['all_about_you'] = bundle.obj.all_about_you
-            bundle.data['current_city'] = bundle.obj.current_city
-            #bundle.data['user'] = bundle.obj.current_city
-            '''
             for key, value in bundle.data.items():
                 if key not in permitted_fields: del bundle.data[key]
-            bundle.data['first_name'] = bundle.obj.user.first_name
-            bundle.data['last_name'] = bundle.obj.user.last_name
-            bundle.data['verified'] = True
-            #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-            bundle.data['num_friends'] = 0
-            bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-            bundle.data['pending'] = "Pending"
-            bundle.data['tasa_respuestas'] = 0
-
-            from datetime import timedelta
-            d = timedelta(hours=1)
-            online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-            if online: bundle.data['last_login'] = "Online"
-            else: bundle.data['last_login'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-            #print bundle.obj.user.last_login
-            #print datetime.now().timetz()
-
+            
             if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
             if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
-                # borroneo
+                # borroneo del nombre y el avatar
                 """
                 from django.conf import settings as django_settings
                 bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
