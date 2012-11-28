@@ -316,11 +316,15 @@ class LoginResource(ModelResource):
         return bundle
 
     def full_dehydrate(self, bundle):
-        token = bundle.data
+        token = bundle.data['token']
+        user = bundle.data['idUser']
+        prof = bundle.data['idProfile']
         bundle.data = {}
         bundle.data['status'] = True
         bundle.data['code'] = 201 
-        bundle.data['token'] = token      
+        bundle.data['token'] = token
+        bundle.data['idUser'] = user  
+        bundle.data['idProfile'] = prof  
         return bundle
 
     def wrap_view(self, view):
@@ -332,7 +336,9 @@ class LoginResource(ModelResource):
                 content = {}
                 data = {}
                 content['msg'] = "Logged in"
-                data['xAuthToken'] = json.loads(response.content)['token']                
+                data['xAuthToken'] = json.loads(response.content)['token']
+                data['idAccount'] = json.loads(response.content)['idUser']
+                data['idProfile'] =  json.loads(response.content)['idProfile']               
                 content['code'] = 200
                 content['status'] = True
                 content['data'] = data                

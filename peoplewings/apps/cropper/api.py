@@ -60,37 +60,40 @@ class CroppedResource(ModelResource):
         cropped_img.cropit()
         
         if cropped_img is not None:
-            cropped_img.create_thumbs((245, 245), (108, 108), (49, 49))
-            cropped_img.save()
-            up = UserProfile.objects.get(user = request.user.pk)
-            #Save the images to s3
-            s3 = S3Custom()
-            new_url_big = s3.upload_file(cropped_img.image_big.path, 'avatar')
-            new_url_med = s3.upload_file(cropped_img.image_med.path, 'avatar')
-            new_url_small = s3.upload_file(cropped_img.image_small.path, 'avatar')
-            new_url_blur = s3.upload_file(cropped_img.image_med_blur.path, 'avatar')
-            #Delete local and old(s3) images
-            s3.delete_file(up.avatar)
-            s3.delete_file(up.medium_avatar)
-            s3.delete_file(up.thumb_avatar)
-            s3.delete_file(up.blur_avatar)
-            cropped_img.remove_local()
-            #Assign the url to the avatar field in userprofile
-            if new_url_big is not None and new_url_med is not None and new_url_small is not None and new_url_blur is not None:
-                up.avatar = new_url_big
-                up.medium_avatar = new_url_med
-                up.thumb_avatar = new_url_small
-                up.blur_avatar = new_url_blur
-                up.save()
-            else:
-                return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)                
+            try:
+                cropped_img.create_thumbs((245, 245), (108, 108), (49, 49))
+                cropped_img.save()
+                up = UserProfile.objects.get(user = request.user.pk)
+                #Save the images to s3
+                s3 = S3Custom()
+                new_url_big = s3.upload_file(cropped_img.image_big.path, 'avatar')
+                new_url_med = s3.upload_file(cropped_img.image_med.path, 'avatar')
+                new_url_small = s3.upload_file(cropped_img.image_small.path, 'avatar')
+                new_url_blur = s3.upload_file(cropped_img.image_med_blur.path, 'avatar')
+                #Delete local and old(s3) images
+                s3.delete_file(up.avatar)
+                s3.delete_file(up.medium_avatar)
+                s3.delete_file(up.thumb_avatar)
+                s3.delete_file(up.blur_avatar)
+                cropped_img.remove_local()
+                #Assign the url to the avatar field in userprofile
+                if new_url_big is not None and new_url_med is not None and new_url_small is not None and new_url_blur is not None:
+                    up.avatar = new_url_big
+                    up.medium_avatar = new_url_med
+                    up.thumb_avatar = new_url_small
+                    up.blur_avatar = new_url_blur
+                    up.save()
+                else:
+                    return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)                
+                data = dict()
+                data['url'] = up.avatar
+                data['width'] = cropped_img.w
+                data['height'] = cropped_img.h
+                return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
+            except Exception, e:
+                return self.create_response(request, {"status":True, "msg":e, "code":"200", "data":data}, response_class = HttpResponse)
         else:
             return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
-        data = dict()
-        data['url'] = up.avatar
-        data['width'] = cropped_img.w
-        data['height'] = cropped_img.h
-        return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
 
     def wrap_view(self, view):
         @csrf_exempt

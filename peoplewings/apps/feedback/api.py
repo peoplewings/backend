@@ -39,15 +39,24 @@ class FeedbackResource(ModelResource):
         always_return_data = True        
         validation = FeedbackValidation()
 
-    def know_teh_browser(user_agent):
+    def know_teh_browser(self, user_agent):
         must_have = {'Firefox':'Firefox', 'Seamonkey':'Seamonkey', 'Chrome':'Chrome', 'Chromium':'Chromium', 'Safari':'Safari', 'Opera':'Opera', 'Internet Explorer':';MSIE', 'Googlebot':'Googlebot'}
-        must_not_have = {'Firefox':'Seamonkey', 'Seamonkey':None, 'Chrome':'Chromium', 'Chromium':None, 'Safari':['Chrome','Chromium'], 'Opera':None, 'Internet Explorer':None, 'Googlebot':'Googlebot'}
-        return user_agent
+        must_not_have = {'Firefox':['Seamonkey'], 'Seamonkey':[None], 'Chrome':['Chromium'], 'Chromium':[None], 'Safari':['Chrome','Chromium'], 'Opera':[None], 'Internet Explorer':[None], 'Googlebot':['Googlebot']}
+        for key, value in must_have.items():
+            if user_agent.find(value) != -1:
+                if must_not_have[key]:
+                    breaker = 0
+                    for key2 in must_not_have[key]:                    
+                            if user_agent.find(key2) != -1:
+                                breaker = 1
+                if breaker == 0:
+                    return value                        
+        return None
         
         
     def obj_create(self, bundle, request=None, **kwargs):
-        print bundle.request.META['HTTP_USER_AGENT']
-        return super(FeedbackResource, self).obj_create(bundle, request=None, user=bundle.request.user)
+        browser = self.know_teh_browser(bundle.request.META['HTTP_USER_AGENT'])
+        return super(FeedbackResource, self).obj_create(bundle, request=None, user=bundle.request.user, browser = browser)
 
     def wrap_view(self, view):
         @csrf_exempt
