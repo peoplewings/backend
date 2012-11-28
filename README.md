@@ -68,7 +68,7 @@ There are some standard error messages:
     {"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}
  * Response:
    * OK 
-     * 200 OK {"code": 200, "data": {"idAccount": 2, "idProfile": 2, "xAuthToken": "94f6b041e53d56893553f44d1d30bb6f4cba7080255ff9bd91e021947dc91c318857b8ea223a74bb"}, "msg": "Logged in", "status": true}
+     * 200 OK {"code": 200, "msg": "Account activated", "status": true}
    * NO
      * 200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}
@@ -81,7 +81,7 @@ There are some standard error messages:
      {username = "joan@peoplewings.com, password = "asdf", remember="on"} (This call keeps you logged in in the system, forever)
  * Response:
    * OK
-     * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}
+    * 200 OK {"code": 200, "data": {"idAccount": 2, "idProfile": 2, "xAuthToken": "94f6b041e53d56893553f44d1d30bb6f4cba7080255ff9bd91e021947dc91c318857b8ea223a74bb"}, "msg": "Logged in", "status": true}
    * NO
      * 200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}
