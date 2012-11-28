@@ -61,7 +61,7 @@ class CroppedResource(ModelResource):
         
         if cropped_img is not None:
             try:
-                cropped_img.create_thumbs((245, 245), (108, 108), (49, 49))
+                cropped_img.create_thumbs((244, 244), (108, 108), (48, 48))
                 cropped_img.save()
                 up = UserProfile.objects.get(user = request.user.pk)
                 #Save the images to s3
