@@ -139,7 +139,7 @@ There are some standard error messages:
     
 ### Delete my account (Joan):
  * Request:
-    /DELETE /accounts/me/
+    /DELETE /accounts/me
     {"current_password":"asdf"}
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -149,7 +149,7 @@ There are some standard error messages:
 
 ### Update account (Joan):
  * Request:
-    /PUT /accounts/me/
+    /PUT /accounts/me
     {"current_password":"asdf", "resource":{"email":"asdf", "password":"qwert", "lastName":"lol"}} All these minus current_password are optional, you can always have 1 field or more
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -161,7 +161,7 @@ There are some standard error messages:
 
 ### View my profile (Eze):
  * Request:
-    /GET profiles/me/
+    /GET /profiles/me
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  * Response:
    * OK
@@ -169,62 +169,99 @@ There are some standard error messages:
       {
           "code":200,
           "data": {
-            "age":13,
-            "allAboutYou": "say whaaaaat!!",
-            "avatar": "/static/img/blank_avatar.jpg",
-            ...
+            "age": 25,
+            "allAboutYou": "I'm a nice man from Argentina. I have Armenian roots and an exotic look on me. I'm an expert IT guy, not like the ones in 'The IT crowd' but more like 'BBT'.",
+            "avatar": "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+            "birthDay": "1",
+            "birthMonth": "2",
+            "birthYear": "1987",
+            "civilState": "IC",
+            "company": "PeopleWings",
             "current": {
-                  "country": "Argentina",
-                  "lat": "0E-9",
-                  "lon": "0E-9",
-                  "name": "Buenos Aires",
-                  "region": "Bs As"
+              "country": "Spain",
+              "lat": "41.387917000",
+              "lon": "2.169919000",
+              "name": "Barcelona",
+              "region": "Catalonia"
             },
             "education": [
-                {
-                  "degree": "Master of Lords",
-                  "institution": "University of Reading"
-                },
-                {
-                  "degree": "Master in Chemistry",
-                  "institution": "University of Waterloo"
-                }
+              {
+                "degree": "Licensed",
+                "institution": "Universitat Politècnica de Catalunya"
+              }
             ],
-            ...
+            "emails": "eze_ano@gmail.com",
+            "enjoyPeople": "People who makes me spend a lot of money in plane tickets",
+            "firstName": "Ez",
+            "gender": "Male",
+            "hometown": {
+              "country": "Argentina",
+              "lat": "-34.603723000",
+              "lon": "-58.381593000",
+              "name": "Buenos Aires",
+              "region": "Buenos Aires Province"
+            },
+            "id": "me",
+            "incredible": "Plane accident",
+            "inspiredBy": "Steve Jobs",
             "instantMessages": [
-                {
-                  "imUsername": "zek.skype",
-                  "instantMessage": "Skype"
-                }
-              ],
-              "interestedIn": [
-                {
-                  "gender": "Female"
-                }
+              {
+                "imUsername": "EzeAnoki",
+                "instantMessage": "Whatsap"
+              },
+              {
+                "imUsername": "Ezeq87",
+                "instantMessage": "Facetime"
+              }
             ],
+            "interestedIn": [],
             "languages": [
-                {
-                  "level": "intermediate",
-                  "name": "english"
-                },
-                {
-                  "level": "expert",
-                  "name": "spanish"
-                },
-                {
-                  "level": "beginner",
-                  "name": "german"
-                }
+              {
+                "level": "expert",
+                "name": "english"
+              }
             ],
-            ...
+            "lastLogin": {
+              "country": "England",
+              "lat": "0E-9",
+              "lon": "0E-9",
+              "name": "London",
+              "region": "NoName"
+            },
+            "lastLoginDate": "Online",
+            "lastName": "Mate",
+            "mainMission": "Internationalize Alioli",
+            "movies": "AlaBalaNica",
+            "numFriends": 0,
+            "numReferences": 0,
+            "occupation": "Software Engineer",
+            "otherLocations": [],
+            "otherPages": "http://www.petardas.com",
+            "pending": "Pending",
+            "personalPhilosophy": "Take your time while eating. And drink lots of water!",
+            "phone": "609826937",
+            "pid": 1,
+            "politicalOpinion": "I don't believe in politics",
+            "pwOpinion": "It's very far from home",
+            "pwState": "Y",
+            "quotes": "YOLO (You only live once)",
+            "religion": "Atheist",
+            "resourceUri": "/api/v1/profiles/1",
+            "sharing": "Time",
+            "showBirthday": "F",
             "socialNetworks": [
-                {
-                  "snUsername": "lola.facebook",
-                  "socialNetwork": "Facebook"
-                }
+              {
+                "snUsername": "Ese_Eze",
+                "socialNetwork": "Twitter"
+              },
+              {
+                "snUsername": "Soy_el_amo87",
+                "socialNetwork": "Tuenti"
+              }
             ],
-            "sports": "swimming",
-            "user": "/api/v1/accounts/2"
+            "sports": "Rollerblade",
+            "tasaRespuestas": 0,
+            "verified": true
           },
           "msg":"Profile retrieved successfully.",
           "status":true
@@ -234,11 +271,12 @@ There are some standard error messages:
 
 ### Update my profile (Eze):
  * Request:
-    /PUT profiles/me/
+    /PUT /profiles/me
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "age": 23,
       ...
+      "last_login":{"name":"London", "country":"England", "lat":"0.0", "lon":"0.0"}
     }
 
  * Response:
@@ -250,7 +288,7 @@ There are some standard error messages:
 
 ### View another profile (Eze):
  * Request:
-    /GET profiles/17/
+    /GET /profiles/17
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -258,10 +296,11 @@ There are some standard error messages:
       {
           "code":200,
           "data": {
-            "age":13,
+            "age":23,
             "allAboutYou": "say whaaaaat!!",
+            "avatar": "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+            "birthday": "1989-03-05",
             ...
-            "user": "/api/v1/accounts/2"
           },
           "msg":"Profile retrieved successfully.",
           "status":true
@@ -449,12 +488,13 @@ There are some standard error messages:
         "data": 
           {
               "count": 56,
+              "endResult": 10,
               "profiles": 
               [
                       {
                         "age": 13,
                         "allAboutYou": "",
-                        "avatar": "/static/img/blank_avatar.jpg",
+                        "avatar": "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
                         "current": {
                           "country": "Argentina",
                           "name": "Buenos Aires",
@@ -481,12 +521,13 @@ There are some standard error messages:
                         "numReferences": 0,
                         "occupation": "tocar los huevos",
                         "pending": "Pending",
+                        "resourceUri": "/api/v1/profiles/1",
                         "tasaRespuestas": 0,
-                        "user": "/api/v1/accounts/2",
                         "verified": true
                       },
                       ...
-              ]
+              ],
+              "startResult": 1
           },
         "msg": "Profiles retrieved successfully.",
         "status": true

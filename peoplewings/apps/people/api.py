@@ -386,13 +386,14 @@ class UserProfileResource(ModelResource):
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
+    last_login = fields.ToOneField(CityResource, 'last_login', full=True, null=True)
     interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
 
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
         allowed_methods = ['get', 'post', 'put']
-        include_resource_uri = False
+        include_resource_uri = True
         resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = AnonymousApiTokenAuthentication()
@@ -405,7 +406,7 @@ class UserProfileResource(ModelResource):
             'languages':ALL_WITH_RELATIONS,
             #'userlanguages': ALL_WITH_RELATIONS,
         }
-        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go']
+        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go', 'user']
 
     def normalize_query(self, query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
@@ -443,6 +444,7 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
         city = request.GET.get('wings', None)
         start_date = request.GET.get('startDate', None)
@@ -685,6 +687,15 @@ class UserProfileResource(ModelResource):
             i.data['country'] = country.name
         return bundle.data['other_locations']
 
+    def dehydrate_last_login(self, bundle):
+        if bundle.data['last_login'] is None: return {}
+        city = bundle.data['last_login'].obj
+        region = city.region
+        country = region.country
+        bundle.data['last_login'].data['region'] = region.name
+        bundle.data['last_login'].data['country'] = country.name
+        return bundle.data['last_login'].data
+
     """
     def dehydrate_birthday(self, bundle):
         bundle.data['birth_day'] = bundle.obj.birthday.day
@@ -712,6 +723,7 @@ class UserProfileResource(ModelResource):
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
+        del data['user']
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
         if b:
@@ -807,6 +819,11 @@ class UserProfileResource(ModelResource):
             """
             bundle.data.pop('hometown')
 
+        if 'last_login' in bundle.data:
+            llcity = City.objects.saveLocation(**bundle.data['last_login'])
+            up.last_login = llcity
+            bundle.data.pop('last_login')
+
         if 'other_locations' in bundle.data:
             up.other_locations = []
             for ol in bundle.data['other_locations']:
@@ -854,12 +871,17 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
-        paginator = Paginator(data, 10)
+        page_size = 10
+        count = len(data)
+        num_page = int(request.GET.get('page', 1))
+        startResult = (num_page - 1) * page_size + 1
+        endResult = min(num_page * page_size, count)
+        paginator = Paginator(data, page_size)
         try:
-            page = paginator.page(int(request.GET.get('page', 1)))
+            page = paginator.page(num_page)
         except InvalidPage:
             return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-        objects = {'count':len(data), 'profiles':page.object_list}
+        objects = {'count':count, 'startResult': startResult, 'endResult': endResult, 'profiles':page.object_list}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
@@ -870,55 +892,40 @@ class UserProfileResource(ModelResource):
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
 
+        bundle.data['first_name'] = bundle.obj.user.first_name
+        bundle.data['last_name'] = bundle.obj.user.last_name
+        bundle.data['verified'] = True
+        #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
+        bundle.data['num_friends'] = 0
+        bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
+        bundle.data['pending'] = "Pending"
+        bundle.data['tasa_respuestas'] = 0
+
+        from datetime import timedelta
+        d = timedelta(hours=1)
+        online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
+        if online: bundle.data['last_login_date'] = "Online"
+        else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
+        #print bundle.obj.user.last_login
+        #print datetime.now().timetz()
+
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'medium_avatar', 'thumb_avatar', 'blur_avatar']
-            '''
-            De user:
+            permitted_fields = ['medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             
-            bundle.data['last_login'] = bundle.obj.user.last_login
-            De user profile:
-            bundle.data['avatar'] = bundle.obj.avatar
-            bundle.data['age'] = bundle.obj.age
-            bundle.data['languages'] = bundle.obj.languages
-            bundle.data['languages'] = self.dehydrate_languages(bundle)
-            bundle.data['occupation'] = bundle.obj.occupation
-            bundle.data['all_about_you'] = bundle.obj.all_about_you
-            bundle.data['current_city'] = bundle.obj.current_city
-            #bundle.data['user'] = bundle.obj.current_city
-            '''
             for key, value in bundle.data.items():
                 if key not in permitted_fields: del bundle.data[key]
-            bundle.data['first_name'] = bundle.obj.user.first_name
-            bundle.data['last_name'] = bundle.obj.user.last_name
-            bundle.data['verified'] = True
-            #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-            bundle.data['num_friends'] = 0
-            bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-            bundle.data['pending'] = "Pending"
-            bundle.data['tasa_respuestas'] = 0
-
-            from datetime import timedelta
-            d = timedelta(hours=1)
-            online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-            if online: bundle.data['last_login'] = "Online"
-            else: bundle.data['last_login'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-            #print bundle.obj.user.last_login
-            #print datetime.now().timetz()
-
+            
             if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
             if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
-                # borroneo
+                # borroneo del nombre y el avatar
                 """
                 from django.conf import settings as django_settings
                 bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
                 """
-                del bundle.data['avatar']
-                del bundle.data['medium_avatar']
-                del bundle.data['thumb_avatar']
-
+                bundle.data['avatar'] = bundle.data['blur_avatar']
                 long_first = len(bundle.obj.user.first_name)
                 long_last = len(bundle.obj.user.last_name)
                 import string, random
@@ -931,9 +938,14 @@ class UserProfileResource(ModelResource):
                 bundle.data['first_name'] = ran_name
                 bundle.data['last_name'] = ran_last
             else:
-                del bundle.data['blur_avatar']
+                bundle.data['avatar'] = bundle.data['medium_avatar']
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
+            del bundle.data['thumb_avatar']
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
