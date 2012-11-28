@@ -68,7 +68,7 @@ There are some standard error messages:
     {"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}
  * Response:
    * OK 
-     * 200 OK {"code": 200, "data": {"msg": "Account activated"}, "status": true}
+     * 200 OK {"code": 200, "data": {"idAccount": 2, "idProfile": 2, "xAuthToken": "94f6b041e53d56893553f44d1d30bb6f4cba7080255ff9bd91e021947dc91c318857b8ea223a74bb"}, "msg": "Logged in", "status": true}
    * NO
      * 200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}
@@ -678,3 +678,18 @@ There are some standard error messages:
 
     * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+
+### Send feedback (Joan):
+  * Request:
+    POST /feedback/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511", "text":"oajsbdnpaojdnpojnaopdsjn", "ftype": "Problem"|"Advice"|"Positive"|"Negative"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg":"The feedback has been posted"
+        "status": true
+      }
+
+    * NO 
