@@ -144,7 +144,7 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 200 OK {"code": 200, "data": {"msg": "Account deleted"}, "status": true}
+     * 200 OK {"code": 200, "data": {"avatar": "http://peoplewings-test-media.s3.amazonaws.com/avatar/crop-73d6a2a52a904e8083a79c81e5ef7605-small_1.jpeg", "email": "joan@peoplewings.com", "firstName": "Choni", "lastName": "Pichoni"}, "msg": "Account shown", "status": true}
    * NO 
 
 ### Update account (Joan):
