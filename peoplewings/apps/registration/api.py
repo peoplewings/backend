@@ -514,7 +514,7 @@ class AccountResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        excludes = ['id', 'is_active', 'is_staff', 'is_superuser', 'username', 'date_joined', 'last_login']
+        excludes = ['is_active', 'is_staff', 'is_superuser', 'username', 'date_joined', 'last_login']
         validation = AccountValidation()     
        
     def apply_authorization_limits(self, request, object_list=None):
