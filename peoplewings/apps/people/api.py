@@ -724,8 +724,10 @@ class UserProfileResource(ModelResource):
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
         del data['user']
+        """
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
+        """
         if b:
             up = UserProfile.objects.get(user=request.user)
             data['pw_state'] = up.pw_state

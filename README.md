@@ -201,7 +201,7 @@ There are some standard error messages:
               "name": "Buenos Aires",
               "region": "Buenos Aires Province"
             },
-            "id": "me",
+            "id": 1,
             "incredible": "Plane accident",
             "inspiredBy": "Steve Jobs",
             "instantMessages": [
@@ -240,7 +240,6 @@ There are some standard error messages:
             "pending": "Pending",
             "personalPhilosophy": "Take your time while eating. And drink lots of water!",
             "phone": "609826937",
-            "pid": 1,
             "politicalOpinion": "I don't believe in politics",
             "pwOpinion": "It's very far from home",
             "pwState": "Y",
