@@ -1,8 +1,7 @@
 # Django settings for Peoplewings project.
 # Those settings are for dev enviroment only.
-from common import *
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -18,7 +17,7 @@ DATABASES = {
         'USER': 'postgres',                      # Not used with sqlite3.
         'PASSWORD': '1111',                  # Not used with sqlite3.
         'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -28,8 +27,8 @@ USE_I18N = True
 
 INSTALLED_APPS = (
     # Standard django apps
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
+    'django.contrib.auth', #User django auth
+    'django.contrib.contenttypes', #User django auth
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -40,8 +39,8 @@ INSTALLED_APPS = (
     'south',
     'tastypie',
     # Project custom apps
-    'peoplewings.apps.landing',
     'peoplewings.apps.registration',
+    'peoplewings.apps.landing',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
     'peoplewings.apps.wings',
@@ -49,9 +48,13 @@ INSTALLED_APPS = (
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
     'peoplewings.apps.notifications',
+    'peoplewings.apps.feedback',
+    'peoplewings.libs.customauth',    
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+SITE = 'http://peoplewings-frontend.herokuapp.com'
 
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
@@ -61,6 +64,13 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
+"""
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
+EMAIL_HOST_PASSWORD = 'wings208b'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+"""
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
