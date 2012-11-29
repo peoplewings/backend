@@ -68,7 +68,7 @@ There are some standard error messages:
     {"activationKey":"9286095aa048bf4c28369830520263d135f841d1"}
  * Response:
    * OK 
-     * 200 OK {"code": 200, "data": {"msg": "Account activated"}, "status": true}
+     * 200 OK {"code": 200, "msg": "Account activated", "status": true}
    * NO
      * 200 OK {"code": 400, "error": {"msg": "The activation key has been already used"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "The activation key is not a valid key"}, "status": false}
@@ -81,7 +81,7 @@ There are some standard error messages:
      {username = "joan@peoplewings.com, password = "asdf", remember="on"} (This call keeps you logged in in the system, forever)
  * Response:
    * OK
-     * 200 OK {"code": 200, "data": {"msg": "Logged in", "x-auth-token": "88a04fa420dc2b3734be743e3f4dc0475d1eedf4a29b75330c4d971d11f3d898e14302d773bc5500"}, "status": true}
+    * 200 OK {"code": 200, "data": {"idAccount": 2, "idProfile": 2, "xAuthToken": "94f6b041e53d56893553f44d1d30bb6f4cba7080255ff9bd91e021947dc91c318857b8ea223a74bb"}, "msg": "Logged in", "status": true}
    * NO
      * 200 OK {"code": 400, "error": {"msg": "Username/password do not match any user in the system"}, "status": false}
      * 200 OK {"code": 400, "error": {"msg": "Inactive user"}, "status": false}
@@ -144,7 +144,7 @@ There are some standard error messages:
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
    * OK
-     * 200 OK {"code": 200, "data": {"msg": "Account deleted"}, "status": true}
+     * 200 OK {"code": 200, "data": {"avatar": "http://peoplewings-test-media.s3.amazonaws.com/avatar/crop-73d6a2a52a904e8083a79c81e5ef7605-small_1.jpeg", "email": "joan@peoplewings.com", "firstName": "Choni", "lastName": "Pichoni"}, "msg": "Account shown", "status": true}
    * NO 
 
 ### Update account (Joan):
@@ -718,3 +718,18 @@ There are some standard error messages:
 
     * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
+
+### Send feedback (Joan):
+  * Request:
+    POST /feedback/
+    {"X-Auth-Token":"c1a41e16465376b099c31d8b84dfa4ba78a89d28692f4cebb2b7fdbe676b3ca815973bb9a8834511", "text":"oajsbdnpaojdnpojnaopdsjn", "ftype": "Problem"|"Advice"|"Positive"|"Negative"}
+
+  *Response:
+    * 200 OK
+      {
+        "code": 200,
+        "msg":"The feedback has been posted"
+        "status": true
+      }
+
+    * NO 

@@ -51,16 +51,17 @@ class CroppedResource(ModelResource):
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
      
         cropped_img = Cropped()
-        try:
-            cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
-            cropped_img.x = int(bundle.data['x'])
-            cropped_img.y = int(bundle.data['y'])
-            cropped_img.w = int(bundle.data['w'])
-            cropped_img.h = int(bundle.data['h'])
-            cropped_img.cropit()
-            
-            if cropped_img is not None:
-                cropped_img.create_thumbs((245, 245), (108, 108), (49, 49))
+
+        cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
+        cropped_img.x = int(bundle.data['x'])
+        cropped_img.y = int(bundle.data['y'])
+        cropped_img.w = int(bundle.data['w'])
+        cropped_img.h = int(bundle.data['h'])
+        cropped_img.cropit()
+        
+        if cropped_img is not None:
+            try:
+                cropped_img.create_thumbs((244, 244), (108, 108), (48, 48))
                 cropped_img.save()
                 up = UserProfile.objects.get(user = request.user.pk)
                 #Save the images to s3
@@ -84,17 +85,15 @@ class CroppedResource(ModelResource):
                     up.save()
                 else:
                     return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)                
-            else:
-                return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
-            data = dict()
-            data['url'] = up.avatar
-            data['width'] = cropped_img.w
-            data['height'] = cropped_img.h
-            return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
-        except Exception, e:             
-            print e           
-            return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
-        
+                data = dict()
+                data['url'] = up.avatar
+                data['width'] = cropped_img.w
+                data['height'] = cropped_img.h
+                return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
+            except Exception, e:
+                return self.create_response(request, {"status":True, "msg":e, "code":"200", "data":data}, response_class = HttpResponse)
+        else:
+            return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
 
     def wrap_view(self, view):
         @csrf_exempt

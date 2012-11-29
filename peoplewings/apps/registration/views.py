@@ -14,6 +14,7 @@ from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.registration.backends import get_backend
 from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadParameters, NotAKey
 from django.contrib.auth.models import User
+from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.registration.models import *
 
 
@@ -75,7 +76,12 @@ def login(bundle):
         api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now())
     ## Links the user to the token
     api_token.save()
-    return api_token.token
+    try:
+        pf = UserProfile.objects.get(user=user)
+    except:
+       pass 
+    ret = dict(token=api_token.token, idUser=user.pk, idProfile=pf.pk)
+    return ret
 
 def api_token_is_authenticated(bundle, **kwargs):
     ##Check if the user exists
