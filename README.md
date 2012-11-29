@@ -130,7 +130,7 @@ There are some standard error messages:
     
 ### View my account (Joan):
  * Request:
-    /GET /accounts/me
+    /GET /accounts/3
     {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
@@ -139,9 +139,9 @@ There are some standard error messages:
     
 ### Delete my account (Joan):
  * Request:
-    /DELETE /accounts/me
+    /DELETE /accounts/3
     {"current_password":"asdf"}
-    X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
+    {X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145}
  * Response:
    * OK
      * 200 OK {"code": 200, "data": {"avatar": "http://peoplewings-test-media.s3.amazonaws.com/avatar/crop-73d6a2a52a904e8083a79c81e5ef7605-small_1.jpeg", "email": "joan@peoplewings.com", "firstName": "Choni", "lastName": "Pichoni"}, "msg": "Account shown", "status": true}
@@ -149,7 +149,7 @@ There are some standard error messages:
 
 ### Update account (Joan):
  * Request:
-    /PUT /accounts/me
+    /PUT /accounts/3
     {"current_password":"asdf", "resource":{"email":"asdf", "password":"qwert", "lastName":"lol"}} All these minus current_password are optional, you can always have 1 field or more
     X-AUTH-TOKEN:ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145
  * Response:
@@ -201,7 +201,7 @@ There are some standard error messages:
               "name": "Buenos Aires",
               "region": "Buenos Aires Province"
             },
-            "id": "me",
+            "id": 1,
             "incredible": "Plane accident",
             "inspiredBy": "Steve Jobs",
             "instantMessages": [
@@ -240,7 +240,6 @@ There are some standard error messages:
             "pending": "Pending",
             "personalPhilosophy": "Take your time while eating. And drink lots of water!",
             "phone": "609826937",
-            "pid": 1,
             "politicalOpinion": "I don't believe in politics",
             "pwOpinion": "It's very far from home",
             "pwState": "Y",
