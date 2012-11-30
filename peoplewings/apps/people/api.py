@@ -724,8 +724,10 @@ class UserProfileResource(ModelResource):
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
         del data['user']
+        """
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
+        """
         if b:
             up = UserProfile.objects.get(user=request.user)
             data['pw_state'] = up.pw_state
@@ -911,7 +913,7 @@ class UserProfileResource(ModelResource):
 
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
+            permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             
             for key, value in bundle.data.items():
                 if key not in permitted_fields: del bundle.data[key]

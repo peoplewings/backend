@@ -1,8 +1,7 @@
 # Django settings for Peoplewings project.
-# Those settings are for dev enviroment only.
-from common import *
+# Those settings are for production enviroment only.
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -14,10 +13,10 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'postgres',                      # Or path to database file if using sqlite3.
-        'USER': 'postgres',                      # Not used with sqlite3.
-        'PASSWORD': '1111',                  # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': 'derpr1u0brbo6h',                      # Or path to database file if using sqlite3.
+        'USER': 'paucbpbuauurig',                      # Not used with sqlite3.
+        'PASSWORD': '5UACWRXRwmjhlWsvBEpgn2C61y',                  # Not used with sqlite3.
+        'HOST': 'ec2-23-21-209-85.compute-1.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -28,8 +27,8 @@ USE_I18N = True
 
 INSTALLED_APPS = (
     # Standard django apps
-    'django.contrib.auth', #User django auth
-    'django.contrib.contenttypes', #User django auth
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -39,24 +38,26 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
+    'storages',
+    'compressor',
     # Project custom apps
-    'peoplewings.apps.registration',
     'peoplewings.apps.landing',
+    'peoplewings.apps.registration',
     'peoplewings.apps.people',
     'peoplewings.apps.ajax',
     'peoplewings.apps.wings',
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
-    'peoplewings.apps.notifications',
     'peoplewings.apps.feedback',
-    'peoplewings.libs.customauth',    
+    'peoplewings.libs.customauth',
+    'peoplewings.libs.S3Custom',
+    #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-
+#SITE
 SITE = 'http://peoplewings-frontend.herokuapp.com'
-
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -65,13 +66,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
-"""
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
-EMAIL_HOST_PASSWORD = 'wings208b'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-"""
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -102,10 +96,23 @@ LOGGING = {
     }
 }
 
-#IMG
-STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
-MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
+"""
+# Compressor IMG
+COMPRESS_ENABLED = True
+if COMPRESS_ENABLED:
+    COMPRESS_CSS_FILTERS = [
+        'compressor.filters.css_default.CssAbsoluteFilter',
+        'compressor.filters.cssmin.CSSMinFilter',
+    ]
+    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    COMPRESS_URL = STATIC_URL
+    COMPRESS_OFFLINE = True
+"""
+# Storages IMG
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
+#IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"

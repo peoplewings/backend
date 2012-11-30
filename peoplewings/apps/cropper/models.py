@@ -32,10 +32,10 @@ class Original(models.Model):
             IMG_TYPE = os.path.splitext(self.image.name)[1].strip('.')
             if IMG_TYPE == 'jpeg':
                 PIL_TYPE = 'jpeg'
-                FILE_EXTENSION = 'jpg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'jpg':
-                PIL_TYPE = 'jpg'
-                FILE_EXTENSION = 'jpg'
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'png':
                 PIL_TYPE = 'png'
                 FILE_EXTENSION = 'png'
@@ -91,10 +91,10 @@ class Cropped(models.Model):
             IMG_TYPE = os.path.splitext(self.original.image.name)[1].strip('.')
             if IMG_TYPE == 'jpeg':
                 PIL_TYPE = 'jpeg'
-                FILE_EXTENSION = 'jpg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'jpg':
-                PIL_TYPE = 'jpg'
-                FILE_EXTENSION = 'jpg'
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'png':
                 PIL_TYPE = 'png'
                 FILE_EXTENSION = 'png'
@@ -134,10 +134,10 @@ class Cropped(models.Model):
             IMG_TYPE = os.path.splitext(self.image_big.name)[1].strip('.')
             if IMG_TYPE == 'jpeg':
                 PIL_TYPE = 'jpeg'
-                FILE_EXTENSION = 'jpg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'jpg':
-                PIL_TYPE = 'jpg'
-                FILE_EXTENSION = 'jpg'
+                PIL_TYPE = 'jpeg'
+                FILE_EXTENSION = 'jpeg'
             elif IMG_TYPE == 'png':
                 PIL_TYPE = 'png'
                 FILE_EXTENSION = 'png'
@@ -226,7 +226,7 @@ class Cropped(models.Model):
         im_bot = im_top.crop((0, size[1] - edge, size[0], edge))
         im_right = im_top.crop((size[0] - edge, 0, edge, size[1]))
         im_left = im_top.crop((0, 0, edge, size[1]))
-        im_blank.paste(center_copy, (edge, edge, size[0] + edge, size[1] + edge))
+        im_blank.paste(center_copy, (edge, edge))
         return im_blank
     def post_blur(self, size, photo):
         edge = 20
