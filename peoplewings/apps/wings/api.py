@@ -198,7 +198,7 @@ class AccomodationsResource(ModelResource):
             return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
         a = super(AccomodationsResource, self).post_list(request, **kwargs)
         data = {}
-        data['uri'] = json.loads(a.content)['resourceUri']
+        data['id'] = json.loads(a.content)['id']
         dic = {"msg":"Accommodation created successfully.", "data":data, "status":True, "code":200}
         return self.create_response(request, dic)
 
