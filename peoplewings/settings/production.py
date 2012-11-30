@@ -1,6 +1,5 @@
 # Django settings for Peoplewings project.
-# Those settings are for dev enviroment only.
-from common import *
+# Those settings are for production enviroment only.
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
@@ -14,11 +13,11 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'postgres',                      # Or path to database file if using sqlite3.
-        'USER': 'postgres',                      # Not used with sqlite3.
-        'PASSWORD': '1111',                  # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'NAME': 'derpr1u0brbo6h',                      # Or path to database file if using sqlite3.
+        'USER': 'paucbpbuauurig',                      # Not used with sqlite3.
+        'PASSWORD': '5UACWRXRwmjhlWsvBEpgn2C61y',                  # Not used with sqlite3.
+        'HOST': 'ec2-23-21-209-85.compute-1.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -92,9 +91,6 @@ LOGGING = {
 }
 
 #IMG
-STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
-MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
-
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"

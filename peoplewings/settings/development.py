@@ -1,6 +1,6 @@
 # Django settings for Peoplewings project.
 # Those settings are for dev enviroment only.
-from common import *
+import os
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -103,9 +103,6 @@ LOGGING = {
 }
 
 #IMG
-STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
-MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
-
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
