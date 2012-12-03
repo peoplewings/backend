@@ -606,3 +606,169 @@ There are some standard error messages:
     * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
      * 200 OK {"code": 410, "msg":"That friendship doesn't exist.", "status": false}
+
+### View all notifications
+  * Request:
+    GET /notifications
+
+  * Response
+    * 200 OK {"code": 200, "data": [NotificationObject1, NotificationObject2, NotificationObject3,..., NotificationObjectn], "status":true} 
+      where NotificationObject:
+      {
+        "id_sender": 3,
+        "id_receiver": 4,
+        "created": 1354534560,
+        "reference": "4f7538f9765148c5a64b660862b9d05d",
+        "read": true,
+        "title": "What's your name?",
+        "message": "Fuck you! Thats my name!",
+        "med_avatar": "http: //ww....",
+        "age": 34,
+        "verfied": true,
+        "current_location": {
+            "country": "Argentina",
+            "lat": "0E-9",
+            "lon": "0E-9",
+            "name": "BuenosAires",
+            "region": "BsAs"
+        }
+      }
+
+
+### View req/inv notifications
+  * Request:
+
+  * Response
+    * 200 OK
+
+
+### View message notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View friend inv/req notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View number of new notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View new notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+
+

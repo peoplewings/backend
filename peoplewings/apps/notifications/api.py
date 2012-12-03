@@ -38,38 +38,26 @@ class NotificationsResource(ModelResource):
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
-        always_return_data = True
-        #validation = FormValidation(form_class=CroppedForm)
-  
-    def prepend_urls(self):      
-        return [
-            ## notifications/me (get_detail and post_detail and delete_detail)
-            url(r"^(?P<resource_name>%s)/me%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('api_notifications_detail'), name="api_account_detail"),
-        ] 
-    
-    def api_notifications_detail(self, request, **kwargs):
-        return self.dipatch_detail(request, **kwargs)
-            
-    def apply_authorization_limits(self, request, object_list=None):
-        if request and request.method in ('GET'):  # 1.
-            prof = UserProfile.objects.get(user = request.user)
-            return object_list.filter(receiver = prof)
-        return []    
+        always_return_data = True                    
 
     def get_list(self, request, **kwargs):
+        ## We are doin it the hard way
+        try:
+            prof = UserProfile.objects.get(user = request.user)
+        except:
+            return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
+        try:
+            my_notifications = Notifications.objects.filter(receiver=prof).order_by('created')
+            for i in my_notifications:
+                print my_notifications.__dict__
+        except:
+            return self.create_response(request, {"status":False, "msg":"Could not load the notifications", "code":"403"}, response_class = HttpResponse)
+        return self.create_response(request, {"status":True, "msg":"OK", "code":"200"}, response_class = HttpResponse)
+            
+        
+    def get_detail(self, request, **kwargs):
         ##DO NOTHING
         return self.create_response(request, {"status":False, "data":"Forbidden", "code":"403"}, response_class = HttpResponse)
-    
-    def get_detail(self, request, **kwargs):
-        response = super(NotificationsResource, self).get_detail(request, **kwargs)    
-        data = json.loads(response.content)
-        content = {}  
-        content['msg'] = 'Notifications shown'      
-        content['status'] = True
-        content['code'] = 200        
-        content['data'] = data
-        return self.create_response(request, content, response_class=HttpResponse)
     
     def wrap_view(self, view):
         @csrf_exempt
@@ -77,7 +65,6 @@ class NotificationsResource(ModelResource):
             try:
                 callback = getattr(self, view)
                 response = callback(request, *args, **kwargs)              
-
                 return response
             except (BadRequest, fields.ApiFieldError), e:
                 return http.HttpBadRequest(e.args[0])
