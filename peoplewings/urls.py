@@ -8,7 +8,7 @@ from tastypie.api import Api
 
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource
-from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource, RelationshipResource
+from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource, RelationshipResource, ReferenceResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.apps.feedback.api import FeedbackResource
@@ -40,6 +40,7 @@ v1_api.register(AccomodationsResource())
 v1_api.register(FeedbackResource())
 v1_api.register(RelationshipResource())
 v1_api.register(CroppedResource())
+v1_api.register(ReferenceResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
@@ -53,4 +54,6 @@ urlpatterns = patterns('',
 
 # Static files patterns for development:
 if settings.DEBUG:
-    urlpatterns += staticfiles_urlpatterns()
+    urlpatterns += patterns('',
+        (r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+        'document_root': settings.MEDIA_ROOT}))

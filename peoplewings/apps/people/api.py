@@ -1,7 +1,7 @@
 #People API
 import json
 import re
-from datetime import date
+from datetime import date, datetime
 from pprint import pprint
 from tastypie import fields
 from tastypie.authentication import *
@@ -25,9 +25,9 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship
-from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm
-from peoplewings.apps.people.exceptions import FriendYourselfError, CannotAcceptOrRejectError, InvalidAcceptRejectError
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference
+from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
+from peoplewings.apps.people.exceptions import *
 from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
@@ -35,6 +35,7 @@ from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.libs.customauth.models import ApiToken
+from peoplewings.apps.wings.models import Accomodation
 
 class RelationshipResource(ModelResource):
     class Meta:
@@ -168,6 +169,70 @@ class RelationshipResource(ModelResource):
     def alter_list_data_to_serialize(self, request, data):
         return data['objects']
 
+class ReferenceResource(ModelResource):
+    author = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'author', full=True, null=True)
+
+    class Meta:
+        object_class = Reference
+        list_allowed_methods = ['get', 'post']
+        #detail_allowed_methods = ['get']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        include_resource_uri = True
+        excludes = ['id']
+        validation = FormValidation(form_class=ReferenceForm)
+        
+    def dehydrate_author(self, bundle):
+        return_fields = ['avatar', 'first_name', 'last_name']
+        res = {}
+        for i in return_fields:
+            res[i] = bundle.data['author'][i]
+        return res
+
+    def post_list(self, request, **kwargs):
+        deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+        self.is_valid(bundle, request)
+        if bundle.errors:
+            self.error_response(bundle.errors, request)
+
+        try:
+            super(ReferenceResource, self).post_list(request, **kwargs)
+        except CommentYourselfError:
+            return self.create_response(request, {"msg":"Cannot comment yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+        
+        dic = {"msg":"Your reference has been posted.", "status":True, "code":200}
+        return self.create_response(request, dic)
+
+    @transaction.commit_on_success
+    def obj_create(self, bundle, request=None, **kwargs):
+        author = UserProfile.objects.get(user=request.user)
+        commented = UserProfile.objects.get(pk=int(kwargs['profile_id']))
+        if author.id == commented.id: raise CommentYourselfError()
+        ref = Reference.objects.create(author=author, commented=commented, title=bundle.data['title'], text=bundle.data['text'], punctuation=bundle.data['punctuation'])     
+        return bundle
+
+    def get_list(self, request, **kwargs):
+        up = UserProfile.objects.get(user=request.user)
+        refs = Reference.objects.filter(commented=up)
+        res = []
+        for r in refs:
+            bundle = self.build_bundle(obj=r, request=request)
+            bundle = self.full_dehydrate(bundle)
+            res.append(bundle)
+
+        content = {}  
+        content['msg'] = 'References retrieved successfully.'
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = res
+        return self.create_response(request, content, response_class=HttpResponse)
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data['objects']
+
 class InstantMessageResource(ModelResource):
     class Meta:
         object_class = InstantMessage
@@ -181,7 +246,7 @@ class InstantMessageResource(ModelResource):
 
 class UserInstantMessageResource(ModelResource):
     instant_message = fields.ToOneField(InstantMessageResource, 'instant_message', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserInstantMessage
@@ -206,7 +271,7 @@ class SocialNetworkResource(ModelResource):
 
 class UserSocialNetworkResource(ModelResource):
     social_network = fields.ToOneField(SocialNetworkResource, 'social_network', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserSocialNetwork
@@ -231,7 +296,7 @@ class UniversityResource(ModelResource):
 
 class UserUniversityResource(ModelResource):
     university = fields.ToOneField(UniversityResource, 'university', full=True)
-    user_profile = fields.ToOneField('apps.people.api.UserProfileResource', 'user_profile')
+    user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
 
     class Meta:
         object_class = UserProfileStudiedUniversity
@@ -252,7 +317,7 @@ class LanguageResource(ModelResource):
         include_resource_uri = False
         fields = ['name']
         serializer = CamelCaseJSONSerializer(formats=['json'])
-        authentication = AnonymousApiTokenAuthentication()
+        #authentication = AnonymousApiTokenAuthentication()
         authorization = ReadOnlyAuthorization()
         always_return_data = True
         filtering = {
@@ -260,8 +325,6 @@ class LanguageResource(ModelResource):
         }
 
     def get_list(self, request, **kwargs):
-        if request.user.is_anonymous():
-            return self.create_response(request, {"msg":"Unauthorized.", "code":413, "status":False}, response_class=HttpForbidden)
         response = super(LanguageResource, self).get_list(request, **kwargs)
         data = json.loads(response.content)
         content = {}  
@@ -323,13 +386,14 @@ class UserProfileResource(ModelResource):
     current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
     hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
     other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
+    last_login = fields.ToOneField(CityResource, 'last_login', full=True, null=True)
     interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
 
     class Meta:
         object_class = UserProfile
         queryset = UserProfile.objects.all()
         allowed_methods = ['get', 'post', 'put']
-        include_resource_uri = False
+        include_resource_uri = True
         resource_name = 'profiles'
         serializer = CamelCaseJSONSerializer(formats=['json'])
         authentication = AnonymousApiTokenAuthentication()
@@ -338,11 +402,11 @@ class UserProfileResource(ModelResource):
         validation = FormValidation(form_class=UserProfileForm)
         filtering = {
             "age": ['range'],
-            'gender':['in'],
+            'gender':['exact'],
             'languages':ALL_WITH_RELATIONS,
             #'userlanguages': ALL_WITH_RELATIONS,
         }
-        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go']
+        excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go', 'user']
 
     def normalize_query(self, query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
@@ -380,7 +444,56 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
+        # capacity, start age, end age, language and type are OBLIGATORY        
+        city = request.GET.get('wings', None)
+        start_date = request.GET.get('startDate', None)
+        end_date = request.GET.get('endDate', None)
+        capacity = request.GET.get('capacity', None)
+        start_age = request.GET.get('startAge', None)
+        end_age = request.GET.get('endAge', None)
+        language = request.GET.get('language', None)
+        gender = request.GET.get('gender', None)
+        tipo = request.GET.get('type', None)
+        
+        # QuerySets are lazy. This means that we can stack filters and there will be no database activity
+        # until the queryset is evaluated.
+        
+        # filter by profile's parameters: start age, end age, language, gender
+        if language and language != 'all':
+            entry_query = self.get_query(language, ['userlanguage__language__name'])
+            base_object_list = base_object_list.filter(entry_query).distinct()
 
+        if start_age and end_age:
+            base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
+
+        if gender:
+            entry_query = self.get_query(gender, ['gender'])
+            base_object_list = base_object_list.filter(entry_query).distinct()
+
+        # filter by wings' parameters: city, start date, end date, capacity, type
+        if capacity or start_date or end_date or city or tipo:
+            accomodation_list = Accomodation.objects.all()
+            if capacity:
+                accomodation_list = accomodation_list.filter(capacity__gte=capacity)
+            if start_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                accomodation_list = accomodation_list.exclude(date_end__isnull=False, date_end__lt=start_date)
+            if end_date:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                accomodation_list = accomodation_list.exclude(date_start__isnull=False, date_start__gt=end_date)
+            if city:
+                accomodation_list = accomodation_list.filter(city__name__iexact=city)
+            if tipo:
+                is_request = tipo == 'Applicant'
+                accomodation_list = accomodation_list.filter(is_request=is_request)
+            base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
+
+        return base_object_list
+        
+        """
+        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
+        pprint(request.GET)
         query = request.GET.get('userlanguage__level', None)
         if query:
             entry_query = self.get_query(query, ['userlanguage__level'])
@@ -430,6 +543,7 @@ class UserProfileResource(ModelResource):
             raise Http404("Sorry, no results on that page.")
 
         return page
+        """
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
@@ -446,6 +560,8 @@ class UserProfileResource(ModelResource):
             # /profiles/me/relationships/<profile_id>
             url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('reference_collection'), name="api_list_references"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -464,6 +580,9 @@ class UserProfileResource(ModelResource):
         rr = RelationshipResource()
         return rr.dispatch_detail(request, **kwargs)
 
+    def reference_collection(self, request, **kwargs):
+        rr = ReferenceResource()
+        return rr.dispatch_list(request, **kwargs)
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -568,6 +687,15 @@ class UserProfileResource(ModelResource):
             i.data['country'] = country.name
         return bundle.data['other_locations']
 
+    def dehydrate_last_login(self, bundle):
+        if bundle.data['last_login'] is None: return {}
+        city = bundle.data['last_login'].obj
+        region = city.region
+        country = region.country
+        bundle.data['last_login'].data['region'] = region.name
+        bundle.data['last_login'].data['country'] = country.name
+        return bundle.data['last_login'].data
+
     """
     def dehydrate_birthday(self, bundle):
         bundle.data['birth_day'] = bundle.obj.birthday.day
@@ -595,8 +723,14 @@ class UserProfileResource(ModelResource):
         if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
+        del data['user']
+        """
         data['pid'] = kwargs['pk']
         data['id'] = 'me'
+        """
+        if b:
+            up = UserProfile.objects.get(user=request.user)
+            data['pw_state'] = up.pw_state
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -619,12 +753,11 @@ class UserProfileResource(ModelResource):
         deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-
-        up = UserProfile.objects.get(user=request.user)
         self.is_valid(bundle, request)
         if bundle.errors:
             self.error_response(bundle.errors, request)
 
+        up = UserProfile.objects.get(user=request.user)
         if 'interested_in' in bundle.data:
             up.interested_in = []
             for i in bundle.data['interested_in']:
@@ -688,6 +821,11 @@ class UserProfileResource(ModelResource):
             """
             bundle.data.pop('hometown')
 
+        if 'last_login' in bundle.data:
+            llcity = City.objects.saveLocation(**bundle.data['last_login'])
+            up.last_login = llcity
+            bundle.data.pop('last_login')
+
         if 'other_locations' in bundle.data:
             up.other_locations = []
             for ol in bundle.data['other_locations']:
@@ -735,60 +873,81 @@ class UserProfileResource(ModelResource):
         + correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
         + futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
         '''
+        page_size = 10
+        count = len(data)
+        num_page = int(request.GET.get('page', 1))
+        startResult = (num_page - 1) * page_size + 1
+        endResult = min(num_page * page_size, count)
+        paginator = Paginator(data, page_size)
+        try:
+            page = paginator.page(num_page)
+        except InvalidPage:
+            return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
+        objects = {'count':count, 'startResult': startResult, 'endResult': endResult, 'profiles':page.object_list}
         content = {}  
         content['msg'] = 'Profiles retrieved successfully.'      
         content['status'] = True
         content['code'] = 200
-        content['data'] = data
+        content['data'] = objects
         return self.create_response(request, content, response_class=HttpResponse)
 
     def full_dehydrate(self, bundle):
         bundle = super(UserProfileResource, self).full_dehydrate(bundle)
 
+        bundle.data['first_name'] = bundle.obj.user.first_name
+        bundle.data['last_name'] = bundle.obj.user.last_name
+        bundle.data['verified'] = True
+        #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
+        bundle.data['num_friends'] = 0
+        bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
+        bundle.data['pending'] = "Pending"
+        bundle.data['tasa_respuestas'] = 0
+
+        from datetime import timedelta
+        d = timedelta(hours=1)
+        online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
+        if online: bundle.data['last_login_date'] = "Online"
+        else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
+        #print bundle.obj.user.last_login
+        #print datetime.now().timetz()
+
         if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
             # venimos de get_list => solamente devolver los campos requeridos
-            permitted_fields = ['avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'user', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas']
-            '''
-            De user:
+            permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             
-            bundle.data['last_login'] = bundle.obj.user.last_login
-            De user profile:
-            bundle.data['avatar'] = bundle.obj.avatar
-            bundle.data['age'] = bundle.obj.age
-            bundle.data['languages'] = bundle.obj.languages
-            bundle.data['languages'] = self.dehydrate_languages(bundle)
-            bundle.data['occupation'] = bundle.obj.occupation
-            bundle.data['all_about_you'] = bundle.obj.all_about_you
-            bundle.data['current_city'] = bundle.obj.current_city
-            #bundle.data['user'] = bundle.obj.current_city
-            '''
             for key, value in bundle.data.items():
                 if key not in permitted_fields: del bundle.data[key]
-            bundle.data['first_name'] = bundle.obj.user.first_name
-            bundle.data['last_name'] = bundle.obj.user.last_name
-            bundle.data['verified'] = True
-            bundle.data['num_friends'] = 0
-            bundle.data['num_references'] = 0
-            bundle.data['pending'] = "Pending"
-            bundle.data['tasa_respuestas'] = 0
-
-            from datetime import timedelta, datetime
-            d = timedelta(hours=1)
-            online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-            if online: bundle.data['last_login'] = "Online"
-            else: bundle.data['last_login'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-            #print bundle.obj.user.last_login
-            #print datetime.now().timetz()
-
+            
             if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
             if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
 
             if bundle.request.user.is_anonymous():
-                bundle.data['avatar'] = 'fake_' + bundle.data['avatar']
-                bundle.data['first_name'] = 'fake_' + bundle.data['first_name']
-                bundle.data['last_name'] = 'fake_' + bundle.data['last_name']
+                # borroneo del nombre y el avatar
+                """
+                from django.conf import settings as django_settings
+                bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
+                """
+                bundle.data['avatar'] = bundle.data['blur_avatar']
+                long_first = len(bundle.obj.user.first_name)
+                long_last = len(bundle.obj.user.last_name)
+                import string, random
+                ran_name = [random.choice(string.ascii_lowercase) for n in xrange(long_first)]
+                ran_last = [random.choice(string.ascii_lowercase) for n in xrange(long_last)]
+                ran_name = "".join(ran_name)
+                ran_last = "".join(ran_last)
+                ran_name = ran_name.capitalize()
+                ran_last = ran_last.capitalize()
+                bundle.data['first_name'] = ran_name
+                bundle.data['last_name'] = ran_last
+            else:
+                bundle.data['avatar'] = bundle.data['medium_avatar']
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
         else:  
             # venimos de get_detail y ademas el usuario esta logueado
+            del bundle.data['blur_avatar']
+            del bundle.data['medium_avatar']
+            del bundle.data['thumb_avatar']
             if bundle.request.path != u'/api/v1/profiles/me':
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
@@ -806,6 +965,14 @@ class UserProfileResource(ModelResource):
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
+
+    """
+    def alter_detail_data_to_serialize(self, request, data):
+        if 'blur_avatar' in data.data: del data.data['blur_avatar']
+        if 'medium_avatar' in data.data: del data.data['medium_avatar']
+        if 'thumb_avatar' in data.data: del data.data['thumb_avatar']
+        return self
+    """
 
     def wrap_view(self, view):
         @csrf_exempt
@@ -862,12 +1029,20 @@ class UserProfileResource(ModelResource):
                     return self.create_response(request, content, response_class = HttpResponse)
                 else:               
                     content = {}
-                    errors = {}
+                    errors = []
                     content['msg'] = "Error in some fields."               
                     content['code'] = 400
                     content['status'] = False
+                    #for i in e.response.content: print i
+                    for k, v in json.loads(e.response.content).items():
+                        errors.append(v)
+                    """
+                    print json.loads(e.response.content)['profiles/me/accomodations']
+                    print e.response.content
                     if 'profiles' in e.response.content: errors = json.loads(e.response.content)['profiles']
-                    else: errors = json.loads(e.response.content)['accomodations']
+                    elif 'accomodations' in e.response.content: errors = json.loads(e.response.content)['accomodations']
+                    else: errors = json.loads(e.response.content)['reference']
+                    """
                     content['errors'] = errors
                     return self.create_response(request, content, response_class = HttpResponse)
             except Exception, e:

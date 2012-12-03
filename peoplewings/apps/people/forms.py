@@ -5,7 +5,7 @@ from django.forms.formsets import BaseFormSet
 from django.forms.widgets import TextInput, Textarea
 from django.contrib.auth.forms import AuthenticationForm
 from peoplewings.apps.registration.forms import RegistrationForm, RegistrationFormUniqueEmail
-from peoplewings.apps.people.models import UserProfile, Language, University, SocialNetwork, InstantMessage
+from peoplewings.apps.people.models import UserProfile, Language, University, SocialNetwork, InstantMessage, Reference
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 import datetime
@@ -317,19 +317,19 @@ class UserProfileForm(forms.Form):
 
     # Contact info
     emails = forms.EmailField(required=False)
-    phone = forms.CharField(max_length=max_short_len, required=False)
+    phone = forms.CharField(max_length=max_medium_len, required=False)
     #social_networks = forms.ManyToManyField(SocialNetwork, through='UserSocialNetwork', required=False)
     #instant_messages = forms.ManyToManyField(InstantMessage, through='UserInstantMessage', required=False)
 
     # About me
     all_about_you = forms.CharField(max_length=max_long_len, required=False)
     main_mission = forms.CharField(max_length=max_long_len, required=False)
-    occupation = forms.CharField(max_length=max_short_len, required=False)
-    company = forms.CharField(max_length=max_short_len, required=False)
+    occupation = forms.CharField(max_length=max_medium_len, required=False)
+    company = forms.CharField(max_length=max_medium_len, required=False)
     #universities = forms.ManyToManyField(University, through='UserProfileStudiedUniversity', required=False)
     personal_philosophy = forms.CharField(max_length=max_long_len, required=False)
-    political_opinion = forms.CharField(max_length=max_short_len, required=False)
-    religion = forms.CharField(max_length=max_short_len, required=False)
+    political_opinion = forms.CharField(max_length=max_medium_len, required=False)
+    religion = forms.CharField(max_length=max_medium_len, required=False)
 
     # Likes
     enjoy_people = forms.CharField(max_length=max_long_len, required=False)
@@ -351,4 +351,6 @@ class UserProfileForm(forms.Form):
 class UserLanguageForm(forms.Form):
   level = forms.ChoiceField(required=False, choices=LANGUAGES_LEVEL_CHOICES)
 
+class ReferenceForm(forms.Form):
+  punctuation = forms.ChoiceField(required=True, choices=PUNCTUATION_CHOICES)
 

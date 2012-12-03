@@ -1,6 +1,5 @@
 # Django settings for Peoplewings project.
-# Those settings are for dev enviroment only.
-from common import *
+# Those settings are for production enviroment only.
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
@@ -14,11 +13,11 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'postgres',                      # Or path to database file if using sqlite3.
-        'USER': 'postgres',                      # Not used with sqlite3.
-        'PASSWORD': '1111',                  # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'NAME': 'derpr1u0brbo6h',                      # Or path to database file if using sqlite3.
+        'USER': 'paucbpbuauurig',                      # Not used with sqlite3.
+        'PASSWORD': '5UACWRXRwmjhlWsvBEpgn2C61y',                  # Not used with sqlite3.
+        'HOST': 'ec2-23-21-209-85.compute-1.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -54,11 +53,13 @@ INSTALLED_APPS = (
 )
 
 # SMTP settings
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
+EMAIL_HOST = 'smtp.1and1.es' #probar con .com
+EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
 EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
+SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -89,3 +90,19 @@ LOGGING = {
     }
 }
 
+#IMG
+AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+
+S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
+STATIC_URL = S3_URL
+MEDIA_URL = 'http://0.0.0.0:5000/media/'
+
+ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
+ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
+
+# Storages IMG
+AWS_QUERYSTRING_AUTH = False

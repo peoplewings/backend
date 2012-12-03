@@ -13,9 +13,6 @@ from urllib import unquote
 from peoplewings.libs.S3Custom import S3Custom
 
 class UploadView(FormView):
-    """
-    Upload picture to future cropping
-    """
     form_class = OriginalForm
     template_name = 'cropper/upload.html'
 
@@ -23,17 +20,23 @@ class UploadView(FormView):
     def dispatch(self, *args, **kwargs):
         return super(UploadView, self).dispatch(*args, **kwargs)
 
-    def success(self, request, form, original):
-        #print original.__dict__
-        response = {'id': original.id, 'image': unquote(original.image.url).split('?')[0], 'width': original.image_width, 'height': original.image_height}
+    def success(self, request, form, original, errors=None):
+        if original:
+            response = {'id': original.id, 'image': original.image.url, 'width': original.image_width, 'height': original.image_height}
+        else :
+            return json_response({'success': False, 'errors': errors})
         return json_success_response(response)
-        #return redirect(original)
 
     def form_valid(self, form):
         original = form.save()
-        if original.image_width > 600: 
-            original._resize_image((600, 600))
-            original.save()
+        if  original.image_width >= 280 and original.image_height >= 281:
+            if original.image_width > 600 or original.image_height > 600:
+                original.resize((600, 600))
+                if not original.image:
+                    return self.success(self.request, form, None, errors = 'Error while uploading the image')
+                original.save() 
+        else:
+            return self.success(self.request, form, None, errors = 'The image is too small')       
         return self.success(self.request, form, original)
 
     def form_invalid(self, form):
@@ -41,11 +44,8 @@ class UploadView(FormView):
                 'success': False,
                 'errors': dict(form.errors.items()),
                 })
-
+# NOT USING THIS CLASS. GO TO THE API!!
 class CropView(FormView):
-    """
-    Crop picture and save result into model
-    """
     form_class = CroppedForm
     template_name = 'cropper/crop.html'
 
@@ -76,16 +76,11 @@ class CropView(FormView):
         }
 
     def form_valid(self, form):
-        #print form.__dict__
-        cropped = form.save(commit=False)
-        cropped.save()
+        cropped = form.save()
         up = UserProfile.objects.get(pk=self.request.user.get_profile().id)
         up.avatar = settings.STATIC_URL + cropped.image.name
         up.save()
-        return self.success(request  = self.request,
-                            form     = form,
-                            original = self.get_object(),
-                            cropped  = cropped)
+        return self.success(request = self.request, form = form, original = self.get_object(), cropped  = cropped)
 
     def success(self, request, form, original, cropped):
         """

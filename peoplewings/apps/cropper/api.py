@@ -23,7 +23,7 @@ from peoplewings.apps.cropper.models import Cropped, Original
 from peoplewings.apps.cropper.forms import CroppedForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
-
+from peoplewings.libs.S3Custom import S3Custom
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from tastypie.utils import dict_strip_unicode_keys
@@ -51,33 +51,49 @@ class CroppedResource(ModelResource):
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
      
         cropped_img = Cropped()
-        try:
-            cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
-            cropped_img.x = int(bundle.data['x'])
-            cropped_img.y = int(bundle.data['y'])
-            cropped_img.w = int(bundle.data['w'])
-            cropped_img.h = int(bundle.data['h'])
-            cropped_img.cropit()
-            
-            if cropped_img is not None:
-                cropped_img.thumbnail((246, 246), Image.ANTIALIAS)
-                cropped_img.w = 246
-                cropped_img.h = 246
+
+        cropped_img.original = Original.objects.get(pk=kwargs['pk'])            
+        cropped_img.x = int(bundle.data['x'])
+        cropped_img.y = int(bundle.data['y'])
+        cropped_img.w = int(bundle.data['w'])
+        cropped_img.h = int(bundle.data['h'])
+        cropped_img.cropit()
+        
+        if cropped_img is not None:
+            try:
+                cropped_img.create_thumbs((244, 244), (108, 108), (48, 48))
                 cropped_img.save()
                 up = UserProfile.objects.get(user = request.user.pk)
-                up.avatar = cropped_img.image.url
-                up.save()
-            else:
-                return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
-            data = dict()
-            data['url'] = cropped_img.image.url
-            data['width'] = cropped_img.w
-            data['height'] = cropped_img.h
-            return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
-        except Exception, e:             
-            print e           
-            return self.create_response(request, {"status":False, "error":"The original image or user does not exists", "code":"403"}, response_class = HttpResponse)
-        
+                #Save the images to s3
+                s3 = S3Custom()
+                new_url_big = s3.upload_file(cropped_img.image_big.path, 'avatar')
+                new_url_med = s3.upload_file(cropped_img.image_med.path, 'avatar')
+                new_url_small = s3.upload_file(cropped_img.image_small.path, 'avatar')
+                new_url_blur = s3.upload_file(cropped_img.image_med_blur.path, 'avatar')
+                #Delete local and old(s3) images
+                s3.delete_file(up.avatar)
+                s3.delete_file(up.medium_avatar)
+                s3.delete_file(up.thumb_avatar)
+                s3.delete_file(up.blur_avatar)
+                cropped_img.remove_local()
+                #Assign the url to the avatar field in userprofile
+                if new_url_big is not None and new_url_med is not None and new_url_small is not None and new_url_blur is not None:
+                    up.avatar = new_url_big
+                    up.medium_avatar = new_url_med
+                    up.thumb_avatar = new_url_small
+                    up.blur_avatar = new_url_blur
+                    up.save()
+                else:
+                    return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)                
+                data = dict()
+                data['url'] = up.avatar
+                data['width'] = cropped_img.w
+                data['height'] = cropped_img.h
+                return self.create_response(request, {"status":True, "msg":"Avatar cropped and updated", "code":"200", "data":data}, response_class = HttpResponse)
+            except Exception, e:
+                return self.create_response(request, {"status":True, "msg":e, "code":"200", "data":data}, response_class = HttpResponse)
+        else:
+            return self.create_response(request, {"status":False, "error":"The image could not be cropped", "code":"403"}, response_class = HttpResponse)
 
     def wrap_view(self, view):
         @csrf_exempt

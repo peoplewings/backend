@@ -1,1 +1,2 @@
-from test import *
+from common import *
+

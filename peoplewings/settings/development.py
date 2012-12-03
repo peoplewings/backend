@@ -1,6 +1,6 @@
 # Django settings for Peoplewings project.
 # Those settings are for dev enviroment only.
-from common import *
+import os
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -58,11 +58,20 @@ INSTALLED_APPS = (
 SITE = 'http://peoplewings-frontend.herokuapp.com'
 
 # SMTP settings
+EMAIL_HOST = 'smtp.1and1.es' #probar con .com
+EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
+EMAIL_HOST_PASSWORD = 'wings208b'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
+SERVER_EMAIL = 'emailconfirm@peoplewings.com'
+"""
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
 EMAIL_HOST_PASSWORD = 'wings208b'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+"""
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -94,29 +103,18 @@ LOGGING = {
 }
 
 #IMG
-MEDIA_ROOT = '/data/media/'
-STATIC_ROOT = '/data/static/'
-
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = S3_URL
-"""
-# Compressor IMG
-COMPRESS_ENABLED = True
-if COMPRESS_ENABLED:
-    COMPRESS_CSS_FILTERS = [
-        'compressor.filters.css_default.CssAbsoluteFilter',
-        'compressor.filters.cssmin.CSSMinFilter',
-    ]
-    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-    COMPRESS_URL = STATIC_URL
-    COMPRESS_OFFLINE = True
-"""
+MEDIA_URL = 'http://0.0.0.0:5000/media/'
+
+ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
+ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
+ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
+
 # Storages IMG
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 AWS_QUERYSTRING_AUTH = False

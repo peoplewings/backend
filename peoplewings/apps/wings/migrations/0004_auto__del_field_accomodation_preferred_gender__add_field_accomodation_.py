@@ -8,40 +8,32 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Relationship'
-        db.create_table('people_relationship', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('sender', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sender', to=orm['people.UserProfile'])),
-            ('receiver', self.gf('django.db.models.fields.related.ForeignKey')(related_name='receiver', to=orm['people.UserProfile'])),
-            ('relationship_type', self.gf('django.db.models.fields.CharField')(max_length=8)),
-        ))
-        db.send_create_signal('people', ['Relationship'])
+        # Deleting field 'Accomodation.preferred_gender'
+        db.delete_column('wings_accomodation', 'preferred_gender')
 
-        # Adding unique constraint on 'Relationship', fields ['sender', 'receiver']
-        db.create_unique('people_relationship', ['sender_id', 'receiver_id'])
+        # Adding field 'Accomodation.preferred_male'
+        db.add_column('wings_accomodation', 'preferred_male',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
 
-        # Deleting field 'UserProfile.name_to_show'
-        db.delete_column('people_userprofile', 'name_to_show')
-
-
-        # Changing field 'UserProfile.birthday'
-        #db.alter_column('people_userprofile', 'birthday', self.gf('django.db.models.fields.DateField')(default=0))
-
-    def backwards(self, orm):
-        # Removing unique constraint on 'Relationship', fields ['sender', 'receiver']
-        db.delete_unique('people_relationship', ['sender_id', 'receiver_id'])
-
-        # Deleting model 'Relationship'
-        db.delete_table('people_relationship')
-
-        # Adding field 'UserProfile.name_to_show'
-        db.add_column('people_userprofile', 'name_to_show',
-                      self.gf('django.db.models.fields.CharField')(default='name_to_show', max_length=20),
+        # Adding field 'Accomodation.preferred_female'
+        db.add_column('wings_accomodation', 'preferred_female',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
                       keep_default=False)
 
 
-        # Changing field 'UserProfile.birthday'
-        db.alter_column('people_userprofile', 'birthday', self.gf('django.db.models.fields.DateField')(null=True))
+    def backwards(self, orm):
+        # Adding field 'Accomodation.preferred_gender'
+        db.add_column('wings_accomodation', 'preferred_gender',
+                      self.gf('django.db.models.fields.CharField')(default='B', max_length=1),
+                      keep_default=False)
+
+        # Deleting field 'Accomodation.preferred_male'
+        db.delete_column('wings_accomodation', 'preferred_male')
+
+        # Deleting field 'Accomodation.preferred_female'
+        db.delete_column('wings_accomodation', 'preferred_female')
+
 
     models = {
         'auth.group': {
@@ -139,7 +131,7 @@ class Migration(SchemaMigration):
             'user_profile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"})
         },
         'people.userlanguage': {
-            'Meta': {'object_name': 'UserLanguage'},
+            'Meta': {'unique_together': "(('user_profile', 'language'),)", 'object_name': 'UserLanguage'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.Language']"}),
             'level': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
@@ -149,8 +141,8 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'UserProfile'},
             'age': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
-            'avatar': ('django.db.models.fields.CharField', [], {'default': "'/static/img/blank_avatar.jpg'", 'max_length': '250'}),
-            'birthday': ('django.db.models.fields.DateField', [], {}),
+            'avatar': ('django.db.models.fields.CharField', [], {'default': "'http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg'", 'max_length': '250'}),
+            'birthday': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'civil_state': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '2', 'null': 'True', 'blank': 'True'}),
             'company': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
             'current_city': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'cc+'", 'null': 'True', 'to': "orm['locations.City']"}),
@@ -201,7 +193,44 @@ class Migration(SchemaMigration):
             'social_network': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.SocialNetwork']"}),
             'social_network_username': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'user_profile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"})
+        },
+        'wings.accomodation': {
+            'Meta': {'object_name': 'Accomodation', '_ormbases': ['wings.Wing']},
+            'about': ('django.db.models.fields.TextField', [], {'max_length': '1000', 'blank': 'True'}),
+            'additional_information': ('django.db.models.fields.TextField', [], {'max_length': '1000', 'blank': 'True'}),
+            'address': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
+            'blankets': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'bus': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'capacity': ('django.db.models.fields.CharField', [], {'default': '1', 'max_length': '1'}),
+            'city': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.City']", 'on_delete': 'models.PROTECT'}),
+            'i_have_pet': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'live_center': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'number': ('django.db.models.fields.CharField', [], {'max_length': '10', 'blank': 'True'}),
+            'others': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'pets_allowed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
+            'preferred_female': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'preferred_male': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'sharing_once': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'smoking': ('django.db.models.fields.CharField', [], {'default': "'N'", 'max_length': '1'}),
+            'train': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'tram': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'underground': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'wheelchair': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'where_sleeping_type': ('django.db.models.fields.CharField', [], {'default': "'C'", 'max_length': '1'}),
+            'wing_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['wings.Wing']", 'unique': 'True', 'primary_key': 'True'})
+        },
+        'wings.wing': {
+            'Meta': {'object_name': 'Wing'},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"}),
+            'best_days': ('django.db.models.fields.CharField', [], {'default': "'A'", 'max_length': '1'}),
+            'date_end': ('django.db.models.fields.DateField', [], {'null': 'True'}),
+            'date_start': ('django.db.models.fields.DateField', [], {'null': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_request': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'name': ('django.db.models.fields.CharField', [], {'default': "'Wing'", 'max_length': '200'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'Y'", 'max_length': '1'})
         }
     }
 
-    complete_apps = ['people']
+    complete_apps = ['wings']

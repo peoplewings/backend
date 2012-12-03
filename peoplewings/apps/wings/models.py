@@ -18,7 +18,8 @@ class Wing(models.Model):
 class Accomodation(Wing):
     sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
     capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=1)
-    preferred_gender = models.CharField(max_length=1, choices=PREFERRED_GENDER_CHOICES, default='B')
+    preferred_male = models.BooleanField(default=False)
+    preferred_female = models.BooleanField(default=False)
     wheelchair = models.BooleanField(default=False, verbose_name='Wheelchair accessible')
     where_sleeping_type = models.CharField(max_length=1, choices=WHERE_SLEEPING_CHOICES, default='C', verbose_name='Sleeping arrangements')
     smoking = models.CharField(max_length=1, choices=SMOKING_CHOICES, default='N')
