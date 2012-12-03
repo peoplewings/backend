@@ -161,7 +161,7 @@ There are some standard error messages:
 
 ### View my profile (Eze):
  * Request:
-    /GET /profiles/me
+    /GET /profiles/1
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  * Response:
    * OK
@@ -270,7 +270,7 @@ There are some standard error messages:
 
 ### Update my profile (Eze):
  * Request:
-    /PUT /profiles/me
+    /PUT /profiles/1
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "age": 23,
