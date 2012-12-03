@@ -490,60 +490,6 @@ class UserProfileResource(ModelResource):
             base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
 
         return base_object_list
-        
-        """
-        base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
-        pprint(request.GET)
-        query = request.GET.get('userlanguage__level', None)
-        if query:
-            entry_query = self.get_query(query, ['userlanguage__level'])
-            if request.GET.get('languages__name', None): 
-                base_object_list = base_object_list.filter(entry_query, userlanguage__language__name=request.GET.get('languages__name', None)).distinct()
-            else:
-                base_object_list = base_object_list.filter(entry_query).distinct()
-
-
-        wing_filter = {}
-
-        ds = None
-        de = None
-
-        if 'date_start__gte' in request.GET.keys():
-            ds = request.GET['date_start__gte']
-
-        if 'date_end__lte' in request.GET.keys():
-            de = request.GET['date_end__lte']
-
-        for k, v in request.GET.items():
-            #print "insert key ", k, " with value ", v
-            if k != 'date_start__gte' and k != 'date_end__lte': wing_filter[k] = v            
-
-        ar = AccomodationsResource()
-        wing_filter_2 = ar.build_filters(wing_filter)
-
-        #for i in wing_filter_2: print i
-        if len(wing_filter_2) > 0:
-            accomodation_list = ar.apply_filters(request, wing_filter_2)
-
-            if ds is not None:
-                accomodation_list = accomodation_list.filter(
-                    Q(date_start__gte=ds) | Q(date_start__isnull=True)
-                )
-            if de is not None:
-                accomodation_list = accomodation_list.filter( 
-                    Q(date_end__lte=de) | Q(date_end__isnull=True)
-                )
-
-            base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
-
-        paginator = Paginator(base_object_list, 10)
-        try:
-            page = paginator.page(int(request.GET.get('page', 1)))
-        except InvalidPage:
-            raise Http404("Sorry, no results on that page.")
-
-        return page
-        """
 
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
@@ -604,17 +550,6 @@ class UserProfileResource(ModelResource):
             d['degree'] = u.degree
             res.append(d)
         return res
-        """
-        for i in bundle.data['education']: 
-            # i.data = {id: id_university, name:'University of Reading'}
-            uni = i.obj
-            upu = UserProfileStudiedUniversity.objects.get(university=uni, user_profile=bundle.obj)
-            i.data['degree'] = upu.degree
-            i.data['institution'] = i.data['name']
-            i.data.pop('id')
-            i.data.pop('name')
-        return bundle.data['education']
-        """
 
     def dehydrate_social_networks(self, bundle):
         usn = UserSocialNetwork.objects.filter(user_profile=bundle.obj)
@@ -625,17 +560,6 @@ class UserProfileResource(ModelResource):
             d['sn_username'] = u.social_network_username
             res.append(d)
         return res
-        """
-        for i in bundle.data['social_networks']: 
-            # i.data = {id: id_social_networks, name:'Facebook'}
-            sn = i.obj
-            usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
-            i.data['sn_username'] = usn.social_network_username
-            i.data['social_network'] = i.data['name']
-            i.data.pop('name')
-            i.data.pop('id')
-        return bundle.data['social_networks']
-        """
 
     def dehydrate_instant_messages(self, bundle):
         uim = UserInstantMessage.objects.filter(user_profile=bundle.obj)
@@ -646,17 +570,6 @@ class UserProfileResource(ModelResource):
             d['im_username'] = u.instant_message_username
             res.append(d)
         return res
-        """
-        for i in bundle.data['instant_messages']: 
-            # i.data = {id: id_instant_message, name:'Whatsapp'}
-            im = i.obj
-            uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
-            i.data['im_username'] = uim.instant_message_username
-            i.data['instant_message'] = i.data['name']
-            i.data.pop('name')
-            i.data.pop('id')
-        return bundle.data['instant_messages']
-        """
     
     def dehydrate_current(self, bundle):
         if bundle.data['current'] is None: return {} 
@@ -719,8 +632,7 @@ class UserProfileResource(ModelResource):
 
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        b = kwargs['pk'] == 'me'
-        if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        up = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
         del data['user']
