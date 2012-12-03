@@ -54,7 +54,6 @@ MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'data/media'))
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -64,7 +63,6 @@ MEDIA_URL = '/media/'
 # Static content is saved to here --
 STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_ROOT,'staticfiles')) # this folder is used to collect static files in production. not used in development
 STATIC_ROOT = '/'
-STATIC_URL =  "/static/"
 
 # Additional locations of static files
 STATICFILES_DIRS = (
