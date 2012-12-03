@@ -22,7 +22,7 @@ class UploadView(FormView):
 
     def success(self, request, form, original, errors=None):
         if original:
-            response = {'id': original.id, 'image': '%s%s' % (settings.MEDIA_URL, original.image.url), 'width': original.image_width, 'height': original.image_height}
+            response = {'id': original.id, 'image': original.image.url, 'width': original.image_width, 'height': original.image_height}
         else :
             return json_response({'success': False, 'errors': errors})
         return json_success_response(response)
