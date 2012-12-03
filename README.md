@@ -427,13 +427,16 @@ There are some standard error messages:
     POST /profiles/me/accomodations/
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
-      "about": "",
-      "additionalInformation": "",
-      "address": "",
-      ...
-      "preferredMale": True,
-      "preferredFemale": True,
-      ...
+      "name": "Eze's house",
+      "additionalInformation": "It has a nice big garden in the rear part and two floors.",
+      "dateStart":"2012-11-28",
+      "dateEnd":"2012-11-29",
+      "address": "Avinguda Sarria",
+      "preferredMale": "True",
+      "preferredFemale": "True",
+      "number":"66",
+      "postalCode":"AZ34",
+      "city":{"name":"London", "country":"England", "lat":"0.0", "lon":"0.0"}
     }
 
  * Response:
