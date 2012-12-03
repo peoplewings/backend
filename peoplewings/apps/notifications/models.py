@@ -61,7 +61,7 @@ class Friendship(Notifications):
         self.kind = 'friendship'
         super(Friendship, self).save()
 
-# AditionalInformation class
+# AdditionalInformation class
 class AdditionalInformation(models.Model):
     notification = models.ForeignKey(Notifications, related_name = '%(class)s_notification', on_delete=models.CASCADE)
     modified = models.BooleanField(default=False)
@@ -69,7 +69,7 @@ class AdditionalInformation(models.Model):
         abstract = True
 
 # Accomodation class
-class AccomodationInformation(AditionalInformation):
+class AccomodationInformation(AdditionalInformation):
     start_date = models.DateField()
     end_date = models.DateField()
     transport = models.CharField(max_length = 50)

@@ -13,6 +13,7 @@ from peoplewings.apps.locations.api import CityResource, RegionResource, Country
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.apps.feedback.api import FeedbackResource
 from peoplewings.apps.cropper.api import CroppedResource
+from peoplewings.apps.notifications.api import NotificationsResource
 
 
 admin.autodiscover()
@@ -41,6 +42,7 @@ v1_api.register(FeedbackResource())
 v1_api.register(RelationshipResource())
 v1_api.register(CroppedResource())
 v1_api.register(ReferenceResource())
+v1_api.register(NotificationsResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),

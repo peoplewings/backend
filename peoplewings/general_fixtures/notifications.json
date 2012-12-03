@@ -53,7 +53,6 @@
     "fields": {
         "receiver" : 1,
         "sender" : 2,
-        "title" : "Accomodation in Barcelona (Barcelona)",
         "created" : "2012-10-04 20:00",
         "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
@@ -65,7 +64,6 @@
     "pk": 1,
     "fields": {
         "title" : "Help! Need accomodation in Bcn",
-        "num_people" : 2, 
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hi Joan! I've just saw your accomodation wing in Barcelona. Can I go?",
@@ -78,7 +76,6 @@
     "pk": 2,
     "fields": {
         "title" : "Help! Need accomodation in Bcn",
-        "num_people" : 2,
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Mhmhm, I don't know it yet. Let me check sumthing...",
@@ -91,7 +88,6 @@
     "pk": 3,
     "fields": {
         "title" : "Help! Need accomodation in Bcn",
-        "num_people" : 2,
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "OK, tell me something ASAP pls",
@@ -104,7 +100,6 @@
     "pk": 4,
     "fields": {
         "title" : "Help! Need accomodation in Bcn",
-        "num_people" : 2,
         "state" : "A",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hey! Its all ok. You can come!",
@@ -117,7 +112,6 @@
     "pk": 5,
     "fields": {
         "title" : "Need accomodation in Berlin",
-        "num_people" : 1,
         "state" : "M",
         "public_message" : "",
         "private_message" : "Can you give me accomodation in Berlin?",
@@ -126,17 +120,11 @@
     }
   },
 {
-    "model": "notifications.AdditionalInformation",
-    "pk": 1,
-    "fields": {
-        "notification" : 1,
-        "modified" : false
-    }
-  },
-{
     "model": "notifications.AccomodationInformation",
     "pk": 1,
     "fields": {
+"notification" : 1,
+        "modified" : false,
         "start_date" : "2012-12-14",
     "end_date" : "2012-12-18",
     "transport" : "Plane",
@@ -144,71 +132,47 @@
     }
   },
 {
-    "model": "notifications.AdditionalInformation",
+    "model": "notifications.AccomodationInformation",
     "pk": 2,
     "fields": {
         "notification" : 2,
-        "modified" : false
-    }
-  },
-{
-    "model": "notifications.AccomodationInformation",
-    "pk": 2,
-    "fields": {
+        "modified" : false,
         "start_date" : "2012-12-14",
     "end_date" : "2012-12-18",
     "transport" : "Plane",
     "num_people" : 3
-    }
-  },
-{
-    "model": "notifications.AdditionalInformation",
-    "pk": 3,
-    "fields": {
-        "notification" : 3,
-        "modified" : false
     }
   },
 {
     "model": "notifications.AccomodationInformation",
     "pk": 3,
     "fields": {
+        "notification" : 3,
+        "modified" : false,
         "start_date" : "2012-12-14",
     "end_date" : "2012-12-18",
     "transport" : "Plane",
     "num_people" : 3
-    }
-  },
-{
-    "model": "notifications.AdditionalInformation",
-    "pk": 4,
-    "fields": {
-        "notification" : 4,
-        "modified" : false
     }
   },
 {
     "model": "notifications.AccomodationInformation",
     "pk": 4,
     "fields": {
+        "notification" : 4,
+        "modified" : false,
         "start_date" : "2012-12-14",
     "end_date" : "2012-12-18",
     "transport" : "Plane",
     "num_people" : 3
-    }
-  },
-{
-    "model": "notifications.AdditionalInformation",
-    "pk": 5,
-    "fields": {
-        "notification" : 5,
-        "modified" : false
     }
   },
 {
     "model": "notifications.AccomodationInformation",
     "pk": 5,
     "fields": {
+        "notification" : 5,
+        "modified" : false,
         "start_date" : "2012-12-19",
     "end_date" : "2012-12-21",
     "transport" : "Plane",

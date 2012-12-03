@@ -1,5 +1,5 @@
 ##API for Notifications
-
+import json
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -9,6 +9,7 @@ from tastypie.validation import FormValidation
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import trailing_slash
+from tastypie.utils import dict_strip_unicode_keys
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -20,13 +21,17 @@ from django.contrib.auth.models import User
 from django.conf.urls import url
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
+from django.db.models import Q
 
 from peoplewings.apps.people.models import UserProfile
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
-from tastypie.utils import dict_strip_unicode_keys
+from peoplewings.libs.customauth.models import ApiToken
+from peoplewings.apps.registration.authentication import ApiTokenAuthentication
+
+from domain import *
 
 class NotificationsResource(ModelResource):
     
@@ -47,12 +52,16 @@ class NotificationsResource(ModelResource):
         except:
             return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
         try:
-            my_notifications = Notifications.objects.filter(receiver=prof).order_by('created')
+            my_notifications = Notifications.objects.filter(Q(receiver=prof)|Q(sender=prof)).order_by('-created')
+            result = []
             for i in my_notifications:
-                print my_notifications.__dict__
-        except:
-            return self.create_response(request, {"status":False, "msg":"Could not load the notifications", "code":"403"}, response_class = HttpResponse)
-        return self.create_response(request, {"status":True, "msg":"OK", "code":"200"}, response_class = HttpResponse)
+                aux = notifications_list()
+                aux.reference = i.reference
+                result.append(aux)
+                print i.__dict__
+        except Exception, e:
+            return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : , "code":"200"}, response_class = HttpResponse)
             
         
     def get_detail(self, request, **kwargs):
