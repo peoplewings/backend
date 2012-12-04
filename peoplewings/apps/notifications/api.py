@@ -54,59 +54,62 @@ class NotificationsResource(ModelResource):
             prof = UserProfile.objects.get(user = request.user)
         except:
             return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
-        result = []        
+        result_dict = dict()        
         try:
             my_notifications = Notifications.objects.filter(Q(receiver=prof)|Q(sender=prof)).order_by('-created')
             for i in my_notifications:
-                aux = NotificationsList()
-                aux.sender = i.sender_id
-                aux.receiver = i.receiver_id
-                aux.created = unix_time_millis(i.created)
-                aux.reference = i.reference
-                aux.read = i.read
-                aux.kind = i.kind
-                ## Request specific
-                if aux.kind == 'requests':
-                    req = Requests.objects.get(pk = i.pk)
-                    additional_list = AccomodationInformation.objects.filter(notification = i)
-                    for additional in additional_list:
-                        aux.start_date = additional.start_date
-                        aux.end_date = additional.end_date
-                        aux.num_people = additional.num_people                                      
-                    aux.title = req.title
-                    aux.state = req.state  
-                    aux.private_message = req.private_message   
-                ## Invite specific               
-                elif aux.kind == 'invites':
-                    inv = Invites.objects.get(pk = i.pk)     
-                    additional_list = AccomodationInformation.objects.filter(notification = i)
-                    for additional in additional_list:
-                        aux.start_date = additional.start_date
-                        aux.end_date = additional.end_date
-                        aux.num_people = additional.num_people                                      
-                    aux.title = req.title
-                    aux.state = req.state         
-                    aux.private_message = inv.private_message    
-                ## Message specific                         
-                elif aux.kind == 'messages':
-                    msg = Messages.objects.get(pk = i.pk)
-                    aux.private_message = msg.message
-                #Profile specific
-                if (aux.sender == prof.pk):
-                    ## YOU are the sender. Need receiver info
-                    prof_aux = UserProfile.objects.get(pk = aux.receiver)                   
-                else:
-                    ## YOU are the receiver. Need the sender info  
-                    prof_aux = UserProfile.objects.get(pk = aux.sender)               
-                aux.med_avatar =  prof_aux.medium_avatar
-                aux.age = prof_aux.get_age()
-                aux.verified = False                    
-                aux.location = prof_aux.current_city.stringify()        
-                                                               
-                result.append(aux)
+                if not i.reference in result_dict:
+                    aux = NotificationsList()
+                    aux.sender = i.sender_id
+                    aux.receiver = i.receiver_id
+                    aux.created = i.created
+                    aux.reference = i.reference
+                    aux.read = i.read
+                    aux.kind = i.kind
+                    ## Request specific
+                    if aux.kind == 'requests':
+                        req = Requests.objects.get(pk = i.pk)
+                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        for additional in additional_list:
+                            aux.start_date = additional.start_date
+                            aux.end_date = additional.end_date
+                            aux.num_people = additional.num_people                                      
+                        aux.title = req.title
+                        aux.state = req.state  
+                        aux.private_message = req.private_message   
+                    ## Invite specific               
+                    elif aux.kind == 'invites':
+                        inv = Invites.objects.get(pk = i.pk)     
+                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        for additional in additional_list:
+                            aux.start_date = additional.start_date
+                            aux.end_date = additional.end_date
+                            aux.num_people = additional.num_people                                      
+                        aux.title = req.title
+                        aux.state = req.state         
+                        aux.private_message = inv.private_message    
+                    ## Message specific                         
+                    elif aux.kind == 'messages':
+                        msg = Messages.objects.get(pk = i.pk)
+                        aux.private_message = msg.message
+                    #Profile specific
+                    if (aux.sender == prof.pk):
+                        ## YOU are the sender. Need receiver info
+                        prof_aux = UserProfile.objects.get(pk = aux.receiver)                   
+                    else:
+                        ## YOU are the receiver. Need the sender info  
+                        prof_aux = UserProfile.objects.get(pk = aux.sender)               
+                    aux.med_avatar =  prof_aux.medium_avatar
+                    aux.age = prof_aux.get_age()
+                    aux.verified = False                    
+                    aux.location = prof_aux.current_city.stringify()                                                                           
+                    result_dict[aux.reference] = aux          
         except Exception, e:
             raise e
-            #return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)        
+            #return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)   
+        result = []
+        for key, value in result_dict.items():
+            result.append(value)         
         return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
             
         
