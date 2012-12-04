@@ -1,7 +1,7 @@
 # Django settings for Peoplewings project.
 # Those settings are for production enviroment only.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
