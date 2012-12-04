@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
+    'storages',
+    'compressor',
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -47,7 +49,9 @@ INSTALLED_APPS = (
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
-    'peoplewings.apps.notifications',
+    'peoplewings.apps.feedback',
+    'peoplewings.libs.customauth',
+    'peoplewings.libs.S3Custom',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
