@@ -745,24 +745,23 @@ There are some standard error messages:
     * 200 OK {"code": 200, "data": [NotificationObject1, NotificationObject2, NotificationObject3,..., NotificationObjectn], "status":true} 
       where NotificationObject:
       {
-        "id_sender": 3,
-        "id_receiver": 4,
-        "created": 1354534560,
-        "reference": "4f7538f9765148c5a64b660862b9d05d",
-        "read": true,
-        "title": "What's your name?",
-        "message": "Fuck you! Thats my name!",
-        "med_avatar": "http: //ww....",
-        "age": 34,
-        "verfied": true,
-        "current_location": {
-            "country": "Argentina",
-            "lat": "0E-9",
-            "lon": "0E-9",
-            "name": "BuenosAires",
-            "region": "BsAs"
-        }
-      }
+			"age": 25,
+			"created": 1349373600,
+			"endDate": "2012-12-21",
+			"kind": "requests",
+			"location": "Barcelona, Catalonia, Spain",
+			"medAvatar": "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
+			"numPeople": 1,
+			"privateMessage": "Can you give me accomodation in Berlin?",
+			"read": true,
+			"receiver": 1,
+			"reference": "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
+			"sender": 2,
+			"startDate": "2012-12-19",
+			"state": "M",
+			"title": "Need accomodation in Berlin",
+			"verified": false
+		}
 
 
 ### View req/inv notifications
