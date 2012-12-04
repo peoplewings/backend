@@ -719,17 +719,11 @@ class UserProfileResource(ModelResource):
 
     def get_detail(self, request, **kwargs):
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        b = kwargs['pk'] == 'me'
-        if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
         del data['user']
-        """
-        data['pid'] = kwargs['pk']
-        data['id'] = 'me'
-        """
-        if b:
-            up = UserProfile.objects.get(user=request.user)
+        up = UserProfile.objects.get(user=request.user)
+        if int(kwargs['pk']) == up.id:
             data['pw_state'] = up.pw_state
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
