@@ -1,5 +1,6 @@
 ##API for Notifications
 import json
+
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -24,11 +25,13 @@ from django.http import HttpResponse
 from django.db.models import Q
 
 from peoplewings.apps.people.models import UserProfile
-from models import Notifications, Requests, Invites, Messages, NotificationsAlarm
+
+from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation
 
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.libs.customauth.models import ApiToken
+from peoplewings.libs.bussines import *
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 from domain import *
@@ -51,17 +54,60 @@ class NotificationsResource(ModelResource):
             prof = UserProfile.objects.get(user = request.user)
         except:
             return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
+        result = []        
         try:
             my_notifications = Notifications.objects.filter(Q(receiver=prof)|Q(sender=prof)).order_by('-created')
-            result = []
             for i in my_notifications:
-                aux = notifications_list()
+                aux = NotificationsList()
+                aux.sender = i.sender_id
+                aux.receiver = i.receiver_id
+                aux.created = unix_time_millis(i.created)
                 aux.reference = i.reference
+                aux.read = i.read
+                aux.kind = i.kind
+                ## Request specific
+                if aux.kind == 'requests':
+                    req = Requests.objects.get(pk = i.pk)
+                    additional_list = AccomodationInformation.objects.filter(notification = i)
+                    for additional in additional_list:
+                        aux.start_date = additional.start_date
+                        aux.end_date = additional.end_date
+                        aux.num_people = additional.num_people                                      
+                    aux.title = req.title
+                    aux.state = req.state  
+                    aux.private_message = req.private_message   
+                ## Invite specific               
+                elif aux.kind == 'invites':
+                    inv = Invites.objects.get(pk = i.pk)     
+                    additional_list = AccomodationInformation.objects.filter(notification = i)
+                    for additional in additional_list:
+                        aux.start_date = additional.start_date
+                        aux.end_date = additional.end_date
+                        aux.num_people = additional.num_people                                      
+                    aux.title = req.title
+                    aux.state = req.state         
+                    aux.private_message = inv.private_message    
+                ## Message specific                         
+                elif aux.kind == 'messages':
+                    msg = Messages.objects.get(pk = i.pk)
+                    aux.private_message = msg.message
+                #Profile specific
+                if (aux.sender == prof.pk):
+                    ## YOU are the sender. Need receiver info
+                    prof_aux = UserProfile.objects.get(pk = aux.receiver)                   
+                else:
+                    ## YOU are the receiver. Need the sender info  
+                    prof_aux = UserProfile.objects.get(pk = aux.sender)               
+                aux.med_avatar =  prof_aux.medium_avatar
+                aux.age = prof_aux.get_age()
+                aux.verified = False                    
+                aux.location = prof_aux.current_city.stringify()        
+                                                               
                 result.append(aux)
-                print i.__dict__
         except Exception, e:
-            return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
-        return self.create_response(request, {"status":True, "msg":"OK", "data" : , "code":"200"}, response_class = HttpResponse)
+            raise e
+            #return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)        
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
             
         
     def get_detail(self, request, **kwargs):

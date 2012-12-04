@@ -130,6 +130,12 @@ class UserProfile(models.Model):
     places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
     places_wanna_go = models.TextField(max_length=max_long_len, blank=True) 
 
+    def get_age(self):
+        today = date.today()
+        self.age = today.year - self.birthday.year
+        if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): self.age -= 1
+        return self.age
+
 class Relationship(models.Model):    
     sender = models.ForeignKey('UserProfile', related_name='sender')
     receiver = models.ForeignKey('UserProfile', related_name='receiver')

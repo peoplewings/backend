@@ -16,7 +16,7 @@ TYPE_CHOICES = (
 class Notifications(models.Model):
     receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)
     sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.BigIntegerField(default=0)
     reference = models.CharField(max_length=36, blank=False)
     read = models.BooleanField(default=False)
     kind = models.CharField(max_length=15, null=True)
@@ -66,7 +66,7 @@ class AdditionalInformation(models.Model):
     notification = models.ForeignKey(Notifications, related_name = '%(class)s_notification', on_delete=models.CASCADE)
     modified = models.BooleanField(default=False)
     class Meta:
-        abstract = True
+        abstract = True        
 
 # Accomodation class
 class AccomodationInformation(AdditionalInformation):

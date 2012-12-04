@@ -1,8 +1,10 @@
-class BussinesModel(object).
-    _fields_ = []
-    
-    def object_to_json(self):
-        result = "{"
-        for i in _fields_:
-            result = '%s%s:%s,' % (result, i, self.'%s' % i)
-        return result
+import datetime
+
+def unix_time(dt):
+    epoch = dt
+    print epoch
+    delta = dt - epoch
+    return delta.total_seconds()
+
+def unix_time_millis(dt):
+    return unix_time(dt) * 1000.0

@@ -69,7 +69,7 @@ class CityManager(models.Manager):
             return city
         except Exception, e: 
             print e
-            return None
+            return None    
 
 class City(models.Model):
     name = models.CharField(max_length=max_short_len, unique=False)
@@ -77,3 +77,6 @@ class City(models.Model):
     lon = models.DecimalField(max_digits=12, decimal_places=9, default=0.0)
     region = models.ForeignKey('Region')
     objects = CityManager()
+
+    def stringify(self):
+        return '%s, %s, %s' % (self.name, self.region.name, self.region.country.name)

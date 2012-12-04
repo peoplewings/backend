@@ -13,7 +13,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('receiver', self.gf('django.db.models.fields.related.ForeignKey')(related_name='notifications_receiver', to=orm['people.UserProfile'])),
             ('sender', self.gf('django.db.models.fields.related.ForeignKey')(related_name='notifications_sender', to=orm['people.UserProfile'])),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
+            ('created', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
             ('reference', self.gf('django.db.models.fields.CharField')(max_length=36)),
             ('read', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('kind', self.gf('django.db.models.fields.CharField')(max_length=15, null=True)),
@@ -188,7 +188,7 @@ class Migration(SchemaMigration):
         },
         'notifications.notifications': {
             'Meta': {'object_name': 'Notifications'},
-            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'created': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'kind': ('django.db.models.fields.CharField', [], {'max_length': '15', 'null': 'True'}),
             'read': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
