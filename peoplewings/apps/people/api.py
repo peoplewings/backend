@@ -546,7 +546,6 @@ class UserProfileResource(ModelResource):
         return page
         """
 
-    # lol
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
         return [
