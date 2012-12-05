@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'south',
     'tastypie',
     'storages',
-    'compressor',
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -52,9 +51,11 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
 SITE = 'http://peoplewings.herokuapp.com'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
