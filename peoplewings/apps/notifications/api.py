@@ -20,6 +20,7 @@ from django.forms import ValidationError
 from django.utils.cache import patch_cache_control
 from django.contrib.auth.models import User
 from django.conf.urls import url
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 from django.db.models import Q
@@ -75,8 +76,8 @@ class NotificationsListResource(ModelResource):
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                      
-                        aux.title = req.wing.name
+                            aux.num_people = additional.num_people                                    
+                        aux.message = req.wing.name
                         aux.state = req.state  
                         aux.private_message = req.private_message   
                     ## Invite specific               
@@ -86,18 +87,18 @@ class NotificationsListResource(ModelResource):
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                      
-                        aux.title = inv.wing.name
+                            aux.num_people = additional.num_people                                                                         
+                        aux.message = req.wing.name
                         aux.state = inv.state         
                         aux.private_message = inv.private_message    
                     ## Message specific                         
                     elif aux.kind == 'messages':
                         msg = Messages.objects.get(pk = i.pk)
-                        aux.private_message = msg.private_message
+                        aux.message = msg.private_message
                     ## Friendship specific                         
                     elif aux.kind == 'friendship':
-                        msg = Messages.objects.get(pk = i.pk)
-                        aux.private_message = msg.message
+                        friend = Friendship.objects.get(pk = i.pk)
+                        aux.message = friend.message
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -109,7 +110,10 @@ class NotificationsListResource(ModelResource):
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
                     aux.location = prof_aux.current_city.stringify()
-                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)                                                                          
+                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)
+                    ## URL
+                    aux.thread_url = 
+                    ## Add the result                                                                     
                     result_dict[aux.reference] = aux          
         except Exception, e:
             raise e
@@ -197,9 +201,8 @@ class RequestsInvitesListResource(ModelResource):
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
-                        aux.title = req.title
+                        aux.message = req.wing.name
                         aux.state = req.wing.name  
-                        aux.private_message = req.private_message   
                     ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
@@ -208,9 +211,8 @@ class RequestsInvitesListResource(ModelResource):
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
-                        aux.title = inv.wing.name
-                        aux.state = inv.state         
-                        aux.private_message = inv.private_message                        
+                        aux.message = req.wing.name
+                        aux.state = inv.state                                
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -304,7 +306,7 @@ class MessagesListResource(ModelResource):
                     aux.kind = i.kind                                                    
                     ## Message specific                         
                     msg = Messages.objects.get(pk = i.pk)
-                    aux.private_message = msg.private_message
+                    aux.message = msg.private_message
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -397,8 +399,8 @@ class FriendshipListResource(ModelResource):
                     aux.read = i.read
                     aux.kind = i.kind                    
                     ## Friendship specific                         
-                    msg = Messages.objects.get(pk = i.pk)
-                    aux.private_message = msg.message
+                    friend = Friendship.objects.get(pk = i.pk)
+                    aux.message = friend.message
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info

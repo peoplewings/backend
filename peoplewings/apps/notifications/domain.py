@@ -17,13 +17,15 @@ class NotificationsList(object):
     end_date = models.DateField()
     num_people = models.IntegerField()
     ## Msg/req/inv specific
-    private_message = models.TextField()
+    message = models.TextField()
     #Profile specific
     name = models.CharField()
     med_avatar =  models.CharField()
     age = models.IntegerField()
     verified = models.BooleanField()
     location = models.TextField()
+    ## URLs
+    thread_url = models.CharField()
     
     def jsonable(self):
         res = dict()
