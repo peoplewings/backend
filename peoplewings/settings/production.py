@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'gunicorn',
     'south',
     'tastypie',
+    'storages',
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -47,10 +48,14 @@ INSTALLED_APPS = (
     'peoplewings.apps.cropper',
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
-    'peoplewings.apps.notifications',
+    'peoplewings.apps.feedback',
+    'peoplewings.libs.customauth',
+    'peoplewings.libs.S3Custom',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+SITE = 'http://peoplewings.herokuapp.com'
 
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
@@ -97,7 +102,7 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'http://0.0.0.0:5000/media/'
+MEDIA_URL = 'http://peoplewings-backend-stable.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
