@@ -444,7 +444,7 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
-        if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
+        #if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
         city = request.GET.get('wings', None)
         start_date = request.GET.get('startDate', None)
@@ -473,7 +473,8 @@ class UserProfileResource(ModelResource):
 
         # filter by wings' parameters: city, start date, end date, capacity, type
         if capacity or start_date or end_date or city or tipo:
-            accomodation_list = Accomodation.objects.all()
+            #Q(date_end__lte=de) | Q(date_end__isnull=True)
+            accomodation_list = Accomodation.objects.filter(status__in=('Y', 'M'))
             if capacity:
                 accomodation_list = accomodation_list.filter(capacity__gte=capacity)
             if start_date:
@@ -881,7 +882,7 @@ class UserProfileResource(ModelResource):
         num_page = int(request.GET.get('page', 1))
         endResult = min(num_page * page_size, count)
         #startResult = (num_page - 1) * page_size + 1
-        startResult = endResult - num_page*page_size
+        startResult = endResult - (num_page - 1)*page_size
         paginator = Paginator(data, page_size)
         try:
             page = paginator.page(num_page)
