@@ -4,6 +4,7 @@ import json
 
 class NotificationsList(object):
     ## Notif specific
+    id = models.IntegerField()
     sender = models.IntegerField()
     receiver = models.IntegerField()
     created = models.CharField()
@@ -11,7 +12,6 @@ class NotificationsList(object):
     read = models.BooleanField()
     kind = models.CharField()
     ## Request/inv specific
-    title = models.CharField()
     state = models.CharField()    
     start_date = models.DateField()
     end_date = models.DateField()
@@ -33,6 +33,7 @@ class NotificationsList(object):
 
 class RequestThread(object):
     ## Notif specific
+    id  = models.IntegerField()
     sender = models.IntegerField()
     receiver = models.IntegerField()
     created = models.CharField()
@@ -49,14 +50,23 @@ class RequestThread(object):
     transport = models.CharField()
     private_message = models.TextField()
     #Sender specific
-    name = models.CharField()    
-    age = models.IntegerField()
-    verified = models.BooleanField()
-    location = models.TextField()
-    friends = models.IntegerField()
-    references = models.IntegerField()
-    med_avatar =  models.CharField()
-    small_avatar = models.CharField()
+    nameS = models.CharField()    
+    ageS = models.IntegerField()
+    verifiedS = models.BooleanField()
+    locationS = models.TextField()
+    friendsS = models.IntegerField()
+    referencesS = models.IntegerField()
+    med_avatarS =  models.CharField()
+    small_avatarS = models.CharField()
+    #Receiver specific
+    nameR = models.CharField()    
+    ageR = models.IntegerField()
+    verifiedR = models.BooleanField()
+    locationR = models.TextField()
+    friendsR = models.IntegerField()
+    referencesR = models.IntegerField()
+    med_avatarR =  models.CharField()
+    small_avatarR = models.CharField()
 
     def jsonable(self):
         res = dict()

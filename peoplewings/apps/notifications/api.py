@@ -61,6 +61,7 @@ class NotificationsListResource(ModelResource):
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
+                    aux.id = i.pk
                     aux.sender = i.sender_id
                     aux.receiver = i.receiver_id
                     aux.created = i.created
@@ -75,7 +76,7 @@ class NotificationsListResource(ModelResource):
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
-                        aux.title = req.title
+                        aux.title = req.wing.name
                         aux.state = req.state  
                         aux.private_message = req.private_message   
                     ## Invite specific               
@@ -86,8 +87,8 @@ class NotificationsListResource(ModelResource):
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
-                        aux.title = req.title
-                        aux.state = req.state         
+                        aux.title = inv.wing.name
+                        aux.state = inv.state         
                         aux.private_message = inv.private_message    
                     ## Message specific                         
                     elif aux.kind == 'messages':
@@ -181,6 +182,7 @@ class RequestsInvitesListResource(ModelResource):
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
+                    aux.id = i.pk
                     aux.sender = i.sender_id
                     aux.receiver = i.receiver_id
                     aux.created = i.created
@@ -196,7 +198,7 @@ class RequestsInvitesListResource(ModelResource):
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
                         aux.title = req.title
-                        aux.state = req.state  
+                        aux.state = req.wing.name  
                         aux.private_message = req.private_message   
                     ## Invite specific               
                     elif aux.kind == 'invites':
@@ -206,8 +208,8 @@ class RequestsInvitesListResource(ModelResource):
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
-                        aux.title = req.title
-                        aux.state = req.state         
+                        aux.title = inv.wing.name
+                        aux.state = inv.state         
                         aux.private_message = inv.private_message                        
                     #Profile specific
                     if (aux.sender == prof.pk):
@@ -293,6 +295,7 @@ class MessagesListResource(ModelResource):
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
+                    aux.id = i.pk
                     aux.sender = i.sender_id
                     aux.receiver = i.receiver_id
                     aux.created = i.created
@@ -386,6 +389,7 @@ class FriendshipListResource(ModelResource):
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
+                    aux.id = i.pk
                     aux.sender = i.sender_id
                     aux.receiver = i.receiver_id
                     aux.created = i.created
@@ -470,13 +474,56 @@ class RequestThreadResource(ModelResource):
     def get_detail(self, request, **kwargs):
         ## We are doin it the hard way
         ref = kwargs['pk']
+        result = []
         try:
-            thread = Notifications.objects.filter(reference=ref).order_by('-created')
+            thread = Notifications.objects.filter(reference=ref).order_by('created')
         except:
             return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
         for i in thread:
-            print i.__dict__            
-        return self.create_response(request, {"status":True, "msg":"OK", "data" : "ok", "code":"200"}, response_class = HttpResponse)
+            aux = RequestThread()
+            ## Notif specific
+            aux.id  = i.pk
+            aux.sender = i.sender
+            aux.receiver = i.receiver
+            aux.created = i.created
+            aux.reference = i.reference
+            aux.read = i.read
+            aux.kind = i.kind
+            ## Request specific
+            try:
+                req = Requests.objects.get(pk = aux.id)
+                additional_list = AccomodationInformation.objects.filter(notification = i)
+            except:
+               return self.create_response(request, {"status":False, "msg":"Could not load the request", "code":"403"}, response_class = HttpResponse) 
+            aux.wing_name = req.wing.name
+            aux.wing_id = req.wing.pk
+            aux.state = req.state              
+            for additional in additional_list: 
+                aux.start_date = additional.start_date
+                aux.end_date = additional.end_date
+                aux.num_people = additional.num_people
+                aux.transport = additional.transport
+            aux.private_message = req.private_message
+            #Sender specific
+            aux.nameS = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+            aux.ageS = i.sender.age
+            aux.verifiedS = False
+            aux.locationS = i.sender.current_city.stringify()
+            aux.friendsS = len(i.sender.relationships.filter())
+            aux.referencesS = len(i.sender.references.filter())
+            aux.med_avatarS =  i.sender.medium_avatar
+            aux.small_avatarS = i.sender.thumb_avatar
+            #Receiver specific
+            aux.nameR = '%s %s' % (i.receiver.user.first_name, i.receiver.user.last_name)
+            aux.ageR = i.receiver.age
+            aux.verifiedR = False
+            aux.locationR = i.receiver.current_city.stringify()
+            aux.friendsR = len(i.receiver.relationships.filter())
+            aux.referencesR = len(i.receiver.references.filter())
+            aux.med_avatarR =  i.receiver.medium_avatar
+            aux.small_avatarR = i.receiver.thumb_avatar
+            result.append(aux)
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
             
         
     def get_list(self, request, **kwargs):
