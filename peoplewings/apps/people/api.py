@@ -879,8 +879,9 @@ class UserProfileResource(ModelResource):
         page_size = 10
         count = len(data)
         num_page = int(request.GET.get('page', 1))
-        startResult = (num_page - 1) * page_size + 1
         endResult = min(num_page * page_size, count)
+        #startResult = (num_page - 1) * page_size + 1
+        startResult = endResult - num_page*page_size
         paginator = Paginator(data, page_size)
         try:
             page = paginator.page(num_page)
