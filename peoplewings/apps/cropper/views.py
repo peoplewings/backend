@@ -29,7 +29,7 @@ class UploadView(FormView):
 
     def form_valid(self, form):
         original = form.save()
-        if  original.image_width > 280 and original.image_height > 281:
+        if  original.image_width >= 280 and original.image_height >= 281:
             if original.image_width > 600 or original.image_height > 600:
                 original.resize((600, 600))
                 if not original.image:
