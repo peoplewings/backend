@@ -13,7 +13,7 @@ from peoplewings.apps.locations.api import CityResource, RegionResource, Country
 from peoplewings.apps.wings.api import AccomodationsResource
 from peoplewings.apps.feedback.api import FeedbackResource
 from peoplewings.apps.cropper.api import CroppedResource
-
+#Here we registre the resources...
 
 admin.autodiscover()
 
