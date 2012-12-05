@@ -562,6 +562,9 @@ class UserProfileResource(ModelResource):
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('reference_collection'), name="api_list_references"),
+            # PREVIEW: GET /profiles/2/preview
+            url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('preview'), name="api_detail_preview"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -583,6 +586,9 @@ class UserProfileResource(ModelResource):
     def reference_collection(self, request, **kwargs):
         rr = ReferenceResource()
         return rr.dispatch_list(request, **kwargs)
+
+    def preview(self, request, **kwargs):
+        return self.dispatch_detail(request, **kwargs)
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -718,13 +724,16 @@ class UserProfileResource(ModelResource):
         return age
 
     def get_detail(self, request, **kwargs):
+        
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+        up = UserProfile.objects.get(user=request.user)
+        is_preview = request.path.split('/')[-1] == 'preview'
+        if not is_preview and int(kwargs['pk']) != up.id: return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+        
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        del data['user']
-        up = UserProfile.objects.get(user=request.user)
-        if int(kwargs['pk']) == up.id:
-            data['pw_state'] = up.pw_state
+        if 'user' in data: del data['user']
+        if not is_preview: data['pw_state'] = up.pw_state
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -890,12 +899,13 @@ class UserProfileResource(ModelResource):
 
         bundle.data['first_name'] = bundle.obj.user.first_name
         bundle.data['last_name'] = bundle.obj.user.last_name
-        bundle.data['verified'] = True
+        bundle.data['verified'] = 'XXX'
         #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-        bundle.data['num_friends'] = 0
+        bundle.data['num_friends'] = 'XXX'
         bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-        bundle.data['pending'] = "Pending"
-        bundle.data['tasa_respuestas'] = 0
+        bundle.data['tasa_respuestas'] = 'XXX'
+        bundle.data['reply_time'] = 'XXX'
+        bundle.data['num_photos'] = 'XXX'
 
         from datetime import timedelta
         d = timedelta(hours=1)
@@ -904,9 +914,9 @@ class UserProfileResource(ModelResource):
         else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
         #print bundle.obj.user.last_login
         #print datetime.now().timetz()
-
-        if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
+        if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
             # venimos de get_list => solamente devolver los campos requeridos
+            bundle.data['pending'] = 'XXX'
             permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             
             for key, value in bundle.data.items():
@@ -937,13 +947,18 @@ class UserProfileResource(ModelResource):
                 bundle.data['avatar'] = bundle.data['medium_avatar']
             del bundle.data['blur_avatar']
             del bundle.data['medium_avatar']
-        else:  
+        else:
+
             # venimos de get_detail y ademas el usuario esta logueado
             del bundle.data['blur_avatar']
             del bundle.data['medium_avatar']
             del bundle.data['thumb_avatar']
-            is_own = int(bundle.request.path.split('/')[-1]) == UserProfile.objects.get(user=bundle.request.user).id
-            if not is_own:
+            is_preview = bundle.request.path == self.get_resource_uri(bundle)+"/preview"
+            if is_preview:
+                del bundle.data['emails']
+                del bundle.data['social_networks']
+                del bundle.data['instant_messages']
+                del bundle.data['phone']
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
                 elif bundle.data['show_birthday'] == 'P':
