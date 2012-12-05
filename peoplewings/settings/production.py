@@ -1,7 +1,7 @@
 # Django settings for Peoplewings project.
 # Those settings are for production enviroment only.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -57,7 +57,6 @@ INSTALLED_APPS = (
 )
 
 SITE = 'http://peoplewings.herokuapp.com'
-
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
