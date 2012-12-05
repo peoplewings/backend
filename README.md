@@ -161,7 +161,7 @@ There are some standard error messages:
 
 ### View my profile (Eze):
  * Request:
-    /GET /profiles/me
+    /GET /profiles/1
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  * Response:
    * OK
@@ -270,7 +270,7 @@ There are some standard error messages:
 
 ### Update my profile (Eze):
  * Request:
-    /PUT /profiles/me
+    /PUT /profiles/1
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "age": 23,
@@ -285,9 +285,9 @@ There are some standard error messages:
      * 403 FORBIDDEN {"code": 413, "msg": "Error: anonymous users have no profile.", "status": false}
      * 200 OK {"code": 400, "errors": {"emails": ["Enter a valid e-mail address."]}, "msg": "Error in some fields.", "status": false}
 
-### View another profile (Eze):
+### Preview a profile (Eze):
  * Request:
-    /GET /profiles/17
+    /GET /profiles/17/preview
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
