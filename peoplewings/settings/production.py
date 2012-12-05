@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
@@ -94,6 +95,22 @@ LOGGING = {
         },
     }
 }
+
+"""
+# Compressor IMG
+COMPRESS_ENABLED = True
+if COMPRESS_ENABLED:
+    COMPRESS_CSS_FILTERS = [
+        'compressor.filters.css_default.CssAbsoluteFilter',
+        'compressor.filters.cssmin.CSSMinFilter',
+    ]
+    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    COMPRESS_URL = STATIC_URL
+    COMPRESS_OFFLINE = True
+"""
+# Storages IMG
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
