@@ -39,20 +39,25 @@ class RequestThread(object):
     reference = models.CharField()
     read = models.BooleanField()
     kind = models.CharField()
-    ## Request
-    #title = models.CharField()
-    state = models.CharField()    
+    ## Request specific
+    wing_name = models.CharField()
+    wing_id = models.CharField()
+    state = models.CharField()        
     start_date = models.DateField()
     end_date = models.DateField()
     num_people = models.IntegerField()
-    ## Msg/req/inv specific
+    transport = models.CharField()
     private_message = models.TextField()
-    #Profile specific
-    med_avatar =  models.CharField()
+    #Sender specific
+    name = models.CharField()    
     age = models.IntegerField()
     verified = models.BooleanField()
     location = models.TextField()
-    
+    friends = models.IntegerField()
+    references = models.IntegerField()
+    med_avatar =  models.CharField()
+    small_avatar = models.CharField()
+
     def jsonable(self):
         res = dict()
         for key, value in self.__dict__.items():            

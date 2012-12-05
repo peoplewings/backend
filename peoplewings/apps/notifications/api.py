@@ -219,7 +219,8 @@ class RequestsInvitesListResource(ModelResource):
                     aux.med_avatar =  prof_aux.medium_avatar
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
-                    aux.location = prof_aux.current_city.stringify()                                                                           
+                    aux.location = prof_aux.current_city.stringify()   
+                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)                                                                        
                     result_dict[aux.reference] = aux          
         except Exception, e:
             raise e
@@ -311,7 +312,8 @@ class MessagesListResource(ModelResource):
                     aux.med_avatar =  prof_aux.medium_avatar
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
-                    aux.location = prof_aux.current_city.stringify()                                                                           
+                    aux.location = prof_aux.current_city.stringify() 
+                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)                                                                        
                     result_dict[aux.reference] = aux          
         except Exception, e:
             raise e
@@ -403,7 +405,8 @@ class FriendshipListResource(ModelResource):
                     aux.med_avatar =  prof_aux.medium_avatar
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
-                    aux.location = prof_aux.current_city.stringify()                                                                           
+                    aux.location = prof_aux.current_city.stringify() 
+                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)                                                                                                                                                  
                     result_dict[aux.reference] = aux          
         except Exception, e:
             raise e
