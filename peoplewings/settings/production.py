@@ -1,7 +1,7 @@
 # Django settings for Peoplewings project.
 # Those settings are for production enviroment only.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -52,12 +52,10 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
-    #'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-#SITE
-SITE = 'http://peoplewings-frontend.herokuapp.com'
+SITE = 'http://peoplewings.herokuapp.com'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -119,7 +117,7 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'http://0.0.0.0:5000/media/'
+MEDIA_URL = 'http://peoplewings-backend-stable.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
