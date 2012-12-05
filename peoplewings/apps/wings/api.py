@@ -205,12 +205,16 @@ class AccomodationsResource(ModelResource):
     def get_detail(self, request, **kwargs):
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"msg":"Error: the uri provided is not correct: missing profile id", "code" : 413, "status" : False}, response_class=HttpForbidden)
-
+        
         up = UserProfile.objects.get(user=request.user)
+        is_preview = request.path.split('/')[-1] == 'preview'
+        if not is_preview and int(kwargs['profile_id']) != up.id: 
+            return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)        
+        
         if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
         try:
             a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
-        except:
+        except Exception, e:
             return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
         bundle = self.build_bundle(obj=a, request=request)
         bundle = self.full_dehydrate(bundle)
@@ -294,7 +298,14 @@ class AccomodationsResource(ModelResource):
             bundle.obj.date_start = datetime.datetime.strptime(bundle.obj.date_start, format)
         if bundle.obj.date_end is not None and type(bundle.obj.date_end) == unicode:
             bundle.obj.date_end = datetime.datetime.strptime(bundle.obj.date_end, format)
-        return super(AccomodationsResource, self).full_dehydrate(bundle)
+        bundle = super(AccomodationsResource, self).full_dehydrate(bundle)
+        is_preview = bundle.request.path.split('/')[-1] == 'preview'
+        if is_preview:
+            del bundle.data['address']
+            del bundle.data['number']
+            del bundle.data['postal_code']
+            del bundle.data['additional_information']
+        return bundle
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]

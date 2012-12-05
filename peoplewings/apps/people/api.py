@@ -443,6 +443,7 @@ class UserProfileResource(ModelResource):
         return query
 
     def apply_filters(self, request, applicable_filters):
+        # lol
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
         #if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
@@ -553,19 +554,23 @@ class UserProfileResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_collection'), name="api_list_wings"), 
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
             # /profiles/<profile_id>|me/relationships/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_collection'), name="api_list_relationships"),
             # /profiles/me/relationships/<profile_id>
-            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
+            # /profiles/<profile_id>|me/references
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('reference_collection'), name="api_list_references"),
-            # PREVIEW: GET /profiles/2/preview
+            # PREVIEW PROFILE: GET /profiles/2/preview
             url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('preview'), name="api_detail_preview"),
+                self.wrap_view('preview_profile'), name="api_detail_preview"),
+            # PREVIEW WINGS: GET /profiles/2/accomodations/34/preview
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('preview_accomodation'), name="api_detail_preview_accomodation"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -588,8 +593,12 @@ class UserProfileResource(ModelResource):
         rr = ReferenceResource()
         return rr.dispatch_list(request, **kwargs)
 
-    def preview(self, request, **kwargs):
+    def preview_profile(self, request, **kwargs):
         return self.dispatch_detail(request, **kwargs)
+
+    def preview_accomodation(self, request, **kwargs):
+        accomodation_resource = AccomodationsResource()
+        return accomodation_resource.dispatch_detail(request, **kwargs)  
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
