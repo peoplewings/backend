@@ -443,6 +443,7 @@ class UserProfileResource(ModelResource):
         return query
 
     def apply_filters(self, request, applicable_filters):
+        # lol
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
         #if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
