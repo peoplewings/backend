@@ -80,6 +80,12 @@ class NotificationsListResource(ModelResource):
                         aux.message = req.wing.name
                         aux.state = req.state  
                         aux.private_message = req.private_message   
+                        ## URL
+                        try:
+                            
+                        except:
+
+                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, , aux.reference)
                     ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
@@ -90,15 +96,21 @@ class NotificationsListResource(ModelResource):
                             aux.num_people = additional.num_people                                                                         
                         aux.message = req.wing.name
                         aux.state = inv.state         
-                        aux.private_message = inv.private_message    
+                        aux.private_message = inv.private_message  
+                        ## URL
+                        aux.thread_url = '%sinvitethread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)
                     ## Message specific                         
                     elif aux.kind == 'messages':
                         msg = Messages.objects.get(pk = i.pk)
                         aux.message = msg.private_message
+                        ## URL
+                        aux.thread_url = '%smessagethread/%s' % (settings.BACKEND_SITE, aux.reference)
                     ## Friendship specific                         
                     elif aux.kind == 'friendship':
                         friend = Friendship.objects.get(pk = i.pk)
                         aux.message = friend.message
+                        ## URL
+                        aux.thread_url = '%sfriendthread/%s' % (settings.BACKEND_SITE, aux.reference)
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -111,8 +123,6 @@ class NotificationsListResource(ModelResource):
                     aux.verified = False                    
                     aux.location = prof_aux.current_city.stringify()
                     aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)
-                    ## URL
-                    aux.thread_url = 
                     ## Add the result                                                                     
                     result_dict[aux.reference] = aux          
         except Exception, e:
@@ -203,6 +213,8 @@ class RequestsInvitesListResource(ModelResource):
                             aux.num_people = additional.num_people                                      
                         aux.message = req.wing.name
                         aux.state = req.wing.name  
+                        ## URL
+                        aux.thread_url = '%srequestthread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)
                     ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
@@ -212,7 +224,9 @@ class RequestsInvitesListResource(ModelResource):
                             aux.end_date = additional.end_date
                             aux.num_people = additional.num_people                                      
                         aux.message = req.wing.name
-                        aux.state = inv.state                                
+                        aux.state = inv.state     
+                        ## URL
+                        aux.thread_url = '%sinvitethread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)              
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -307,6 +321,8 @@ class MessagesListResource(ModelResource):
                     ## Message specific                         
                     msg = Messages.objects.get(pk = i.pk)
                     aux.message = msg.private_message
+                    ## URL
+                    aux.thread_url = '%smessagethread/%s' % (settings.BACKEND_SITE, aux.reference)
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -401,6 +417,8 @@ class FriendshipListResource(ModelResource):
                     ## Friendship specific                         
                     friend = Friendship.objects.get(pk = i.pk)
                     aux.message = friend.message
+                    ## URL
+                    aux.thread_url = '%sfriendthread/%s' % (settings.BACKEND_SITE, aux.reference)
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -460,7 +478,7 @@ class FriendshipListResource(ModelResource):
 
         return wrapper
 
-class RequestThreadResource(ModelResource):
+class AccomodationRequestThreadResource(ModelResource):
     
     class Meta:
         object_class = Requests
@@ -471,7 +489,7 @@ class RequestThreadResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True 
-        resource_name = 'requestthread'                    
+        resource_name = 'accomodationrequestthread'                    
 
     def get_detail(self, request, **kwargs):
         ## We are doin it the hard way
@@ -482,7 +500,7 @@ class RequestThreadResource(ModelResource):
         except:
             return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
         for i in thread:
-            aux = RequestThread()
+            aux = AccomodationsRequestThread()
             ## Notif specific
             aux.id  = i.pk
             aux.sender = i.sender
@@ -491,7 +509,7 @@ class RequestThreadResource(ModelResource):
             aux.reference = i.reference
             aux.read = i.read
             aux.kind = i.kind
-            ## Request specific
+            ## AccomodationRequest specific
             try:
                 req = Requests.objects.get(pk = aux.id)
                 additional_list = AccomodationInformation.objects.filter(notification = i)

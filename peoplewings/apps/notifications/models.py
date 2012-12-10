@@ -20,6 +20,7 @@ class Notifications(models.Model):
     reference = models.CharField(max_length=36, blank=False)
     read = models.BooleanField(default=False)
     kind = models.CharField(max_length=15, null=True)
+    wing_type = models.CharField(max_length=30, default='none')
 
 # Request class
 class Requests(Notifications):    

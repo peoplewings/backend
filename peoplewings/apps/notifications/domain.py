@@ -33,7 +33,7 @@ class NotificationsList(object):
             res[key] = value
         return res
 
-class RequestThread(object):
+class AccomodationRequestThread(object):
     ## Notif specific
     id  = models.IntegerField()
     sender = models.IntegerField()
@@ -42,7 +42,7 @@ class RequestThread(object):
     reference = models.CharField()
     read = models.BooleanField()
     kind = models.CharField()
-    ## Request specific
+    ## AccomodationRequest specific
     wing_name = models.CharField()
     wing_id = models.CharField()
     state = models.CharField()        

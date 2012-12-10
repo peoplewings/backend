@@ -68,7 +68,8 @@
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hi Joan! I've just saw your accomodation wing in Barcelona. Can I go?",
         "make_public" : true,
-        "wing" : 2
+        "wing" : 2,
+        "wing_type" : "accomodation"
     }
   },
 {
@@ -80,7 +81,8 @@
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Mhmhm, I don't know it yet. Let me check sumthing...",
         "make_public" : true,
-        "wing" : 2
+        "wing" : 2,
+        "wing_type" : "accomodation"
     }
   },
 {
@@ -92,7 +94,8 @@
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "OK, tell me something ASAP pls",
         "make_public" : true,
-        "wing" : 2
+        "wing" : 2,
+        "wing_type" : "accomodation"
     }
   },
 {
@@ -104,7 +107,8 @@
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hey! Its all ok. You can come!",
         "make_public" : true,
-        "wing" : 2
+        "wing" : 2,
+        "wing_type" : "accomodation"
     }
   },
 {
@@ -116,14 +120,15 @@
         "public_message" : "",
         "private_message" : "Can you give me accomodation in Berlin?",
         "make_public" : false,
-        "wing" : 1
+        "wing" : 1,
+        "wing_type" : "accomodation"
     }
   },
 {
     "model": "notifications.AccomodationInformation",
     "pk": 1,
     "fields": {
-"notification" : 1,
+        "notification" : 1,
         "modified" : false,
         "start_date" : "2012-12-14",
     "end_date" : "2012-12-18",
