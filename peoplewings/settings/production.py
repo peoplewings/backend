@@ -1,7 +1,7 @@
 # Django settings for Peoplewings project.
 # Those settings are for production enviroment only.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -51,12 +51,12 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
 
 SITE = 'http://peoplewings.herokuapp.com'
-
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -94,6 +94,22 @@ LOGGING = {
         },
     }
 }
+
+"""
+# Compressor IMG
+COMPRESS_ENABLED = True
+if COMPRESS_ENABLED:
+    COMPRESS_CSS_FILTERS = [
+        'compressor.filters.css_default.CssAbsoluteFilter',
+        'compressor.filters.cssmin.CSSMinFilter',
+    ]
+    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    COMPRESS_URL = STATIC_URL
+    COMPRESS_OFFLINE = True
+"""
+# Storages IMG
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
