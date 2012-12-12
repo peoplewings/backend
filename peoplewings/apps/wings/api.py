@@ -195,7 +195,7 @@ class AccomodationsResource(ModelResource):
     def post_list(self, request, **kwargs):
         up = UserProfile.objects.get(user=request.user)
         if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
-            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorizeddddd"}, response_class=HttpForbidden)
+            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized", "up.id":up.id, "kwargs[profile_id]":kwargs['profile_id']}, response_class=HttpForbidden)
         a = super(AccomodationsResource, self).post_list(request, **kwargs)
         data = {}
         data['id'] = json.loads(a.content)['id']
