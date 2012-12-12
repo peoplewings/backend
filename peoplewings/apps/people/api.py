@@ -890,8 +890,8 @@ class UserProfileResource(ModelResource):
         count = len(data)
         num_page = int(request.GET.get('page', 1))
         endResult = min(num_page * page_size, count)
-        #startResult = (num_page - 1) * page_size + 1
-        startResult = endResult - (num_page - 1)*page_size
+        startResult = min((num_page - 1) * page_size + 1, endResult)
+        #startResult = endResult - (num_page - 1)*page_size
         paginator = Paginator(data, page_size)
         try:
             page = paginator.page(num_page)
@@ -970,6 +970,7 @@ class UserProfileResource(ModelResource):
                 del bundle.data['social_networks']
                 del bundle.data['instant_messages']
                 del bundle.data['phone']
+                bundle.data['resource_uri'] += '/preview'
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
                 elif bundle.data['show_birthday'] == 'P':
