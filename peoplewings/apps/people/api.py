@@ -443,7 +443,6 @@ class UserProfileResource(ModelResource):
         return query
 
     def apply_filters(self, request, applicable_filters):
-        # lol
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
         #if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
@@ -550,12 +549,19 @@ class UserProfileResource(ModelResource):
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
         return [
-            ##/profiles/<profile_id>|me/accomodations/
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('accomodation_collection'), name="api_list_wings"), 
+            ##/profiles/<profile_id>|me/accomodations/list
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/list%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_collection'), name="api_list_wings"),
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # PREVIEW WING 34 OF PROFILE 2: GET /profiles/2/accomodations/34/preview
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_collection'), name="api_list_wings"),
+
             # /profiles/<profile_id>|me/relationships/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_collection'), name="api_list_relationships"),
@@ -568,9 +574,6 @@ class UserProfileResource(ModelResource):
             # PREVIEW PROFILE: GET /profiles/2/preview
             url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('preview_profile'), name="api_detail_preview"),
-            # PREVIEW WINGS: GET /profiles/2/accomodations/34/preview
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('preview_accomodation'), name="api_detail_preview_accomodation"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -594,11 +597,7 @@ class UserProfileResource(ModelResource):
         return rr.dispatch_list(request, **kwargs)
 
     def preview_profile(self, request, **kwargs):
-        return self.dispatch_detail(request, **kwargs)
-
-    def preview_accomodation(self, request, **kwargs):
-        accomodation_resource = AccomodationsResource()
-        return accomodation_resource.dispatch_detail(request, **kwargs)  
+        return self.dispatch_detail(request, **kwargs) 
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -726,12 +725,6 @@ class UserProfileResource(ModelResource):
         elif not request.user.is_anonymous() and request.method not in ('GET'):
             return object_list.filter(user=request.user)
         return object_list
-
-    def get_age(self, birthday):
-        today = date.today()
-        age = today.year - birthday.year
-        if today.month < birthday.month or (today.month == birthday.month and today.day < birthday.day): age -= 1
-        return age
 
     def get_detail(self, request, **kwargs):
         
@@ -861,7 +854,7 @@ class UserProfileResource(ModelResource):
 
         for i in bundle.data:
             if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
-        up.age = self.get_age(up.birthday)
+        up.update_age()
         #if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
         up.save()
 
@@ -917,6 +910,7 @@ class UserProfileResource(ModelResource):
         bundle.data['tasa_respuestas'] = 'XXX'
         bundle.data['reply_time'] = 'XXX'
         bundle.data['num_photos'] = 'XXX'
+        bundle.data['age'] = bundle.obj.update_age()
 
         from datetime import timedelta
         d = timedelta(hours=1)
