@@ -20,7 +20,14 @@ class Notifications(models.Model):
     reference = models.CharField(max_length=36, blank=False)
     read = models.BooleanField(default=False)
     kind = models.CharField(max_length=15, null=True)
-    wing_type = models.CharField(max_length=30, default='none')
+
+    def get_subclass(self):
+        try:
+            self.accomodationinformation_notification
+            return self.accomodationinformation_notification
+        except:
+            pass
+        return None
 
 # Request class
 class Requests(Notifications):    
@@ -75,6 +82,9 @@ class AccomodationInformation(AdditionalInformation):
     end_date = models.DateField()
     transport = models.CharField(max_length = 50)
     num_people = models.IntegerField(default=1)
+
+    def get_class_name(self):
+        return 'accomodation'
 
 # NotificationsAlarm class
 # This class will be used as a fast access class to see if user has new notifications

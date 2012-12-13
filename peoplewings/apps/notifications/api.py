@@ -72,33 +72,31 @@ class NotificationsListResource(ModelResource):
                     ## Request specific
                     if aux.kind == 'requests':
                         req = Requests.objects.get(pk = i.pk)
-                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        additional_list = i.get_subclass().all()
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                    
+                            aux.num_people = additional.num_people   
+                            add_class = additional.get_class_name()                                  
                         aux.message = req.wing.name
                         aux.state = req.state  
                         aux.private_message = req.private_message   
                         ## URL
-                        try:
-                            
-                        except:
-
-                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, , aux.reference)
-                    ## Invite specific               
+                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)
+                        ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
-                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        additional_list = i.get_subclass().all()
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                                                         
+                            aux.num_people = additional.num_people  
+                            add_class = additional.get_class_name()                                                                        
                         aux.message = req.wing.name
                         aux.state = inv.state         
                         aux.private_message = inv.private_message  
                         ## URL
-                        aux.thread_url = '%sinvitethread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)
+                        aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)
                     ## Message specific                         
                     elif aux.kind == 'messages':
                         msg = Messages.objects.get(pk = i.pk)
@@ -206,27 +204,29 @@ class RequestsInvitesListResource(ModelResource):
                     ## Request specific
                     if aux.kind == 'requests':
                         req = Requests.objects.get(pk = i.pk)
-                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        additional_list = i.get_subclass().all()                        
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                      
+                            aux.num_people = additional.num_people   
+                            add_class = additional.get_class_name()                                   
                         aux.message = req.wing.name
                         aux.state = req.wing.name  
                         ## URL
-                        aux.thread_url = '%srequestthread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)
+                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)
                     ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
-                        additional_list = AccomodationInformation.objects.filter(notification = i)
+                        additional_list = i.get_subclass().all()
                         for additional in additional_list:
                             aux.start_date = additional.start_date
                             aux.end_date = additional.end_date
-                            aux.num_people = additional.num_people                                      
+                            aux.num_people = additional.num_people   
+                            add_class = additional.get_class_name()                                    
                         aux.message = req.wing.name
                         aux.state = inv.state     
                         ## URL
-                        aux.thread_url = '%sinvitethread/%s' % (settings.BACKEND_SITE, aux.kind, aux.reference)              
+                        aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)            
                     #Profile specific
                     if (aux.sender == prof.pk):
                         ## YOU are the sender. Need receiver info
@@ -500,7 +500,112 @@ class AccomodationRequestThreadResource(ModelResource):
         except:
             return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
         for i in thread:
-            aux = AccomodationsRequestThread()
+            aux = AccomodationRequestThread()
+            ## Notif specific
+            aux.id  = i.pk
+            aux.sender = i.sender
+            aux.receiver = i.receiver
+            aux.created = i.created
+            aux.reference = i.reference
+            aux.read = i.read
+            aux.kind = i.kind
+            ## AccomodationRequest specific
+            try:
+                req = Requests.objects.get(pk = aux.id)
+                additional_list = AccomodationInformation.objects.filter(notification = i)
+            except:
+               return self.create_response(request, {"status":False, "msg":"Could not load the request", "code":"403"}, response_class = HttpResponse) 
+            aux.wing_name = req.wing.name
+            aux.wing_id = req.wing.pk
+            aux.state = req.state              
+            for additional in additional_list: 
+                aux.start_date = additional.start_date
+                aux.end_date = additional.end_date
+                aux.num_people = additional.num_people
+                aux.transport = additional.transport
+            aux.private_message = req.private_message
+            #Sender specific
+            aux.nameS = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+            aux.ageS = i.sender.age
+            aux.verifiedS = False
+            aux.locationS = i.sender.current_city.stringify()
+            aux.friendsS = len(i.sender.relationships.filter())
+            aux.referencesS = len(i.sender.references.filter())
+            aux.med_avatarS =  i.sender.medium_avatar
+            aux.small_avatarS = i.sender.thumb_avatar
+            #Receiver specific
+            aux.nameR = '%s %s' % (i.receiver.user.first_name, i.receiver.user.last_name)
+            aux.ageR = i.receiver.age
+            aux.verifiedR = False
+            aux.locationR = i.receiver.current_city.stringify()
+            aux.friendsR = len(i.receiver.relationships.filter())
+            aux.referencesR = len(i.receiver.references.filter())
+            aux.med_avatarR =  i.receiver.medium_avatar
+            aux.small_avatarR = i.receiver.thumb_avatar
+            result.append(aux)
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
+            
+        
+    def get_list(self, request, **kwargs):
+        ##DO NOTHING
+        return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
+    
+    def wrap_view(self, view):
+        @csrf_exempt
+        def wrapper(request, *args, **kwargs):
+            try:
+                callback = getattr(self, view)
+                response = callback(request, *args, **kwargs)              
+                return response
+            except (BadRequest, fields.ApiFieldError), e:
+                return http.HttpBadRequest(e.args[0])
+            except ValidationError, e:
+                return http.HttpBadRequest(', '.join(e.messages))
+            except Exception, e:
+                if hasattr(e, 'response'):
+                    return e.response
+
+                # A real, non-expected exception.
+                # Handle the case where the full traceback is more helpful
+                # than the serialized error.
+                if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
+                    raise
+
+                # Re-raise the error to get a proper traceback when the error
+                # happend during a test case
+                if request.META.get('SERVER_NAME') == 'testserver':
+                    raise
+
+                # Rather than re-raising, we're going to things similar to
+                # what Django does. The difference is returning a serialized
+                # error message.
+                return self._handle_500(request, e)
+
+        return wrapper
+
+class InviteRequestThreadResource(ModelResource):
+    
+    class Meta:
+        object_class = Requests
+        queryset = Requests.objects.all()
+        allowed_methods = ['get']
+        include_resource_uri = False
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True 
+        resource_name = 'inviterequestthread'                    
+
+    def get_detail(self, request, **kwargs):
+        ## We are doin it the hard way
+        ref = kwargs['pk']
+        result = []
+        try:
+            thread = Notifications.objects.filter(reference=ref).order_by('created')
+        except:
+            return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
+        for i in thread:
+            aux = AccomodationRequestThread()
             ## Notif specific
             aux.id  = i.pk
             aux.sender = i.sender
