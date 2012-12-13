@@ -465,7 +465,12 @@ class UserProfileResource(ModelResource):
             base_object_list = base_object_list.filter(entry_query).distinct()
 
         if start_age and end_age:
-            base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
+            #birthday + timedelta(days=365.25*start_age) <= timedelta.now() <= birthday + timedelta(days=365.25*end_age)
+            from datetime import timedelta, date
+            s_date = date.today() - timedelta(days=365.25*int(start_age))
+            e_date = date.today() - timedelta(days=365.25*int(end_age))
+            base_object_list = base_object_list.filter(birthday__lte=s_date, birthday__gte=e_date).distinct()
+            #base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
 
         if gender:
             entry_query = self.get_query(gender, ['gender'])
@@ -854,7 +859,6 @@ class UserProfileResource(ModelResource):
 
         for i in bundle.data:
             if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
-        up.update_age()
         #if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
         up.save()
 
@@ -910,7 +914,7 @@ class UserProfileResource(ModelResource):
         bundle.data['tasa_respuestas'] = 'XXX'
         bundle.data['reply_time'] = 'XXX'
         bundle.data['num_photos'] = 'XXX'
-        bundle.data['age'] = bundle.obj.update_age()
+        bundle.data['age'] = bundle.obj.get_age()
 
         from datetime import timedelta
         d = timedelta(hours=1)
