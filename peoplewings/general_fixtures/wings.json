@@ -13,6 +13,48 @@
     }
   },
   {
+    "model": "wings.PublicTransport",
+    "pk": 1,
+    "fields": {
+        "name" : "bus"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 2,
+    "fields": {
+        "name" : "tram"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 3,
+    "fields": {
+        "name" : "train"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 4,
+    "fields": {
+        "name" : "underground"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 5,
+    "fields": {
+        "name" : "boat"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 6,
+    "fields": {
+        "name" : "others"
+    }
+  },
+  {
     "model": "wings.Accomodation",
     "pk": 1,
     "fields": {
@@ -27,17 +69,13 @@
         "pets_allowed" : false,
         "blankets" : true,
         "live_center" : false,
-        "underground" : true,
-        "bus" : true,
-        "tram" : false,
-        "train" : false,
-        "others" : false,
         "about" : "It's a nice place in upper east side of Barcelona. Not really far from the center.",
         "address" : "Josep Baladi Street",
         "number" : 23,
         "additional_information" : "", 
         "postal_code" : "08024",
-        "city" : 1
+        "city" : 1,
+        "public_transport" : [1,2,3]
     }
   },
   {
@@ -68,17 +106,13 @@
         "pets_allowed" : false,
         "blankets" : true,
         "live_center" : false,
-        "underground" : true,
-        "bus" : true,
-        "tram" : true,
-        "train" : false,
-        "others" : false,
         "about" : "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.",
         "address" : "Deu i Mata Street",
         "number" : 12,
         "additional_information" : "The house has a nice terrace" ,  
         "postal_code" : "08028",
-        "city" : 1
+        "city" : 1,
+        "public_transport" : [2,3,4,5]
     }
-  } 
+  }
 ]
