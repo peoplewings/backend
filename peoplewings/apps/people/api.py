@@ -450,8 +450,8 @@ class UserProfileResource(ModelResource):
         start_date = request.GET.get('startDate', None)
         end_date = request.GET.get('endDate', None)
         capacity = request.GET.get('capacity', None)
-        start_age = request.GET.get('startAge', None)
-        end_age = request.GET.get('endAge', None)
+        start_age = int(request.GET.get('startAge', None))
+        end_age = int(request.GET.get('endAge', None))
         language = request.GET.get('language', None)
         gender = request.GET.get('gender', None)
         tipo = request.GET.get('type', None)
@@ -466,11 +466,17 @@ class UserProfileResource(ModelResource):
 
         if start_age and end_age:
             #birthday + timedelta(days=365.25*start_age) <= timedelta.now() <= birthday + timedelta(days=365.25*end_age)
+            aux = []
+            for i in base_object_list:
+                if i.get_age() >= start_age and i.get_age() <= end_age: aux.append(i.id)
+            base_object_list = base_object_list.filter(pk__in=aux)
+            '''
             from datetime import timedelta, date
             s_date = date.today() - timedelta(days=365.25*int(start_age))
             e_date = date.today() - timedelta(days=365.25*int(end_age))
             base_object_list = base_object_list.filter(birthday__lte=s_date, birthday__gte=e_date).distinct()
             #base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
+            '''
 
         if gender:
             entry_query = self.get_query(gender, ['gender'])
