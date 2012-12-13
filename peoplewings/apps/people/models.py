@@ -66,7 +66,6 @@ class UserProfile(models.Model):
     """
     
     user = models.ForeignKey(User, unique=True)
-    age = models.IntegerField(default=0)
     pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
 
     avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
@@ -129,13 +128,11 @@ class UserProfile(models.Model):
     places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
     places_wanna_go = models.TextField(max_length=max_long_len, blank=True)
 
-    def update_age(self):
+    def get_age(self):
         today = date.today()
         age = today.year - self.birthday.year
         if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
-        self.age = age
-        self.save()
-        return self.age
+        return age
 
 class Relationship(models.Model):    
     sender = models.ForeignKey('UserProfile', related_name='sender')

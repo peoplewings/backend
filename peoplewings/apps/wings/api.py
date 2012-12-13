@@ -311,7 +311,7 @@ class AccomodationsResource(ModelResource):
         if bundle.obj.date_end is not None and type(bundle.obj.date_end) == unicode:
             bundle.obj.date_end = datetime.datetime.strptime(bundle.obj.date_end, format)
         bundle = super(AccomodationsResource, self).full_dehydrate(bundle)
-        bundle.data['resource_uri'] = str.replace(bundle.data['resource_uri'], 'me', str(bundle.obj.id))
+        bundle.data['resource_uri'] = str.replace(bundle.data['resource_uri'], 'me', str(bundle.obj.author.id))
         is_preview = bundle.request.path.split('/')[-1] == 'preview'
         if is_preview:
             del bundle.data['address']
