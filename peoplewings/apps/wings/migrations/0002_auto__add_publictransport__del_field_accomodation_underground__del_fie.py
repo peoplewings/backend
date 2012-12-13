@@ -185,7 +185,6 @@ class Migration(SchemaMigration):
         },
         'people.userprofile': {
             'Meta': {'object_name': 'UserProfile'},
-            'age': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'avatar': ('django.db.models.fields.CharField', [], {'default': "'http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg'", 'max_length': '250'}),
             'birthday': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
