@@ -107,9 +107,10 @@ class AccomodationsResource(ModelResource):
         del bundle.data['name']
         del bundle.data['number']
         del bundle.data['postal_code']
-       
+
+        forbidden_fields_update = ['author_id', 'id']                
         for key, value in bundle.data.items():
-            if hasattr(a, key): setattr(a, key, value)
+            if hasattr(a, key) and key not in forbidden_fields_update: setattr(a, key, value)
         trans = PublicTransport.objects.all()
         a.public_transport = []
         for i in trans:
@@ -241,9 +242,9 @@ class AccomodationsResource(ModelResource):
             setattr(a, 'city', city)
             bundle.data.pop('city')
 
-        if 'author_id' in bundle.data: bundle.data.pop('author_id')
+        forbidden_fields_update = ['author_id', 'id']
         for i in bundle.data:
-            if hasattr(a, i):
+            if hasattr(a, i) and i not in forbidden_fields_update:
                 """               
                 if i == 'dateStart' or i == 'dateEnd':
                     aux = datetime.strptime(bundle.data.get(i), '%Y-%m-%d')
