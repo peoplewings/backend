@@ -22,7 +22,7 @@ from tastypie.utils import trailing_slash, dict_strip_unicode_keys
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS
 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
-from peoplewings.apps.wings.models import Accomodation
+from peoplewings.apps.wings.models import Accomodation, PublicTransport
 from peoplewings.apps.wings.forms import *
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
@@ -107,9 +107,14 @@ class AccomodationsResource(ModelResource):
         del bundle.data['name']
         del bundle.data['number']
         del bundle.data['postal_code']
+       
         for key, value in bundle.data.items():
             if hasattr(a, key): setattr(a, key, value)
-
+        trans = PublicTransport.objects.all()
+        a.public_transport = []
+        for i in trans:
+            if bundle.data[i.name]:
+                a.public_transport.add(i)
         a.save()
 
         bundle = self.build_bundle(obj=a, request=request)
@@ -175,27 +180,8 @@ class AccomodationsResource(ModelResource):
                 dic['name'] = bundle.data['name']
                 dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
                 bundle.data = dic
-            objects.append(bundle)
-
+            objects.append(bundle.data)
         return self.create_response(request, {"msg":"Accommodations retrieved successfully.", "code":200, "status":True, "data":objects})
-        """
-        self.is_anonymous = request.user.is_anonymous()
-
-
-        if not self.is_anonymous:
-            up = UserProfile.objects.get(user=request.user)        
-            if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
-            accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
-        else: 
-            accomodations = Accomodation.objects.all()
-        objects = []
-        for i in accomodations:
-            bundle = self.build_bundle(obj=i, request=request)
-            bundle = self.full_dehydrate(bundle)
-            objects.append(bundle)
-
-        return self.create_response(request, objects)
-        """
     
     def post_list(self, request, **kwargs):
         up = UserProfile.objects.get(user=request.user)
@@ -265,6 +251,11 @@ class AccomodationsResource(ModelResource):
                 else: setattr(a, i, bundle.data.get(i))
                 """
                 setattr(a, i, bundle.data.get(i))
+        trans = PublicTransport.objects.all()
+        a.public_transport = []
+        for i in trans:
+            if bundle.data[i.name]:
+                a.public_transport.add(i)
         
         #updated_bundle = self.dehydrate(bundle)
         #updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
@@ -319,6 +310,11 @@ class AccomodationsResource(ModelResource):
             del bundle.data['postal_code']
             del bundle.data['additional_information']
             bundle.data['resource_uri'] += '/preview'
+        all_public = PublicTransport.objects.all();
+        for j in all_public:
+            bundle.data[j.name] = False
+        for j in bundle.obj.public_transport.all():
+            bundle.data[j.name] = True
         return bundle
     
     def alter_list_data_to_serialize(self, request, data):
