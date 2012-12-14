@@ -1,0 +1,10 @@
+ID to HASH
+
+1) Modificar todos los models.py y añadir PK en formato UUID -- > 2h
+2) En todas las api.py, revisar y si es necesario crear entradas en el prepend_urls. Por defecto el recurso acepta una <id>%d, habría que cambiarlo a un %w. -> 4h
+3) Mirar como se integra esto con el auth.user. Auth.user no deberia cambiar porque sino se rompen muchas cosas. Hay que mirar como va el tema. -> 2h
+4) Testear TODAS las llamadas con el nuevo ID. -> 8h
+
+Si hay complicaciones, cada bug añade 1h.
+
+TOTAL = 16h + BUGS
