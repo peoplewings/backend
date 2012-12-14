@@ -444,7 +444,7 @@ class UserProfileResource(ModelResource):
 
     def apply_filters(self, request, applicable_filters):
         base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
-        if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
+        #if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
         # capacity, start age, end age, language and type are OBLIGATORY        
         city = request.GET.get('wings', None)
         start_date = request.GET.get('startDate', None)
@@ -473,7 +473,8 @@ class UserProfileResource(ModelResource):
 
         # filter by wings' parameters: city, start date, end date, capacity, type
         if capacity or start_date or end_date or city or tipo:
-            accomodation_list = Accomodation.objects.all()
+            #Q(date_end__lte=de) | Q(date_end__isnull=True)
+            accomodation_list = Accomodation.objects.filter(status__in=('Y', 'M'))
             if capacity:
                 accomodation_list = accomodation_list.filter(capacity__gte=capacity)
             if start_date:
@@ -548,20 +549,31 @@ class UserProfileResource(ModelResource):
     # funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
     def prepend_urls(self):
         return [
-            ##/profiles/<profile_id>|me/accomodations/
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
-                self.wrap_view('accomodation_collection'), name="api_list_wings"), 
+            ##/profiles/<profile_id>|me/accomodations/list
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/list%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_collection'), name="api_list_wings"),
             ##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
-            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # PREVIEW WING 34 OF PROFILE 2: GET /profiles/2/accomodations/34/preview
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_detail'), name="api_detail_wing"),
+            # PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('accomodation_collection'), name="api_list_wings"),
+
             # /profiles/<profile_id>|me/relationships/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_collection'), name="api_list_relationships"),
             # /profiles/me/relationships/<profile_id>
-            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+            url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('relationship_detail'), name="api_detail_relationships"),
+            # /profiles/<profile_id>|me/references
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('reference_collection'), name="api_list_references"),
+            # PREVIEW PROFILE: GET /profiles/2/preview
+            url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('preview_profile'), name="api_detail_preview"),
         ]
 
     def accomodation_collection(self, request, **kwargs):
@@ -583,6 +595,9 @@ class UserProfileResource(ModelResource):
     def reference_collection(self, request, **kwargs):
         rr = ReferenceResource()
         return rr.dispatch_list(request, **kwargs)
+
+    def preview_profile(self, request, **kwargs):
+        return self.dispatch_detail(request, **kwargs) 
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):
@@ -711,26 +726,17 @@ class UserProfileResource(ModelResource):
             return object_list.filter(user=request.user)
         return object_list
 
-    def get_age(self, birthday):
-        today = date.today()
-        age = today.year - birthday.year
-        if today.month < birthday.month or (today.month == birthday.month and today.day < birthday.day): age -= 1
-        return age
-
     def get_detail(self, request, **kwargs):
+        
         if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
-        b = kwargs['pk'] == 'me'
-        if b: kwargs['pk'] = UserProfile.objects.get(user=request.user).id
+        up = UserProfile.objects.get(user=request.user)
+        is_preview = request.path.split('/')[-1] == 'preview'
+        if not is_preview and int(kwargs['pk']) != up.id: return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+        
         a = super(UserProfileResource, self).get_detail(request, **kwargs)
         data = json.loads(a.content)
-        del data['user']
-        """
-        data['pid'] = kwargs['pk']
-        data['id'] = 'me'
-        """
-        if b:
-            up = UserProfile.objects.get(user=request.user)
-            data['pw_state'] = up.pw_state
+        if 'user' in data: del data['user']
+        if not is_preview: data['pw_state'] = up.pw_state
         content = {}  
         content['msg'] = 'Profile retrieved successfully.'      
         content['status'] = True
@@ -848,7 +854,7 @@ class UserProfileResource(ModelResource):
 
         for i in bundle.data:
             if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
-        up.age = self.get_age(up.birthday)
+        up.update_age()
         #if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
         up.save()
 
@@ -876,8 +882,9 @@ class UserProfileResource(ModelResource):
         page_size = 10
         count = len(data)
         num_page = int(request.GET.get('page', 1))
-        startResult = (num_page - 1) * page_size + 1
         endResult = min(num_page * page_size, count)
+        startResult = min((num_page - 1) * page_size + 1, endResult)
+        #startResult = endResult - (num_page - 1)*page_size
         paginator = Paginator(data, page_size)
         try:
             page = paginator.page(num_page)
@@ -896,12 +903,14 @@ class UserProfileResource(ModelResource):
 
         bundle.data['first_name'] = bundle.obj.user.first_name
         bundle.data['last_name'] = bundle.obj.user.last_name
-        bundle.data['verified'] = True
+        bundle.data['verified'] = 'XXX'
         #bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-        bundle.data['num_friends'] = 0
+        bundle.data['num_friends'] = 'XXX'
         bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-        bundle.data['pending'] = "Pending"
-        bundle.data['tasa_respuestas'] = 0
+        bundle.data['tasa_respuestas'] = 'XXX'
+        bundle.data['reply_time'] = 'XXX'
+        bundle.data['num_photos'] = 'XXX'
+        bundle.data['age'] = bundle.obj.update_age()
 
         from datetime import timedelta
         d = timedelta(hours=1)
@@ -910,9 +919,9 @@ class UserProfileResource(ModelResource):
         else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
         #print bundle.obj.user.last_login
         #print datetime.now().timetz()
-
-        if bundle.request.path not in (self.get_resource_uri(bundle), u'/api/v1/profiles/me'):
+        if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
             # venimos de get_list => solamente devolver los campos requeridos
+            bundle.data['pending'] = 'XXX'
             permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
             
             for key, value in bundle.data.items():
@@ -943,12 +952,19 @@ class UserProfileResource(ModelResource):
                 bundle.data['avatar'] = bundle.data['medium_avatar']
             del bundle.data['blur_avatar']
             del bundle.data['medium_avatar']
-        else:  
+        else:
+
             # venimos de get_detail y ademas el usuario esta logueado
             del bundle.data['blur_avatar']
             del bundle.data['medium_avatar']
             del bundle.data['thumb_avatar']
-            if bundle.request.path != u'/api/v1/profiles/me':
+            is_preview = bundle.request.path == self.get_resource_uri(bundle)+"/preview"
+            if is_preview:
+                del bundle.data['emails']
+                del bundle.data['social_networks']
+                del bundle.data['instant_messages']
+                del bundle.data['phone']
+                bundle.data['resource_uri'] += '/preview'
                 if bundle.data['show_birthday'] == 'N':
                     bundle.data['birthday'] = ""
                 elif bundle.data['show_birthday'] == 'P':

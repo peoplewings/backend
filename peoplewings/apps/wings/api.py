@@ -22,7 +22,7 @@ from tastypie.utils import trailing_slash, dict_strip_unicode_keys
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS
 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
-from peoplewings.apps.wings.models import Accomodation
+from peoplewings.apps.wings.models import Accomodation, PublicTransport
 from peoplewings.apps.wings.forms import *
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
@@ -107,9 +107,14 @@ class AccomodationsResource(ModelResource):
         del bundle.data['name']
         del bundle.data['number']
         del bundle.data['postal_code']
+       
         for key, value in bundle.data.items():
             if hasattr(a, key): setattr(a, key, value)
-
+        trans = PublicTransport.objects.all()
+        a.public_transport = []
+        for i in trans:
+            if bundle.data[i.name]:
+                a.public_transport.add(i)
         a.save()
 
         bundle = self.build_bundle(obj=a, request=request)
@@ -157,6 +162,10 @@ class AccomodationsResource(ModelResource):
         up = UserProfile.objects.get(user=request.user)        
         if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
 
+        is_preview = request.path.split('/')[-1] == 'preview'
+        if not is_preview and int(kwargs['profile_id']) != up.id: 
+            return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+
         try:
             accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
         except:
@@ -166,36 +175,20 @@ class AccomodationsResource(ModelResource):
         for i in accomodations:
             bundle = self.build_bundle(obj=i, request=request)
             bundle = self.full_dehydrate(bundle)
-            dic = {}
-            dic['name'] = bundle.data['name']
-            dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
-            bundle.data = dic
-            objects.append(bundle)
-
+            if not is_preview:
+                dic = {}
+                dic['name'] = bundle.data['name']
+                dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
+                bundle.data = dic
+            objects.append(bundle.data)
         return self.create_response(request, {"msg":"Accommodations retrieved successfully.", "code":200, "status":True, "data":objects})
-        """
-        self.is_anonymous = request.user.is_anonymous()
-
-
-        if not self.is_anonymous:
-            up = UserProfile.objects.get(user=request.user)        
-            if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
-            accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
-        else: 
-            accomodations = Accomodation.objects.all()
-        objects = []
-        for i in accomodations:
-            bundle = self.build_bundle(obj=i, request=request)
-            bundle = self.full_dehydrate(bundle)
-            objects.append(bundle)
-
-        return self.create_response(request, objects)
-        """
     
     def post_list(self, request, **kwargs):
         up = UserProfile.objects.get(user=request.user)
+        '''
         if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
-            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+            return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized", "up.id":up.id, "kwargs[profile_id]":kwargs['profile_id']}, response_class=HttpForbidden)
+        '''
         a = super(AccomodationsResource, self).post_list(request, **kwargs)
         data = {}
         data['id'] = json.loads(a.content)['id']
@@ -205,12 +198,16 @@ class AccomodationsResource(ModelResource):
     def get_detail(self, request, **kwargs):
         if 'profile_id' not in kwargs:
             return self.create_response(request, {"msg":"Error: the uri provided is not correct: missing profile id", "code" : 413, "status" : False}, response_class=HttpForbidden)
-
+        
         up = UserProfile.objects.get(user=request.user)
+        is_preview = request.path.split('/')[-1] == 'preview'
+        if not is_preview and int(kwargs['profile_id']) != up.id: 
+            return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+        
         if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
         try:
             a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
-        except:
+        except Exception, e:
             return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
         bundle = self.build_bundle(obj=a, request=request)
         bundle = self.full_dehydrate(bundle)
@@ -254,6 +251,11 @@ class AccomodationsResource(ModelResource):
                 else: setattr(a, i, bundle.data.get(i))
                 """
                 setattr(a, i, bundle.data.get(i))
+        trans = PublicTransport.objects.all()
+        a.public_transport = []
+        for i in trans:
+            if bundle.data[i.name]:
+                a.public_transport.add(i)
         
         #updated_bundle = self.dehydrate(bundle)
         #updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
@@ -287,6 +289,11 @@ class AccomodationsResource(ModelResource):
         bundle.data['city']['lon'] = city.lon
         return bundle.data['city']
 
+    '''
+    def dehydrate_resource_uri(self, bundle):
+        bundle.data['resource_uri'] = str.replace(self._meta.resource_name, 'me', str(bundle.obj.id))
+        return bundle.data['resource_uri']
+    '''
     
     def full_dehydrate(self, bundle):
         format = '%Y-%m-%d'
@@ -294,7 +301,21 @@ class AccomodationsResource(ModelResource):
             bundle.obj.date_start = datetime.datetime.strptime(bundle.obj.date_start, format)
         if bundle.obj.date_end is not None and type(bundle.obj.date_end) == unicode:
             bundle.obj.date_end = datetime.datetime.strptime(bundle.obj.date_end, format)
-        return super(AccomodationsResource, self).full_dehydrate(bundle)
+        bundle = super(AccomodationsResource, self).full_dehydrate(bundle)
+        bundle.data['resource_uri'] = str.replace(bundle.data['resource_uri'], 'me', str(bundle.obj.id))
+        is_preview = bundle.request.path.split('/')[-1] == 'preview'
+        if is_preview:
+            del bundle.data['address']
+            del bundle.data['number']
+            del bundle.data['postal_code']
+            del bundle.data['additional_information']
+            bundle.data['resource_uri'] += '/preview'
+        all_public = PublicTransport.objects.all();
+        for j in all_public:
+            bundle.data[j.name] = False
+        for j in bundle.obj.public_transport.all():
+            bundle.data[j.name] = True
+        return bundle
     
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]

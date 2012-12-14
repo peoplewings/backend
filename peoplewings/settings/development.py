@@ -66,13 +66,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
-"""
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'peoplewings.dev@gmail.com'
-EMAIL_HOST_PASSWORD = 'wings208b'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-"""
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

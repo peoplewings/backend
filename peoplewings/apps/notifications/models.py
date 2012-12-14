@@ -12,6 +12,11 @@ TYPE_CHOICES = (
         ('M', 'Maybe'),
     )
 
+USERSTATE_CHOICES = (
+        ('O', 'Online'),
+        ('F', 'Offline'),
+    )
+
 # Notifications class
 class Notifications(models.Model):
     receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)

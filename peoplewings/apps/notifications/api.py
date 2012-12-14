@@ -71,16 +71,17 @@ class NotificationsListResource(ModelResource):
                     filters = filters & ~Q(first_sender = prof)
                 elif value == 'sent':
                     filters = filters & Q(first_sender = prof)
+            elif key == 'search':
+                #busca sobre los campos:
+                #contenido de la notificacion
+                pass
         try:
             my_notifications = Notifications.objects.filter(filters).order_by('-created')
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
                     aux.id = i.pk
-                    aux.sender = i.sender_id
-                    aux.receiver = i.receiver_id
                     aux.created = i.created
-                    aux.reference = i.reference
                     aux.read = i.read
                     aux.kind = i.kind
                     ## Request specific
@@ -93,10 +94,13 @@ class NotificationsListResource(ModelResource):
                             aux.num_people = additional.num_people   
                             add_class = additional.get_class_name()                                  
                         aux.message = req.wing.name
-                        aux.state = req.state  
-                        aux.private_message = req.private_message   
-                        ## URL
-                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)
+                        aux.state = req.state
+                        if i.first_sender == prof.pk:                           
+                            aux.flag_direction = True
+                        else:
+                            aux.flag_direction =   False                      
+                        ## URL                        
+                        aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
                         ## Invite specific               
                     elif aux.kind == 'invites':
                         inv = Invites.objects.get(pk = i.pk)     
@@ -107,36 +111,41 @@ class NotificationsListResource(ModelResource):
                             aux.num_people = additional.num_people  
                             add_class = additional.get_class_name()                                                                        
                         aux.message = req.wing.name
-                        aux.state = inv.state         
-                        aux.private_message = inv.private_message  
+                        aux.state = inv.state   
+                        if i.first_sender == prof.pk:
+                             aux.flag_direction = True
+                        else:
+                            aux.flag_direction =   False          
                         ## URL
-                        aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, aux.reference)
+                        aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
                     ## Message specific                         
                     elif aux.kind == 'messages':
                         msg = Messages.objects.get(pk = i.pk)
-                        aux.message = msg.private_message
+                        aux.content = msg.private_message
                         ## URL
-                        aux.thread_url = '%smessagethread/%s' % (settings.BACKEND_SITE, aux.reference)
+                        aux.thread_url = '%smessagethread/%s' % (settings.BACKEND_SITE, i.reference)
                     ## Friendship specific                         
                     elif aux.kind == 'friendship':
                         friend = Friendship.objects.get(pk = i.pk)
-                        aux.message = friend.message
+                        aux.content = friend.message
                         ## URL
-                        aux.thread_url = '%sfriendthread/%s' % (settings.BACKEND_SITE, aux.reference)
+                        aux.thread_url = '%sfriendthread/%s' % (settings.BACKEND_SITE, i.reference)
                     #Profile specific
-                    if (aux.sender == prof.pk):
+                    if (i.sender == prof):
                         ## YOU are the sender. Need receiver info
-                        prof_aux = UserProfile.objects.get(pk = aux.receiver)                   
+                        prof_aux = UserProfile.objects.get(pk = i.receiver.pk)                   
                     else:
                         ## YOU are the receiver. Need the sender info  
-                        prof_aux = UserProfile.objects.get(pk = aux.sender)               
+                        prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
+                    aux.interlocutor_id = prof_aux.pk          
                     aux.med_avatar =  prof_aux.medium_avatar
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
                     aux.location = prof_aux.current_city.stringify()
-                    aux.name = '%s %s' % (prof.user.first_name, prof.user.last_name)
+                    aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
+                    aux.connected = 'F'
                     ## Add the result                                                                     
-                    result_dict[aux.reference] = aux          
+                    result_dict[i.reference] = aux          
         except Exception, e:
             raise e
             #return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)   

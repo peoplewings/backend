@@ -1,29 +1,30 @@
 from django.db import models
 import json
-#from peoplewings.libs.bussines import BussinesModel
+from peoplewings.apps.notifications.models import USERSTATE_CHOICES, TYPE_CHOICES
 
 class NotificationsList(object):
     ## Notif specific
     id = models.IntegerField()
-    sender = models.IntegerField()
-    receiver = models.IntegerField()
-    created = models.CharField()
-    reference = models.CharField()
+    created = models.CharField() # PASAR A TIMESTAMP!!
     read = models.BooleanField()
     kind = models.CharField()
     ## Request/inv specific
-    state = models.CharField()    
+    state = models.CharField(choices = TYPE_CHOICES, default='P')
+    flag_direction = models.BooleanField()    
     start_date = models.DateField()
     end_date = models.DateField()
     num_people = models.IntegerField()
-    ## Msg/req/inv specific
     message = models.TextField()
+    ## Msg/req/inv specific
+    content = models.TextField()
     #Profile specific
+    interlocutor_id = models.CharField()
     name = models.CharField()
     med_avatar =  models.CharField()
     age = models.IntegerField()
     verified = models.BooleanField()
     location = models.TextField()
+    connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F');
     ## URLs
     thread_url = models.CharField()
     

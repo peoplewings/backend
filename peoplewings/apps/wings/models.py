@@ -14,6 +14,9 @@ class Wing(models.Model):
     best_days = models.CharField(max_length=1, choices=BETTER_DAYS_CHOICES, default='A', verbose_name='Better days to host')
     is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
     
+class PublicTransport(models.Model):
+    name = models.CharField(max_length=50, blank = False, null = False, default = 'Not specified')
+
 # Accomodation wing class
 class Accomodation(Wing):
     sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
@@ -27,11 +30,7 @@ class Accomodation(Wing):
     pets_allowed = models.BooleanField(default=False, verbose_name='Guests pets allowed')
     blankets = models.BooleanField(default=False, verbose_name='I have blankets')
     live_center = models.BooleanField(default=False, verbose_name='I live in the center')
-    underground = models.BooleanField(default=False)
-    bus = models.BooleanField(default=False)
-    tram = models.BooleanField(default=False)
-    train = models.BooleanField(default=False)
-    others = models.BooleanField(default=False)
+    public_transport = models.ManyToManyField(PublicTransport)
     about = models.TextField(max_length=max_text_msg_len, blank=True, verbose_name='About your Accomodation')
     address = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='Street address')
     number = models.CharField(max_length=max_ultra_short_len, blank=True)

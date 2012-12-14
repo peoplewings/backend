@@ -17,6 +17,7 @@ class Migration(SchemaMigration):
             ('reference', self.gf('django.db.models.fields.CharField')(max_length=36)),
             ('read', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('kind', self.gf('django.db.models.fields.CharField')(max_length=15, null=True)),
+            ('first_sender', self.gf('django.db.models.fields.related.ForeignKey')(related_name='notifications_first_sender', null=True, to=orm['people.UserProfile'])),
         ))
         db.send_create_signal('notifications', ['Notifications'])
 
@@ -189,6 +190,7 @@ class Migration(SchemaMigration):
         'notifications.notifications': {
             'Meta': {'object_name': 'Notifications'},
             'created': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
+            'first_sender': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'notifications_first_sender'", 'null': 'True', 'to': "orm['people.UserProfile']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'kind': ('django.db.models.fields.CharField', [], {'max_length': '15', 'null': 'True'}),
             'read': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

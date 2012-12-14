@@ -161,7 +161,7 @@ There are some standard error messages:
 
 ### View my profile (Eze):
  * Request:
-    /GET /profiles/me
+    /GET /profiles/1
     "X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"
  * Response:
    * OK
@@ -270,7 +270,7 @@ There are some standard error messages:
 
 ### Update my profile (Eze):
  * Request:
-    /PUT /profiles/me
+    /PUT /profiles/1
     {"X-Auth-Token":"ada787d3684123f27382f53ef7485d42d95ef9aeede39e63de4bb81de3e91df61c2b66af9de50145"}
     {
       "age": 23,
@@ -285,9 +285,9 @@ There are some standard error messages:
      * 403 FORBIDDEN {"code": 413, "msg": "Error: anonymous users have no profile.", "status": false}
      * 200 OK {"code": 400, "errors": {"emails": ["Enter a valid e-mail address."]}, "msg": "Error in some fields.", "status": false}
 
-### View another profile (Eze):
+### Preview a profile (Eze):
  * Request:
-    /GET /profiles/17
+    /GET /profiles/17/preview
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -313,9 +313,9 @@ There are some standard error messages:
 
 ### Crop image (Joan) (W8 Sergi):
 
-### View my accommodations (Eze):
+### List my accommodations (Eze):
  * Request:
-    GET /profiles/me/accomodations/
+    GET /profiles/1/accomodations/list
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -324,12 +324,12 @@ There are some standard error messages:
           "code": 200,
           "data": [
             {
-              "name": "my accomodation in Buenos Aires",
-              "uri": "/api/v1/accomodations/97"
+              "name": "Eze's house",
+              "uri": "/api/v1/profiles/5/accomodations/5"
             },
             {
-              "name": "my accomodation in Madrid",
-              "uri": "/api/v1/accomodations/96"
+              "name": "My palace",
+              "uri": "/api/v1/profiles/1/accomodations/1"
             }
           ],
           "msg": "Accommodations retrieved successfully.",
@@ -338,9 +338,9 @@ There are some standard error messages:
    * NO 
      * 200 OK {"code": 413, "msg": "Unauthorized", "status": false}
 
-### View another user's accommodations (Eze):
+### Preview the accommodations of a user (Eze):
  * Request:
-    GET /profiles/2/accomodations/
+    GET /profiles/1/accomodations/preview
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * OK
@@ -349,12 +349,42 @@ There are some standard error messages:
           "code": 200,
           "data": [
             {
-              "name": "my accomodation in Buenos Aires",
-              "uri": "/api/v1/accomodations/97"
+              "about": "",
+              "bestDays": "A",
+              "blankets": false,
+              "bus": false,
+              "capacity": "1",
+              "city": {
+                "country": "England",
+                "lat": "0E-9",
+                "lon": "0E-9",
+                "name": "London",
+                "region": "NoName"
+              },
+              "dateEnd": "2012-11-29",
+              "dateStart": "2012-11-28",
+              "iHavePet": false,
+              "id": 5,
+              "isRequest": false,
+              "liveCenter": false,
+              "name": "Eze's house",
+              "others": false,
+              "petsAllowed": false,
+              "preferredFemale": true,
+              "preferredMale": true,
+              "resourceUri": "/api/v1/profiles/5/accomodations/5/preview",
+              "sharingOnce": false,
+              "smoking": "N",
+              "status": "Y",
+              "train": false,
+              "tram": false,
+              "underground": false,
+              "wheelchair": false,
+              "whereSleepingType": "C"
             },
             {
-              "name": "my accomodation in Madrid",
-              "uri": "/api/v1/accomodations/96"
+              "about": "",
+              ...
             }
           ],
           "msg": "Accommodations retrieved successfully.",
@@ -365,7 +395,7 @@ There are some standard error messages:
 
 ### View one of my accommodations (Eze):
  * Request:
-    GET /profiles/me/accomodations/20
+    GET /profiles/1/accomodations/1
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
@@ -373,18 +403,41 @@ There are some standard error messages:
         "code": 200,
         "data": {
           "about": "",
-          "additionalInformation": "",
-          "address": "",
+          "additionalInformation": "It has a nice big garden in the rear part and two floors.",
+          "address": "Avinguda Sarria",
           "bestDays": "A",
           "blankets": false,
           "bus": false,
-          "capacity": "2",
+          "capacity": "1",
           "city": {
-            "city": "Buenos Aires",
-            "country": "Argentina",
-            "region": "Bs As"
+            "country": "England",
+            "lat": "0E-9",
+            "lon": "0E-9",
+            "name": "London",
+            "region": "NoName"
           },
-          ...
+          "dateEnd": "2012-11-29",
+          "dateStart": "2012-11-28",
+          "iHavePet": false,
+          "id": 1,
+          "isRequest": false,
+          "liveCenter": false,
+          "name": "My palace",
+          "number": "66",
+          "others": false,
+          "petsAllowed": false,
+          "postalCode": "AZ34",
+          "preferredFemale": true,
+          "preferredMale": true,
+          "resourceUri": "/api/v1/profiles/1/accomodations/1",
+          "sharingOnce": false,
+          "smoking": "N",
+          "status": "Y",
+          "train": false,
+          "tram": false,
+          "underground": false,
+          "wheelchair": false,
+          "whereSleepingType": "C"
         },
         "msg": "Accommodation retrieved successfully.",
         "status": true
@@ -392,9 +445,9 @@ There are some standard error messages:
    * NO 
      * 200 OK {"code": 413, "msg":"Unauthorized", "status": false}
 
-### View an accommodation of another user (Eze):
+### Preview one accommodation (mine or another user's) (Eze):
  * Request:
-    GET /profiles/17/accomodations/20
+    GET /profiles/2/accomodations/1/preview
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
  * Response:
    * 200 OK
@@ -402,18 +455,37 @@ There are some standard error messages:
         "code": 200,
         "data": {
           "about": "",
-          "additionalInformation": "",
-          "address": "",
           "bestDays": "A",
           "blankets": false,
           "bus": false,
-          "capacity": "2",
+          "capacity": "1",
           "city": {
-            "city": "Madrid",
-            "country": "Spain",
-            "region": "Madrid"
+            "country": "England",
+            "lat": "0E-9",
+            "lon": "0E-9",
+            "name": "London",
+            "region": "NoName"
           },
-          ...
+          "dateEnd": "2012-11-29",
+          "dateStart": "2012-11-28",
+          "iHavePet": false,
+          "id": 1,
+          "isRequest": false,
+          "liveCenter": false,
+          "name": "My palace",
+          "others": false,
+          "petsAllowed": false,
+          "preferredFemale": true,
+          "preferredMale": true,
+          "resourceUri": "/api/v1/profiles/1/accomodations/1/preview",
+          "sharingOnce": false,
+          "smoking": "N",
+          "status": "Y",
+          "train": false,
+          "tram": false,
+          "underground": false,
+          "wheelchair": false,
+          "whereSleepingType": "C"
         },
         "msg": "Accommodation retrieved successfully.",
         "status": true
@@ -424,7 +496,7 @@ There are some standard error messages:
 
 ### Create Accommodation (Eze):
  * Request:
-    POST /profiles/me/accomodations/
+    POST /profiles/me/accomodations/list
     {"X-AUTH-TOKEN":"c442e716a18f780212b378810b9cd52b4e3f1774ba79dd19b33a30d3b0efcc032b3669e3da30658c"} 
     {
       "name": "Eze's house",

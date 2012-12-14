@@ -15,7 +15,7 @@ from peoplewings.apps.feedback.api import FeedbackResource
 from peoplewings.apps.cropper.api import CroppedResource
 from peoplewings.apps.notifications.api import NotificationsListResource, RequestsInvitesListResource, MessagesListResource, FriendshipListResource, AccomodationRequestThreadResource
 
-
+#Here we registre the resources...
 admin.autodiscover()
 
 v1_api=Api(api_name='v1')
