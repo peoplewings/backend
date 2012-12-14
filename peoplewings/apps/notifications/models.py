@@ -20,6 +20,7 @@ class Notifications(models.Model):
     reference = models.CharField(max_length=36, blank=False)
     read = models.BooleanField(default=False)
     kind = models.CharField(max_length=15, null=True)
+    first_sender = models.ForeignKey(UserProfile, related_name='%(class)s_first_sender', on_delete=models.CASCADE, null = True)
 
     def get_subclass(self):
         try:

@@ -56,9 +56,23 @@ class NotificationsListResource(ModelResource):
             prof = UserProfile.objects.get(user = request.user)
         except:
             return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
-        result_dict = dict()        
+        result_dict = dict()     
+        filters = Q(receiver=prof)|Q(sender=prof)
+        for key, value in request.GET.items():
+            if key == 'kind':
+                if value == 'reqinv':
+                    filters = filters & Q(kind='requests')|Q(kind='invites')
+                elif value == 'msg':
+                      filters = filters & Q(kind='messages')
+                elif value == 'friendship':
+                      filters = filters & Q(kind='friends')
+            elif key == 'target':
+                if value == 'received':
+                    filters = filters & ~Q(first_sender = prof)
+                elif value == 'sent':
+                    filters = filters & Q(first_sender = prof)
         try:
-            my_notifications = Notifications.objects.filter(Q(receiver=prof)|Q(sender=prof)).order_by('-created')
+            my_notifications = Notifications.objects.filter(filters).order_by('-created')
             for i in my_notifications:
                 if not i.reference in result_dict:
                     aux = NotificationsList()
