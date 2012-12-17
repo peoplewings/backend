@@ -5,14 +5,14 @@ from peoplewings.apps.notifications.models import USERSTATE_CHOICES, TYPE_CHOICE
 class NotificationsList(object):
     ## Notif specific
     id = models.IntegerField()
-    created = models.CharField() # PASAR A TIMESTAMP!!
+    created = models.BigIntegerField()
     read = models.BooleanField()
     kind = models.CharField()
     ## Request/inv specific
     state = models.CharField(choices = TYPE_CHOICES, default='P')
     flag_direction = models.BooleanField()    
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.BigIntegerField()
+    end_date = models.BigIntegerField()
     num_people = models.IntegerField()
     message = models.TextField()
     ## Msg/req/inv specific
