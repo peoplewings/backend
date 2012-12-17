@@ -62,8 +62,8 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('notification', self.gf('django.db.models.fields.related.ForeignKey')(related_name='accomodationinformation_notification', to=orm['notifications.Notifications'])),
             ('modified', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('start_date', self.gf('django.db.models.fields.DateField')()),
-            ('end_date', self.gf('django.db.models.fields.DateField')()),
+            ('start_date', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
+            ('end_date', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
             ('transport', self.gf('django.db.models.fields.CharField')(max_length=50)),
             ('num_people', self.gf('django.db.models.fields.IntegerField')(default=1)),
         ))
@@ -161,12 +161,12 @@ class Migration(SchemaMigration):
         },
         'notifications.accomodationinformation': {
             'Meta': {'object_name': 'AccomodationInformation'},
-            'end_date': ('django.db.models.fields.DateField', [], {}),
+            'end_date': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'notification': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'accomodationinformation_notification'", 'to': "orm['notifications.Notifications']"}),
             'num_people': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'start_date': ('django.db.models.fields.DateField', [], {}),
+            'start_date': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'transport': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         'notifications.friendship': {
