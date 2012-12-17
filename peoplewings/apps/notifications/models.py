@@ -84,8 +84,8 @@ class AdditionalInformation(models.Model):
 
 # Accomodation class
 class AccomodationInformation(AdditionalInformation):
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.BigIntegerField(default=0)
+    end_date = models.BigIntegerField(default=0)
     transport = models.CharField(max_length = 50)
     num_people = models.IntegerField(default=1)
 

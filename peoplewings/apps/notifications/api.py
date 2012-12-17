@@ -77,7 +77,7 @@ class NotificationsListResource(ModelResource):
                 for k in list_value:
                      filter_search = filter_search | Q(receiver__user__first_name__icontains = k) | Q(receiver__user__last_name__icontains = k) 
                      filter_search = filter_search | Q(requests__private_message__icontains= k) | Q(invites__private_message__icontains= k) | Q(messages__private_message__icontains= k) | Q(friendship__message__icontains= k)
-                     #filter_search = filter_search | Q()
+                     filter_search = filter_search | Q(requests__wing__name__icontains=k) | Q(invites__wing__name__icontains=k)
                      #filter_search = filter_search | Q(notifications_receiver__= k) | Q(receiver__user__last_name__icontains = k)                 
                 filters = filters & filter_search                           
         try:
@@ -88,7 +88,10 @@ class NotificationsListResource(ModelResource):
                     aux = NotificationsList()
                     aux.id = i.pk
                     aux.created = i.created
-                    aux.read = i.read
+                    if (i.receiver == prof):
+                        aux.read = True
+                    else:
+                        aux.read = i.read
                     aux.kind = i.kind
                     ## Request specific
                     if aux.kind == 'requests':
