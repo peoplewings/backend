@@ -72,12 +72,18 @@ class NotificationsListResource(ModelResource):
                 elif value == 'sent':
                     filters = filters & Q(first_sender = prof)
             elif key == 'search':
-                #busca sobre los campos:
-                #contenido de la notificacion
-                pass
+                list_value = value.split(' ')
+                filter_search = Q()
+                for k in list_value:
+                     filter_search = filter_search | Q(receiver__user__first_name__icontains = k) | Q(receiver__user__last_name__icontains = k) 
+                     filter_search = filter_search | Q(requests__private_message__icontains= k) | Q(invites__private_message__icontains= k) | Q(messages__private_message__icontains= k) | Q(friendship__message__icontains= k)
+                     #filter_search = filter_search | Q()
+                     #filter_search = filter_search | Q(notifications_receiver__= k) | Q(receiver__user__last_name__icontains = k)                 
+                filters = filters & filter_search                           
         try:
             my_notifications = Notifications.objects.filter(filters).order_by('-created')
             for i in my_notifications:
+                print i.__dict__
                 if not i.reference in result_dict:
                     aux = NotificationsList()
                     aux.id = i.pk
@@ -95,7 +101,7 @@ class NotificationsListResource(ModelResource):
                             add_class = additional.get_class_name()                                  
                         aux.message = req.wing.name
                         aux.state = req.state
-                        if i.first_sender == prof.pk:                           
+                        if i.first_sender == prof:                           
                             aux.flag_direction = True
                         else:
                             aux.flag_direction =   False                      
@@ -143,6 +149,7 @@ class NotificationsListResource(ModelResource):
                     aux.verified = False                    
                     aux.location = prof_aux.current_city.stringify()
                     aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
+
                     aux.connected = 'F'
                     ## Add the result                                                                     
                     result_dict[i.reference] = aux          
