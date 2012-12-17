@@ -232,7 +232,8 @@
         "places_lived_in" : "Barcelona, Buenos Aires",
         "places_visited" : "Jerez de la Frontera" ,   
         "places_gonna_go" : "Yerevan",
-        "places_wanna_go" : "New Zealand"
+        "places_wanna_go" : "New Zealand",
+        "last_login" : 1
     }
   },
 {
@@ -272,7 +273,8 @@
         "places_lived_in" : "Barcelona",
         "places_visited" : "Boston, New York"  ,  
         "places_gonna_go" : "London",
-        "places_wanna_go" : "New Zealand"
+        "places_wanna_go" : "New Zealand",
+        "last_login" : 1
     }
   },
 {
@@ -312,7 +314,8 @@
         "places_lived_in" : "Barcelona, Paris",
         "places_visited" : "Morocco"    ,
         "places_gonna_go" : "Estraperlo",
-        "places_wanna_go" : "Seattle (USA)"
+        "places_wanna_go" : "Seattle (USA)",
+        "last_login" : 1
     }
   },
 {
@@ -352,7 +355,8 @@
         "places_lived_in" : "Barcelona, Bristol",
         "places_visited" : "London"    ,
         "places_gonna_go" : "Home",
-        "places_wanna_go" : "Tailand"
+        "places_wanna_go" : "Tailand",
+        "last_login" : 1
     }
   },
 {
@@ -392,7 +396,8 @@
         "places_lived_in" : "Barcelona, Rayidh",
         "places_visited" : "Afganistan",
         "places_gonna_go" : "San Francisco",
-        "places_wanna_go" : "Eastern countrys, Tailand"
+        "places_wanna_go" : "Eastern countrys, Tailand",
+        "last_login" : 1
     }
   },
 {

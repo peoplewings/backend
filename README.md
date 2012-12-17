@@ -808,3 +808,168 @@ There are some standard error messages:
       }
 
     * NO 
+
+### View all notifications
+  * Request:
+    GET /notifications
+
+  * Response
+    * 200 OK {"code": 200, "data": [NotificationObject1, NotificationObject2, NotificationObject3,..., NotificationObjectn], "status":true} 
+      where NotificationObject:
+      {
+			"age": 25,
+			"created": 1349373600,
+			"endDate": "2012-12-21",
+			"kind": "requests",
+			"location": "Barcelona, Catalonia, Spain",
+			"medAvatar": "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
+			"numPeople": 1,
+			"privateMessage": "Can you give me accomodation in Berlin?",
+			"read": true,
+			"receiver": 1,
+			"reference": "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
+			"sender": 2,
+			"startDate": "2012-12-19",
+			"state": "M",
+			"title": "Need accomodation in Berlin",
+			"verified": false
+		}
+
+
+### View req/inv notifications
+  * Request:
+
+  * Response
+    * 200 OK
+
+
+### View message notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View friend inv/req notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View one thread friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View number of new notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### View new notifications
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Create one friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one request notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one invite notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one message notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+### Delete one friend notification
+  * Request:
+    
+
+  * Response
+    * 200 OK
+
+
+
+

@@ -9,51 +9,88 @@ TYPE_CHOICES = (
         ('A', 'Accepted'),
         ('P', 'Pending'),
         ('D', 'Denyed'),
+        ('M', 'Maybe'),
+    )
+
+USERSTATE_CHOICES = (
+        ('O', 'Online'),
+        ('F', 'Offline'),
     )
 
 # Notifications class
 class Notifications(models.Model):
     receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)
-    sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)
-    title = models.CharField(max_length = 100, blank=False)
-    created = models.DateTimeField(auto_now_add=True)
+    sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
+    created = models.BigIntegerField(default=0)
     reference = models.CharField(max_length=36, blank=False)
+    read = models.BooleanField(default=False)
+    kind = models.CharField(max_length=15, null=True)
+    first_sender = models.ForeignKey(UserProfile, related_name='%(class)s_first_sender', on_delete=models.CASCADE, null = True)
+
+    def get_subclass(self):
+        try:
+            self.accomodationinformation_notification
+            return self.accomodationinformation_notification
+        except:
+            pass
+        return None
 
 # Request class
 class Requests(Notifications):    
-    num_people = models.IntegerField(default=1)
-    read = models.BooleanField(default=False)   
+    title = models.CharField(max_length = 100, blank=False)
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
     public_message = models.TextField(blank=True)
     private_message = models.TextField(blank=True)
     make_public = models.BooleanField(default=False)
     wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
+    def save(self):
+        self.kind = 'requests'
+        super(Requests, self).save()
+
 # Invite class
 class Invites(Notifications):
-    num_people = models.IntegerField(default=1)
-    read = models.BooleanField(default=False)    
+    title = models.CharField(max_length = 100, blank=False)
     state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
     private_message = models.TextField(blank=True)
     wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
+    def save(self):
+        self.kind = 'invites'
+        super(Invites, self).save()
+
 # Messages class
 class Messages(Notifications): 
     private_message = models.TextField(blank=True)
-    read = models.BooleanField(default=False)
 
-# AditionalInformation class
-class AditionalInformation(models.Model):
+    def save(self):
+        self.kind = 'messages'
+        super(Messages, self).save()
+
+# Friendship class
+class Friendship(Notifications):
+    message = models.TextField(blank=True)
+
+    def save(self):
+        self.kind = 'friendship'
+        super(Friendship, self).save()
+
+# AdditionalInformation class
+class AdditionalInformation(models.Model):
     notification = models.ForeignKey(Notifications, related_name = '%(class)s_notification', on_delete=models.CASCADE)
+    modified = models.BooleanField(default=False)
     class Meta:
-        abstract = True
+        abstract = True        
 
 # Accomodation class
-class AccomodationInformation(AditionalInformation):
-    title = models.CharField(max_length = 100, blank=False)
+class AccomodationInformation(AdditionalInformation):
     start_date = models.DateField()
     end_date = models.DateField()
     transport = models.CharField(max_length = 50)
+    num_people = models.IntegerField(default=1)
+
+    def get_class_name(self):
+        return 'accomodation'
 
 # NotificationsAlarm class
 # This class will be used as a fast access class to see if user has new notifications

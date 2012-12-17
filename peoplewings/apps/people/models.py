@@ -134,6 +134,12 @@ class UserProfile(models.Model):
         if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
         return age
 
+    def get_age(self):
+        today = date.today()
+        self.age = today.year - self.birthday.year
+        if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): self.age -= 1
+        return self.age
+
 class Relationship(models.Model):    
     sender = models.ForeignKey('UserProfile', related_name='sender')
     receiver = models.ForeignKey('UserProfile', related_name='receiver')
