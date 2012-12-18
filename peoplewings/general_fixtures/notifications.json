@@ -77,6 +77,45 @@
         "first_sender" : 2
     }
   },
+    {
+    "model": "notifications.Notifications",
+    "pk": 7,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "created" : "1349383600",
+        "reference" : "dd1cdacc-e747-43dc-a766-d838e1f6eee5",
+        "read" : true,
+        "kind" : "messages",
+        "first_sender" : 1
+    }
+  },
+    {
+    "model": "notifications.Notifications",
+    "pk": 8,
+    "fields": {
+        "receiver" : 1,
+        "sender" : 2,
+        "created" : "1349393600",
+        "reference" : "dd1cdacc-e747-43dc-a766-d838e1f6eee5",
+        "read" : false,
+        "kind" : "messages",
+        "first_sender" : 1
+    }
+  },
+    {
+    "model": "notifications.Notifications",
+    "pk": 9,
+    "fields": {
+        "receiver" : 3,
+        "sender" : 2,
+        "created" : "1349393500",
+        "reference" : "c7cdda55-b345-46d6-93e1-ba1cf5e4de02",
+        "read" : false,
+        "kind" : "messages",
+        "first_sender" : 2
+    }
+  },
 {
     "model": "notifications.Requests",
     "pk": 1,
@@ -147,6 +186,27 @@
         "private_message" : "Need to check it first. Tell u ASAP",
         "make_public" : false,
         "wing" : 1
+    }
+  },
+      {
+    "model": "notifications.Messages",
+    "pk": 7,
+    "fields": {
+        "private_message": "Fuckin bastard. Stick your fuckin flag up your godamn ass!"
+    }
+  },
+    {
+    "model": "notifications.Messages",
+    "pk": 8,
+    "fields": {
+        "private_message": "Chill out asshole!"
+    }
+  },
+    {
+    "model": "notifications.Messages",
+    "pk": 9,
+    "fields": {
+        "private_message": "Wanna report that bitch, can you help me?"
     }
   },
 {

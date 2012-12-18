@@ -31,8 +31,9 @@ class NotificationsList(object):
     
     def jsonable(self):
         res = dict()
-        for key, value in self.__dict__.items():            
-            res[key] = value
+        for key, value in self.__dict__.items():   
+            if value is not None:         
+                res[key] = value
         return res
 
     def search(self, key):
