@@ -43,9 +43,6 @@ v1_api.register(RelationshipResource())
 v1_api.register(CroppedResource())
 v1_api.register(ReferenceResource())
 v1_api.register(NotificationsListResource())
-v1_api.register(RequestsInvitesListResource())
-v1_api.register(MessagesListResource())
-v1_api.register(FriendshipListResource())
 v1_api.register(AccomodationRequestThreadResource())
 
 urlpatterns = patterns('',
