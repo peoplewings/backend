@@ -16,6 +16,7 @@ from peoplewings.apps.registration.exceptions import NotActive, AuthFail, BadPar
 from django.contrib.auth.models import User
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.registration.models import *
+from django.conf import settings
 
 
 def activate(request, backend,
@@ -87,8 +88,11 @@ def api_token_is_authenticated(bundle, **kwargs):
     ##Check if the user exists
     token = bundle.META.get("HTTP_X_AUTH_TOKEN")
     #apitoken = ApiToken.objects.get(token = token, last > datetime.datetime.utcnow().replace(tzinfo=utc) + 3600)
-    try:    
-        apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=3600)))
+    try: 
+        if (settings.LOGIN_TIME == 0):
+            apitoken = ApiToken.objects.get(token = token)
+        else:
+            apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))        
         apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)
         apitoken.save()
         user = User.objects.get(pk=apitoken.user_id)
