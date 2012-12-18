@@ -4,35 +4,42 @@ from peoplewings.apps.notifications.models import USERSTATE_CHOICES, TYPE_CHOICE
 
 class NotificationsList(object):
     ## Notif specific
-    id = models.IntegerField()
-    created = models.BigIntegerField()
-    read = models.BooleanField()
-    kind = models.CharField()
-    ## Request/inv specific
-    state = models.CharField(choices = TYPE_CHOICES, default='P')
-    flag_direction = models.BooleanField()
-    start_date = models.BigIntegerField()
-    end_date = models.BigIntegerField()
-    num_people = models.IntegerField()
-    message = models.TextField()
-    ## Msg/req/inv specific
-    content = models.TextField()
-    #Profile specific
-    interlocutor_id = models.CharField()
-    name = models.CharField()
-    avatar =  models.CharField()
-    age = models.IntegerField()
-    verified = models.BooleanField()
-    location = models.TextField()
-    connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F')
-    ## URLs
-    thread_url = models.CharField()
+    def __init__(self):
+        self.id = None
+        self.created = None
+        self.read = None
+        self.kind = None
+        ## Request/inv specific
+        self.state = None
+        self.flag_direction = None
+        self.start_date = None
+        self.end_date = None
+        self.num_people = None
+        self.message = None
+        ## Msg/req/inv specific
+        self.content = None
+        #Profile specific
+        self.interlocutor_id = None
+        self.name = None
+        self.avatar =  None
+        self.age = None
+        self.verified = None
+        self.location = None
+        self.connected = None
+        ## URLs
+        self.thread_url = None
     
     def jsonable(self):
         res = dict()
         for key, value in self.__dict__.items():            
             res[key] = value
         return res
+
+    def search(self, key):
+        if (self.name is not None and key in self.name) or (self.message is not None and key in self.message) or (self.content is not None and key in self.content):
+            return True
+        return False
+
 
 class Thread(object):
     #Thread specific

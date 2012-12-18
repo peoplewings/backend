@@ -64,6 +64,19 @@
         "first_sender" : 2
     }
   },
+  {
+    "model": "notifications.Notifications",
+    "pk": 6,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "created" : "1349383600",
+        "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
+        "read" : false,
+        "kind" : "requests",
+        "first_sender" : 2
+    }
+  },
 {
     "model": "notifications.Requests",
     "pk": 1,
@@ -117,9 +130,21 @@
     "pk": 5,
     "fields": {
         "title" : "Need accomodation in Berlin",
-        "state" : "M",
+        "state" : "P",
         "public_message" : "",
         "private_message" : "Can you give me accomodation in Berlin?",
+        "make_public" : false,
+        "wing" : 1
+    }
+  },
+  {
+    "model": "notifications.Requests",
+    "pk": 6,
+    "fields": {
+        "title" : "Need accomodation in Berlin",
+        "state" : "M",
+        "public_message" : "",
+        "private_message" : "Need to check it first. Tell u ASAP",
         "make_public" : false,
         "wing" : 1
     }
@@ -177,6 +202,18 @@
     "pk": 5,
     "fields": {
         "notification" : 5,
+        "modified" : false,
+        "start_date" : 1355871600,
+    "end_date" : 1356044400,
+    "transport" : "Plane",
+    "num_people" : 1
+    }
+  },
+  {
+    "model": "notifications.AccomodationInformation",
+    "pk": 6,
+    "fields": {
+        "notification" : 6,
         "modified" : false,
         "start_date" : 1355871600,
     "end_date" : 1356044400,
