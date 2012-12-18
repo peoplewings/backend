@@ -147,7 +147,7 @@ class NotificationsListResource(ModelResource):
                         ## YOU are the receiver. Need the sender info  
                         prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
                     aux.interlocutor_id = prof_aux.pk          
-                    aux.med_avatar =  prof_aux.medium_avatar
+                    aux.avatar =  prof_aux.thumb_avatar
                     aux.age = prof_aux.get_age()
                     aux.verified = False                    
                     aux.location = prof_aux.current_city.stringify()

@@ -10,7 +10,7 @@ class NotificationsList(object):
     kind = models.CharField()
     ## Request/inv specific
     state = models.CharField(choices = TYPE_CHOICES, default='P')
-    flag_direction = models.BooleanField()    
+    flag_direction = models.BooleanField()
     start_date = models.BigIntegerField()
     end_date = models.BigIntegerField()
     num_people = models.IntegerField()
@@ -20,11 +20,11 @@ class NotificationsList(object):
     #Profile specific
     interlocutor_id = models.CharField()
     name = models.CharField()
-    med_avatar =  models.CharField()
+    avatar =  models.CharField()
     age = models.IntegerField()
     verified = models.BooleanField()
     location = models.TextField()
-    connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F');
+    connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F')
     ## URLs
     thread_url = models.CharField()
     
@@ -33,6 +33,26 @@ class NotificationsList(object):
         for key, value in self.__dict__.items():            
             res[key] = value
         return res
+
+class Thread(object):
+    #Thread specific
+    id = models.IntegerField()
+    created = models.BigIntegerField()
+    read = models.BooleanField()
+    kind = models.CharField()
+    #Profile specific
+    interlocutor_id = models.CharField()
+    name = models.CharField()
+    med_avatar =  models.CharField()
+    small_avatar = models.CharField()
+    age = models.IntegerField()
+    verified = models.BooleanField()
+    location = models.TextField()
+    connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F')
+    friends = models.IntegerField()
+    references = models.IntegerField()
+    #Req/invite specific
+
 
 class AccomodationRequestThread(object):
     ## Notif specific
