@@ -75,9 +75,9 @@ class NotificationsListResource(ModelResource):
 					filters = filters & ~Q(first_sender = prof)
 				elif value == 'sent':
 					filters = filters & Q(first_sender = prof)
-			#elif key == 'state' and [o for o ]:
-
-		
+			elif key == 'state' and 'kind' in [k for k, v in request.GET.items()]:
+				#Filtro por estado de la request
+				filters = filters & Q(requests__state = value)
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:
