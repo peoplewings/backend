@@ -93,7 +93,7 @@ class NotificationsListResource(ModelResource):
 				## Request specific
 				if aux.kind == 'requests':
 					req = Requests.objects.get(pk = i.pk)
-					additional_list = i.get_subclass().all()
+					additional_list = i.get_subclass().all()		
 					for additional in additional_list:
 						aux.start_date = additional.start_date
 						aux.end_date = additional.end_date

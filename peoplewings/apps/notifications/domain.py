@@ -38,7 +38,7 @@ class NotificationsList(object):
         return res
 
     def search(self, key):
-        if (self.name is not None and key in self.name) or (self.message is not None and key in self.message) or (self.content is not None and key in self.content):
+        if (self.name is not None and key.lower() in self.name.lower()) or (self.message is not None and key.lower() in self.message.lower()) or (self.content is not None and key.lower() in self.content.lower()):
             return True
         return False
 

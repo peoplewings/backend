@@ -116,6 +116,123 @@
         "first_sender" : 2
     }
   },
+      {
+    "model": "notifications.Notifications",
+    "pk": 10,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 4,
+        "created" : "1355735949",
+        "reference" : "7f7b9856-7ab4-4c1b-92ba-aed21e809259",
+        "read" : false,
+        "kind" : "requests",
+        "first_sender" : 4
+    }
+  },
+        {
+    "model": "notifications.Notifications",
+    "pk": 11,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 5,
+        "created" : "1355736129",
+        "reference" : "4751ef47-6189-4c6d-9921-ccd62d13c2c9",
+        "read" : true,
+        "kind" : "requests",
+        "first_sender" : 5
+    }
+  },
+          {
+    "model": "notifications.Notifications",
+    "pk": 12,
+    "fields": {
+        "receiver" : 1,
+        "sender" : 2,
+        "created" : "1355817609",
+        "reference" : "07b07ef2-b046-4235-8a06-ebfd546b6080",
+        "read" : true,
+        "kind" : "requests",
+        "first_sender" : 2
+    }
+  },
+  {
+    "model": "notifications.Notifications",
+    "pk": 13,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 1,
+        "created" : "1355832009",
+        "reference" : "07b07ef2-b046-4235-8a06-ebfd546b6080",
+        "read" : false,
+        "kind" : "requests",
+        "first_sender" : 2
+    }
+  },
+    {
+    "model": "notifications.Notifications",
+    "pk": 14,
+    "fields": {
+        "receiver" : 4,
+        "sender" : 2,
+        "created" : "1355900409",
+        "reference" : "4f111108-12be-4afa-893a-cf9860202350",
+        "read" : true,
+        "kind" : "requests",
+        "first_sender" : 2
+    }
+  },
+      {
+    "model": "notifications.Notifications",
+    "pk": 15,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 4,
+        "created" : "1355907609",
+        "reference" : "4f111108-12be-4afa-893a-cf9860202350",
+        "read" : true,
+        "kind" : "requests",
+        "first_sender" : 2
+    }
+  },
+        {
+    "model": "notifications.Notifications",
+    "pk": 16,
+    "fields": {
+        "receiver" : 5,
+        "sender" : 2,
+        "created" : "1355738485",
+        "reference" : "74d146ca-5aa4-4ecd-a82b-c6ddfe5242bf",
+        "read" : false,
+        "kind" : "invites",
+        "first_sender" : 2
+    }
+  },
+          {
+    "model": "notifications.Notifications",
+    "pk": 17,
+    "fields": {
+        "receiver" : 3,
+        "sender" : 2,
+        "created" : "1355824885",
+        "reference" : "b7ed5e81-c09b-44a6-a414-f59785ec0456",
+        "read" : true,
+        "kind" : "invites",
+        "first_sender" : 2
+    }
+  },
+          {
+    "model": "notifications.Notifications",
+    "pk": 18,
+    "fields": {
+        "receiver" : 2,
+        "sender" : 3,
+        "created" : "1355911285",
+        "reference" : "b7ed5e81-c09b-44a6-a414-f59785ec0456",
+        "read" : false,
+        "kind" : "invites",
+        "first_sender" : 2
+    }
+  },
 {
     "model": "notifications.Requests",
     "pk": 1,
@@ -186,6 +303,111 @@
         "private_message" : "Need to check it first. Tell u ASAP",
         "make_public" : false,
         "wing" : 1
+    }
+  },
+    {
+    "model": "notifications.Requests",
+    "pk": 10,
+    "fields": {
+        "title" : "Do you have some spare, m8?",
+        "state" : "P",
+        "public_message" : "",
+        "private_message" : "Need a room in Barcelona, in the center if possible",
+        "make_public" : false,
+        "wing" : 2
+    }
+  },
+      {
+    "model": "notifications.Requests",
+    "pk": 11,
+    "fields": {
+        "title" : "I dont wanna die...",
+        "state" : "P",
+        "public_message" : "",
+        "private_message" : "I'm cold. Need a warm bed.",
+        "make_public" : false,
+        "wing" : 2
+    }
+  },
+        {
+    "model": "notifications.Requests",
+    "pk": 12,
+    "fields": {
+        "title" : "Need a bed in Barcelona",
+        "state" : "A",
+        "public_message" : "",
+        "private_message" : "Hey Eze, there's a party in my current house.. Can I come over your place?",
+        "make_public" : false,
+        "wing" : 1
+    }
+  },
+          {
+    "model": "notifications.Requests",
+    "pk": 13,
+    "fields": {
+        "title" : "Need a bed in Barcelona",
+        "state" : "A",
+        "public_message" : "",
+        "private_message" : "Of course, we could talk about Git and branches!",
+        "make_public" : false,
+        "wing" : 1
+    }
+  },
+            {
+    "model": "notifications.Requests",
+    "pk": 14,
+    "fields": {
+        "title" : "Need a bed in the posh side of Barcelona",
+        "state" : "D",
+        "public_message" : "",
+        "private_message" : "Can you give me accomodation in the posh side?",
+        "make_public" : false,
+        "wing" : 3
+    }
+  },
+              {
+    "model": "notifications.Requests",
+    "pk": 15,
+    "fields": {
+        "title" : "Need a bed in the posh side of Barcelona",
+        "state" : "D",
+        "public_message" : "",
+        "private_message" : "You are scum! GET OUT!",
+        "make_public" : false,
+        "wing" : 3
+    }
+  },
+                {
+    "model": "notifications.Invites",
+    "pk": 16,
+    "fields": {
+        "title" : "Hey Pau! Wanna come to my place",
+        "state" : "P",
+        "private_message" : "So lonelyy, so lonelyyy xDDD",
+        "wing" : "2"
+
+    }
+  },
+                  {
+    "model": "notifications.Invites",
+    "pk": 17,
+    "fields": {
+        "title" : "Hey, I have a spare room",
+        "state" : "M",
+        "private_message" : "I see you are really british",
+        "wing" : "2"
+
+    }
+  },
+                    {
+    "model": "notifications.Invites",
+    "pk": 18,
+    "fields": {
+        "title" : "Hey, I have a spare room",
+        "state" : "M",
+        "private_message" : "I even eat fish&chips!",
+        "wing" : "2"
+
     }
   },
       {
@@ -278,6 +500,114 @@
         "start_date" : 1355871600,
     "end_date" : 1356044400,
     "transport" : "Plane",
+    "num_people" : 1
+    }
+  },
+  {
+    "model": "notifications.AccomodationInformation",
+    "pk": 7,
+    "fields": {
+        "notification" : 10,
+        "modified" : false,
+        "start_date" : 1356393609,
+    "end_date" : 1356652809,
+    "transport" : "Plane",
+    "num_people" : 2
+    }
+  },
+    {
+    "model": "notifications.AccomodationInformation",
+    "pk": 8,
+    "fields": {
+        "notification" : 11,
+        "modified" : false,
+        "start_date" : 1356393609,
+    "end_date" : 1356739209,
+    "transport" : "Plane",
+    "num_people" : 2
+    }
+  },
+  {
+    "model": "notifications.AccomodationInformation",
+    "pk": 12,
+    "fields": {
+        "notification" : 12,
+        "modified" : false,
+        "start_date" : 1355961609,
+    "end_date" : 1356048009,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+    {
+    "model": "notifications.AccomodationInformation",
+    "pk": 9,
+    "fields": {
+        "notification" : 13,
+        "modified" : false,
+        "start_date" : 1355961609,
+    "end_date" : 1356048009,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+    {
+    "model": "notifications.AccomodationInformation",
+    "pk": 10,
+    "fields": {
+        "notification" : 14,
+        "modified" : false,
+        "start_date" : 1356134409,
+    "end_date" : 1356220809,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+      {
+    "model": "notifications.AccomodationInformation",
+    "pk": 11,
+    "fields": {
+        "notification" : 15,
+        "modified" : false,
+        "start_date" : 1356134409,
+    "end_date" : 1356220809,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+      {
+    "model": "notifications.AccomodationInformation",
+    "pk": 12,
+    "fields": {
+        "notification" : 16,
+        "modified" : false,
+        "start_date" : 1355911285,
+    "end_date" : 1356084085,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+        {
+    "model": "notifications.AccomodationInformation",
+    "pk": 13,
+    "fields": {
+        "notification" : 17,
+        "modified" : false,
+        "start_date" : 1356087685,
+    "end_date" : 1356174085,
+    "transport" : "Bus",
+    "num_people" : 1
+    }
+  },
+          {
+    "model": "notifications.AccomodationInformation",
+    "pk": 14,
+    "fields": {
+        "notification" : 18,
+        "modified" : false,
+        "start_date" : 1356087685,
+    "end_date" : 1356174085,
+    "transport" : "Bus",
     "num_people" : 1
     }
   }
