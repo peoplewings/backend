@@ -114,5 +114,42 @@
         "city" : 1,
         "public_transport" : [2,3,4,5]
     }
+  },
+    {
+    "model": "wings.Wing",
+    "pk": 3,
+    "fields": {
+        "author" : 4,
+        "name" : "Victribell pitzza house",
+        "status" : "Y",
+        "date_start" : null,
+        "date_end" : null,
+        "best_days" : "W",
+        "is_request" : false
+    }
+  },
+   {
+    "model": "wings.Accomodation",
+    "pk": 3,
+    "fields": {
+        "sharing_once" : false,
+        "capacity" : 2,
+        "preferred_male" : false,
+        "preferred_female" : true,
+        "wheelchair" : true,
+        "where_sleeping_type" : "P",
+        "smoking" : "S",
+        "i_have_pet" : false,
+        "pets_allowed" : false,
+        "blankets" : true,
+        "live_center" : false,
+        "about" : "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.",
+        "address" : "Mandri",
+        "number" : 12,
+        "additional_information" : "The house has a nice fuck you" ,  
+        "postal_code" : "08028",
+        "city" : 1,
+        "public_transport" : [2,3,4,5]
+    }
   }
 ]

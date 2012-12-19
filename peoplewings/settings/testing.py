@@ -52,12 +52,13 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
-    #'peoplewings.apps.notifications',
+    'peoplewings.apps.notifications',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
 #SITE
 SITE = 'http://peoplewings-frontend.herokuapp.com'
+BACKEND_SITE = 'http://peoplewings-backend.herokuapp.com/api/v1/'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -112,3 +113,4 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
+LOGIN_TIME = 0

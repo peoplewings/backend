@@ -66,6 +66,10 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 
+#SITE
+SITE = 'http://peoplewings.herokuapp.com'
+BACKEND_SITE = 'http://peoplewings-backend-stable.herokuapp.com/api/v1/'
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
@@ -127,3 +131,4 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
+LOGIN_TIME = 0

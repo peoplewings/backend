@@ -56,6 +56,7 @@ INSTALLED_APPS = (
 )
 
 SITE = 'http://peoplewings-frontend.herokuapp.com'
+BACKEND_SITE = 'http://0.0.0.0:5000/api/v1/'
 
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
@@ -111,3 +112,4 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
+LOGIN_TIME = 0
