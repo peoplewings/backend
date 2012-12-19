@@ -71,7 +71,8 @@ class NotificationsListResource(ModelResource):
 		return filters
 
 	def search(self, request, initial_dict):
-		result_dict = initial_dict.copy()
+		result_dict = []
+		result_dict.extend(initial_dict)
 		for key, value in request.GET.items():
 			if key == 'search':
 				list_value = value.split(' ')
@@ -84,7 +85,8 @@ class NotificationsListResource(ModelResource):
 		return result_dict
 
 	def order_by(self, request, initial_dict):
-		result_dict = initial_dict.copy()
+		result_dict = []
+		result_dict.extend(initial_dict)
 		for key, value in request.GET.items():			
 			if key == 'order':
 				if  value == 'date':
