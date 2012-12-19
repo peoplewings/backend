@@ -51,17 +51,7 @@ class NotificationsListResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationslist'               
 
-	def get_list(self, request, **kwargs):
-		## We are doin it the hard way
-		try:
-			prof = UserProfile.objects.get(user = request.user)
-		except:
-			return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
-
-		result_dict = []     
-		filters = Q(receiver=prof)|Q(sender=prof)
-		order_by = '-created'
-
+	def filter_get(self, request, filters):
 		for key, value in request.GET.items():
 			if key == 'kind':
 				if value == 'reqinv':
@@ -78,6 +68,49 @@ class NotificationsListResource(ModelResource):
 			elif key == 'state' and 'kind' in [k for k, v in request.GET.items()]:
 				#Filtro por estado de la request
 				filters = filters & Q(requests__state = value)
+		return filters
+
+	def search(self, request, initial_dict):
+		result_dict = initial_dict.copy()
+		for key, value in request.GET.items():
+			if key == 'search':
+				list_value = value.split(' ')
+				search_list = []
+				for k in list_value:
+					aux_dict_small = [o.thread_url for o in result_dict if o.search(k)]
+					aux_dict_extended = [o for o in result_dict if o.thread_url in aux_dict_small]
+					search_list += aux_dict_extended
+				return search_list
+		return result_dict
+
+	def order_by(self, request, initial_dict):
+		result_dict = initial_dict.copy()
+		for key, value in request.GET.items():			
+			if key == 'order':
+				if  value == 'date':
+					 result_dict = sorted(result_dict, key=attrgetter('created'), reverse=True)
+				elif value == 'interlocutor':                                        
+					result_dict = sorted(result_dict, key=attrgetter('name'), reverse=False)
+				elif value == 'read':
+					result_dict = sorted(result_dict, key=attrgetter('read'), reverse=False)
+				elif value == 'date-start' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
+					result_dict = sorted(result_dict, key=attrgetter('start_date'), reverse=True)
+				elif value == 'type' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
+					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
+		return result_dict
+
+	def get_list(self, request, **kwargs):
+		## We are doin it the hard way
+		try:
+			prof = UserProfile.objects.get(user = request.user)
+		except:
+			return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
+
+		result_dict = []     
+		filters = Q(receiver=prof)|Q(sender=prof)
+		order_by = '-created'
+		filters = self.filter_get(request, filters)
+		
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:
@@ -160,26 +193,9 @@ class NotificationsListResource(ModelResource):
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)   
 		result = []
 		#Here we will apply search filter and order_by
-		for key, value in request.GET.items():
-			if key == 'search':
-				list_value = value.split(' ')
-				search_list = []
-				for k in list_value:
-					aux_dict_small = [o.thread_url for o in result_dict if o.search(k)]
-					aux_dict_extended = [o for o in result_dict if o.thread_url in aux_dict_small]
-					search_list += aux_dict_extended
-				result_dict = search_list
-			elif key == 'order':
-				if  value == 'date':
-					 result_dict = sorted(result_dict, key=attrgetter('created'), reverse=True)
-				elif value == 'interlocutor':                                        
-					result_dict = sorted(result_dict, key=attrgetter('name'), reverse=False)
-				elif value == 'read':
-					result_dict = sorted(result_dict, key=attrgetter('read'), reverse=False)
-				elif value == 'date-start' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
-					result_dict = sorted(result_dict, key=attrgetter('start_date'), reverse=True)
-				elif value == 'type' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
-					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
+		result_dict = self.search(request, result_dict)
+		result_dict = self.order_by(request, result_dict)
+		
 		for o in result_dict:
 			if o.thread_url not in [r.thread_url for r in result]:
 				result.append(o)
