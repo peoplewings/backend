@@ -97,8 +97,9 @@ class NotificationsListResource(ModelResource):
 					for additional in additional_list:
 						aux.start_date = additional.start_date
 						aux.end_date = additional.end_date
-						aux.num_people = additional.num_people   
-						add_class = additional.get_class_name()                                  
+						aux.num_people = additional.num_people 
+						add_class = additional.get_class_name() 
+						aux.wing_type = add_class                             
 					aux.message = req.wing.name
 					aux.state = req.state
 					if i.first_sender == prof:                           
@@ -115,7 +116,8 @@ class NotificationsListResource(ModelResource):
 						aux.start_date = additional.start_date
 						aux.end_date = additional.end_date
 						aux.num_people = additional.num_people  
-						add_class = additional.get_class_name()                                                                        
+						add_class = additional.get_class_name()   
+						aux.wing_type = add_class                                                                            
 					aux.message = req.wing.name
 					aux.state = inv.state   
 					if i.first_sender == prof.pk:
@@ -152,7 +154,6 @@ class NotificationsListResource(ModelResource):
 
 				aux.connected = 'F'
 				## Add the result                                                                     
-				#result_dict.append(dict((k, v) for k, v in aux.__dict__.iteritems()))
 				result_dict.append(aux)                
 		except Exception, e:
 			raise e
@@ -175,11 +176,15 @@ class NotificationsListResource(ModelResource):
 					result_dict = sorted(result_dict, key=attrgetter('name'), reverse=False)
 				elif value == 'read':
 					result_dict = sorted(result_dict, key=attrgetter('read'), reverse=False)
+				elif value == 'date-start' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
+					result_dict = sorted(result_dict, key=attrgetter('start_date'), reverse=True)
+				elif value == 'type' and 'reqinv' in [val for key, val in request.GET.items() if key == 'kind']:
+					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
 		for o in result_dict:
 			if o.thread_url not in [r.thread_url for r in result]:
 				result.append(o)
 		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
-			
+
 		
 	def get_detail(self, request, **kwargs):
 		##DO NOTHING

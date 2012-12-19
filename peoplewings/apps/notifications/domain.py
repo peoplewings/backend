@@ -16,6 +16,7 @@ class NotificationsList(object):
         self.end_date = None
         self.num_people = None
         self.message = None
+        self.wing_type =  None
         ## Msg/req/inv specific
         self.content = None
         #Profile specific
