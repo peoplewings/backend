@@ -33,9 +33,20 @@ from pprint import pprint
 
 import json
 
+class PublicTransportResource(ModelResource):
+    class Meta:
+        object_class = PublicTransport
+        queryset = PublicTransport.objects.all()
+        allowed_methods = ['get']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True
+        validation = FormValidation(form_class=PublicTransportForm)
+
 class AccomodationsResource(ModelResource):
-    #is_anonymous = False
     city = fields.ToOneField(CityResource, 'city', full=True, null=True)
+    #public_transport = fields.ToManyField(PublicTransportResource, 'public_transport', full=True, null=True)
 
     class Meta:
         object_class = Accomodation
@@ -114,7 +125,7 @@ class AccomodationsResource(ModelResource):
         trans = PublicTransport.objects.all()
         a.public_transport = []
         for i in trans:
-            if bundle.data[i.name]:
+            if i.name in bundle.data:
                 a.public_transport.add(i)
         a.save()
 
@@ -303,6 +314,7 @@ class AccomodationsResource(ModelResource):
         if bundle.obj.date_end is not None and type(bundle.obj.date_end) == unicode:
             bundle.obj.date_end = datetime.datetime.strptime(bundle.obj.date_end, format)
         bundle = super(AccomodationsResource, self).full_dehydrate(bundle)
+
         bundle.data['resource_uri'] = str.replace(bundle.data['resource_uri'], 'me', str(bundle.obj.author.id))
         is_preview = bundle.request.path.split('/')[-1] == 'preview'
         if is_preview:

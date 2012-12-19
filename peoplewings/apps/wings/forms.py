@@ -7,7 +7,7 @@ import datetime
 from django.utils.translation import ugettext_lazy as _
 
 from peoplewings.global_vars import *
-from peoplewings.apps.wings.models import Wing, Accomodation
+from peoplewings.apps.wings.models import Wing, Accomodation, PublicTransport
 
 now = datetime.datetime.now()
 
@@ -55,8 +55,10 @@ class WingForm(ModelForm):
       if bloquear:
             self.fields['stat'].widget.attrs['disabled'] = True
 
+class PublicTransportForm(ModelForm):
+    class Meta:
+      model = PublicTransport
 class AccomodationForm(forms.Form):
-
     name = forms.CharField(max_length=max_short_text_len, required=True)
     status = forms.ChoiceField(choices=WINGS_STATUS, required=False)
     date_start = forms.DateField(required=False)
