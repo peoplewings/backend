@@ -143,7 +143,9 @@ class NotificationsListResource(ModelResource):
 					aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
 					## Invite specific               
 				elif aux.kind == 'invites':
-					inv = Invites.objects.get(pk = i.pk)     
+					print i.id					
+					inv = Invites.objects.get(pk = i.pk) 
+					print inv
 					additional_list = i.get_subclass().all()
 					for additional in additional_list:
 						aux.start_date = additional.start_date
@@ -151,7 +153,7 @@ class NotificationsListResource(ModelResource):
 						aux.num_people = additional.num_people  
 						add_class = additional.get_class_name()   
 						aux.wing_type = add_class                                                                            
-					aux.message = req.wing.name
+					aux.message = inv.wing.name
 					aux.state = inv.state   
 					if i.first_sender == prof.pk:
 						 aux.flag_direction = True
