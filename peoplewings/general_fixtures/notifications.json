@@ -384,7 +384,7 @@
         "title" : "Hey Pau! Wanna come to my place",
         "state" : "P",
         "private_message" : "So lonelyy, so lonelyyy xDDD",
-        "wing" : "2"
+        "wing" : 2
 
     }
   },
@@ -395,7 +395,7 @@
         "title" : "Hey, I have a spare room",
         "state" : "M",
         "private_message" : "I see you are really british",
-        "wing" : "2"
+        "wing" : 2
 
     }
   },
@@ -406,7 +406,7 @@
         "title" : "Hey, I have a spare room",
         "state" : "M",
         "private_message" : "I even eat fish&chips!",
-        "wing" : "2"
+        "wing" : 2
 
     }
   },
