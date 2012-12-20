@@ -112,3 +112,9 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
+
+# SSL
+HTTPS_SUPPORT = True
+SECURE_REQUIRED_PATHS = (
+    '/languages/',
+)
