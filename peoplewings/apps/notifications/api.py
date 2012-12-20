@@ -192,7 +192,7 @@ class NotificationsListResource(ModelResource):
             page = paginator.page(num_page)
         except InvalidPage:
             return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in page.object_list], "code":"200"}, response_class = HttpResponse)
 
         
     def get_detail(self, request, **kwargs):
