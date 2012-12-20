@@ -187,7 +187,8 @@ class NotificationsListResource(ModelResource):
             if o.thread_url not in [r.thread_url for r in result]:
                 result.append(o)
         num_page = int(request.GET.get('page', 1))
-        paginator = Paginator(result, 1)
+        page_size=10
+        paginator = Paginator(result, page_size)
         try:
             page = paginator.page(num_page)
         except InvalidPage:
