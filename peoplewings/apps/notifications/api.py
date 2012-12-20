@@ -78,6 +78,9 @@ class NotificationsListResource(ModelResource):
 			elif key == 'state' and 'kind' in [k for k, v in request.GET.items()]:
 				#Filtro por estado de la request
 				filters = filters & Q(requests__state = value)
+
+        num_page = int(request.GET.get('page', 1))
+        
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:
@@ -185,6 +188,12 @@ class NotificationsListResource(ModelResource):
 		for o in result_dict:
 			if o.thread_url not in [r.thread_url for r in result]:
 				result.append(o)
+
+        paginator = Paginator(result, 1)
+        try:
+            page = paginator.page(num_page)
+        except InvalidPage:
+            return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
 		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
 
 		
