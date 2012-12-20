@@ -186,14 +186,17 @@ class NotificationsListResource(ModelResource):
         for o in result_dict:
             if o.thread_url not in [r.thread_url for r in result]:
                 result.append(o)
+        page_size=1
         num_page = int(request.GET.get('page', 1))
-        page_size=10
+        count = len(result)
+        endResult = min(num_page * page_size, count)
+        startResult = min((num_page - 1) * page_size + 1, endResult)
         paginator = Paginator(result, page_size)
         try:
             page = paginator.page(num_page)
         except InvalidPage:
             return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in page.object_list], "code":"200"}, response_class = HttpResponse)
+        return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in page.object_list], "code":200, 'count':count, 'startResult': startResult, 'endResult': endResult}, response_class = HttpResponse)
 
         
     def get_detail(self, request, **kwargs):
