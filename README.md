@@ -504,8 +504,8 @@ There are some standard error messages:
       "dateStart":"2012-11-28",
       "dateEnd":"2012-11-29",
       "address": "Avinguda Sarria",
-      "preferredMale": "True",
-      "preferredFemale": "True",
+      "preferredMale": true,
+      "preferredFemale": true,
       "number":"66",
       "postalCode":"AZ34",
       "city":{"name":"London", "country":"England", "lat":"0.0", "lon":"0.0"}
