@@ -52,7 +52,7 @@ class NotificationsListResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationslist'               
 
-	def filter_get(self, request, filters):
+	def filter_get(self, request, filters, prof):
 		for key, value in request.GET.items():
 			if key == 'kind':
 				if value == 'reqinv':
@@ -112,7 +112,7 @@ class NotificationsListResource(ModelResource):
 		result_dict = []     
 		filters = Q(receiver=prof)|Q(sender=prof)
 		order_by = '-created'
-		filters = self.filter_get(request, filters)
+		filters = self.filter_get(request, filters, prof)
 		
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
