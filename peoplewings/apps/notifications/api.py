@@ -205,7 +205,7 @@ class NotificationsListResource(ModelResource):
 			if o.thread_url not in [r.thread_url for r in result]:
 				result.append(o)
 
-		page_size=50
+		page_size=2
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
 		endResult = min(num_page * page_size, count)
