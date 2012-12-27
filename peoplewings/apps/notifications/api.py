@@ -146,9 +146,7 @@ class NotificationsListResource(ModelResource):
 					aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
 					## Invite specific               
 				elif aux.kind == 'invites':
-					print i.id					
 					inv = Invites.objects.get(pk = i.pk) 
-					print inv
 					additional_list = i.get_subclass().all()
 					for additional in additional_list:
 						aux.start_date = additional.start_date
@@ -211,11 +209,17 @@ class NotificationsListResource(ModelResource):
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
 		paginator = Paginator(result, page_size)
+		
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
 			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)    
-		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in page.object_list], "code":200, 'count':count, 'startResult': startResult, 'endResult': endResult}, response_class = HttpResponse)
+		data = {}
+		data["items"] = [i.jsonable() for i in page.object_list]
+		data["count"] = count
+		data["startResult"] = startResult
+		data["endResult"] = endResult
+		return self.create_response(request, {"status":True, "msg":"OK", "data" : data, "code":200}, response_class = HttpResponse)
 					
   
 	def get_detail(self, request, **kwargs):
