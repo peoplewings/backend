@@ -200,7 +200,6 @@
     "pk": 1,
     "fields": {
         "user" : 1,
-        "age" : 25,
         "pw_state" : "Y",
         "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
         "medium_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
@@ -241,7 +240,6 @@
     "pk": 2,
     "fields": {
         "user" : 2,
-        "age" : 26,
         "pw_state" : "C",
         "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
         "medium_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
@@ -282,7 +280,6 @@
     "pk": 3,
     "fields": {
         "user" : 3,
-        "age" : 27,
         "pw_state" : "M",
         "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
         "medium_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
@@ -323,7 +320,6 @@
     "pk": 4,
     "fields": {
         "user" : 4,
-        "age" : 32,
         "pw_state" : "T",
         "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
         "medium_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
@@ -364,7 +360,6 @@
     "pk": 5,
     "fields": {
         "user" : 5,
-        "age" : 33,
         "pw_state" : "W",
         "avatar" : "http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
         "medium_avatar" : "http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
