@@ -102,7 +102,7 @@ class NotificationsListResource(ModelResource):
 					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
 		return result_dict
 
-	def get_list(self, request, **kwargs):
+	def get_list(self, request, **kwargs):		
 		## We are doin it the hard way
 		try:
 			prof = UserProfile.objects.get(user = request.user)
