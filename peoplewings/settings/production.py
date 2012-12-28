@@ -56,7 +56,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
-SITE = 'http://peoplewings.herokuapp.com'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -68,7 +67,7 @@ SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 
 #SITE
 SITE = 'http://peoplewings.herokuapp.com'
-BACKEND_SITE = 'http://peoplewings-backend-stable.herokuapp.com/api/v1/'
+BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -120,9 +119,9 @@ AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
-S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
+S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'http://peoplewings-backend-stable.herokuapp.com/media/'
+MEDIA_URL = 'https://peoplewings-backend-stable.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
