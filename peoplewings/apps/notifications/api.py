@@ -185,7 +185,8 @@ class NotificationsListResource(ModelResource):
 				aux.avatar =  prof_aux.thumb_avatar
 				aux.age = prof_aux.get_age()
 				aux.verified = False                    
-				aux.location = prof_aux.current_city.stringify()
+				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
+				else: aux.location = "Not specified, not specified, not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
 
 				aux.connected = 'F'
