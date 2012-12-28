@@ -1,6 +1,6 @@
 # Django settings for Peoplewings project.
 # Those settings are for dev enviroment only.
-import os
+import os, sys
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -11,16 +11,27 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'postgres',                      # Or path to database file if using sqlite3.
-        'USER': 'postgres',                      # Not used with sqlite3.
-        'PASSWORD': '1111',                  # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
+TEST = 'test' in sys.argv
+ 
+if TEST:
+    # in-memory SQLite used for testing
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'postgres',                      # Or path to database file if using sqlite3.
+            'USER': 'postgres',                      # Not used with sqlite3.
+            'PASSWORD': '1111',                  # Not used with sqlite3.
+            'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
+        }
     }
-}
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -113,3 +124,4 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
 LOGIN_TIME = 0
+

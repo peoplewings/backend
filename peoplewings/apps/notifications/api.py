@@ -44,7 +44,8 @@ class NotificationsListResource(ModelResource):
 	class Meta:
 		object_class = Notifications
 		queryset = Notifications.objects.all()
-		allowed_methods = ['get']
+		detail_allowed_methods = []
+		list_allowed_methods = ['post', 'get']
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
@@ -146,9 +147,7 @@ class NotificationsListResource(ModelResource):
 					aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
 					## Invite specific               
 				elif aux.kind == 'invites':
-					print i.id					
 					inv = Invites.objects.get(pk = i.pk) 
-					print inv
 					additional_list = i.get_subclass().all()
 					for additional in additional_list:
 						aux.start_date = additional.start_date
@@ -187,7 +186,8 @@ class NotificationsListResource(ModelResource):
 				aux.avatar =  prof_aux.thumb_avatar
 				aux.age = prof_aux.get_age()
 				aux.verified = False                    
-				aux.location = prof_aux.current_city.stringify()
+				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
+				else: aux.location = "Not specified, not specified, not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
 
 				aux.connected = 'F'
@@ -205,285 +205,28 @@ class NotificationsListResource(ModelResource):
 			if o.thread_url not in [r.thread_url for r in result]:
 				result.append(o)
 
-		page_size=50
+		page_size=2
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
 		paginator = Paginator(result, page_size)
+		
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
 			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)    
-		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in page.object_list], "code":200, 'count':count, 'startResult': startResult, 'endResult': endResult}, response_class = HttpResponse)
-					
-  
-	def get_detail(self, request, **kwargs):
-		##DO NOTHING
-		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
-	
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
-				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
-			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
-			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
-
-		return wrapper
-
-
-class AccomodationRequestThreadResource(ModelResource):
-	
-	class Meta:
-		object_class = Requests
-		queryset = Requests.objects.all()
-		allowed_methods = ['get']
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True 
-		resource_name = 'accomodationrequestthread'                    
-
-	def get_detail(self, request, **kwargs):
-		## We are doin it the hard way
-		ref = kwargs['pk']
-		result = []
-		try:
-			thread = Notifications.objects.filter(reference=ref).order_by('created')
-		except:
-			return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
-		for i in thread:
-			aux = AccomodationRequestThread()
-			## Notif specific
-			aux.id  = i.pk
-			aux.sender = i.sender
-			aux.receiver = i.receiver
-			aux.created = i.created
-			aux.reference = i.reference
-			aux.read = i.read
-			aux.kind = i.kind
-			## AccomodationRequest specific
-			try:
-				req = Requests.objects.get(pk = aux.id)
-				additional_list = AccomodationInformation.objects.filter(notification = i)
-			except:
-			   return self.create_response(request, {"status":False, "msg":"Could not load the request", "code":"403"}, response_class = HttpResponse) 
-			aux.wing_name = req.wing.name
-			aux.wing_id = req.wing.pk
-			aux.state = req.state              
-			for additional in additional_list: 
-				aux.start_date = additional.start_date
-				aux.end_date = additional.end_date
-				aux.num_people = additional.num_people
-				aux.transport = additional.transport
-			aux.private_message = req.private_message
-			#Sender specific
-			aux.nameS = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
-			aux.ageS = i.sender.age
-			aux.verifiedS = False
-			aux.locationS = i.sender.current_city.stringify()
-			aux.friendsS = len(i.sender.relationships.filter())
-			aux.referencesS = len(i.sender.references.filter())
-			aux.med_avatarS =  i.sender.medium_avatar
-			aux.small_avatarS = i.sender.thumb_avatar
-			#Receiver specific
-			aux.nameR = '%s %s' % (i.receiver.user.first_name, i.receiver.user.last_name)
-			aux.ageR = i.receiver.age
-			aux.verifiedR = False
-			aux.locationR = i.receiver.current_city.stringify()
-			aux.friendsR = len(i.receiver.relationships.filter())
-			aux.referencesR = len(i.receiver.references.filter())
-			aux.med_avatarR =  i.receiver.medium_avatar
-			aux.small_avatarR = i.receiver.thumb_avatar
-			result.append(aux)
-		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
-			
-		
-	def get_list(self, request, **kwargs):
-		##DO NOTHING
-		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
-	
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
-				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
-			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
-			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
-
-		return wrapper
-
-class InviteRequestThreadResource(ModelResource):
-	
-	class Meta:
-		object_class = Requests
-		queryset = Requests.objects.all()
-		allowed_methods = ['get']
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True 
-		resource_name = 'inviterequestthread'                    
-
-	def get_detail(self, request, **kwargs):
-		## We are doin it the hard way
-		ref = kwargs['pk']
-		result = []
-		try:
-			thread = Notifications.objects.filter(reference=ref).order_by('created')
-		except:
-			return self.create_response(request, {"status":False, "data":"Could not find any thread with that reference id", "code":"403"}, response_class = HttpResponse)
-		for i in thread:
-			aux = AccomodationRequestThread()
-			## Notif specific
-			aux.id  = i.pk
-			aux.sender = i.sender
-			aux.receiver = i.receiver
-			aux.created = i.created
-			aux.reference = i.reference
-			aux.read = i.read
-			aux.kind = i.kind
-			## AccomodationRequest specific
-			try:
-				req = Requests.objects.get(pk = aux.id)
-				additional_list = AccomodationInformation.objects.filter(notification = i)
-			except:
-			   return self.create_response(request, {"status":False, "msg":"Could not load the request", "code":"403"}, response_class = HttpResponse) 
-			aux.wing_name = req.wing.name
-			aux.wing_id = req.wing.pk
-			aux.state = req.state              
-			for additional in additional_list: 
-				aux.start_date = additional.start_date
-				aux.end_date = additional.end_date
-				aux.num_people = additional.num_people
-				aux.transport = additional.transport
-			aux.private_message = req.private_message
-			#Sender specific
-			aux.nameS = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
-			aux.ageS = i.sender.age
-			aux.verifiedS = False
-			aux.locationS = i.sender.current_city.stringify()
-			aux.friendsS = len(i.sender.relationships.filter())
-			aux.referencesS = len(i.sender.references.filter())
-			aux.med_avatarS =  i.sender.medium_avatar
-			aux.small_avatarS = i.sender.thumb_avatar
-			#Receiver specific
-			aux.nameR = '%s %s' % (i.receiver.user.first_name, i.receiver.user.last_name)
-			aux.ageR = i.receiver.age
-			aux.verifiedR = False
-			aux.locationR = i.receiver.current_city.stringify()
-			aux.friendsR = len(i.receiver.relationships.filter())
-			aux.referencesR = len(i.receiver.references.filter())
-			aux.med_avatarR =  i.receiver.medium_avatar
-			aux.small_avatarR = i.receiver.thumb_avatar
-			result.append(aux)
-		return self.create_response(request, {"status":True, "msg":"OK", "data" : [i.jsonable() for i in result], "code":"200"}, response_class = HttpResponse)
-			
-		
-	def get_list(self, request, **kwargs):
-		##DO NOTHING
-		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
-	
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
-				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
-			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
-			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
-
-		return wrapper
-
-class MessagesResource(ModelResource):
-	
-	class Meta:
-		object_class = Notifications
-		queryset = Notifications.objects.all()
-		allowed_methods = ['post']
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True     
-		resource_name = 'messages'
-
+		data = {}
+		data["items"] = [i.jsonable() for i in page.object_list]
+		data["count"] = count
+		data["startResult"] = startResult
+		data["endResult"] = endResult
+		return self.create_response(request, {"status":True, "msg":"OK", "data" : data, "code":200}, response_class = HttpResponse)
+					  	
 
 	def post_list(self, request, **kwargs):
-		
-	def post_detail(self, request, **kwargs):
-		##DO NOTHING
+		##check if the request has the mandatory parameters
+		print request.__dict__
 		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
 	
 	def wrap_view(self, view):
@@ -518,3 +261,6 @@ class MessagesResource(ModelResource):
 				return self._handle_500(request, e)
 
 		return wrapper
+
+
+
