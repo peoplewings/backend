@@ -44,9 +44,9 @@ class Requests(Notifications):
     make_public = models.BooleanField(default=False)
     wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.kind = 'requests'
-        super(Requests, self).save()
+        super(Requests, self).save(*args, **kwargs)
 
 # Invite class
 class Invites(Notifications):
@@ -55,25 +55,25 @@ class Invites(Notifications):
     private_message = models.TextField(blank=True)
     wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.kind = 'invites'
-        super(Invites, self).save()
+        super(Invites, self).save(*args, **kwargs)
 
 # Messages class
 class Messages(Notifications): 
     private_message = models.TextField(blank=True)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.kind = 'messages'
-        super(Messages, self).save()
+        super(Messages, self).save(*args, **kwargs)
 
 # Friendship class
 class Friendship(Notifications):
     message = models.TextField(blank=True)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.kind = 'friendship'
-        super(Friendship, self).save()
+        super(Friendship, self).save(*args, **kwargs)
 
 # AdditionalInformation class
 class AdditionalInformation(models.Model):
