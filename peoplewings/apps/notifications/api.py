@@ -465,3 +465,56 @@ class InviteRequestThreadResource(ModelResource):
 				return self._handle_500(request, e)
 
 		return wrapper
+
+class MessagesResource(ModelResource):
+	
+	class Meta:
+		object_class = Notifications
+		queryset = Notifications.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True     
+		resource_name = 'messages'
+
+
+	def post_list(self, request, **kwargs):
+		
+	def post_detail(self, request, **kwargs):
+		##DO NOTHING
+		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
+	
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)              
+				return response
+			except (BadRequest, fields.ApiFieldError), e:
+				return http.HttpBadRequest(e.args[0])
+			except ValidationError, e:
+				return http.HttpBadRequest(', '.join(e.messages))
+			except Exception, e:
+				if hasattr(e, 'response'):
+					return e.response
+
+				# A real, non-expected exception.
+				# Handle the case where the full traceback is more helpful
+				# than the serialized error.
+				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
+					raise
+
+				# Re-raise the error to get a proper traceback when the error
+				# happend during a test case
+				if request.META.get('SERVER_NAME') == 'testserver':
+					raise
+
+				# Rather than re-raising, we're going to things similar to
+				# what Django does. The difference is returning a serialized
+				# error message.
+				return self._handle_500(request, e)
+
+		return wrapper
