@@ -4,15 +4,22 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
+import string
+import random
+import json
+from datetime import datetime
 
 from django.test import TestCase, Client
-from datetime import datetime
+from django_dynamic_fixture import G
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.notifications.models import Notifications, Messages
 from django.contrib.auth.models import User
+from people.models import UserProfile
+from peoplewings.libs.customauth.models import ApiToken
+
 from django.utils.timezone import utc
-import json
+
  
 class PaginationTest(TestCase):
 	fixtures = ['locations.json', 'user.json', 'people.json', 'wings.json']
@@ -113,7 +120,92 @@ class PaginationTest(TestCase):
 		self.assertEqual(json.loads(r3.content)['code'], 413)
 		self.assertEqual(json.loads(r3.content)['msg'], "Sorry, no results on that page.")
 		self.assertEqual(json.loads(r3.content)['status'], False)
+
+class GetListMessagesTest(TestCase):
+
+	def setUp(self):
+		#make some messages as example
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		for i in range(100):
+			self.msg1 = G(Messages, sender=self.profile1, reference = i%5)
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_get_messages(self):
+		c = Client()
+		#GET the messages
+		print self.msg1.__dict__
+		r1 = c.get('/api/v1/notificationslist?kind=msg', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 2)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 5)
+
 		
+class PostListMessagesTest(TestCase):
+
+	def setUp(self):
+		#make some messages as example
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_post_messages(self):
+		c = Client()
+		content = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		#What happens?
+		#Check that profile1 has no messages
+		self.assertEqual(self.profile1.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile1.notifications_sender.count(), 0)
+		#Check that profile2 has no messages
+		self.assertEqual(self.profile2.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile2.notifications_sender.count(), 0)
+		#When a user (profile1), sends a message to another user (profile2):
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "data": {"content": content}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		#Response is well formed
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		#Profile 1 has 1 new message as a sender
+		self.assertEqual(self.profile1.notifications_sender.count(), 1)
+		#Profile 2 has 1 new message as a receiver
+		self.assertEqual(self.profile2.notifications_receiver.count(), 1)
+		#The message has a unique reference
+		self.assertNotEqual(self.profile2.notifications_receiver.get().reference, None)
+		#The message is well formed
+		self.assertNotEqual(self.profile2.notifications_receiver.get().receiver, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().sender, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().created, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().kind, None)
+		#The message has read = false
+		self.assertEqual(self.profile2.notifications_receiver.get().read, False)
+		#The first sender of the message is profile1
+		self.assertEqual(self.profile2.notifications_receiver.get().first_sender, self.profile1)
+		#Errors show up properly:
+		#The receiver of the message does not exists
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": 10, "kind": "message", "data": {"content": content}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 403)
+		self.assertEqual(json.loads(r1.content)['errors'], "The receiver of the message does not exists")
+		#The message cannot be empty
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "data": {"content": ""}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"content":"The message cannot be empty"})
+		#The message is too long
+		content = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "data": {"content": content}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"content":"The message is too long"})
 
 
 

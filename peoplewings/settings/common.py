@@ -12,6 +12,9 @@ PROJECT_DIR = os.path.normpath(os.path.join(PROJECT_ROOT,'..')) # The general pr
 STATIC_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'static')) 
 MEDIA_ROOT = os.path.normpath(os.path.join(PROJECT_DIR,'media'))
 FIXTURE_DIRS = (os.path.join(PROJECT_ROOT, 'general_fixtures'),)
+sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'apps')))
+
+
 
 # IMPORT CORRECT SETTINGS BASED IN GIT BRANCHES
 LOCAL_HOSTNAMES= ('fr33d4n-LapTop','MacBook-Pro-de-Ezequiel.local')
