@@ -1,5 +1,6 @@
 ##API for Notifications
 import json
+import ast
 from operator import itemgetter, attrgetter
 
 from tastypie import fields
@@ -53,6 +54,24 @@ class NotificationsListResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationslist'               
 
+	def validate(self, kind, POST):
+		errors = {}
+		if kind == 'message':
+			#Messages need idReceiver and data. data needs content and content cannot be empty
+			try:
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+			except KeyError:
+				errors['idReceiver'] = 'This field is needed'
+			try:
+				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+			except KeyError:
+				errors['data'] = 'This field is needed'
+			try:
+				if POST['data']['content'] is not None and POST['data']['content']  == "": errors['content']  = 'The message cannot be empty'
+				elif POST['data']['content'] is not None and len(POST['data']['content'])  > 1500: errors['content']  = 'The message is too long'
+			except KeyError:
+				errors['content']  = 'This field is needed'
+		return errors				
 	def filter_get(self, request, filters, prof):
 		for key, value in request.GET.items():
 			if key == 'kind':
@@ -114,7 +133,6 @@ class NotificationsListResource(ModelResource):
 		filters = Q(receiver=prof)|Q(sender=prof)
 		order_by = '-created'
 		filters = self.filter_get(request, filters, prof)
-		
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:
@@ -164,7 +182,7 @@ class NotificationsListResource(ModelResource):
 					## URL
 					aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
 				## Message specific                         
-				elif aux.kind == 'messages':
+				elif aux.kind == 'messages':					
 					msg = Messages.objects.get(pk = i.pk)
 					aux.content = msg.private_message
 					## URL
@@ -226,8 +244,22 @@ class NotificationsListResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		##check if the request has the mandatory parameters
-		print request.__dict__
-		return self.create_response(request, {"status":False, "data":"Method not allowed", "code":"403"}, response_class = HttpResponse)
+		POST = ast.literal_eval(request.raw_post_data)
+		try:
+			if POST['kind']:	pass		
+		except KeyError:
+			return self.create_response(request, {"status":False, "errors":{"kind": ["This field is required"]}, "code":410}, response_class = HttpResponse)
+		errors = self.validate(POST['kind'], POST)
+		if len(errors.keys()) > 0:
+			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
+		# Create the notification
+		try:
+			if POST['kind'] == 'message':
+				Notifications.objects.create_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'])
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": "The receiver of the message does not exists", "code":403}, response_class = HttpResponse)
+
+		return self.create_response(request, {"status":True, "data":"The message has been sent succesfully", "code":200}, response_class = HttpResponse)
 	
 	def wrap_view(self, view):
 		@csrf_exempt

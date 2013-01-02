@@ -4,6 +4,7 @@ from peoplewings.apps.wings.models import Wing
 from django.db.models.signals import post_save, post_delete
 from django.db.models import signals
 import uuid
+import time
 
 TYPE_CHOICES = (
 		('A', 'Accepted'),
@@ -17,8 +18,21 @@ USERSTATE_CHOICES = (
 		('F', 'Offline'),
 	)
 
+class NotificationsManager(models.Manager):
+	def create_message(self, **kwargs):
+		try:
+			rec = UserProfile.objects.get(pk = kwargs['receiver'])
+		except Exception, e:
+			raise e
+		try:
+			sen = UserProfile.objects.get(user = kwargs['sender'])
+		except Exception, e:
+			raise e			
+		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'messages', read = False, first_sender =  sen, private_message = kwargs['content'])
+
 # Notifications class
 class Notifications(models.Model):
+	objects = NotificationsManager()
 	receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)
 	sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
 	created = models.BigIntegerField(default=0)
@@ -34,7 +48,7 @@ class Notifications(models.Model):
 		except:
 			pass
 		return None
-
+				
 # Request class
 class Requests(Notifications):    
 	title = models.CharField(max_length = 100, blank=False)
