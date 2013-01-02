@@ -245,10 +245,8 @@ class NotificationsListResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		##check if the request has the mandatory parameters
 		POST = ast.literal_eval(request.raw_post_data)
-		try:
-			if POST['kind']:	pass		
-		except KeyError:
-			return self.create_response(request, {"status":False, "errors":{"kind": ["This field is required"]}, "code":410}, response_class = HttpResponse)
+		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":{"kind": ["This field is required"]}, "code":410}, response_class = HttpResponse)
+
 		errors = self.validate(POST['kind'], POST)
 		if len(errors.keys()) > 0:
 			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
