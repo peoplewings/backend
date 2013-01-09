@@ -8,12 +8,13 @@ import string
 import random
 import json
 from datetime import datetime
+import uuid
 
 from django.test import TestCase, Client
 from django_dynamic_fixture import G, get
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
-from peoplewings.apps.notifications.models import Notifications, Messages
+from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites
 from wings.models import Accomodation, Wing
 from django.contrib.auth.models import User
 from people.models import UserProfile
@@ -417,6 +418,119 @@ class PostListRequestsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['status'], False)
 		self.assertEqual(json.loads(r1.content)['code'], 410)
 		self.assertEqual(json.loads(r1.content)['errors'], 'The selected wing is not a valid choice')
+
+	def test_delete_notifications(self):
+		#Initialize method vars
+		request1 = G(Requests, receiver=self.profile1, first_sender = self.profile1)
+		request2 = G(Requests, sender=self.profile1)
+		invite1 = G(Invites, receiver=self.profile1, first_sender = self.profile1)
+		message1 = G(Messages, sender=self.profile1)
+		request3 = G(Requests, receiver=self.profile2, sender = self.profile1, first_sender = self.profile2)
+		message2 = G(Messages, sender=self.profile2)
+		invite2 = G(Invites)
+		c = Client()
+
+		#Initial checks...
+		#Check profile 1 has 5 notifications
+		count = 0
+		for i in self.profile1.notifications_receiver.all():
+			if i.first_sender.pk == self.profile1.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		for i in self.profile1.notifications_sender.all():
+			if i.first_sender.pk == self.profile1.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		self.assertEqual(count, 5)
+		#Check profile 2 has 2 notifications
+		count = 0
+		for i in self.profile2.notifications_receiver.all():
+			if i.first_sender.pk == self.profile2.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		for i in self.profile2.notifications_sender.all():
+			if i.first_sender.pk == self.profile2.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		self.assertEqual(count, 2)
+		#Make the call that deletes request1, message1 and request3 from the profile1 POV
+		r1 = c.put('/api/v1/notificationslist', json.dumps({"threads": [request1.reference, request3.reference, message1.reference]}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(json.loads(r1.content)['data'], 'The notifications have been deleted succesfully')
+
+		#When deleting a notification thread, we make it "invisible", to the user. So...
+		count = 0
+		for i in self.profile1.notifications_receiver.all():
+			if i.first_sender.pk == self.profile1.pk:
+				if i.first_sender_visible == True:					
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:					
+					count = count + 1
+		for i in self.profile1.notifications_sender.all():
+			if i.first_sender.pk == self.profile1.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		self.assertEqual(count, 2)
+		#And the other one, profile2, keeps seeing 2 notification
+		count = 0
+		for i in self.profile2.notifications_receiver.all():
+			if i.first_sender.pk == self.profile2.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		for i in self.profile2.notifications_sender.all():
+			if i.first_sender.pk == self.profile2.pk:
+				if i.first_sender_visible == True:
+					count = count + 1
+			else:
+				if i.second_sender_visible == True:
+					count = count + 1
+		self.assertEqual(count, 2)
+		#We will need to check the other methods (GET /api/v1/notificationslist) to see if they implement this functionality as well. The result should be the same
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 2)
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 2)
+		#ERRORS
+		uuid_1 = str(uuid.uuid4())
+		uuid_2 = str(uuid.uuid4())
+		r1 = c.put('/api/v1/notificationslist', json.dumps({"threads": [uuid_1, uuid_2, message1.reference, message2.reference, invite2.reference]}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 400)
+		self.assertEqual(json.loads(r1.content)['errors'], {message2.reference : "This reference is not owned by the user thus it can't be deleted", invite2.reference : "This reference is not owned by the user thus it can't be deleted"})
+
+
+
+
+
+
 
 
 

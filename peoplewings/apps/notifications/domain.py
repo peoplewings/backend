@@ -9,6 +9,7 @@ class NotificationsList(object):
 		self.created = None
 		self.read = None
 		self.kind = None
+		self.reference = None
 		## Request/inv specific
 		self.state = None
 		self.flag_direction = None
