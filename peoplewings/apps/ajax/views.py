@@ -2,14 +2,23 @@
 from django.views.decorators.csrf import csrf_protect
 from django.conf import settings
 from pprint import pprint
-from peoplewings.apps.people.models import University
+import os
 from django.utils import simplejson
 from datetime import datetime
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+
+from tastypie.http import HttpUnauthorized, HttpForbidden
+from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.resources import ModelResource
+
 from peoplewings.apps.cropper.models import Original
-import os
+from peoplewings.apps.people.models import University, Relationship, UserProfile
+from peoplewings.apps.notifications.models import Notifications
+from peoplewings.apps.wings.models import Wing
+from peoplewings.apps.registration.views import api_token_is_authenticated
+
 
 def search_university(request):
     query=request.GET.get('q')
@@ -33,6 +42,56 @@ def search_university(request):
     	response_data['details']['Message'] = e.message
 
     response_data['code'] = HttpResponse.status_code
+
+    return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
+
+@csrf_protect
+def search_notification_addressees(request):
+    notif_type=request.GET.get('type')
+    apitoken = api_token_is_authenticated(request)
+    if not apitoken: return ModelResource().create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+    
+    if notif_type not in ('request', 'invitation', 'message'):
+        response_data = {}
+        response_data['error'] = 'Type not valid.'
+        response_data['status'] = False
+        response_data['code'] = 400
+        return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
+
+    # parte comun: 
+    # 1. obtener los usuarios que nos enviaron Messages, Invitations o Requests
+    up = UserProfile.objects.get(user=apitoken)
+    notifs = Notifications.objects.filter(Q(sender=up) | Q(receiver=up))
+    result = set()
+    for i in notifs:
+        if i.sender == up: result.add(i.receiver) 
+        else: result.add(i.sender)
+    # 2. union con My Friends
+    rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type='Accepted')
+    result2 = set()
+    for i in rels:
+        if i.sender == up: result2.add(i.receiver) 
+        else: result2.add(i.sender)
+    result = result.union(result2)
+
+    # parte especifica: si type es 'request', filtrar el listado anterior por aquellos que tengan alas.
+    result = list(result)
+    if notif_type == 'request':
+        for i in result:
+            if not Wings.objects.filter(author=i).exists(): result.remove(i)
+
+    r = []
+    for i in result:
+        dic = {}
+        dic['first_name'] = i.user.first_name
+        dic['last_name'] = i.user.last_name
+        r.append(dic)
+
+    response_data = {}
+    response_data['msg'] = 'Candidates retrieved successfully.'
+    response_data['status'] = True
+    response_data['code'] = 200
+    response_data['data'] = r
 
     return HttpResponse(simplejson.dumps(response_data), mimetype="application/json")
 
