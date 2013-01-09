@@ -1,6 +1,6 @@
 ##API for Notifications
 import json
-import ast
+import pprint
 from operator import itemgetter, attrgetter
 
 from tastypie import fields
@@ -29,7 +29,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.people.models import UserProfile
-
+from wings.models import Wing
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation, Friendship
 
 from peoplewings.apps.ajax.utils import json_response
@@ -71,6 +71,51 @@ class NotificationsListResource(ModelResource):
 				elif POST['data']['content'] is not None and len(POST['data']['content'])  > 1500: errors['content']  = 'The message is too long'
 			except KeyError:
 				errors['content']  = 'This field is needed'
+		if kind == 'request':
+			#Request need idReceiver and data. data needs content and content cannot be empty
+			try:
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+			except KeyError:
+				errors['idReceiver'] = 'This field is needed'
+			try:
+				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+			except KeyError:
+				errors['data'] = 'This field is needed'
+			try:
+				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
+				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
+			except KeyError:
+				errors['content']  = 'This field is needed'
+			try:
+				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": errors['publicText']  = 'The request public message cannot be empty'
+				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: errors['publicText']  = 'The request public message is too long'
+			except KeyError:
+				errors['content']  = 'This field is needed'
+			try:
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
+			except:
+				errors['startDate'] = 'This field is needed'
+				errors['endDate'] = 'This field is needed'	
+		if kind == 'invite':
+			#Invites need idReceiver and data. data needs content and content cannot be empty
+			try:
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+			except KeyError:
+				errors['idReceiver'] = 'This field is needed'
+			try:
+				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+			except KeyError:
+				errors['data'] = 'This field is needed'
+			try:
+				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
+				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
+			except KeyError:
+				errors['content']  = 'This field is needed'
+			try:
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
+			except:
+				errors['startDate'] = 'This field is needed'
+				errors['endDate'] = 'This field is needed'	
 		return errors				
 	def filter_get(self, request, filters, prof):
 		for key, value in request.GET.items():
@@ -128,7 +173,6 @@ class NotificationsListResource(ModelResource):
 			prof = UserProfile.objects.get(user = request.user)
 		except:
 			return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
-
 		result_dict = []     
 		filters = Q(receiver=prof)|Q(sender=prof)
 		order_by = '-created'
@@ -136,7 +180,6 @@ class NotificationsListResource(ModelResource):
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:
-				#if not i.reference in result_dict:
 				aux = NotificationsList()
 				aux.id = i.pk
 				aux.created = i.created
@@ -155,7 +198,7 @@ class NotificationsListResource(ModelResource):
 						aux.num_people = additional.num_people 
 						add_class = additional.get_class_name() 
 						aux.wing_type = add_class                             
-					aux.message = req.wing.name
+					aux.message = '%s (%s in %s)' % (req.wing.name, req.wing.__class__, req.wing.city.name)
 					aux.state = req.state
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
@@ -244,20 +287,80 @@ class NotificationsListResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		##check if the request has the mandatory parameters
-		POST = ast.literal_eval(request.raw_post_data)
+		POST = json.loads(request.raw_post_data)
 		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":{"kind": ["This field is required"]}, "code":410}, response_class = HttpResponse)
 
 		errors = self.validate(POST['kind'], POST)
 		if len(errors.keys()) > 0:
 			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
 		# Create the notification
-		try:
-			if POST['kind'] == 'message':
+		
+		if POST['kind'] == 'message':
+			try:
 				Notifications.objects.create_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'])
-		except Exception, e:
-			return self.create_response(request, {"status":False, "errors": "The receiver of the message does not exists", "code":403}, response_class = HttpResponse)
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": "The receiver of the message does not exists", "code":403}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True, "data":"The message has been sent succesfully", "code":200}, response_class = HttpResponse)
+		elif POST['kind'] == 'request':
+			#Check that the receiver exists
+			try:
+				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
+			except:
+				return self.create_response(request, {"status":False, "errors": "The receiver of the request does not exists", "code":403}, response_class = HttpResponse)
+			#Check that the wing we entered is owned by the receiver
+			try:
+				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
+				if check_wing.author.pk != POST['idReceiver']:
+					return self.create_response(request, {"status":False, "errors": "The selected wing is not a valid choice", "code":410}, response_class = HttpResponse)
+			except:	
+				errors = {}
+				errors['wingId'] = 'This field is required'
+				return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)									
+			try:
+				notif = Notifications.objects.create_request(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], 
+										private_message = POST['data']['privateText'], public_message = POST['data']['publicText'], 
+										make_public = POST['data']['makePublic'])
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
+			#create the additional info related with the request
+			if (POST['data']['wingType'] == 'accomodation'):
+				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'], 
+											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
-		return self.create_response(request, {"status":True, "data":"The message has been sent succesfully", "code":200}, response_class = HttpResponse)
+			if POST['data']['makePublic'] is True:
+				#we have to create a new wing...
+				pass
+				#TODO
+			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
+		elif POST['kind'] == 'invite':
+			#Check that the receiver exists
+			try:
+				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
+			except:
+				return self.create_response(request, {"status":False, "errors": "The receiver of the request does not exists", "code":403}, response_class = HttpResponse)
+			#Check that the wing we entered is owned by the sender
+			try:
+				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
+				if check_wing.author.pk != request.user.pk:
+					return self.create_response(request, {"status":False, "errors": "The selected wing is not a valid choice", "code":410}, response_class = HttpResponse)
+			except:	
+				errors = {}
+				errors['wingId'] = 'This field is required'
+				return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)									
+			try:
+				notif = Notifications.objects.create_invite(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], private_message = POST['data']['privateText'])
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
+			#create the additional info related with the request
+			if (POST['data']['wingType'] == 'accomodation'):
+				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'], 
+											flexible_end = POST['data']['wingParameters']['flexibleEnd'])
+
+			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
+		else:
+			return self.create_response(request, {"status":False, "data":"Not implemented", "code":400}, response_class = HttpResponse)
 	
 	def wrap_view(self, view):
 		@csrf_exempt
