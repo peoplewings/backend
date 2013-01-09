@@ -65,10 +65,17 @@ class NotificationsManager(models.Manager):
 						first_sender =  sender, private_message = kwargs['private_message'], state = 'P',  wing = wing)
 		return notif
 
-
-
-
-
+	def invisible_notification(self, ref, user):
+		try:
+			notif = self.filter(reference = ref)
+			for i in notif:
+				if (i.first_sender == user):
+					i.first_sender_visible = False
+				else:
+					i.second_sender_visible = False
+				i.save()
+		except:
+			pass
 
 # Notifications class
 class Notifications(models.Model):
@@ -80,6 +87,8 @@ class Notifications(models.Model):
 	read = models.BooleanField(default=False)
 	kind = models.CharField(max_length=15, null=True)
 	first_sender = models.ForeignKey(UserProfile, related_name='%(class)s_first_sender', on_delete=models.CASCADE, null = True)
+	first_sender_visible = models.BooleanField(default=True)
+	second_sender_visible = models.BooleanField(default=True)
 
 	def get_subclass(self):
 		try:

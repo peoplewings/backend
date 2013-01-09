@@ -1,6 +1,7 @@
 ##API for Notifications
 import json
 import pprint
+from tastypie import http
 from operator import itemgetter, attrgetter
 
 from tastypie import fields
@@ -46,7 +47,7 @@ class NotificationsListResource(ModelResource):
 		object_class = Notifications
 		queryset = Notifications.objects.all()
 		detail_allowed_methods = []
-		list_allowed_methods = ['post', 'get']
+		list_allowed_methods = ['post', 'get', 'put']
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
@@ -116,7 +117,25 @@ class NotificationsListResource(ModelResource):
 			except:
 				errors['startDate'] = 'This field is needed'
 				errors['endDate'] = 'This field is needed'	
-		return errors				
+		return errors		
+
+	def put_list_validate(self, PUT, user):
+		errors = {}
+		if not PUT.has_key('threads'):
+			errors['threads'] = "This field is required"
+			return errors
+		else:		
+			#We check, for each thread, if they are owned by the user
+			for i in PUT['threads']:
+				try:
+					notif = Notifications.objects.get(reference = i)
+				except:
+					notif = None
+				if notif is not None:
+					if (notif.receiver != user and notif.sender != user):
+						errors[notif.reference] = "This reference is not owned by the user thus it can't be deleted"
+		return errors
+
 	def filter_get(self, request, filters, prof):
 		for key, value in request.GET.items():
 			if key == 'kind':
@@ -174,7 +193,7 @@ class NotificationsListResource(ModelResource):
 		except:
 			return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
 		result_dict = []     
-		filters = Q(receiver=prof)|Q(sender=prof)
+		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
 		filters = self.filter_get(request, filters, prof)
 		try:
@@ -183,6 +202,7 @@ class NotificationsListResource(ModelResource):
 				aux = NotificationsList()
 				aux.id = i.pk
 				aux.created = i.created
+				aux.reference = i.reference
 				if (i.sender == prof):
 					aux.read = True
 				else:
@@ -203,9 +223,7 @@ class NotificationsListResource(ModelResource):
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
 					else:
-						aux.flag_direction =   False                      
-					## URL                        
-					aux.thread_url = '%s%srequestthread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
+						aux.flag_direction =   False                                         
 					## Invite specific               
 				elif aux.kind == 'invites':
 					inv = Invites.objects.get(pk = i.pk) 
@@ -222,20 +240,14 @@ class NotificationsListResource(ModelResource):
 						 aux.flag_direction = True
 					else:
 						aux.flag_direction =   False          
-					## URL
-					aux.thread_url = '%s%sinvitethread/%s' % (settings.BACKEND_SITE, add_class, i.reference)
 				## Message specific                         
 				elif aux.kind == 'messages':					
 					msg = Messages.objects.get(pk = i.pk)
 					aux.content = msg.private_message
-					## URL
-					aux.thread_url = '%smessagethread/%s' % (settings.BACKEND_SITE, i.reference)
 				## Friendship specific                         
 				elif aux.kind == 'friendship':
 					friend = Friendship.objects.get(pk = i.pk)
 					aux.content = friend.message
-					## URL
-					aux.thread_url = '%sfriendthread/%s' % (settings.BACKEND_SITE, i.reference)
 				#Profile specific
 				if (i.sender == prof):
 					## YOU are the sender. Need receiver info
@@ -258,14 +270,12 @@ class NotificationsListResource(ModelResource):
 			raise e
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)   
 		result = []
-		#Here we will apply search filter and order_by
+		#Here we will apply search filter and order_by		
 		result_dict = self.search(request, result_dict)
 		result_dict = self.order_by(request, result_dict)
-		
 		for o in result_dict:
-			if o.thread_url not in [r.thread_url for r in result]:
+			if o.reference not in [r.reference for r in result]:
 				result.append(o)
-
 		page_size=2
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
@@ -361,6 +371,19 @@ class NotificationsListResource(ModelResource):
 			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
 		else:
 			return self.create_response(request, {"status":False, "data":"Not implemented", "code":400}, response_class = HttpResponse)
+
+	def put_list(self, request, **kwargs):
+		#This call comes from the DELETE
+		profile = UserProfile.objects.get(user = request.user)
+		PUT = json.loads(request.raw_post_data)
+		errors = self.put_list_validate(PUT, profile)
+		if len(errors.keys()) > 0:
+			return self.create_response(request, {"status":False, "errors":errors, "code":400}, response_class = HttpResponse)
+		#We have this shit validated, let's move on		
+		refs = PUT["threads"]
+		for i in refs:
+			Notifications.objects.invisible_notification(i, profile)
+		return self.create_response(request, {"status":True, "data": "The notifications have been deleted succesfully", "code":200}, response_class = HttpResponse)
 	
 	def wrap_view(self, view):
 		@csrf_exempt
