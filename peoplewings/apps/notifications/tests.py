@@ -292,29 +292,43 @@ class PostListRequestsTest(TestCase):
 		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": "", "publicText": public_message, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], False)
-		self.assertEqual(json.loads(r1.content)['code'], 403)
-		self.assertEqual(json.loads(r1.content)['errors'], "The request private message cannot be empty")
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"privateText" : "The request private message cannot be empty"})
 		#The private message is too long
 		private_message2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
 		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message2, "publicText": public_message, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], False)
-		self.assertEqual(json.loads(r1.content)['code'], 403)
-		self.assertEqual(json.loads(r1.content)['errors'], "TThe private message is too long")
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"privateText" : "The request private message is too long"})
 		#The public message is too long
 		public_message2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
 		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message2, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], False)
-		self.assertEqual(json.loads(r1.content)['code'], 403)
-		self.assertEqual(json.loads(r1.content)['errors'], "The public message is too long")
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"publicText" : "The request public message is too long"})
 		#Date start cannot be greater than date end
 		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357562400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], False)
-		self.assertEqual(json.loads(r1.content)['code'], 403)
-		self.assertEqual(json.loads(r1.content)['errors'], "Date start cannot be greater than date end")
-
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"endDate" : 'This field should be greater or equal than the starting date'})
+		#Now we want to send a request with make public = True
+		"""
+		make_public = True
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		#We should check that profile1 does not have any wing with is_request = True
+		test_public = None
+		try:
+			test_public = Wing.objects.get(author=self.profile1)
+		except:
+			pass
+		if not make_public:
+			self.assertEqual(test_public, None)
+		else:
+			self.assertNotEqual(test_public, None)
+		"""
 		
 
 

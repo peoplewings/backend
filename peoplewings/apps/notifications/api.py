@@ -82,10 +82,20 @@ class NotificationsListResource(ModelResource):
 			except KeyError:
 				errors['data'] = 'This field is needed'
 			try:
-				if POST['data']['content'] is not None and POST['data']['content']  == "": errors['content']  = 'The message cannot be empty'
-				elif POST['data']['content'] is not None and len(POST['data']['content'])  > 1500: errors['content']  = 'The message is too long'
+				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
+				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
 			except KeyError:
 				errors['content']  = 'This field is needed'
+			try:
+				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": errors['publicText']  = 'The request public message cannot be empty'
+				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: errors['publicText']  = 'The request public message is too long'
+			except KeyError:
+				errors['content']  = 'This field is needed'
+			try:
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
+			except:
+				errors['startDate'] = 'This field is needed'
+				errors['endDate'] = 'This field is needed'	
 		return errors				
 	def filter_get(self, request, filters, prof):
 		for key, value in request.GET.items():
@@ -285,7 +295,10 @@ class NotificationsListResource(ModelResource):
 											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'], 
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
-
+			if POST['data']['makePublic'] is True:
+				#we have to create a new wing...
+				pass
+				#TODO
 			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
 		else:
 			return self.create_response(request, {"status":False, "data":"Not implemented", "code":400}, response_class = HttpResponse)
