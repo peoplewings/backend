@@ -212,14 +212,16 @@ class PostListRequestsTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
 		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
-		self.wing2 = G(Accomodation, author=self.profile2)
+		
 
 	def test_post_requests(self):
 		c = Client()
+		self.wing2 = G(Accomodation, author=self.profile2)
+		wing3 = G(Accomodation)
 		private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
 		public_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
 		make_public = False
@@ -314,6 +316,12 @@ class PostListRequestsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['status'], False)
 		self.assertEqual(json.loads(r1.content)['code'], 410)
 		self.assertEqual(json.loads(r1.content)['errors'], {"endDate" : 'This field should be greater or equal than the starting date'})
+		#The selected wing is not a valid choice
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "accomodation",   "wingParameters": {"wingId": wing3.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], 'The selected wing is not a valid choice')
 		#Now we want to send a request with make public = True
 		"""
 		make_public = True
@@ -329,7 +337,86 @@ class PostListRequestsTest(TestCase):
 		else:
 			self.assertNotEqual(test_public, None)
 		"""
-		
+
+	def test_post_invites(self):
+		c = Client()
+		self.wing1 = G(Accomodation, author=self.profile1)
+		wing3 = G(Accomodation)
+		private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		#What happens?
+		#Check that profile1 has no requests
+		self.assertEqual(self.profile1.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile1.notifications_sender.count(), 0)
+		#Check that profile2 has no requests
+		self.assertEqual(self.profile2.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile2.notifications_sender.count(), 0)
+		#When a user (profile1), sends a invite to another user (profile2):
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "invite",  "data": { "privateText": private_message, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing1.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		#Response is well formed
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		#Profile 1 has 1 new message as a sender
+		self.assertEqual(self.profile1.notifications_sender.count(), 1)
+		#Profile 2 has 1 new message as a receiver
+		self.assertEqual(self.profile2.notifications_receiver.count(), 1)
+		#The invite has a unique reference
+		self.assertNotEqual(self.profile2.notifications_receiver.get().reference, None)
+		#The invite is well formed
+		self.assertNotEqual(self.profile2.notifications_receiver.get().receiver, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().sender, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().created, None)
+		self.assertEqual(self.profile2.notifications_receiver.get().kind, "invite")
+		#The invite has read = false
+		self.assertEqual(self.profile2.notifications_receiver.get().read, False)
+		#The first sender of the invite is profile1
+		self.assertEqual(self.profile2.notifications_receiver.get().first_sender, self.profile1)
+		#As a invite the state of it should be in "Pending"
+		self.assertEqual(self.profile2.notifications_receiver.get().invites.state, "P")
+		#As a invite the wing should be the same we entered
+		self.assertEqual(self.profile2.notifications_receiver.get().invites.wing.pk, self.wing1.pk)
+		#As a invite the private message should not be None or empty
+		self.assertNotEqual(self.profile2.notifications_receiver.get().invites.private_message, None)
+		#Check if the additional information (related with the wing, request and wing type) is correct
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get_or_none(), None)
+		#Check if the start_date is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().start_date, None)
+		#Check if the end_date is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().end_date, None)
+		#Check if the capacity is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().num_people, None)		
+		#Errors show up properly:
+		#The receiver of the request does not exists
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": 456, "kind": "invite",  "data": { "privateText": private_message, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing1.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2,  "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 403)
+		self.assertEqual(json.loads(r1.content)['errors'], "The receiver of the request does not exists")
+		#The request private message cannot be empty
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "invite",  "data": { "privateText": "", "wingType": "accomodation",   "wingParameters": {"wingId": self.wing1.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"privateText" : "The request private message cannot be empty"})
+		#The private message is too long
+		private_message2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "invite",  "data": { "privateText": private_message2, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing1.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"privateText" : "The request private message is too long"})
+		#Date start cannot be greater than date end
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "invite",  "data": { "privateText": private_message, "wingType": "accomodation",   "wingParameters": {"wingId": self.wing1.pk, "startDate": "1357603200", "endDate": "1357562400", "capacity": 2, "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], {"endDate" : 'This field should be greater or equal than the starting date'})
+		#The selected wing is not a valid choice
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "invite",  "data": { "privateText": private_message, "wingType": "accomodation",   "wingParameters": {"wingId": wing3.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2,  "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		self.assertEqual(json.loads(r1.content)['code'], 410)
+		self.assertEqual(json.loads(r1.content)['errors'], 'The selected wing is not a valid choice')
 
 
 

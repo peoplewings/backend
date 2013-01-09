@@ -48,6 +48,23 @@ class NotificationsManager(models.Manager):
 						state = 'P', make_public = kwargs['make_public'], wing = wing)
 		return notif
 
+	def create_invite(self, **kwargs):
+		try:
+			receiver = UserProfile.objects.get(pk = kwargs['receiver'])
+		except Exception, e:
+			raise e
+		try:
+			sender = UserProfile.objects.get(user = kwargs['sender'])
+		except Exception, e:
+			raise e
+		try:
+			wing = Wing.objects.get(pk= kwargs['wing'])
+		except Exception, e:
+			raise e
+		notif = Invites.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'invite', read = False, 
+						first_sender =  sender, private_message = kwargs['private_message'], state = 'P',  wing = wing)
+		return notif
+
 
 
 
@@ -91,7 +108,7 @@ class Invites(Notifications):
 	wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
 	def save(self, *args, **kwargs):
-		self.kind = 'invites'
+		self.kind = 'invite'
 		super(Invites, self).save(*args, **kwargs)
 
 # Messages class
@@ -126,8 +143,10 @@ class AccomodationInformationManager(models.Manager):
 			return None
 
 	def create_request(self, **kwargs):
-		print kwargs['start_date']
 		self.create(notification = kwargs['notification'], start_date =  kwargs['start_date'], end_date =  kwargs['end_date'], transport =  kwargs['transport'], num_people =  kwargs['num_people'], flexible_start = kwargs['flexible_start'], flexible_end =  kwargs['flexible_end'])
+
+	def create_invite(self, **kwargs):
+		self.create(notification = kwargs['notification'], start_date =  kwargs['start_date'], end_date =  kwargs['end_date'], num_people =  kwargs['num_people'], flexible_start = kwargs['flexible_start'], flexible_end =  kwargs['flexible_end'])
 
 # Accomodation class
 class AccomodationInformation(AdditionalInformation):
