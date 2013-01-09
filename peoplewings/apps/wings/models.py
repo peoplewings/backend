@@ -4,6 +4,8 @@ from peoplewings.apps.locations.models import City
 
 from peoplewings.global_vars import *
 
+from pprint import pprint
+
 # Wing class
 class Wing(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -13,6 +15,9 @@ class Wing(models.Model):
     date_end = models.DateField(null=True)
     best_days = models.CharField(max_length=1, choices=BETTER_DAYS_CHOICES, default='A', verbose_name='Better days to host')
     is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
+
+    def get_type(self):
+        if Accomodation.objects.filter(pk=self.pk).exists(): return Accomodation.objects.get(pk=self.pk).get_type()
     
 class PublicTransport(models.Model):
     name = models.CharField(max_length=50, blank = False, null = False, default = 'Not specified')

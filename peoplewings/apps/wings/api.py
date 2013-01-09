@@ -45,6 +45,7 @@ class PublicTransportResource(ModelResource):
         validation = FormValidation(form_class=PublicTransportForm)
 
 class WingResource(ModelResource):
+    wing_type = fields.CharField()
     class Meta:
         object_class = Wing
         queryset = Wing.objects.all()
@@ -54,8 +55,40 @@ class WingResource(ModelResource):
         authentication = ApiTokenAuthentication()
         authorization = Authorization()
         always_return_data = True
-        #include_resource_uri = True
-        fields = ['name',]
+        include_resource_uri = False
+        fields = ['name', 'id']
+
+    def get_list(self, request, **kwargs):
+        '''
+        response = super(WingResource, self).get_list(request, **kwargs)
+        data = json.loads(response.content)
+        content = {}  
+        content['msg'] = 'Wings retrieved successfully.'      
+        content['status'] = True
+        content['code'] = 200
+        content['data'] = data
+        return self.create_response(request, content, response_class=HttpResponse)
+        '''
+        try:
+            w = Wing.objects.filter(author_id=kwargs['profile_id'])
+        except:
+            return self.create_response(request, {"msg":"Error: User not found.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+        
+        objects = []
+        for i in w:
+            bundle = self.build_bundle(obj=i, request=request)
+            bundle = self.full_dehydrate(bundle)
+            '''
+                dic = {}
+                dic['name'] = bundle.data['name']
+                dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
+                bundle.data = dic
+            '''
+            objects.append(bundle.data)
+        return self.create_response(request, {"msg":"Wings retrieved successfully.", "code":200, "status":True, "data":objects})
+
+    def dehydrate_wing_type(self, bundle):
+        return bundle.obj.get_type()
 
     def alter_list_data_to_serialize(self, request, data):
         return data["objects"]
