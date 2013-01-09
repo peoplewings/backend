@@ -37,3 +37,6 @@ class Accomodation(Wing):
     additional_information = models.TextField(max_length=max_text_msg_len, blank=True)   
     postal_code = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='ZIP / Postal code')
     city = models.ForeignKey(City, on_delete=models.PROTECT)
+
+    def get_type(self):
+        return "Accommodation"

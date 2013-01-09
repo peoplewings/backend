@@ -22,7 +22,7 @@ from tastypie.utils import trailing_slash, dict_strip_unicode_keys
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS
 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
-from peoplewings.apps.wings.models import Accomodation, PublicTransport
+from peoplewings.apps.wings.models import Accomodation, PublicTransport, Wing
 from peoplewings.apps.wings.forms import *
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
@@ -43,6 +43,99 @@ class PublicTransportResource(ModelResource):
         authorization = Authorization()
         always_return_data = True
         validation = FormValidation(form_class=PublicTransportForm)
+
+class WingResource(ModelResource):
+    class Meta:
+        object_class = Wing
+        queryset = Wing.objects.all()
+        detail_allowed_methods = []
+        list_allowed_methods = ['get']
+        serializer = CamelCaseJSONSerializer(formats=['json'])
+        authentication = ApiTokenAuthentication()
+        authorization = Authorization()
+        always_return_data = True
+        #include_resource_uri = True
+        fields = ['name',]
+
+    def alter_list_data_to_serialize(self, request, data):
+        return data["objects"]
+
+    def wrap_view(self, view):
+        @csrf_exempt
+        def wrapper(request, *args, **kwargs):
+            try:
+                callback = getattr(self, view)
+                response = callback(request, *args, **kwargs)
+
+                varies = getattr(self._meta.cache, "varies", [])
+
+                if varies:
+                    patch_vary_headers(response, varies)             
+
+                if request.is_ajax() and not response.has_header("Cache-Control"):
+                    patch_cache_control(response, no_cache=True)
+
+                return response
+            except BadRequest, e:
+                content = {}
+                errors = {}
+                content['msg'] = e.args[0]               
+                content['code'] = 400
+                content['status'] = False
+                return self.create_response(request, content, response_class = HttpResponse) 
+            except ValidationError, e:
+                content = {}
+                errors = {}
+                content['msg'] = "Error in some fields"
+                content['code'] = 410
+                content['status'] = False
+                content['errors'] = json.loads(e.messages)
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ValueError, e:
+                content = {}
+                errors = {}
+                content['msg'] = "No JSON could be decoded"               
+                content['code'] = 411
+                content['status'] = False
+                return self.create_response(request, content, response_class = HttpResponse)
+            except ImmediateHttpResponse, e:
+                if (isinstance(e.response, HttpMethodNotAllowed)):
+                    content = {}
+                    errors = {}
+                    content['msg'] = "Method not allowed"                               
+                    content['code'] = 412
+                    content['status'] = False
+                    return self.create_response(request, content, response_class = HttpResponse)
+                elif (isinstance(e.response, HttpUnauthorized)):
+                    content = {}
+                    errors = {}
+                    content['msg'] = "Unauthorized"                               
+                    content['code'] = 413
+                    content['status'] = False
+                    return self.create_response(request, content, response_class = HttpResponse)
+                elif (isinstance(e.response, HttpApplicationError)):
+                    content = {}
+                    errors = {}
+                    content['msg'] = "Can't logout"                               
+                    content['code'] = 400
+                    content['status'] = False
+                    return self.create_response(request, content, response_class = HttpResponse)
+                else:               
+                    content = {}
+                    errors = {}
+                    content['msg'] = "Error in some fields."               
+                    content['code'] = 400
+                    content['status'] = False
+                    errors = json.loads(e.response.content)['wings']
+                    content['errors'] = errors
+                    return self.create_response(request, content, response_class = HttpResponse)
+            except Exception, e:
+                return self._handle_500(request, e)
+
+        return wrapper
+    
+
+
 
 class AccomodationsResource(ModelResource):
     city = fields.ToOneField(CityResource, 'city', full=True, null=True)
