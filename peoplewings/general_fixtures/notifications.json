@@ -8,7 +8,7 @@
         "created" : "1349096400",
         "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 3
     }
   },
@@ -21,7 +21,7 @@
         "created" : "1349098260",
         "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 3
     }
   },
@@ -34,7 +34,7 @@
         "created" : "1349100000",
         "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 3
     }
   },
@@ -47,7 +47,7 @@
         "created" : "1349103600",
         "reference" : "e411f00c-2e41-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 3
     }
   },
@@ -60,7 +60,7 @@
         "created" : "1349373600",
         "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -73,7 +73,7 @@
         "created" : "1349383600",
         "reference" : "b85bea98-2e47-11e2-8f1a-e4d53dbee5a0",
         "read" : false,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -125,7 +125,7 @@
         "created" : "1355735949",
         "reference" : "7f7b9856-7ab4-4c1b-92ba-aed21e809259",
         "read" : false,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 4
     }
   },
@@ -138,7 +138,7 @@
         "created" : "1355736129",
         "reference" : "4751ef47-6189-4c6d-9921-ccd62d13c2c9",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 5
     }
   },
@@ -151,7 +151,7 @@
         "created" : "1355817609",
         "reference" : "07b07ef2-b046-4235-8a06-ebfd546b6080",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -164,7 +164,7 @@
         "created" : "1355832009",
         "reference" : "07b07ef2-b046-4235-8a06-ebfd546b6080",
         "read" : false,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -177,7 +177,7 @@
         "created" : "1355900409",
         "reference" : "4f111108-12be-4afa-893a-cf9860202350",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -190,7 +190,7 @@
         "created" : "1355907609",
         "reference" : "4f111108-12be-4afa-893a-cf9860202350",
         "read" : true,
-        "kind" : "requests",
+        "kind" : "request",
         "first_sender" : 2
     }
   },
@@ -234,10 +234,9 @@
     }
   },
 {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 1,
     "fields": {
-        "title" : "Help! Need accomodation in Bcn",
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hi Joan! I've just saw your accomodation wing in Barcelona. Can I go?",
@@ -246,10 +245,9 @@
     }
   },
 {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 2,
     "fields": {
-        "title" : "Help! Need accomodation in Bcn",
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Mhmhm, I don't know it yet. Let me check sumthing...",
@@ -258,10 +256,9 @@
     }
   },
 {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 3,
     "fields": {
-        "title" : "Help! Need accomodation in Bcn",
         "state" : "M",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "OK, tell me something ASAP pls",
@@ -270,10 +267,9 @@
     }
   },
 {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 4,
     "fields": {
-        "title" : "Help! Need accomodation in Bcn",
         "state" : "A",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hey! Its all ok. You can come!",
@@ -282,10 +278,9 @@
     }
   },
 {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 5,
     "fields": {
-        "title" : "Need accomodation in Berlin",
         "state" : "P",
         "public_message" : "",
         "private_message" : "Can you give me accomodation in Berlin?",
@@ -294,10 +289,9 @@
     }
   },
   {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 6,
     "fields": {
-        "title" : "Need accomodation in Berlin",
         "state" : "M",
         "public_message" : "",
         "private_message" : "Need to check it first. Tell u ASAP",
@@ -306,10 +300,9 @@
     }
   },
     {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 10,
     "fields": {
-        "title" : "Do you have some spare, m8?",
         "state" : "P",
         "public_message" : "",
         "private_message" : "Need a room in Barcelona, in the center if possible",
@@ -318,10 +311,9 @@
     }
   },
       {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 11,
     "fields": {
-        "title" : "I dont wanna die...",
         "state" : "P",
         "public_message" : "",
         "private_message" : "I'm cold. Need a warm bed.",
@@ -330,10 +322,9 @@
     }
   },
         {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 12,
     "fields": {
-        "title" : "Need a bed in Barcelona",
         "state" : "A",
         "public_message" : "",
         "private_message" : "Hey Eze, there's a party in my current house.. Can I come over your place?",
@@ -342,10 +333,9 @@
     }
   },
           {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 13,
     "fields": {
-        "title" : "Need a bed in Barcelona",
         "state" : "A",
         "public_message" : "",
         "private_message" : "Of course, we could talk about Git and branches!",
@@ -354,10 +344,9 @@
     }
   },
             {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 14,
     "fields": {
-        "title" : "Need a bed in the posh side of Barcelona",
         "state" : "D",
         "public_message" : "",
         "private_message" : "Can you give me accomodation in the posh side?",
@@ -366,10 +355,9 @@
     }
   },
               {
-    "model": "notifications.Requests",
+    "model": "notifications.request",
     "pk": 15,
     "fields": {
-        "title" : "Need a bed in the posh side of Barcelona",
         "state" : "D",
         "public_message" : "",
         "private_message" : "You are scum! GET OUT!",
@@ -440,7 +428,9 @@
         "start_date" : 1355439600,
     "end_date" : 1355785200,
     "transport" : "Plane",
-    "num_people" : 3
+    "num_people" : 3,
+    "flexible_start": false,
+    "flexible_end": false
     }
   },
 {
@@ -452,7 +442,9 @@
         "start_date" : 1355439600,
     "end_date" : 1355785200,
     "transport" : "Plane",
-    "num_people" : 3
+    "num_people" : 3,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
 {
@@ -464,7 +456,9 @@
         "start_date" : 1355439600,
     "end_date" : 1355785200,
     "transport" : "Plane",
-    "num_people" : 3
+    "num_people" : 3,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
 {
@@ -476,7 +470,9 @@
         "start_date" : 1355439600,
     "end_date" : 1355785200,
     "transport" : "Plane",
-    "num_people" : 3
+    "num_people" : 3,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
 {
@@ -488,7 +484,9 @@
         "start_date" : 1355871600,
     "end_date" : 1356044400,
     "transport" : "Plane",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
   {
@@ -500,7 +498,9 @@
         "start_date" : 1355871600,
     "end_date" : 1356044400,
     "transport" : "Plane",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
   {
@@ -512,7 +512,9 @@
         "start_date" : 1356393609,
     "end_date" : 1356652809,
     "transport" : "Plane",
-    "num_people" : 2
+    "num_people" : 2,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
     {
@@ -524,7 +526,9 @@
         "start_date" : 1356393609,
     "end_date" : 1356739209,
     "transport" : "Plane",
-    "num_people" : 2
+    "num_people" : 2,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
   {
@@ -536,7 +540,9 @@
         "start_date" : 1355961609,
     "end_date" : 1356048009,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
     {
@@ -548,7 +554,9 @@
         "start_date" : 1355961609,
     "end_date" : 1356048009,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
     {
@@ -560,7 +568,9 @@
         "start_date" : 1356134409,
     "end_date" : 1356220809,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
       {
@@ -572,7 +582,9 @@
         "start_date" : 1356134409,
     "end_date" : 1356220809,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
       {
@@ -584,7 +596,9 @@
         "start_date" : 1355911285,
     "end_date" : 1356084085,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
         {
@@ -596,7 +610,9 @@
         "start_date" : 1356087685,
     "end_date" : 1356174085,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   },
           {
@@ -608,7 +624,9 @@
         "start_date" : 1356087685,
     "end_date" : 1356174085,
     "transport" : "Bus",
-    "num_people" : 1
+    "num_people" : 1,
+    "flexible_start" : false,
+    "flexible_end": false
     }
   }
 ]

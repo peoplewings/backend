@@ -30,6 +30,53 @@ class NotificationsManager(models.Manager):
 			raise e			
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'messages', read = False, first_sender =  sen, private_message = kwargs['content'])
 
+	def create_request(self, **kwargs):
+		try:
+			receiver = UserProfile.objects.get(pk = kwargs['receiver'])
+		except Exception, e:
+			raise e
+		try:
+			sender = UserProfile.objects.get(user = kwargs['sender'])
+		except Exception, e:
+			raise e
+		try:
+			wing = Wing.objects.get(pk= kwargs['wing'])
+		except Exception, e:
+			raise e
+		notif = Requests.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'request', read = False, 
+						first_sender =  sender, private_message = kwargs['private_message'], public_message = kwargs['public_message'], 
+						state = 'P', make_public = kwargs['make_public'], wing = wing)
+		return notif
+
+	def create_invite(self, **kwargs):
+		try:
+			receiver = UserProfile.objects.get(pk = kwargs['receiver'])
+		except Exception, e:
+			raise e
+		try:
+			sender = UserProfile.objects.get(user = kwargs['sender'])
+		except Exception, e:
+			raise e
+		try:
+			wing = Wing.objects.get(pk= kwargs['wing'])
+		except Exception, e:
+			raise e
+		notif = Invites.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'invite', read = False, 
+						first_sender =  sender, private_message = kwargs['private_message'], state = 'P',  wing = wing)
+		return notif
+
+	def invisible_notification(self, ref, user):
+		try:
+			notif = self.filter(reference = ref)
+			for i in notif:
+				if (i.first_sender == user):
+					i.first_sender_visible = False
+				else:
+					i.second_sender_visible = False
+				i.save()
+		except:
+			pass
+
 # Notifications class
 class Notifications(models.Model):
 	objects = NotificationsManager()
@@ -40,6 +87,8 @@ class Notifications(models.Model):
 	read = models.BooleanField(default=False)
 	kind = models.CharField(max_length=15, null=True)
 	first_sender = models.ForeignKey(UserProfile, related_name='%(class)s_first_sender', on_delete=models.CASCADE, null = True)
+	first_sender_visible = models.BooleanField(default=True)
+	second_sender_visible = models.BooleanField(default=True)
 
 	def get_subclass(self):
 		try:
@@ -50,8 +99,7 @@ class Notifications(models.Model):
 		return None
 				
 # Request class
-class Requests(Notifications):    
-	title = models.CharField(max_length = 100, blank=False)
+class Requests(Notifications):
 	state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
 	public_message = models.TextField(blank=True)
 	private_message = models.TextField(blank=True)
@@ -59,18 +107,17 @@ class Requests(Notifications):
 	wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
 	def save(self, *args, **kwargs):
-		self.kind = 'requests'
+		self.kind = 'request'
 		super(Requests, self).save(*args, **kwargs)
 
 # Invite class
 class Invites(Notifications):
-	title = models.CharField(max_length = 100, blank=False)
 	state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
 	private_message = models.TextField(blank=True)
 	wing = models.ForeignKey(Wing, related_name='%(class)s_wing', on_delete=models.CASCADE, null=False)
 
 	def save(self, *args, **kwargs):
-		self.kind = 'invites'
+		self.kind = 'invite'
 		super(Invites, self).save(*args, **kwargs)
 
 # Messages class
@@ -96,13 +143,29 @@ class AdditionalInformation(models.Model):
 	class Meta:
 		abstract = True        
 
+#Accomodation info Manager
+class AccomodationInformationManager(models.Manager):
+	def get_or_none(self, **kwargs):
+		try:
+			return self.get(**kwargs)
+		except self.model.DoesNotExist:
+			return None
+
+	def create_request(self, **kwargs):
+		self.create(notification = kwargs['notification'], start_date =  kwargs['start_date'], end_date =  kwargs['end_date'], transport =  kwargs['transport'], num_people =  kwargs['num_people'], flexible_start = kwargs['flexible_start'], flexible_end =  kwargs['flexible_end'])
+
+	def create_invite(self, **kwargs):
+		self.create(notification = kwargs['notification'], start_date =  kwargs['start_date'], end_date =  kwargs['end_date'], num_people =  kwargs['num_people'], flexible_start = kwargs['flexible_start'], flexible_end =  kwargs['flexible_end'])
+
 # Accomodation class
 class AccomodationInformation(AdditionalInformation):
+	objects = AccomodationInformationManager()
 	start_date = models.BigIntegerField(default=0)
 	end_date = models.BigIntegerField(default=0)
 	transport = models.CharField(max_length = 50)
 	num_people = models.IntegerField(default=1)
-
+	flexible_start = models.BooleanField(default = False)
+	flexible_end = models.BooleanField(default = False)
 	def get_class_name(self):
 		return 'accomodation'
 
