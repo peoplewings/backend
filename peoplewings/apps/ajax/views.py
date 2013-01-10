@@ -47,10 +47,12 @@ def search_university(request):
 
 @csrf_protect
 def search_notification_addressees(request):
-    notif_type=request.GET.get('type')
+
     apitoken = api_token_is_authenticated(request)
     if not apitoken: return ModelResource().create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
     
+    notif_type=request.GET.get('type')
+    name=request.GET.get('name', '')
     if notif_type not in ('request', 'invitation', 'message'):
         response_data = {}
         response_data['error'] = 'Type not valid.'
@@ -61,13 +63,15 @@ def search_notification_addressees(request):
     # parte comun: 
     # 1. obtener los usuarios que nos enviaron Messages, Invitations o Requests
     up = UserProfile.objects.get(user=apitoken)
-    notifs = Notifications.objects.filter(Q(sender=up) | Q(receiver=up))
+    notifs = Notifications.objects.filter(Q(Q(sender=up), Q(receiver__user__first_name__istartswith=name) | Q(receiver__user__last_name__istartswith=name)) 
+        | Q(Q(receiver=up), Q(sender__user__first_name__istartswith=name) | Q(sender__user__last_name__istartswith=name)))
     result = set()
     for i in notifs:
         if i.sender == up: result.add(i.receiver) 
         else: result.add(i.sender)
     # 2. union con My Friends
-    rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type='Accepted')
+    rels = Relationship.objects.filter(Q(Q(sender=up), Q(receiver__user__first_name__istartswith=name) | Q(receiver__user__last_name__istartswith=name)) 
+        | Q(Q(receiver=up), Q(sender__user__first_name__istartswith=name) | Q(sender__user__last_name__istartswith=name)), relationship_type='Accepted')
     result2 = set()
     for i in rels:
         if i.sender == up: result2.add(i.receiver) 
