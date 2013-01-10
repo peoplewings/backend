@@ -85,6 +85,7 @@ def search_notification_addressees(request):
         dic = {}
         dic['first_name'] = i.user.first_name
         dic['last_name'] = i.user.last_name
+        dic['id'] = i.id
         r.append(dic)
 
     response_data = {}

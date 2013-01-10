@@ -67,6 +67,7 @@ class AutocompleteTest(TestCase):
         l1 = json.loads(r1.content)['data']
         self.assertEqual(l1[0]['first_name'], self.profile2.user.first_name)
         self.assertEqual(l1[0]['last_name'], self.profile2.user.last_name)
+        self.assertEqual(l1[0]['id'], self.profile2.id)
 
         r2 = c.get('/ajax/search/notification_addressee?type=message', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
         self.assertEqual(json.loads(r2.content)['code'], 200)
@@ -76,6 +77,7 @@ class AutocompleteTest(TestCase):
         l2 = json.loads(r2.content)['data']
         self.assertEqual(l2[0]['first_name'], self.profile1.user.first_name)
         self.assertEqual(l2[0]['last_name'], self.profile1.user.last_name)
+        self.assertEqual(l2[0]['id'], self.profile1.id)
 
         r3 = c.get('/ajax/search/notification_addressee?type=message', HTTP_X_AUTH_TOKEN=self.token3, content_type='application/json')
         self.assertEqual(json.loads(r3.content)['code'], 200)
@@ -96,8 +98,10 @@ class AutocompleteTest(TestCase):
         l1 = json.loads(r1.content)['data']
         self.assertEqual(l1[0]['first_name'], self.profile2.user.first_name)
         self.assertEqual(l1[0]['last_name'], self.profile2.user.last_name)
+        self.assertEqual(l1[0]['id'], self.profile2.id)
         self.assertEqual(l1[1]['first_name'], self.profile3.user.first_name)
         self.assertEqual(l1[1]['last_name'], self.profile3.user.last_name)
+        self.assertEqual(l1[1]['id'], self.profile3.id)
 
         r2 = c.get('/ajax/search/notification_addressee?type=message', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
         self.assertEqual(json.loads(r2.content)['code'], 200)
@@ -107,6 +111,7 @@ class AutocompleteTest(TestCase):
         l2 = json.loads(r2.content)['data']
         self.assertEqual(l2[0]['first_name'], self.profile1.user.first_name)
         self.assertEqual(l2[0]['last_name'], self.profile1.user.last_name)
+        self.assertEqual(l2[0]['id'], self.profile1.id)
 
         r3 = c.get('/ajax/search/notification_addressee?type=message', HTTP_X_AUTH_TOKEN=self.token3, content_type='application/json')
         self.assertEqual(json.loads(r3.content)['code'], 200)
