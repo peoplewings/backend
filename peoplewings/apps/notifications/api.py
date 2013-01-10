@@ -142,7 +142,7 @@ class NotificationsListResource(ModelResource):
 				if value == 'reqinv':
 					filters = filters & Q(kind='requests')|Q(kind='invites')
 				elif value == 'msg':
-					  filters = filters & Q(kind='messages')
+					  filters = filters & Q(kind='message')
 				elif value == 'friendship':
 					  filters = filters & Q(kind='friends')
 			elif key == 'target':
@@ -418,5 +418,97 @@ class NotificationsListResource(ModelResource):
 
 		return wrapper
 
+class NotificationsThreadResource(ModelResource):
+	
+	class Meta:
+		object_class = Notifications
+		queryset = Notifications.objects.all()
+		detail_allowed_methods = []
+		list_allowed_methods = []
+		detail_allowed_methods = ['get']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True     
+		resource_name = 'notificationsthread'
+
+
+	def get_detail(self, request, **kwargs):
+		ref = kwargs['pk']
+		filters = Q(reference= ref)
+		aux_list = []
+		me = UserProfile.objects.get(user = request.user)
+
+		notifs = Notifications.objects.filter(filters).order_by('created')
+		if not notifs:
+			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
+		for i in notifs:
+			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
+				print me.pk, ' ', i.sender.pk, ' ', i.receiver.pk
+				return self.create_response(request, {"status":False, "errors":"You are not allowed to visualize the notification with that reference", "code":400}, response_class = HttpResponse)			
+			if i.kind == 'message':
+				aux = MessageThread()
+				#sender info
+				aux.sender_id = i.sender.pk
+				aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+				aux.sender_age = i.sender.get_age()
+				aux.sender_verified = True
+				aux.sender_location = i.sender.current_city.stringify()
+				aux.sender_friends = i.sender.relationships.count()
+				aux.sender_references = i.sender.references.count()
+				aux.sender_med_avatar = i.sender.medium_avatar
+				aux.sender_small_avatar = i.sender.thumb_avatar
+				aux.sender_connected = 'F'
+				#receiver info
+				aux.receiver_id = i.receiver.pk
+				aux.receiver_avatar = i.receiver.thumb_avatar
+				#message info
+				msg = Messages.objects.get(pk = i.pk)
+				aux.content['message'] = msg.private_message
+				#generic info
+				aux.kind = i.kind
+				aux.created = i.created
+				aux.reference = i.reference
+				aux.id = i.pk
+			else:
+				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
+			#Once we filled the aux object, we have to add it to the list
+			aux_list.append(aux.jsonable())
+		#Now we have the list
+		return self.create_response(request, {"status":True, "data": aux_list, "code":200}, response_class = HttpResponse)
+
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)              
+				return response
+			except (BadRequest, fields.ApiFieldError), e:
+				return http.HttpBadRequest(e.args[0])
+			except ValidationError, e:
+				return http.HttpBadRequest(', '.join(e.messages))
+			except Exception, e:
+				if hasattr(e, 'response'):
+					return e.response
+
+				# A real, non-expected exception.
+				# Handle the case where the full traceback is more helpful
+				# than the serialized error.
+				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
+					raise
+
+				# Re-raise the error to get a proper traceback when the error
+				# happend during a test case
+				if request.META.get('SERVER_NAME') == 'testserver':
+					raise
+
+				# Rather than re-raising, we're going to things similar to
+				# what Django does. The difference is returning a serialized
+				# error message.
+				return self._handle_500(request, e)
+
+		return wrapper
 
 

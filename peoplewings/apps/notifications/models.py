@@ -28,7 +28,7 @@ class NotificationsManager(models.Manager):
 			sen = UserProfile.objects.get(user = kwargs['sender'])
 		except Exception, e:
 			raise e			
-		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'messages', read = False, first_sender =  sen, private_message = kwargs['content'])
+		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'message', read = False, first_sender =  sen, private_message = kwargs['content'])
 
 	def create_request(self, **kwargs):
 		try:
@@ -125,7 +125,7 @@ class Messages(Notifications):
 	private_message = models.TextField(blank=True)
 
 	def save(self, *args, **kwargs):
-		self.kind = 'messages'
+		self.kind = 'message'
 		super(Messages, self).save(*args, **kwargs)
 
 # Friendship class
