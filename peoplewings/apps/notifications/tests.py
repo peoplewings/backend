@@ -525,15 +525,3 @@ class PostListRequestsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['status'], False)
 		self.assertEqual(json.loads(r1.content)['code'], 400)
 		self.assertEqual(json.loads(r1.content)['errors'], {message2.reference : "This reference is not owned by the user thus it can't be deleted", invite2.reference : "This reference is not owned by the user thus it can't be deleted"})
-
-
-
-
-
-
-
-
-
-
-
-
