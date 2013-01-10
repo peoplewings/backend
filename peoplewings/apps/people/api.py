@@ -33,7 +33,7 @@ from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
-from peoplewings.apps.wings.api import AccomodationsResource
+from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation
 
@@ -572,6 +572,9 @@ class UserProfileResource(ModelResource):
             # PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
                 self.wrap_view('accomodation_collection'), name="api_list_wings"),
+            # GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
+            url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
+                self.wrap_view('wing_collection'), name="api_list_wings"),
 
             # /profiles/<profile_id>|me/relationships/
             url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
@@ -608,7 +611,11 @@ class UserProfileResource(ModelResource):
         return rr.dispatch_list(request, **kwargs)
 
     def preview_profile(self, request, **kwargs):
-        return self.dispatch_detail(request, **kwargs) 
+        return self.dispatch_detail(request, **kwargs)
+
+    def wing_collection(self, request, **kwargs):
+        wing_resource = WingResource()
+        return wing_resource.dispatch_list(request, **kwargs)  
     
     #funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
     def dehydrate_languages(self, bundle):

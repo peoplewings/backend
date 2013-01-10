@@ -30,7 +30,14 @@ class NotificationsList(object):
 		self.connected = None
 		## URLs
 		self.thread_url = None
-	
+
+	def gen_key(self, key):
+		buff = key.replace("_", " ")
+		buff = buff.split()
+		buff = [i.capitalize() for i in buff if len(buff) > 1]
+		buff = "".join(buff)
+		return buff
+
 	def jsonable(self):
 		res = dict()
 		for key, value in self.__dict__.items():   
@@ -42,6 +49,46 @@ class NotificationsList(object):
 		if (self.name is not None and key.lower() in self.name.lower()) or (self.message is not None and key.lower() in self.message.lower()) or (self.content is not None and key.lower() in self.content.lower()):
 			return True
 		return False
+
+class MessageThread(object):
+	## Notif specific
+	def __init__(self):
+		#sender info
+		self.sender_id = None
+		self.sender_name = None
+		self.sender_age = None
+		self.sender_verified = None
+		self.sender_location = None
+		self.sender_friends = None
+		self.sender_references = None
+		self.sender_med_avatar = None
+		self.sender_small_avatar = None
+		self.sender_connected = None
+		#receiver info
+		self.receiver_id = None
+		self.receiver_avatar = None
+		#message info
+		self.content = {}
+		self.content['message'] = None
+		#generic info
+		self.kind = None
+		self.created = None
+		self.reference = None
+		self.id = None
+	
+	def gen_key(self, key):
+		buff = key.replace("_", " ")
+		buff = buff.split()
+		buff = [i.capitalize() for i in buff if len(buff) > 1]
+		buff = "".join(buff)
+		return buff
+
+	def jsonable(self):
+		res = dict()
+		for key, value in self.__dict__.items():   
+			if value is not None:         
+				res[key] = value
+		return res
 
 
 class Thread(object):

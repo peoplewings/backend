@@ -1,2 +1,12 @@
--r requirements/test.txt
-
+-r requirements/common.txt
+boto==2.6.0
+django-appconf==0.5
+django-compressor==1.2
+django-crontab==0.4
+django-dynamic-fixture==1.6.4
+django-extensions==1.0.0
+django-image-cropper==0.1.2
+django-imagekit==2.0.1
+django-registration==0.8
+django-storages==1.1.5
+django-tastypie==0.9.12-alpha
