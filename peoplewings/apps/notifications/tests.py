@@ -9,6 +9,7 @@ import random
 import json
 from datetime import datetime
 import uuid
+import time
 
 from django.test import TestCase, Client
 from django_dynamic_fixture import G, get
@@ -419,6 +420,16 @@ class PostListRequestsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['code'], 410)
 		self.assertEqual(json.loads(r1.content)['errors'], 'The selected wing is not a valid choice')
 
+class DeleteNotificationsTest(TestCase):
+
+	def setUp(self):
+		#make some users and profiles as example
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
 	def test_delete_notifications(self):
 		#Initialize method vars
 		request1 = G(Requests, receiver=self.profile1, first_sender = self.profile1)
@@ -526,14 +537,124 @@ class PostListRequestsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['code'], 400)
 		self.assertEqual(json.loads(r1.content)['errors'], {message2.reference : "This reference is not owned by the user thus it can't be deleted", invite2.reference : "This reference is not owned by the user thus it can't be deleted"})
 
+class GetNotificationsThreadTest(TestCase):
 
+	def setUp(self):
+		#make some users and profiles as example
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
 
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
 
+		#First make a thread of messages
+		self.ref = str(uuid.uuid4())
+		self.created = time.time() - 3600*24
+		self.check_created = self.created
+		self.message1 = G(Messages, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message2 = G(Messages, reference = self.ref, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message3 = G(Messages, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message4 = G(Messages, reference = self.ref, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message5 = G(Messages, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message6 = G(Messages, reference = self.ref, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message7 = G(Messages, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=self.created)
+		self.created = self.created + 3600
+		self.message8 = G(Messages, reference = self.ref, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="message", created=self.created)
 
+		#Make another thread of messages belonging to profile2 and profile 3
+		self.profile3 = G(UserProfile)
+		self.ref2 = str(uuid.uuid4())
+		self.created2 = time.time() - 3600*24
+		self.check_created2 = self.created
+		self.message11 = G(Messages, reference = self.ref2, sender=self.profile2, receiver=self.profile3, first_sender=self.profile2, kind="message", created=self.created2)
+		self.created = self.created + 3600
+		self.message12 = G(Messages, reference = self.ref2, sender=self.profile3, receiver=self.profile2, first_sender=self.profile2, kind="message", created=self.created2)
+		self.created = self.created + 3600
+		self.message13 = G(Messages, reference = self.ref2, sender=self.profile2, receiver=self.profile3, first_sender=self.profile2, kind="message", created=self.created2)
 
+	def test_get_notificationsthread_message(self):
+		#Initialize method vars
+		c = Client()
+		expected_sender = self.profile1
+		expected_receiver = self.profile2
 
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		#Now let's check out the data we've just received...
+		#... we know that the notifications come ordered from older to newer (ASC)
+		self.assertEqual(js.has_key('data'), True)
+		self.assertEqual(isinstance(js['data'], list), True)		
+		
+		for i in js['data']:
+			#Check if the response is good
+			self.assertTrue(i.has_key('senderId'))
+			self.assertEqual(i['senderId'], expected_sender.pk)
+			self.assertTrue(i.has_key('senderName'))
+			self.assertEqual(i['senderName'], '%s %s' % (expected_sender.user.first_name, expected_sender.user.last_name))
+			self.assertTrue(i.has_key('senderAge'))
+			self.assertEqual(i['senderAge'], expected_sender.get_age())
+			self.assertTrue(i.has_key('senderVerified'))
+			self.assertEqual(i['senderVerified'], True)
+			self.assertTrue(i.has_key('senderLocation'))
+			self.assertEqual(i['senderLocation'], expected_sender.current_city.stringify())
+			self.assertTrue(i.has_key('senderFriends'))
+			self.assertEqual(i['senderFriends'], expected_sender.relationships.count())
+			self.assertTrue(i.has_key('senderReferences'))
+			self.assertEqual(i['senderReferences'], expected_sender.references.count())
+			self.assertTrue(i.has_key('senderMedAvatar'))
+			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
+			self.assertTrue(i.has_key('senderSmallAvatar'))
+			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
+			self.assertTrue(i.has_key('senderConnected'))
+			self.assertEqual(i['senderConnected'], 'F')
+			self.assertTrue(i.has_key('receiverId'))
+			self.assertEqual(i['receiverId'], expected_receiver.pk)
+			self.assertTrue(i.has_key('receiverAvatar'))
+			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
+			self.assertTrue(i.has_key('kind'))
+			self.assertEqual(i['kind'], 'message')
+			self.assertTrue(i.has_key('content'))
+			self.assertTrue(i['content'].has_key('message'))
+			self.assertTrue(i.has_key('created'))		
+			self.assertEqual(i['created'], int(self.check_created))
+			self.assertTrue(i.has_key('content'))
+			self.assertEqual(i['reference'], self.ref)
+			#Update next data
+			if expected_sender.pk == self.profile1.pk:
+				expected_sender = self.profile2
+				expected_receiver = self.profile1
+			else:
+				expected_sender = self.profile1
+				expected_receiver = self.profile2
+			self.check_created = self.check_created + 3600
+		#Now the ERRORS
+		r1 = c.get('/api/v1/notificationsthread/' + str(uuid.uuid4()), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The notification with that reference does not exists")
 
-
-
-
-
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref2), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "You are not allowed to visualize the notification with that reference")
