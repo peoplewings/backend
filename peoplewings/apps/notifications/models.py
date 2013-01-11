@@ -30,6 +30,21 @@ class NotificationsManager(models.Manager):
 			raise e			
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'message', read = False, first_sender =  sen, private_message = kwargs['content'])
 
+	def respond_message(self, **kwargs):
+		try:
+			rec = UserProfile.objects.get(pk = kwargs['receiver'])
+		except Exception, e:
+			raise e
+		try:
+			sen = UserProfile.objects.get(user = kwargs['sender'])
+		except Exception, e:
+			raise e
+		try:			
+			fs = Notifications.objects.filter(reference= kwargs['reference']).order_by('created')[0]
+		except Exception, e:
+			raise e
+		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = kwargs['reference'], kind = 'message', read = False, first_sender =  fs.first_sender, private_message = kwargs['content'])
+
 	def create_request(self, **kwargs):
 		try:
 			receiver = UserProfile.objects.get(pk = kwargs['receiver'])

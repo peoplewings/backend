@@ -426,6 +426,7 @@ class NotificationsThreadResource(ModelResource):
 		detail_allowed_methods = []
 		list_allowed_methods = []
 		detail_allowed_methods = ['get']
+		list_allowed_methods = ['post']
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
@@ -433,6 +434,35 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
+	def validate(self, POST):
+		errors = {}
+		if not POST.has_key('idReceiver'):
+			errors['idReceiver'] = 'This field is required'
+		else:
+			if not UserProfile.objects.filter(pk = POST['idReceiver']):
+				return "The receiver of the notification does not exists"
+
+		if not POST.has_key('reference'):
+			errors['reference']= 'This field is required'
+
+		if not POST.has_key('kind'):
+			errors['reference']= 'This field is not valid'
+
+		if not POST.has_key('data'):
+			errors['data'] = 'This field is required'
+		else:
+			if POST['kind'] not in ['request', 'invite', 'message']:
+				errors['kind'] = 'This field is not valid'
+
+		if POST.has_key('kind') and POST['kind'] == 'message' and POST.has_key('data'):
+			if not POST['data'].has_key('content'):
+				errors['content']= 'This field is required'
+			else:
+				if len(POST['data']['content']) > 1500:
+					return "The message of the notification is too long"
+				elif len(POST['data']['content']) == 0:
+					return "The message of the notification cannot be empty"
+		return errors
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -445,7 +475,6 @@ class NotificationsThreadResource(ModelResource):
 			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
-				print me.pk, ' ', i.sender.pk, ' ', i.receiver.pk
 				return self.create_response(request, {"status":False, "errors":"You are not allowed to visualize the notification with that reference", "code":400}, response_class = HttpResponse)			
 			if i.kind == 'message':
 				aux = MessageThread()
@@ -477,6 +506,29 @@ class NotificationsThreadResource(ModelResource):
 			aux_list.append(aux.jsonable())
 		#Now we have the list
 		return self.create_response(request, {"status":True, "data": aux_list, "code":200}, response_class = HttpResponse)
+
+	def post_list(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		errors = self.validate(POST)
+		me = UserProfile.objects.get(user= request.user)
+		if isinstance(errors, dict) and len(errors.keys()) > 0:		
+			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
+		elif isinstance(errors, str):
+			return self.create_response(request, {"status":False, "errors": errors, "code":400}, response_class = HttpResponse)
+		try:
+			notif = Notifications.objects.filter(reference= POST['reference'])[0]
+			if not notif.receiver == me and not notif.sender == me:
+				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": "The requested message does not exists", "code":400}, response_class = HttpResponse)
+		# Respond the notification
+		if POST['kind'] == 'message':
+			try:
+				Notifications.objects.respond_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'], reference= POST['reference'])
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+
+		return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
 
 	def wrap_view(self, view):
 		@csrf_exempt
