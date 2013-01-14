@@ -234,7 +234,7 @@
     }
   },
 {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 1,
     "fields": {
         "state" : "M",
@@ -245,7 +245,7 @@
     }
   },
 {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 2,
     "fields": {
         "state" : "M",
@@ -256,7 +256,7 @@
     }
   },
 {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 3,
     "fields": {
         "state" : "M",
@@ -267,7 +267,7 @@
     }
   },
 {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 4,
     "fields": {
         "state" : "A",
@@ -278,7 +278,7 @@
     }
   },
 {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 5,
     "fields": {
         "state" : "P",
@@ -289,7 +289,7 @@
     }
   },
   {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 6,
     "fields": {
         "state" : "M",
@@ -300,7 +300,7 @@
     }
   },
     {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 10,
     "fields": {
         "state" : "P",
@@ -311,7 +311,7 @@
     }
   },
       {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 11,
     "fields": {
         "state" : "P",
@@ -322,7 +322,7 @@
     }
   },
         {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 12,
     "fields": {
         "state" : "A",
@@ -333,7 +333,7 @@
     }
   },
           {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 13,
     "fields": {
         "state" : "A",
@@ -344,7 +344,7 @@
     }
   },
             {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 14,
     "fields": {
         "state" : "D",
@@ -355,7 +355,7 @@
     }
   },
               {
-    "model": "notifications.request",
+    "model": "notifications.Requests",
     "pk": 15,
     "fields": {
         "state" : "D",
@@ -369,7 +369,6 @@
     "model": "notifications.Invites",
     "pk": 16,
     "fields": {
-        "title" : "Hey Pau! Wanna come to my place",
         "state" : "P",
         "private_message" : "So lonelyy, so lonelyyy xDDD",
         "wing" : 2
@@ -380,7 +379,6 @@
     "model": "notifications.Invites",
     "pk": 17,
     "fields": {
-        "title" : "Hey, I have a spare room",
         "state" : "M",
         "private_message" : "I see you are really british",
         "wing" : 2
@@ -391,7 +389,6 @@
     "model": "notifications.Invites",
     "pk": 18,
     "fields": {
-        "title" : "Hey, I have a spare room",
         "state" : "M",
         "private_message" : "I even eat fish&chips!",
         "wing" : 2
