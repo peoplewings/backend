@@ -12,11 +12,12 @@ import uuid
 import time
 
 from django.test import TestCase, Client
-from django_dynamic_fixture import G, get
+from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites
 from wings.models import Accomodation, Wing
+from locations.models import City
 from django.contrib.auth.models import User
 from people.models import UserProfile
 from peoplewings.libs.customauth.models import ApiToken
@@ -123,6 +124,26 @@ class PaginationTest(TestCase):
 		self.assertEqual(json.loads(r3.content)['code'], 413)
 		self.assertEqual(json.loads(r3.content)['msg'], "Sorry, no results on that page.")
 		self.assertEqual(json.loads(r3.content)['status'], False)
+
+class GetListNotificationsTest(TestCase):
+	def setUp(self):
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.profile2 = G(UserProfile)
+
+		self.wing1 = G(Accomodation, author= self.profile1, city=G(City, name='Barcelona'))
+		self.req = G(Requests, sender= self.profile2, receiver= self.profile1, first_sender=self.profile2, wing= self.wing1)
+
+	def test_get(self):
+		c = Client()
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+
+		
 
 class GetListMessagesTest(TestCase):
 
@@ -800,7 +821,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(js.has_key('errors'))
 		self.assertEqual(js['errors'], "The requested message does not exists")
 	
-	
+	"""
 	def test_post_request(self):
 		#Initialize variables
 		c = Client()
@@ -887,7 +908,7 @@ class PostNotificationsThreadTest(TestCase):
 			assertEqual(i.state, 'M')
 		#Decline it
 		#Change Additional Information
-
+		"""
 	
 
 	

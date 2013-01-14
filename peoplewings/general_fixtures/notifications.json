@@ -99,7 +99,7 @@
         "created" : "1349393600",
         "reference" : "dd1cdacc-e747-43dc-a766-d838e1f6eee5",
         "read" : false,
-        "kind" : "messages",
+        "kind" : "message",
         "first_sender" : 1
     }
   },
@@ -112,7 +112,7 @@
         "created" : "1349393500",
         "reference" : "c7cdda55-b345-46d6-93e1-ba1cf5e4de02",
         "read" : false,
-        "kind" : "messages",
+        "kind" : "message",
         "first_sender" : 2
     }
   },
@@ -203,7 +203,7 @@
         "created" : "1355738485",
         "reference" : "74d146ca-5aa4-4ecd-a82b-c6ddfe5242bf",
         "read" : false,
-        "kind" : "invites",
+        "kind" : "invite",
         "first_sender" : 2
     }
   },
@@ -216,7 +216,7 @@
         "created" : "1355824885",
         "reference" : "b7ed5e81-c09b-44a6-a414-f59785ec0456",
         "read" : true,
-        "kind" : "invites",
+        "kind" : "invite",
         "first_sender" : 2
     }
   },

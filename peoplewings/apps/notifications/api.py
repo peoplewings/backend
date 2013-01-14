@@ -140,7 +140,7 @@ class NotificationsListResource(ModelResource):
 		for key, value in request.GET.items():
 			if key == 'kind':
 				if value == 'reqinv':
-					filters = filters & Q(kind='requests')|Q(kind='invites')
+					filters = filters & Q(kind='request')|Q(kind='invite')
 				elif value == 'msg':
 					  filters = filters & Q(kind='message')
 				elif value == 'friendship':
@@ -209,7 +209,7 @@ class NotificationsListResource(ModelResource):
 					aux.read = i.read
 				aux.kind = i.kind
 				## Request specific
-				if aux.kind == 'requests':
+				if aux.kind == 'request':
 					req = Requests.objects.get(pk = i.pk)
 					additional_list = i.get_subclass().all()		
 					for additional in additional_list:
@@ -225,7 +225,7 @@ class NotificationsListResource(ModelResource):
 					else:
 						aux.flag_direction =   False                                         
 					## Invite specific               
-				elif aux.kind == 'invites':
+				elif aux.kind == 'invite':
 					inv = Invites.objects.get(pk = i.pk) 
 					additional_list = i.get_subclass().all()
 					for additional in additional_list:
@@ -241,7 +241,7 @@ class NotificationsListResource(ModelResource):
 					else:
 						aux.flag_direction =   False          
 				## Message specific                         
-				elif aux.kind == 'messages':					
+				elif aux.kind == 'message':					
 					msg = Messages.objects.get(pk = i.pk)
 					aux.content = msg.private_message
 				## Friendship specific                         
