@@ -669,17 +669,6 @@ class PostNotificationsThreadTest(TestCase):
 		self.profile2 = G(UserProfile)
 		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
 
-		#First make a thread of messages
-		self.ref = str(uuid.uuid4())
-		self.created = time.time() - 3600*24
-		self.check_created = self.created
-		self.message1 = G(Messages, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=self.created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)))
-
-		#First make a thread of messages
-		self.ref2 = str(uuid.uuid4())
-		self.created = time.time() - 3600*24
-		self.check_created = self.created
-		self.message2 = G(Messages, reference = self.ref2, kind="message", created=self.created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)))
 
 	def test_post_message(self):
 		#Initialize variables
@@ -688,12 +677,22 @@ class PostNotificationsThreadTest(TestCase):
 		content2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
 		content3 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
 		content4 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+		#First make a thread of messages
+		ref = str(uuid.uuid4())
+		created = time.time() - 3600*24
+		check_created = created
+		message1 = G(Messages, reference = ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="message", created=created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)))
 
+		#First make a thread of messages
+		ref2 = str(uuid.uuid4())
+		created = time.time() - 3600*24
+		check_created = created
+		message2 = G(Messages, reference = ref2, kind="message", created=created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)))
 		#Check if profile1 has 1 message and profile2 has 1 message as well...
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
 
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile1.pk, "kind": "message", "reference": self.ref, "data": {"content": content1}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content1}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -708,14 +707,19 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 2)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 2)
 		#Check if the newest message is the one we've just sended
-		msg = Messages.objects.filter(reference = self.ref).order_by('created')[1]
+		msg = Messages.objects.filter(reference = ref).order_by('created')[1]
 		self.assertEqual(msg.private_message, content1)
-		self.assertEqual(msg.reference, self.ref)
+		self.assertEqual(msg.reference, ref)
 		#Check if its ordered correctly (oldest first)
 		self.assertEqual(msg.private_message, content1)
+		self.assertEqual(msg.read, False)
+		self.assertEqual(msg.kind, 'message')
+		self.assertEqual(msg.first_sender, self.profile1)
+		self.assertEqual(msg.first_sender_visible, True)
+		self.assertEqual(msg.second_sender_visible, True)
 
 		#Now we are gonna send another message to the same thread
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "reference": self.ref, "data": {"content": content2}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content2}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -729,12 +733,12 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 3)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 3)
 		#Check if the newest message is the one we've just sended
-		msg = Messages.objects.filter(reference = self.ref).order_by('created')[2]
+		msg = Messages.objects.filter(reference = ref).order_by('created')[2]
 		self.assertEqual(msg.private_message, content2)
-		self.assertEqual(msg.reference, self.ref)
+		self.assertEqual(msg.reference, ref)
 
 		#Now profile1 is gonna send another message to the same thread, so the sender timeline goes like this[prof1 --> prof2 --> prof1 --> prof1]
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "reference": self.ref, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -748,12 +752,12 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 4)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 4)
 		#Check if the newest message is the one we've just sended
-		msg = Messages.objects.filter(reference = self.ref).order_by('created')[3]
+		msg = Messages.objects.filter(reference = ref).order_by('created')[3]
 		self.assertEqual(msg.private_message, content3)
-		self.assertEqual(msg.reference, self.ref)
+		self.assertEqual(msg.reference, ref)
 
 		#You are not permitted to respond in a thread that is not yours
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile2.pk, "kind": "message", "reference": self.ref2, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref2, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -763,19 +767,8 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(js.has_key('errors'))
 		self.assertEqual(js['errors'], "You are not permitted to respond in a thread that is not yours")
 
-		#The receiver of the notification does not exists
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": 12, "kind": "message", "reference": self.ref, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
-		self.assertEqual(r1.status_code, 200)
-		js = json.loads(r1.content)
-		self.assertTrue(js.has_key('status'))
-		self.assertEqual(js['status'], False)
-		self.assertTrue(js.has_key('code'))
-		self.assertEqual(js['code'], 400)
-		self.assertTrue(js.has_key('errors'))
-		self.assertEqual(js['errors'], "The receiver of the notification does not exists")
-
 		#The message of the notification is too long
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile1.pk, "kind": "message", "reference": self.ref, "data": {"content": content4}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content4}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -786,7 +779,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['errors'], "The message of the notification is too long")
 
 		#The message of the notification cannot be empty
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile1.pk, "kind": "message", "reference": self.ref, "data": {"content": ""}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": ""}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -797,7 +790,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['errors'], "The message of the notification cannot be empty")
 
 		#The requested message does not exists
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile1.pk, "kind": "message", "reference": str(uuid.uuid4()), "data": {"content": "asd"}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": str(uuid.uuid4()), "data": {"content": "asd"}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -806,7 +799,98 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['code'], 400)
 		self.assertTrue(js.has_key('errors'))
 		self.assertEqual(js['errors'], "The requested message does not exists")
+	
+	
+	def test_post_request(self):
+		#Initialize variables
+		c = Client()
+		content1 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		content2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		content3 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		content4 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+
+		#Create the wing related to the request
+		wing = G(Accomodation, city= self.profile2.current_city, author= self.profile2)
+		#Make a thread of requests
+		ref = str(uuid.uuid4())
+		created = time.time() - 3600*24
+		check_created = created
+		request = G(Requests, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)), public_message= ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(100), wing= wing))
+		additional_info= G(AccomodationInformation, notification=request, start_date=1357948800, end_date=1358208000)
+		#Check if profile1 has 1 request and profile2 has 1 request as well...
+		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
+		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
+
+		#Make the call to test our API (ACCEPT)
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "request", "reference": ref, "data": {"content": content1, "wingType": "accomodation", "state": "A", "wingParameters": {"wingId": wing.pk, "start_date": 1357948800, "end_date": 1358208000, "capacity": 1}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Message sent succesfully")
+		#Check if the call has been made succesfully
+		#Then we are gonna check if the request has been sent...
+		#Check if profile1 has 2 request and profile2 has 2 request as well...
+		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 2)
+		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 2)
+		#Check if the newest request is the one we've just sended
+		req = Requests.objects.filter(reference = ref).order_by('created')[1]
+		self.assertEqual(req.private_message, content1)
+		self.assertEqual(req.reference, ref)
+		#Check if its ordered correctly (oldest first)
+		self.assertEqual(req.read, False)
+		self.assertEqual(req.kind, 'request')
+		self.assertEqual(req.first_sender, self.profile2)
+		self.assertEqual(req.first_sender_visible, True)
+		self.assertEqual(req.second_sender_visible, True)
+		self.assertEqual(req.private_message, content1)
+		self.assertEqual(req.public_message, None)
+		self.assertEqual(req.make_pulic, False)
+		self.assertEqual(req.state, 'A')
+		#We accepted the message, so the state has to propagate through all the thread
+		for i in Requests.objects.filter(reference = ref):
+			assertEqual(i.state, 'A')
+		#Respond the request above, mabeying it
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile2.pk, "kind": "request", "reference": ref, "data": {"content": content2, "wingType": "accomodation", "state": "A", "wingParameters": {"wingId": wing.pk, "start_date": 1357948800, "end_date": 1358208000, "capacity": 1}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Message sent succesfully")
+		#Check if the call has been made succesfully
+		#Then we are gonna check if the request has been sent...
+		#Check if profile1 has 2 request and profile2 has 2 request as well...
+		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 3)
+		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 3)
+		#Check if the newest request is the one we've just sended
+		req = Requests.objects.filter(reference = ref).order_by('created')[2]
+		self.assertEqual(req.private_message, content2)
+		self.assertEqual(req.reference, ref)
+		#Check if its ordered correctly (oldest first)
+		self.assertEqual(req.read, False)
+		self.assertEqual(req.kind, 'request')
+		self.assertEqual(req.first_sender, self.profile2)
+		self.assertEqual(req.first_sender_visible, True)
+		self.assertEqual(req.second_sender_visible, True)
+		self.assertEqual(req.private_message, content2)
+		self.assertEqual(req.public_message, None)
+		self.assertEqual(req.make_pulic, False)
+		self.assertEqual(req.state, 'M')
+		#We accepted the message, so the state has to propagate through all the thread
+		for i in Requests.objects.filter(reference = ref):
+			assertEqual(i.state, 'M')
+		#Decline it
+		#Change Additional Information
+
+	
+
+	
 
 
-
-
+	

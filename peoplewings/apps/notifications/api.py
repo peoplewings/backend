@@ -435,13 +435,7 @@ class NotificationsThreadResource(ModelResource):
 		resource_name = 'notificationsthread'
 
 	def validate(self, POST):
-		errors = {}
-		if not POST.has_key('idReceiver'):
-			errors['idReceiver'] = 'This field is required'
-		else:
-			if not UserProfile.objects.filter(pk = POST['idReceiver']):
-				return "The receiver of the notification does not exists"
-
+		errors = {}		
 		if not POST.has_key('reference'):
 			errors['reference']= 'This field is required'
 
@@ -521,10 +515,19 @@ class NotificationsThreadResource(ModelResource):
 				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors": "The requested message does not exists", "code":400}, response_class = HttpResponse)
+		#Get the receiver of the notification
+		try:
+			aux = Notifications.objects.filter(reference= POST['reference'])[0]
+		except:
+			return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+		if aux.receiver == me:
+			receiver = aux.sender
+		else:
+			receiver = aux.receiver
 		# Respond the notification
 		if POST['kind'] == 'message':
-			try:
-				Notifications.objects.respond_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'], reference= POST['reference'])
+			try:				
+				Notifications.objects.respond_message(receiver = receiver.pk, sender = request.user, content = POST['data']['content'], reference= POST['reference'])
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
 
