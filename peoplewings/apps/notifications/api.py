@@ -140,7 +140,7 @@ class NotificationsListResource(ModelResource):
 		for key, value in request.GET.items():
 			if key == 'kind':
 				if value == 'reqinv':
-					filters = filters & Q(kind='requests')|Q(kind='invites')
+					filters = filters & Q(kind='request')|Q(kind='invite')
 				elif value == 'msg':
 					  filters = filters & Q(kind='message')
 				elif value == 'friendship':
@@ -209,7 +209,7 @@ class NotificationsListResource(ModelResource):
 					aux.read = i.read
 				aux.kind = i.kind
 				## Request specific
-				if aux.kind == 'requests':
+				if aux.kind == 'request':
 					req = Requests.objects.get(pk = i.pk)
 					additional_list = i.get_subclass().all()		
 					for additional in additional_list:
@@ -225,7 +225,7 @@ class NotificationsListResource(ModelResource):
 					else:
 						aux.flag_direction =   False                                         
 					## Invite specific               
-				elif aux.kind == 'invites':
+				elif aux.kind == 'invite':
 					inv = Invites.objects.get(pk = i.pk) 
 					additional_list = i.get_subclass().all()
 					for additional in additional_list:
@@ -241,7 +241,7 @@ class NotificationsListResource(ModelResource):
 					else:
 						aux.flag_direction =   False          
 				## Message specific                         
-				elif aux.kind == 'messages':					
+				elif aux.kind == 'message':					
 					msg = Messages.objects.get(pk = i.pk)
 					aux.content = msg.private_message
 				## Friendship specific                         
@@ -257,10 +257,10 @@ class NotificationsListResource(ModelResource):
 					prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
 				aux.interlocutor_id = prof_aux.pk          
 				aux.avatar =  prof_aux.thumb_avatar
-				aux.age = prof_aux.get_age()
+				#aux.age = prof_aux.get_age()
 				aux.verified = False                    
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
-				else: aux.location = "Not specified, not specified, not specified"
+				else: aux.location = "Not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
 
 				aux.connected = 'F'
@@ -276,7 +276,7 @@ class NotificationsListResource(ModelResource):
 		for o in result_dict:
 			if o.reference not in [r.reference for r in result]:
 				result.append(o)
-		page_size=2
+		page_size=50
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
 		endResult = min(num_page * page_size, count)
@@ -426,6 +426,7 @@ class NotificationsThreadResource(ModelResource):
 		detail_allowed_methods = []
 		list_allowed_methods = []
 		detail_allowed_methods = ['get']
+		list_allowed_methods = ['post']
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
@@ -433,6 +434,29 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
+	def validate(self, POST):
+		errors = {}		
+		if not POST.has_key('reference'):
+			errors['reference']= 'This field is required'
+
+		if not POST.has_key('kind'):
+			errors['reference']= 'This field is not valid'
+
+		if not POST.has_key('data'):
+			errors['data'] = 'This field is required'
+		else:
+			if POST['kind'] not in ['request', 'invite', 'message']:
+				errors['kind'] = 'This field is not valid'
+
+		if POST.has_key('kind') and POST['kind'] == 'message' and POST.has_key('data'):
+			if not POST['data'].has_key('content'):
+				errors['content']= 'This field is required'
+			else:
+				if len(POST['data']['content']) > 1500:
+					return "The message of the notification is too long"
+				elif len(POST['data']['content']) == 0:
+					return "The message of the notification cannot be empty"
+		return errors
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -445,7 +469,6 @@ class NotificationsThreadResource(ModelResource):
 			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
-				print me.pk, ' ', i.sender.pk, ' ', i.receiver.pk
 				return self.create_response(request, {"status":False, "errors":"You are not allowed to visualize the notification with that reference", "code":400}, response_class = HttpResponse)			
 			if i.kind == 'message':
 				aux = MessageThread()
@@ -477,6 +500,38 @@ class NotificationsThreadResource(ModelResource):
 			aux_list.append(aux.jsonable())
 		#Now we have the list
 		return self.create_response(request, {"status":True, "data": aux_list, "code":200}, response_class = HttpResponse)
+
+	def post_list(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		errors = self.validate(POST)
+		me = UserProfile.objects.get(user= request.user)
+		if isinstance(errors, dict) and len(errors.keys()) > 0:		
+			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
+		elif isinstance(errors, str):
+			return self.create_response(request, {"status":False, "errors": errors, "code":400}, response_class = HttpResponse)
+		try:
+			notif = Notifications.objects.filter(reference= POST['reference'])[0]
+			if not notif.receiver == me and not notif.sender == me:
+				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": "The requested message does not exists", "code":400}, response_class = HttpResponse)
+		#Get the receiver of the notification
+		try:
+			aux = Notifications.objects.filter(reference= POST['reference'])[0]
+		except:
+			return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+		if aux.receiver == me:
+			receiver = aux.sender
+		else:
+			receiver = aux.receiver
+		# Respond the notification
+		if POST['kind'] == 'message':
+			try:				
+				Notifications.objects.respond_message(receiver = receiver.pk, sender = request.user, content = POST['data']['content'], reference= POST['reference'])
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+
+		return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
 
 	def wrap_view(self, view):
 		@csrf_exempt
