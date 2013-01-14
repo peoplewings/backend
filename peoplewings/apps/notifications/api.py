@@ -218,7 +218,7 @@ class NotificationsListResource(ModelResource):
 						aux.num_people = additional.num_people 
 						add_class = additional.get_class_name() 
 						aux.wing_type = add_class                             
-					aux.message = '%s (%s in %s)' % (req.wing.name, req.wing.__class__, req.wing.city.name)
+					aux.message = '%s (%s in %s)' % (req.wing.name, req.wing.get_class_name(), req.wing.city.name)
 					aux.state = req.state
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
@@ -234,7 +234,7 @@ class NotificationsListResource(ModelResource):
 						aux.num_people = additional.num_people  
 						add_class = additional.get_class_name()   
 						aux.wing_type = add_class                                                                            
-					aux.message = inv.wing.name
+					aux.message = '%s (%s in %s)' % (inv.wing.name, inv.wing.get_class_name(), inv.wing.city.name)
 					aux.state = inv.state   
 					if i.first_sender == prof.pk:
 						 aux.flag_direction = True
@@ -257,7 +257,7 @@ class NotificationsListResource(ModelResource):
 					prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
 				aux.interlocutor_id = prof_aux.pk          
 				aux.avatar =  prof_aux.thumb_avatar
-				#aux.age = prof_aux.get_age()
+				aux.age = prof_aux.get_age()
 				aux.verified = False                    
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 				else: aux.location = "Not specified"

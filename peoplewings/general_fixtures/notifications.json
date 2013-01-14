@@ -86,7 +86,7 @@
         "created" : "1349383600",
         "reference" : "dd1cdacc-e747-43dc-a766-d838e1f6eee5",
         "read" : true,
-        "kind" : "messages",
+        "kind" : "message",
         "first_sender" : 1
     }
   },
@@ -229,7 +229,7 @@
         "created" : "1355911285",
         "reference" : "b7ed5e81-c09b-44a6-a414-f59785ec0456",
         "read" : false,
-        "kind" : "invites",
+        "kind" : "invite",
         "first_sender" : 2
     }
   },

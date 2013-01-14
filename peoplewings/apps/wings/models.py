@@ -18,8 +18,11 @@ class Wing(models.Model):
 	city = models.ForeignKey(City, on_delete=models.PROTECT)
 
 	def get_type(self):
-	    if Accomodation.objects.filter(pk=self.pk).exists(): return Accomodation.objects.get(pk=self.pk).get_type()
-    
+		if Accomodation.objects.filter(pk=self.pk).exists(): return Accomodation.objects.get(pk=self.pk).get_type()
+
+	def get_class_name(self):
+		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
+	
 	
 class PublicTransport(models.Model):
 	name = models.CharField(max_length=50, blank = False, null = False, default = 'Not specified')
@@ -42,4 +45,4 @@ class Accomodation(Wing):
 	address = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='Street address')
 	number = models.CharField(max_length=max_ultra_short_len, blank=True)
 	additional_information = models.TextField(max_length=max_text_msg_len, blank=True)   
-	postal_code = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='ZIP / Postal code')	
+	postal_code = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='ZIP / Postal code') 
