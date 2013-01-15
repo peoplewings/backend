@@ -70,11 +70,8 @@ class MessageThread(object):
 		#message info
 		self.content = {}
 		self.content['message'] = None
-		#generic info
-		self.kind = None
-		self.created = None
-		self.reference = None
-		self.id = None
+		#generic info		
+		self.created = None		
 	
 	def gen_key(self, key):
 		buff = key.replace("_", " ")
