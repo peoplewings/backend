@@ -92,9 +92,9 @@ class PaginationTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['msg'], "OK")
 		self.assertEqual(json.loads(r1.content)['status'], True)
 		self.assertEqual(json.loads(r1.content)['data']['count'], 5)
-		self.assertEqual(json.loads(r1.content)['data']['endResult'], 2)
+		self.assertEqual(json.loads(r1.content)['data']['endResult'], 5)
 		self.assertEqual(json.loads(r1.content)['data']['startResult'], 1)
-		self.assertEqual(len(json.loads(r1.content)['data']['items']), 2)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 5)
 		l1 = json.loads(r1.content)['data']['items']
 
 		#check that not providing the page parameter has the same effect as calling with page=1
@@ -103,21 +103,21 @@ class PaginationTest(TestCase):
 		self.assertEqual(json.loads(r2.content)['msg'], "OK")
 		self.assertEqual(json.loads(r2.content)['status'], True)
 		self.assertEqual(json.loads(r2.content)['data']['count'], 5)
-		self.assertEqual(json.loads(r2.content)['data']['endResult'], 2)
+		self.assertEqual(json.loads(r2.content)['data']['endResult'], 5)
 		self.assertEqual(json.loads(r2.content)['data']['startResult'], 1)
-		self.assertEqual(len(json.loads(r2.content)['data']['items']), 2)
+		self.assertEqual(len(json.loads(r2.content)['data']['items']), 5)
 		l2 = json.loads(r2.content)['data']['items']
 		self.assertEqual(l1, l2)
 
 		#check last page
-		r4 = c.get('/api/v1/notificationslist?page=3', HTTP_X_AUTH_TOKEN=token, content_type='application/json')
+		r4 = c.get('/api/v1/notificationslist?page=1', HTTP_X_AUTH_TOKEN=token, content_type='application/json')
 		self.assertEqual(json.loads(r4.content)['code'], 200)
 		self.assertEqual(json.loads(r4.content)['msg'], "OK")
 		self.assertEqual(json.loads(r4.content)['status'], True)
 		self.assertEqual(json.loads(r4.content)['data']['count'], 5)
 		self.assertEqual(json.loads(r4.content)['data']['endResult'], 5)
-		self.assertEqual(json.loads(r4.content)['data']['startResult'], 5)
-		self.assertEqual(len(json.loads(r4.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r4.content)['data']['startResult'], 1)
+		self.assertEqual(len(json.loads(r4.content)['data']['items']), 5)
 
 		# checking unexisting pages...
 		r3 = c.get('/api/v1/notificationslist?page=4', HTTP_X_AUTH_TOKEN=token, content_type='application/json')
@@ -164,7 +164,7 @@ class GetListMessagesTest(TestCase):
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], True)
 		self.assertEqual(json.loads(r1.content)['code'], 200)
-		self.assertEqual(len(json.loads(r1.content)['data']['items']), 2)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 5)
 		self.assertEqual(json.loads(r1.content)['data']['count'], 5)
 
 		
@@ -615,8 +615,14 @@ class GetNotificationsThreadTest(TestCase):
 		#Now let's check out the data we've just received...
 		#... we know that the notifications come ordered from older to newer (ASC)
 		self.assertEqual(js.has_key('data'), True)
-		self.assertEqual(isinstance(js['data'], list), True)				
-		for i in js['data']:			
+		data = js['data']
+		self.assertEqual(js['data'].has_key('reference'), True)
+		self.assertEqual(data['reference'], self.ref)
+		self.assertEqual(js['data'].has_key('kind'), True)
+		self.assertEqual(data['kind'], 'message')
+		self.assertEqual(js['data'].has_key('items'), True)
+		self.assertEqual(isinstance(data['items'], list), True)				
+		for i in data['items']:			
 			#Check if the response is good
 			self.assertTrue(i.has_key('senderId'))
 			self.assertEqual(i['senderId'], expected_sender.pk)
@@ -642,14 +648,11 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
 			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
-			self.assertTrue(i.has_key('kind'))
-			self.assertEqual(i['kind'], 'message')
 			self.assertTrue(i.has_key('content'))
 			self.assertTrue(i['content'].has_key('message'))
 			self.assertTrue(i.has_key('created'))		
 			self.assertEqual(i['created'], int(self.check_created))
-			self.assertTrue(i.has_key('content'))
-			self.assertEqual(i['reference'], self.ref)
+
 			#Update next data
 			if expected_sender.pk == self.profile1.pk:
 				expected_sender = self.profile2
@@ -712,7 +715,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
 
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content1}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -739,7 +742,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(msg.second_sender_visible, True)
 
 		#Now we are gonna send another message to the same thread
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content2}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content2}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -758,7 +761,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(msg.reference, ref)
 
 		#Now profile1 is gonna send another message to the same thread, so the sender timeline goes like this[prof1 --> prof2 --> prof1 --> prof1]
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -777,7 +780,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(msg.reference, ref)
 
 		#You are not permitted to respond in a thread that is not yours
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref2, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref2, "data": {"content": content3}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -788,7 +791,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['errors'], "You are not permitted to respond in a thread that is not yours")
 
 		#The message of the notification is too long
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": content4}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content4}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -799,7 +802,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['errors'], "The message of the notification is too long")
 
 		#The message of the notification cannot be empty
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": ref, "data": {"content": ""}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": ""}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -810,7 +813,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['errors'], "The message of the notification cannot be empty")
 
 		#The requested message does not exists
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "message", "reference": str(uuid.uuid4()), "data": {"content": "asd"}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": str(uuid.uuid4()), "data": {"content": "asd"}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -840,6 +843,39 @@ class PostNotificationsThreadTest(TestCase):
 		#Check if profile1 has 1 request and profile2 has 1 request as well...
 		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
 		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
+
+		#profile1 responds the request. He can only respond with a "Chat" or "Cancel/Decline"
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "request", "reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"start_date": 1357948800, "end_date": 1358208000, "capacity": 1, "flexibleStartDate": False, "flexibleEndDate": False}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Message sent succesfully")
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= self.ref).order_by('created')
+		self.assertEqual(len(req), 2)
+		req = req_list[1]
+		self.assertEqual(req.state, 'P')
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertNotEqual(req.private_message, "")
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, 1357948800)
+		self.assertEqual(ai.end_date, 1358208000)
+		self.assertEqual(ai.num_people, 1)
+		self.assertEqual(ai.flexible_start, )
+		self.assertEqual(ai.flexible_end, )
+
+
 
 		#Make the call to test our API (ACCEPT)
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "request", "reference": ref, "data": {"content": content1, "wingType": "accomodation", "state": "A", "wingParameters": {"wingId": wing.pk, "start_date": 1357948800, "end_date": 1358208000, "capacity": 1}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -908,3 +944,4 @@ class PostNotificationsThreadTest(TestCase):
 		#Decline it
 		#Change Additional Information
 		"""
+		

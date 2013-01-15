@@ -434,21 +434,22 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
-	def validate(self, POST):
-		errors = {}		
+	def validate_post_list(self, POST):
+		errors = {}	
+		kind = None	
 		if not POST.has_key('reference'):
 			errors['reference']= 'This field is required'
-
-		if not POST.has_key('kind'):
-			errors['reference']= 'This field is not valid'
+		else:
+			notif = Notifications.objects.filter(reference=POST['reference'])
+			if(len(notif) > 0):
+				kind = notif[0].kind
+			else: 
+				return "The requested message does not exists"
 
 		if not POST.has_key('data'):
 			errors['data'] = 'This field is required'
-		else:
-			if POST['kind'] not in ['request', 'invite', 'message']:
-				errors['kind'] = 'This field is not valid'
 
-		if POST.has_key('kind') and POST['kind'] == 'message' and POST.has_key('data'):
+		if kind and kind == 'message' and POST.has_key('data'):
 			if not POST['data'].has_key('content'):
 				errors['content']= 'This field is required'
 			else:
@@ -467,10 +468,14 @@ class NotificationsThreadResource(ModelResource):
 		notifs = Notifications.objects.filter(filters).order_by('created')
 		if not notifs:
 			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
+		kind = None
+		data = {}
+
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
 				return self.create_response(request, {"status":False, "errors":"You are not allowed to visualize the notification with that reference", "code":400}, response_class = HttpResponse)			
 			if i.kind == 'message':
+				kind = 'message'
 				aux = MessageThread()
 				#sender info
 				aux.sender_id = i.sender.pk
@@ -489,26 +494,29 @@ class NotificationsThreadResource(ModelResource):
 				#message info
 				msg = Messages.objects.get(pk = i.pk)
 				aux.content['message'] = msg.private_message
-				#generic info
-				aux.kind = i.kind
+				#generic info				
 				aux.created = i.created
-				aux.reference = i.reference
-				aux.id = i.pk
 			else:
 				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
 			#Once we filled the aux object, we have to add it to the list
 			aux_list.append(aux.jsonable())
 		#Now we have the list
-		return self.create_response(request, {"status":True, "data": aux_list, "code":200}, response_class = HttpResponse)
+		data['items'] = aux_list
+		data['kind'] = kind
+		data['reference'] = ref
+		if not kind:
+			data = {}
+		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
 
 	def post_list(self, request, **kwargs):
 		POST = json.loads(request.raw_post_data)
-		errors = self.validate(POST)
+		errors = self.validate_post_list(POST)
 		me = UserProfile.objects.get(user= request.user)
 		if isinstance(errors, dict) and len(errors.keys()) > 0:		
 			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
 		elif isinstance(errors, str):
 			return self.create_response(request, {"status":False, "errors": errors, "code":400}, response_class = HttpResponse)
+		kind = Notifications.objects.filter(reference=POST['reference'])[0].kind
 		try:
 			notif = Notifications.objects.filter(reference= POST['reference'])[0]
 			if not notif.receiver == me and not notif.sender == me:
@@ -525,7 +533,7 @@ class NotificationsThreadResource(ModelResource):
 		else:
 			receiver = aux.receiver
 		# Respond the notification
-		if POST['kind'] == 'message':
+		if kind == 'message':
 			try:				
 				Notifications.objects.respond_message(receiver = receiver.pk, sender = request.user, content = POST['data']['content'], reference= POST['reference'])
 			except Exception, e:
