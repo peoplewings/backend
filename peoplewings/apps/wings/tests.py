@@ -40,67 +40,91 @@ class ListWingsNamesTest(TestCase):
         self.a2 = G(Accomodation, author=self.profile1)
         self.a3 = G(Accomodation, author=self.profile3)
 
-    def test_not_logged_in(self):
-        c = Client()  
-        r = c.get('/api/v1/profiles/'+str(self.profile2.pk)+'/wings', content_type='application/json')
-        self.assertEqual(json.loads(r.content)['code'], 413)
-        self.assertEqual(json.loads(r.content)['msg'], "Unauthorized")
-        self.assertEqual(json.loads(r.content)['status'], False)
- 
-    def test_logged_in(self):
-        c = Client()    
-        response = c.get('/api/v1/profiles/'+str(self.profile2.pk)+'/wings', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-
     def test_list_wings(self):
         c = Client()
         
         # user 1 wants to see wings of user 2 => empty list
-        r = c.get('/api/v1/profiles/'+str(self.profile2.pk)+'/wings', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
-        self.assertEqual(json.loads(r.content)['code'], 200)
-        self.assertEqual(json.loads(r.content)['msg'], "Wings retrieved successfully.")
-        self.assertEqual(json.loads(r.content)['status'], True)
-        l1 = json.loads(r.content)['data']
+        r = c.get('/api/v1/wings?profile='+str(self.profile2.pk), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        content = json.loads(r.content)
+        self.assertTrue(content.has_key('code'))
+        self.assertEqual(content['code'], 200)
+        self.assertTrue(content.has_key('msg'))
+        self.assertEqual(content['msg'], "Wings retrieved successfully.")
+        self.assertTrue(content.has_key('status'))
+        self.assertEqual(content['status'], True)
+        self.assertTrue(content.has_key('data'))
+        self.assertTrue(isinstance(content['data'], dict))
+        self.assertTrue(content['data'].has_key('items'))
+        l1 = content['data']['items']
         self.assertEqual(len(l1), 0)
 
         # user 1 wants to see wings of user 3 => 1 wing
-        r = c.get('/api/v1/profiles/'+str(self.profile3.pk)+'/wings', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
-        self.assertEqual(json.loads(r.content)['code'], 200)
-        self.assertEqual(json.loads(r.content)['msg'], "Wings retrieved successfully.")
-        self.assertEqual(json.loads(r.content)['status'], True)
-        l1 = json.loads(r.content)['data']
+        r = c.get('/api/v1/wings?profile='+str(self.profile3.pk), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        content = json.loads(r.content)
+        self.assertTrue(content.has_key('code'))
+        self.assertEqual(content['code'], 200)
+        self.assertTrue(content.has_key('msg'))
+        self.assertEqual(content['msg'], "Wings retrieved successfully.")
+        self.assertTrue(content.has_key('status'))
+        self.assertEqual(content['status'], True)
+        self.assertTrue(content.has_key('data'))
+        self.assertTrue(isinstance(content['data'], dict))
+        self.assertTrue(content['data'].has_key('items'))
+        l1 = content['data']['items']
         self.assertEqual(len(l1), 1)
-        aux = {}
-        aux['name'] = self.a3.name
-        aux['id'] = self.a3.id
-        aux['wingType'] = "Accommodation"
-        self.assertEqual(l1[0], aux)
+        l1_item= l1[0]
+        self.assertTrue(l1_item.has_key('wingName'))
+        self.assertEqual(l1_item['wingName'], self.a3.name)
+        self.assertTrue(l1_item.has_key('idWing'))
+        self.assertEqual(l1_item['idWing'], self.a3.id)
+        self.assertTrue(l1_item.has_key('wingType'))
+        self.assertEqual(l1_item['wingType'], "Accomodation")
 
 
         # check that user 2 sees the same list as user 1 when looking for wings of user 3
-        r = c.get('/api/v1/profiles/'+str(self.profile3.pk)+'/wings', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
-        self.assertEqual(json.loads(r.content)['code'], 200)
-        self.assertEqual(json.loads(r.content)['msg'], "Wings retrieved successfully.")
-        self.assertEqual(json.loads(r.content)['status'], True)
-        l2 = json.loads(r.content)['data']
+        r = c.get('/api/v1/wings?profile='+str(self.profile3.pk), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        content = json.loads(r.content)
+        self.assertTrue(content.has_key('code'))
+        self.assertEqual(content['code'], 200)
+        self.assertTrue(content.has_key('msg'))
+        self.assertEqual(content['msg'], "Wings retrieved successfully.")
+        self.assertTrue(content.has_key('status'))
+        self.assertEqual(content['status'], True)
+        self.assertTrue(content.has_key('data'))
+        self.assertTrue(isinstance(content['data'], dict))
+        self.assertTrue(content['data'].has_key('items'))
+        l2 = content['data']['items']
         self.assertEqual(l1, l2)
 
         # user 2 wants to see wings of user 1 => 2 wings
-        r = c.get('/api/v1/profiles/'+str(self.profile1.pk)+'/wings', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
-        self.assertEqual(json.loads(r.content)['code'], 200)
-        self.assertEqual(json.loads(r.content)['msg'], "Wings retrieved successfully.")
-        self.assertEqual(json.loads(r.content)['status'], True)
-        l1 = json.loads(r.content)['data']
+        r = c.get('/api/v1/wings?profile='+str(self.profile1.pk), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        content = json.loads(r.content)
+        self.assertTrue(content.has_key('code'))
+        self.assertEqual(content['code'], 200)
+        self.assertTrue(content.has_key('msg'))
+        self.assertEqual(content['msg'], "Wings retrieved successfully.")
+        self.assertTrue(content.has_key('status'))
+        self.assertEqual(content['status'], True)
+        self.assertTrue(content.has_key('data'))
+        self.assertTrue(isinstance(content['data'], dict))
+        self.assertTrue(content['data'].has_key('items'))
+        l1 = content['data']['items']
         self.assertEqual(len(l1), 2)
-        l = []
-        aux = {}
-        aux[unicode('name')] = unicode(self.a1.name)
-        aux[unicode('id')] = int(self.a1.pk)
-        aux[unicode('wingType')] = unicode("Accommodation")
-        l.append(aux)
-        aux2 = {}
-        aux2[unicode('name')] = unicode(self.a2.name)
-        aux2[unicode('id')] = int(self.a2.pk)
-        aux2[unicode('wingType')] = unicode("Accommodation")
-        l.append(aux2)
-        self.assertEqual(l, l1)
+        l1_item = l1[0]
+        self.assertTrue(l1_item.has_key('wingName'))
+        self.assertEqual(l1_item['wingName'], self.a1.name)
+        self.assertTrue(l1_item.has_key('idWing'))
+        self.assertEqual(l1_item['idWing'], self.a1.pk)
+        self.assertTrue(l1_item.has_key('wingType'))
+        self.assertEqual(l1_item['wingType'], "Accomodation")
+        l1_item = l1[1]
+        self.assertTrue(l1_item.has_key('wingName'))
+        self.assertEqual(l1_item['wingName'], self.a2.name)
+        self.assertTrue(l1_item.has_key('idWing'))
+        self.assertEqual(l1_item['idWing'], self.a2.pk)
+        self.assertTrue(l1_item.has_key('wingType'))
+        self.assertEqual(l1_item['wingType'], "Accomodation")
