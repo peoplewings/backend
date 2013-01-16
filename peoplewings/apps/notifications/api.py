@@ -434,7 +434,7 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
-	def make_options_req(self, me, notifs):
+	def make_options(self, me, notifs):
 		can_accept = None
 		can_maybe = None
 		can_deny = None
@@ -565,8 +565,13 @@ class NotificationsThreadResource(ModelResource):
 				aux.content['message'] = msg.private_message
 				#generic info				
 				aux.created = i.created
-			elif i.kind == 'request':
-				kind = 'request'
+			elif i.kind == 'request' or i.kind == 'invite':
+				if i.kind == 'request':
+					kind = 'request'
+					req = Requests.objects.get(pk=i.pk)
+				else:
+					kind = 'invite'
+					req = Invites.objects.get(pk=i.pk)
 				aux = RequestItem()
 				aux.senderId= i.sender.pk
 				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
@@ -582,9 +587,11 @@ class NotificationsThreadResource(ModelResource):
 				aux.receiverId= i.receiver.pk
 				aux.receiverAvatar= i.receiver.thumb_avatar
 				#Contents info
-				req = Requests.objects.get(pk=i.pk)
 				aux.content= {}
-				aux.content['message'] = req.public_message + '\n' + req.private_message 
+				if i.kind == 'request':
+					aux.content['message'] = req.public_message + '\n' + req.private_message 
+				else:
+					aux.content['message'] = req.private_message 		
 				#Generic info
 				aux.created= i.created
 			else:
@@ -599,7 +606,7 @@ class NotificationsThreadResource(ModelResource):
 			data['items'] = aux_list
 			data['kind'] = kind
 			data['reference'] = ref
-		elif kind == 'request':
+		elif kind == 'request' or kind == 'invite':
 			data = RequestThread()
 			data.reference = ref
 			data.kind= 'request'
@@ -616,7 +623,7 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
 				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
 				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
-			options = self.make_options_req(me, notifs)
+			options = self.make_options(me, notifs)
 			data.options['canAccept']= options['canAccept']
 			data.options['canMaybe']= options['canMaybe']
 			data.options['canPending']= options['canPending']
