@@ -434,6 +434,75 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
+	def make_options_req(self, me, notifs):
+		can_accept = None
+		can_maybe = None
+		can_deny = None
+		can_pending = None
+		first_sender = notifs[0].first_sender
+		state = Requests.objects.get(pk= notifs[len(notifs) - 1].pk).state
+		if (first_sender == me):
+			if state == 'P':
+				can_accept = 'C'
+				can_maybe = 'F'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'A':
+				can_accept = 'C'
+				can_maybe = 'T'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'M':
+				can_accept = 'F'
+				can_maybe = 'C'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'D':
+				can_accept = 'F'
+				can_maybe = 'F'
+				can_deny = 'C'
+				can_pending = 'F'
+			elif state == 'X':
+				can_accept = 'F'
+				can_maybe = 'F'
+				can_deny = 'C'
+				can_pending = 'T'
+
+		else:
+			if state == 'P':
+				can_accept = 'T'
+				can_maybe = 'T'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'A':
+				can_accept = 'C'
+				can_maybe = 'T'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'M':
+				can_accept = 'T'
+				can_maybe = 'C'
+				can_deny = 'T'
+				can_pending = 'F'
+			elif state == 'D':
+				can_accept = 'T'
+				can_maybe = 'T'
+				can_deny = 'C'
+				can_pending = 'F'
+			elif state == 'X':
+				can_accept = 'F'
+				can_maybe = 'F'
+				can_deny = 'C'
+				can_pending = 'F'
+
+		options = {}
+		options['canAccept'] = can_accept
+		options['canMaybe'] = can_maybe
+		options['canDeny'] = can_deny
+		options['canPending'] = can_pending
+		return options
+
+
 	def validate_post_list(self, POST):
 		errors = {}	
 		kind = None	
@@ -496,15 +565,65 @@ class NotificationsThreadResource(ModelResource):
 				aux.content['message'] = msg.private_message
 				#generic info				
 				aux.created = i.created
+			elif i.kind == 'request':
+				kind = 'request'
+				aux = RequestItem()
+				aux.senderId= i.sender.pk
+				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+				aux.senderAge= i.sender.get_age()
+				aux.senderVerified= True
+				aux.senderLocation= i.sender.current_city.stringify()
+				aux.senderFriends= i.sender.relationships.count()
+				aux.senderReferences= i.sender.references.count()
+				aux.senderMedAvatar= i.sender.medium_avatar
+				aux.senderSmallAvatar= i.sender.thumb_avatar
+				aux.senderConnected= 'F'
+				#receiver info
+				aux.receiverId= i.receiver.pk
+				aux.receiverAvatar= i.receiver.thumb_avatar
+				#Contents info
+				req = Requests.objects.get(pk=i.pk)
+				aux.content= {}
+				aux.content['message'] = req.public_message + '\n' + req.private_message 
+				#Generic info
+				aux.created= i.created
 			else:
 				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
 			#Once we filled the aux object, we have to add it to the list
+			if i.receiver.pk == me.pk:
+				i.read = True
+				i.save()
 			aux_list.append(aux.jsonable())
 		#Now we have the list
-		data['items'] = aux_list
-		data['kind'] = kind
-		data['reference'] = ref
-		if not kind:
+		if kind == 'message':
+			data['items'] = aux_list
+			data['kind'] = kind
+			data['reference'] = ref
+		elif kind == 'request':
+			data = RequestThread()
+			data.reference = ref
+			data.kind= 'request'
+			data.firstSender= req.first_sender.pk	
+			data.wing['type'] = req.wing.get_class_name()
+			data.wing['state'] = req.state
+			data.wing['parameters']['wingId']= req.wing.pk
+			data.wing['parameters']['wingName']= req.wing.name
+			data.wing['parameters']['wingCity']= req.wing.city.stringify()
+			if req.wing.get_class_name() == 'Accomodation':
+				data.wing['parameters']['startDate']= req.accomodationinformation_notification.get().start_date
+				data.wing['parameters']['endDate']= req.accomodationinformation_notification.get().end_date
+				data.wing['parameters']['capacity']= req.accomodationinformation_notification.get().num_people
+				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
+				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
+				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
+			options = self.make_options_req(me, notifs)
+			data.options['canAccept']= options['canAccept']
+			data.options['canMaybe']= options['canMaybe']
+			data.options['canPending']= options['canPending']
+			data.options['canDeny']= options['canDeny']
+			data.items = aux_list
+			data = data.jsonable()
+		else:
 			data = {}
 		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
 
