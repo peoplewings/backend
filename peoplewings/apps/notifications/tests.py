@@ -15,7 +15,7 @@ from django.test import TestCase, Client
 from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
-from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites
+from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites, AccomodationInformation
 from wings.models import Accomodation, Wing
 from locations.models import City
 from django.contrib.auth.models import User
@@ -31,7 +31,7 @@ class PaginationTest(TestCase):
 	
 	def setUp(self):
 		'''
-		self.hadeer = User.objects.create_user(username = 'a@a.com', password = '123456')
+		self.hadeer = User.objects.create_user(username = 'a@a.com', password = '123456'610
 		self.ph = UserProfile.objects.create(user = self.hadeer, birthday="1987-03-04")
 
 		self.john = User.objects.create_user(username = 'b@b.com', password = '123456')
@@ -599,6 +599,36 @@ class GetNotificationsThreadTest(TestCase):
 		self.created = self.created + 3600
 		self.message13 = G(Messages, reference = self.ref2, sender=self.profile2, receiver=self.profile3, first_sender=self.profile2, kind="message", created=self.created2)
 
+		#Make a thread of requests
+		self.ref3 = str(uuid.uuid4())
+		self.created3 = time.time() - 3600*24
+		self.start_date_req = 123923488234
+		self.end_date_req = 123943488234
+		self.check_created3 = self.created3
+		self.check_created3_static = self.check_created3
+		self.wingreq = G(Accomodation, author= self.profile2)
+		self.request1 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='P', wing= self.wingreq, read=True)
+		accominfo1 = G(AccomodationInformation, notification=self.request1, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request2 = G(Requests, reference = self.ref3, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=True)
+		accominfo2 = G(AccomodationInformation, notification=self.request2, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request3 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=True)
+		accominfo3 = G(AccomodationInformation, notification=self.request3, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request4 = G(Requests, reference = self.ref3, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=True)
+		accominfo4 = G(AccomodationInformation, notification=self.request4, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request5 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=True)
+		accominfo5 = G(AccomodationInformation, notification=self.request5, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request6 = G(Requests, reference = self.ref3, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=True)
+		accominfo6 = G(AccomodationInformation, notification=self.request6, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+		self.request7 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='A', wing= self.wingreq, read=False)
+		accominfo7 = G(AccomodationInformation, notification=self.request7, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created3 + 3600
+
 	def test_get_notificationsthread_message(self):
 		#Initialize method vars
 		c = Client()
@@ -661,6 +691,560 @@ class GetNotificationsThreadTest(TestCase):
 				expected_sender = self.profile1
 				expected_receiver = self.profile2
 			self.check_created = self.check_created + 3600
+
+		#Now the ERRORS
+		r1 = c.get('/api/v1/notificationsthread/' + str(uuid.uuid4()), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The notification with that reference does not exists")
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref2), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "You are not allowed to visualize the notification with that reference")
+
+	def test_get_notificationsthread_request(self):
+		#Initialize method vars
+		c = Client()
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		#Now let's check out the data we've just received...
+		#... we know that the notifications come ordered from older to newer (ASC)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(data.has_key('reference'), True)
+		self.assertEqual(data['reference'], self.ref3)
+		self.assertEqual(js['data'].has_key('kind'), True)
+		self.assertEqual(data['kind'], 'request')
+		self.assertEqual(js['data'].has_key('firstSender'), True)
+		self.assertEqual(data['firstSender'], self.profile1.pk)
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], 'A')
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], self.wingreq.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], self.wingreq.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], self.wingreq.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], self.start_date_req)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], self.end_date_req)
+			self.assertTrue(params.has_key('capacity'))
+			self.assertTrue(params.has_key('arrivingVia'))
+			self.assertTrue(params.has_key('flexibleStartDate'))
+			self.assertTrue(params.has_key('flexibleEndDate'))
+
+		self.assertEqual(data.has_key('options'), True)
+		self.assertTrue(isinstance(data['options'], dict))
+		options = data['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'C')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'T')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'T')
+
+		self.assertEqual(js['data'].has_key('items'), True)
+		self.assertEqual(isinstance(data['items'], list), True)
+		self.assertEqual(len(data['items']), 7)		
+
+		expected_sender = self.profile1
+		expected_receiver = self.profile2		
+		for i in data['items']:			
+			#Check if the response is good
+			self.assertTrue(i.has_key('senderId'))
+			self.assertEqual(i['senderId'], expected_sender.pk)
+			self.assertTrue(i.has_key('senderName'))
+			self.assertEqual(i['senderName'], '%s %s' % (expected_sender.user.first_name, expected_sender.user.last_name))
+			self.assertTrue(i.has_key('senderAge'))
+			self.assertEqual(i['senderAge'], expected_sender.get_age())
+			self.assertTrue(i.has_key('senderVerified'))
+			self.assertEqual(i['senderVerified'], True)
+			self.assertTrue(i.has_key('senderLocation'))
+			self.assertEqual(i['senderLocation'], expected_sender.current_city.stringify())
+			self.assertTrue(i.has_key('senderFriends'))
+			self.assertEqual(i['senderFriends'], expected_sender.relationships.count())
+			self.assertTrue(i.has_key('senderReferences'))
+			self.assertEqual(i['senderReferences'], expected_sender.references.count())
+			self.assertTrue(i.has_key('senderMedAvatar'))
+			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
+			self.assertTrue(i.has_key('senderSmallAvatar'))
+			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
+			self.assertTrue(i.has_key('senderConnected'))
+			self.assertEqual(i['senderConnected'], 'F')
+			self.assertTrue(i.has_key('receiverId'))
+			self.assertEqual(i['receiverId'], expected_receiver.pk)
+			self.assertTrue(i.has_key('receiverAvatar'))
+			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
+			self.assertTrue(i.has_key('content'))
+			self.assertTrue(i['content'].has_key('message'))
+			self.assertTrue(i.has_key('created'))		
+			self.assertEqual(i['created'], int(self.check_created3))
+
+			#Update next data
+			if expected_sender.pk == self.profile1.pk:
+				expected_sender = self.profile2
+				expected_receiver = self.profile1
+			else:
+				expected_sender = self.profile1
+				expected_receiver = self.profile2
+			self.check_created3 = self.check_created3 + 3600
+
+		#Now, for each request, we need to check that is correctly marked as read. The rule is simple, if prof1 reads reqthread1, all the messages that are not his should be marked as read.
+		self.request1 = Requests.objects.get(pk = self.request1.pk)
+		self.assertTrue(self.request1.read)
+		self.request2 = Requests.objects.get(pk = self.request2.pk)
+		self.assertTrue(self.request2.read)
+		self.request3 = Requests.objects.get(pk = self.request3.pk)
+		self.assertTrue(self.request3.read)
+		self.request4 = Requests.objects.get(pk = self.request4.pk)
+		self.assertTrue(self.request4.read)
+		self.request5 = Requests.objects.get(pk = self.request5.pk)
+		self.assertTrue(self.request5.read)
+		self.request6 = Requests.objects.get(pk = self.request6.pk)
+		self.assertTrue(self.request6.read)
+		self.request7 = Requests.objects.get(pk = self.request7.pk)
+		self.assertFalse(self.request7.read)
+		#Now let's make profile2 read the same thread, this should mark request7 to "read"
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		#Now let's check out the data we've just received...
+		#... we know that the notifications come ordered from older to newer (ASC)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))		
+		self.assertEqual(data.has_key('reference'), True)
+		self.assertEqual(data['reference'], self.ref3)
+		self.assertEqual(js['data'].has_key('kind'), True)
+		self.assertEqual(data['kind'], 'request')
+		self.assertEqual(js['data'].has_key('firstSender'), True)
+		self.assertEqual(data['firstSender'], self.profile1.pk)
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], 'A')
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], self.wingreq.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], self.wingreq.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], self.wingreq.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], self.start_date_req)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], self.end_date_req)
+			self.assertTrue(params.has_key('capacity'))
+			self.assertTrue(params.has_key('arrivingVia'))
+			self.assertTrue(params.has_key('flexibleStartDate'))
+			self.assertTrue(params.has_key('flexibleEndDate'))
+
+		self.assertEqual(data.has_key('options'), True)
+		self.assertTrue(isinstance(data['options'], dict))
+		options = data['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'C')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'T')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'T')
+
+		self.assertEqual(js['data'].has_key('items'), True)
+		self.assertEqual(isinstance(data['items'], list), True)
+		self.assertEqual(len(data['items']), 7)	
+
+		expected_sender = self.profile1
+		expected_receiver = self.profile2
+		self.check_created3 = self.check_created3_static
+		for i in data['items']:			
+			#Check if the response is good
+			self.assertTrue(i.has_key('senderId'))
+			self.assertEqual(i['senderId'], expected_sender.pk)
+			self.assertTrue(i.has_key('senderName'))
+			self.assertEqual(i['senderName'], '%s %s' % (expected_sender.user.first_name, expected_sender.user.last_name))
+			self.assertTrue(i.has_key('senderAge'))
+			self.assertEqual(i['senderAge'], expected_sender.get_age())
+			self.assertTrue(i.has_key('senderVerified'))
+			self.assertEqual(i['senderVerified'], True)
+			self.assertTrue(i.has_key('senderLocation'))
+			self.assertEqual(i['senderLocation'], expected_sender.current_city.stringify())
+			self.assertTrue(i.has_key('senderFriends'))
+			self.assertEqual(i['senderFriends'], expected_sender.relationships.count())
+			self.assertTrue(i.has_key('senderReferences'))
+			self.assertEqual(i['senderReferences'], expected_sender.references.count())
+			self.assertTrue(i.has_key('senderMedAvatar'))
+			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
+			self.assertTrue(i.has_key('senderSmallAvatar'))
+			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
+			self.assertTrue(i.has_key('senderConnected'))
+			self.assertEqual(i['senderConnected'], 'F')
+			self.assertTrue(i.has_key('receiverId'))
+			self.assertEqual(i['receiverId'], expected_receiver.pk)
+			self.assertTrue(i.has_key('receiverAvatar'))
+			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
+			self.assertTrue(i.has_key('content'))
+			self.assertTrue(i['content'].has_key('message'))
+			self.assertTrue(i.has_key('created'))		
+			self.assertEqual(i['created'], int(self.check_created3))
+
+			#Update next data
+			if expected_sender.pk == self.profile1.pk:
+				expected_sender = self.profile2
+				expected_receiver = self.profile1
+			else:
+				expected_sender = self.profile1
+				expected_receiver = self.profile2
+			self.check_created3 = self.check_created3 + 3600
+
+
+		self.request1 = Requests.objects.get(pk = self.request1.pk)
+		self.assertTrue(self.request1.read)
+		self.request2 = Requests.objects.get(pk = self.request2.pk)
+		self.assertTrue(self.request2.read)
+		self.request3 = Requests.objects.get(pk = self.request3.pk)
+		self.assertTrue(self.request3.read)
+		self.request4 = Requests.objects.get(pk = self.request4.pk)
+		self.assertTrue(self.request4.read)
+		self.request5 = Requests.objects.get(pk = self.request5.pk)
+		self.assertTrue(self.request5.read)
+		self.request6 = Requests.objects.get(pk = self.request6.pk)
+		self.assertTrue(self.request6.read)
+		self.request7 = Requests.objects.get(pk = self.request7.pk)
+		self.assertTrue(self.request7.read)
+
+		#Now we are gonna create a new Pending request...
+		self.ref3 = str(uuid.uuid4())
+		self.created3 = time.time() - 3600*24
+		self.check_created3_static = self.created3
+		self.start_date_req = 123923588234
+		self.end_date_req = 123943588234
+		self.check_created3 = self.created3
+		self.wingreq = G(Accomodation, author= self.profile2)
+		self.request1 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='P', wing= self.wingreq)
+		accominfo1 = G(AccomodationInformation, notification=self.request1, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created + 3600
+		#Now we whould check the "options" for this request...
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		#Now let's check out the data we've just received...
+		#... we know that the notifications come ordered from older to newer (ASC)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))		
+		self.assertEqual(data.has_key('reference'), True)
+		self.assertEqual(data['reference'], self.ref3)
+		self.assertEqual(js['data'].has_key('kind'), True)
+		self.assertEqual(data['kind'], 'request')
+		self.assertEqual(js['data'].has_key('firstSender'), True)
+		self.assertEqual(data['firstSender'], self.profile1.pk)
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], 'P')
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], self.wingreq.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], self.wingreq.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], self.wingreq.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], self.start_date_req)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], self.end_date_req)
+			self.assertTrue(params.has_key('capacity'))
+			self.assertTrue(params.has_key('arrivingVia'))
+			self.assertTrue(params.has_key('flexibleStartDate'))
+			self.assertTrue(params.has_key('flexibleEndDate'))
+
+		self.assertEqual(data.has_key('options'), True)
+		self.assertTrue(isinstance(data['options'], dict))
+		options = data['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'C')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'F')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'T')
+
+		self.assertEqual(js['data'].has_key('items'), True)
+		self.assertEqual(isinstance(data['items'], list), True)
+		self.assertEqual(len(data['items']), 1)		
+
+		expected_sender = self.profile1
+		expected_receiver = self.profile2		
+		for i in data['items']:			
+			#Check if the response is good
+			self.assertTrue(i.has_key('senderId'))
+			self.assertEqual(i['senderId'], expected_sender.pk)
+			self.assertTrue(i.has_key('senderName'))
+			self.assertEqual(i['senderName'], '%s %s' % (expected_sender.user.first_name, expected_sender.user.last_name))
+			self.assertTrue(i.has_key('senderAge'))
+			self.assertEqual(i['senderAge'], expected_sender.get_age())
+			self.assertTrue(i.has_key('senderVerified'))
+			self.assertEqual(i['senderVerified'], True)
+			self.assertTrue(i.has_key('senderLocation'))
+			self.assertEqual(i['senderLocation'], expected_sender.current_city.stringify())
+			self.assertTrue(i.has_key('senderFriends'))
+			self.assertEqual(i['senderFriends'], expected_sender.relationships.count())
+			self.assertTrue(i.has_key('senderReferences'))
+			self.assertEqual(i['senderReferences'], expected_sender.references.count())
+			self.assertTrue(i.has_key('senderMedAvatar'))
+			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
+			self.assertTrue(i.has_key('senderSmallAvatar'))
+			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
+			self.assertTrue(i.has_key('senderConnected'))
+			self.assertEqual(i['senderConnected'], 'F')
+			self.assertTrue(i.has_key('receiverId'))
+			self.assertEqual(i['receiverId'], expected_receiver.pk)
+			self.assertTrue(i.has_key('receiverAvatar'))
+			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
+			self.assertTrue(i.has_key('content'))
+			self.assertTrue(i['content'].has_key('message'))
+			self.assertTrue(i.has_key('created'))		
+			self.assertEqual(i['created'], int(self.check_created3))
+
+			#Update next data
+			if expected_sender.pk == self.profile1.pk:
+				expected_sender = self.profile2
+				expected_receiver = self.profile1
+			else:
+				expected_sender = self.profile1
+				expected_receiver = self.profile2
+			self.check_created3 = self.check_created3 + 3600
+
+		#Now, for each request, we need to check that is correctly marked as read. The rule is simple, if prof1 reads reqthread1, all the messages that are not his should be marked as read.
+		self.assertFalse(self.request1.read)
+		#Then check the same for profile2...
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		#Now let's check out the data we've just received...
+		#... we know that the notifications come ordered from older to newer (ASC)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))		
+		self.assertEqual(data.has_key('reference'), True)
+		self.assertEqual(data['reference'], self.ref3)
+		self.assertEqual(js['data'].has_key('kind'), True)
+		self.assertEqual(data['kind'], 'request')
+		self.assertEqual(js['data'].has_key('firstSender'), True)
+		self.assertEqual(data['firstSender'], self.profile1.pk)
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], 'P')
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], self.wingreq.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], self.wingreq.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], self.wingreq.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], self.start_date_req)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], self.end_date_req)
+			self.assertTrue(params.has_key('capacity'))
+			self.assertTrue(params.has_key('arrivingVia'))
+			self.assertTrue(params.has_key('flexibleStartDate'))
+			self.assertTrue(params.has_key('flexibleEndDate'))
+
+		self.assertEqual(data.has_key('options'), True)
+		self.assertTrue(isinstance(data['options'], dict))
+		options = data['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'T')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'T')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'T')
+
+		self.assertEqual(js['data'].has_key('items'), True)
+		self.assertEqual(isinstance(data['items'], list), True)
+		self.assertEqual(len(data['items']), 1)	
+
+		expected_sender = self.profile1
+		expected_receiver = self.profile2
+		self.check_created3 = self.check_created3_static
+		for i in data['items']:			
+			#Check if the response is good
+			self.assertTrue(i.has_key('senderId'))
+			self.assertEqual(i['senderId'], expected_sender.pk)
+			self.assertTrue(i.has_key('senderName'))
+			self.assertEqual(i['senderName'], '%s %s' % (expected_sender.user.first_name, expected_sender.user.last_name))
+			self.assertTrue(i.has_key('senderAge'))
+			self.assertEqual(i['senderAge'], expected_sender.get_age())
+			self.assertTrue(i.has_key('senderVerified'))
+			self.assertEqual(i['senderVerified'], True)
+			self.assertTrue(i.has_key('senderLocation'))
+			self.assertEqual(i['senderLocation'], expected_sender.current_city.stringify())
+			self.assertTrue(i.has_key('senderFriends'))
+			self.assertEqual(i['senderFriends'], expected_sender.relationships.count())
+			self.assertTrue(i.has_key('senderReferences'))
+			self.assertEqual(i['senderReferences'], expected_sender.references.count())
+			self.assertTrue(i.has_key('senderMedAvatar'))
+			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
+			self.assertTrue(i.has_key('senderSmallAvatar'))
+			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
+			self.assertTrue(i.has_key('senderConnected'))
+			self.assertEqual(i['senderConnected'], 'F')
+			self.assertTrue(i.has_key('receiverId'))
+			self.assertEqual(i['receiverId'], expected_receiver.pk)
+			self.assertTrue(i.has_key('receiverAvatar'))
+			self.assertEqual(i['receiverAvatar'], expected_receiver.thumb_avatar)
+			self.assertTrue(i.has_key('content'))
+			self.assertTrue(i['content'].has_key('message'))
+			self.assertTrue(i.has_key('created'))		
+			self.assertEqual(i['created'], int(self.check_created3))
+
+			#Update next data
+			if expected_sender.pk == self.profile1.pk:
+				expected_sender = self.profile2
+				expected_receiver = self.profile1
+			else:
+				expected_sender = self.profile1
+				expected_receiver = self.profile2
+			self.check_created3 = self.check_created3 + 3600
+
+		self.request1 = Requests.objects.get(pk = self.request1.pk)
+		self.assertTrue(self.request1.read)
+		#Let's only check the tree of options
+		self.ref3 = str(uuid.uuid4())
+		self.created3 = time.time() - 3600*24
+		self.check_created3_static = self.created3
+		self.start_date_req = 123923588234
+		self.end_date_req = 123943588234
+		self.check_created3 = self.created3
+		self.wingreq = G(Accomodation, author= self.profile2)
+		self.request1 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='P', wing= self.wingreq)
+		accominfo1 = G(AccomodationInformation, notification=self.request1, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created + 3600
+		self.request2 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='X', wing= self.wingreq)
+		accominfo2 = G(AccomodationInformation, notification=self.request2, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created + 3600
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		options = json.loads(r1.content)['data']['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'F')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'F')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'T')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'C')
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		options = json.loads(r1.content)['data']['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'F')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'F')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'C')
+
+		self.ref3 = str(uuid.uuid4())
+		self.created3 = time.time() - 3600*24
+		self.check_created3_static = self.created3
+		self.start_date_req = 123923588234
+		self.end_date_req = 123943588234
+		self.check_created3 = self.created3
+		self.wingreq = G(Accomodation, author= self.profile2)
+		self.request1 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='P', wing= self.wingreq)
+		accominfo1 = G(AccomodationInformation, notification=self.request1, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created + 3600
+		self.request2 = G(Requests, reference = self.ref3, sender=self.profile2, receiver=self.profile1, first_sender=self.profile1, kind="request", created=self.created3, state='D', wing= self.wingreq)
+		accominfo2 = G(AccomodationInformation, notification=self.request2, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
+		self.created3 = self.created + 3600
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		options = json.loads(r1.content)['data']['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'F')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'F')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'C')
+		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		options = json.loads(r1.content)['data']['options']
+		self.assertTrue(options.has_key('canAccept'))
+		self.assertEqual(options['canAccept'], 'T')
+		self.assertTrue(options.has_key('canMaybe'))
+		self.assertEqual(options['canMaybe'], 'T')
+		self.assertTrue(options.has_key('canPending'))
+		self.assertEqual(options['canPending'], 'F')
+		self.assertTrue(options.has_key('canDeny'))
+		self.assertEqual(options['canDeny'], 'C')
+
 		#Now the ERRORS
 		r1 = c.get('/api/v1/notificationsthread/' + str(uuid.uuid4()), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)

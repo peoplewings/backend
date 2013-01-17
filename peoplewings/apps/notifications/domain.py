@@ -87,68 +87,63 @@ class MessageThread(object):
 				res[key] = value
 		return res
 
-
-class Thread(object):
-	#Thread specific
-	id = models.IntegerField()
-	created = models.BigIntegerField()
-	read = models.BooleanField()
-	kind = models.CharField()
-	#Profile specific
-	interlocutor_id = models.CharField()
-	name = models.CharField()
-	med_avatar =  models.CharField()
-	small_avatar = models.CharField()
-	age = models.IntegerField()
-	verified = models.BooleanField()
-	location = models.TextField()
-	connected = models.CharField(choices = USERSTATE_CHOICES, default = 'F')
-	friends = models.IntegerField()
-	references = models.IntegerField()
-	#Req/invite specific
-
-
-class AccomodationRequestThread(object):
-	## Notif specific
-	id  = models.IntegerField()
-	sender = models.IntegerField()
-	receiver = models.IntegerField()
-	created = models.CharField()
-	reference = models.CharField()
-	read = models.BooleanField()
-	kind = models.CharField()
-	## AccomodationRequest specific
-	wing_name = models.CharField()
-	wing_id = models.CharField()
-	state = models.CharField()        
-	start_date = models.DateField()
-	end_date = models.DateField()
-	num_people = models.IntegerField()
-	transport = models.CharField()
-	private_message = models.TextField()
-	#Sender specific
-	nameS = models.CharField()    
-	ageS = models.IntegerField()
-	verifiedS = models.BooleanField()
-	locationS = models.TextField()
-	friendsS = models.IntegerField()
-	referencesS = models.IntegerField()
-	med_avatarS =  models.CharField()
-	small_avatarS = models.CharField()
-	#Receiver specific
-	nameR = models.CharField()    
-	ageR = models.IntegerField()
-	verifiedR = models.BooleanField()
-	locationR = models.TextField()
-	friendsR = models.IntegerField()
-	referencesR = models.IntegerField()
-	med_avatarR =  models.CharField()
-	small_avatarR = models.CharField()
+class RequestItem(object):
+	def __init__(self):
+		#sender info
+		self.senderId= None
+		self.senderName= None
+		self.senderAge= None
+		self.senderVerified= None
+		self.senderLocation= None	             
+		self.senderFriends= None
+		self.senderReferences= None
+		self.senderMedAvatar= None
+		self.senderSmallAvatar= None
+		self.senderConnected= None
+		self.content= {}
+		self.content['message']= None
+		self.receiverId= None
+		self.receiverAvatar= None
+		self.created= None
 
 	def jsonable(self):
 		res = dict()
-		for key, value in self.__dict__.items():            
-			res[key] = value
+		for key, value in self.__dict__.items():   
+			if value is not None:         
+				res[key] = value
+		return res
+
+class RequestThread(object):
+	def __init__(self):
+		#sender info
+		self.reference= None
+		self.kind= None
+		self.firstSender= None
+		self.wing= {}
+		self.wing['type'] = None
+		self.wing['state'] = None
+		self.wing['parameters'] = {}
+		self.wing['parameters']['wingId']= 34
+		self.wing['parameters']['wingName']= None
+		self.wing['parameters']['wingCity']= None
+		self.wing['parameters']['startDate']= None
+		self.wing['parameters']['endDate']= None
+		self.wing['parameters']['capacity']= None
+		self.wing['parameters']['arrivingVia']= None
+		self.wing['parameters']['flexibleStartDate']= None
+		self.wing['parameters']['flexibleEndDate']= None
+		self.options= {}
+		self.options['canAccept']= None
+		self.options['canMaybe']= None
+		self.options['canPending']= None
+		self.options['canDeny']= None
+		self.items = []
+
+	def jsonable(self):
+		res = dict()
+		for key, value in self.__dict__.items():   
+			if value is not None:         
+				res[key] = value
 		return res
 
 def ComplexHandler(Obj):
