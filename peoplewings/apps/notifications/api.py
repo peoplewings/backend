@@ -434,13 +434,16 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
-	def make_options(self, me, notifs):
+	def make_options(self, old_mod, me, notifs, is_request):
 		can_accept = None
 		can_maybe = None
 		can_deny = None
 		can_pending = None
 		first_sender = notifs[0].first_sender
-		state = Requests.objects.get(pk= notifs[len(notifs) - 1].pk).state
+		if is_request:
+			state = Requests.objects.get(pk= notifs[len(notifs) - 1].pk).state
+		else:
+			state = Invites.objects.get(pk= notifs[len(notifs) - 1].pk).state
 		if (first_sender == me):
 			if state == 'P':
 				can_accept = 'C'
@@ -453,10 +456,16 @@ class NotificationsThreadResource(ModelResource):
 				can_deny = 'T'
 				can_pending = 'F'
 			elif state == 'M':
-				can_accept = 'F'
-				can_maybe = 'C'
-				can_deny = 'T'
-				can_pending = 'F'
+				if old_mod == me:
+					can_accept = 'T'
+					can_maybe = 'C'
+					can_deny = 'T'
+					can_pending = 'F'
+				else:
+					can_accept = 'F'
+					can_maybe = 'C'
+					can_deny = 'T'
+					can_pending = 'F'
 			elif state == 'D':
 				can_accept = 'F'
 				can_maybe = 'F'
@@ -480,10 +489,16 @@ class NotificationsThreadResource(ModelResource):
 				can_deny = 'T'
 				can_pending = 'F'
 			elif state == 'M':
-				can_accept = 'T'
-				can_maybe = 'C'
-				can_deny = 'T'
-				can_pending = 'F'
+				if old_mod == me:
+					can_accept = 'T'
+					can_maybe = 'C'
+					can_deny = 'T'
+					can_pending = 'F'
+				else:
+					can_accept = 'F'
+					can_maybe = 'C'
+					can_deny = 'T'
+					can_pending = 'F'	
 			elif state == 'D':
 				can_accept = 'T'
 				can_maybe = 'T'
@@ -526,7 +541,57 @@ class NotificationsThreadResource(ModelResource):
 					return "The message of the notification is too long"
 				elif len(POST['data']['content']) == 0:
 					return "The message of the notification cannot be empty"
+		elif kind == 'request' and POST.has_key('data'):
+			data = POST['data']
+			start = None
+			end = None
+			if not data.has_key('content'):
+				errors['content']= 'This field is required'
+			else:
+				if data.has_key('content') and len(data['content']) > 1500:
+					return "The message of the notification is too long"
+				if data.has_key('content') and len(data['content']) == 0:
+					return "The message of the notification cannot be empty"
+			if data.has_key('state'): 
+				if data['state'] not in ['P', 'A', 'M', 'D']:
+					errors['state'] = 'The submited value is not valid'
+			else:
+				errors['state'] = 'This field is required'
+			if data.has_key('wingParameters'):
+				params = data['wingParameters']
+			else:
+				errors['wingParameters'] = 'This field is required'
+				return errors
+			if params.has_key('startDate') and isinstance(params['startDate'], int):
+				start = params['startDate']
+			else:
+				errors['startDate'] = 'This field is required'
+			if params.has_key('endDate') and isinstance(params['endDate'], int):
+				end = params['endDate']
+			else:
+				errors['endDate'] = 'This field is required'
+			if start > end:
+				errors['date'] = 'The starting date cannot be greater than the end date'
+			if params.has_key('capacity'):
+				if params['capacity'] == 0:
+					errors['capacity'] = 'This field cannot be zero'
+			else:
+				params['capacity'] = 'This field is required'
+			if not params.has_key('flexibleStartDate'):
+				errors['flexibleStartDate'] = 'This field is required'
+			if not params.has_key('flexibleEndDate'):
+				errors['flexibleEndDate'] = 'This field is required'				
 		return errors
+
+	def get_last_state_mod(self, thread, thread_len):
+		curr = thread[thread_len-1].state
+		cursor = 0
+		thread_rev = [i for i in thread[::-1]]		
+		for i in thread_rev:
+			if not i.state == curr:
+				return thread_rev[cursor-1].sender
+			cursor = cursor + 1
+		return None
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -539,6 +604,7 @@ class NotificationsThreadResource(ModelResource):
 			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
 		kind = None
 		data = {}
+		thread = []
 
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
@@ -568,10 +634,11 @@ class NotificationsThreadResource(ModelResource):
 			elif i.kind == 'request' or i.kind == 'invite':
 				if i.kind == 'request':
 					kind = 'request'
-					req = Requests.objects.get(pk=i.pk)
+					req = Requests.objects.get(pk=i.pk)					
 				else:
 					kind = 'invite'
 					req = Invites.objects.get(pk=i.pk)
+				thread.append(req)
 				aux = RequestItem()
 				aux.senderId= i.sender.pk
 				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
@@ -612,7 +679,11 @@ class NotificationsThreadResource(ModelResource):
 			data.kind= 'request'
 			data.firstSender= req.first_sender.pk	
 			data.wing['type'] = req.wing.get_class_name()
-			data.wing['state'] = req.state
+			if req.state == 'X':
+				state = 'D'
+			else: 
+				state = req.state
+			data.wing['state'] = state
 			data.wing['parameters']['wingId']= req.wing.pk
 			data.wing['parameters']['wingName']= req.wing.name
 			data.wing['parameters']['wingCity']= req.wing.city.stringify()
@@ -623,7 +694,9 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
 				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
 				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
-			options = self.make_options(me, notifs)
+
+			last_state_mod = self.get_last_state_mod(thread, len(thread))
+			options = self.make_options(last_state_mod, me, notifs, kind == 'request')
 			data.options['canAccept']= options['canAccept']
 			data.options['canMaybe']= options['canMaybe']
 			data.options['canPending']= options['canPending']
@@ -637,6 +710,7 @@ class NotificationsThreadResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
+		arriving_via = None
 		me = UserProfile.objects.get(user= request.user)
 		if isinstance(errors, dict) and len(errors.keys()) > 0:		
 			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
@@ -649,6 +723,7 @@ class NotificationsThreadResource(ModelResource):
 				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors": "The requested message does not exists", "code":400}, response_class = HttpResponse)
+
 		#Get the receiver of the notification
 		try:
 			aux = Notifications.objects.filter(reference= POST['reference'])[0]
@@ -658,6 +733,7 @@ class NotificationsThreadResource(ModelResource):
 			receiver = aux.sender
 		else:
 			receiver = aux.receiver
+
 		# Respond the notification
 		if kind == 'message':
 			try:				
@@ -665,14 +741,43 @@ class NotificationsThreadResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
 
-		return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
+			return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
+		if kind == 'request':
+			try:				
+				request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+				if isinstance(request_result, str):
+					return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
+				if request_result.wing.get_class_name() == 'Accomodation':
+					additional = AccomodationInformation.objects.get(notification = notif.pk)					
+					AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+												num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+												flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True, "data": "Request sent succesfully", "code":200}, response_class = HttpResponse)
+		if kind == 'invite':
+			try:				
+				invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+				if isinstance(request_result, str):
+					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
+				if invite_result.wing.get_class_name() == 'Accomodation':
+					additional = AccomodationInformation.objects.get(notification = notif.pk)					
+					AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+												num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+												flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+
+			except Exception, e:
+				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True, "data": "Invite sent succesfully", "code":200}, response_class = HttpResponse)
+		return self.create_response(request, {"status":False, "errors": "Not implemented", "code":400}, response_class = HttpResponse) 
 
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
+				response = callback(request, *args, **kwargs)     
 				return response
 			except (BadRequest, fields.ApiFieldError), e:
 				return http.HttpBadRequest(e.args[0])
