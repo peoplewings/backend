@@ -288,12 +288,40 @@ class UniversityResource(ModelResource):
 	class Meta:
 		object_class = University
 		queryset = University.objects.all()
-		allowed_methods = []
+		list_allowed_methods = ['get']
+		detail_allowed_methods = []
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
 		always_return_data = True
+		resource_name = "universities"
+
+	def validate(self, GET):
+		errors = []
+		if not GET.has_key('name'):
+			errors['name'] = 'This field is required'
+		return errors
+
+	def get_list(self, request, **kwargs):
+		GET = {}
+		for k, v in request.GET.items():
+			GET[k]=v
+		errors = self.validate(GET)
+		if len(errors) > 0: return self.create_response(request, {"code":400, "status":False, "errors": errors}, response_class=HttpResponse)
+		data = []
+		qset = Q(name__icontains=GET['name'])
+		try:
+    			result = University.objects.filter(qset)[:5]
+
+    			for uni in result:
+    				data.append({"name": uni.name})
+    			if len(GET['name']) == 0: data = []
+    		except Exception, e:
+    			return self.create_response(request, {"code":400, "status":False, "errors": e}, response_class=HttpResponse)
+		return self.create_response(request, {"code":200, "status":True, "data": data}, response_class=HttpResponse)
+
+>>>>>>> notifications
 
 class UserUniversityResource(ModelResource):
 	university = fields.ToOneField(UniversityResource, 'university', full=True)
@@ -1083,6 +1111,7 @@ class UserProfileResource(ModelResource):
 				return self._handle_500(request, e)
 
 		return wrapper
+<<<<<<< HEAD
 
 
 class ContactResource(ModelResource):
@@ -1149,5 +1178,7 @@ class ContactResource(ModelResource):
 
 		return wrapper
 
+=======
+>>>>>>> notifications
 
 

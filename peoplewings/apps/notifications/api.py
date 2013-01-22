@@ -541,7 +541,7 @@ class NotificationsThreadResource(ModelResource):
 					return "The message of the notification is too long"
 				elif len(POST['data']['content']) == 0:
 					return "The message of the notification cannot be empty"
-		elif kind == 'request' and POST.has_key('data'):
+		elif (kind == 'request' or kind == 'invite') and POST.has_key('data'):
 			data = POST['data']
 			start = None
 			end = None
