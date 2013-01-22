@@ -1407,7 +1407,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(js.has_key('errors'))
 		self.assertEqual(js['errors'], "The requested message does not exists")
 	
-	"""
+	
 	def test_post_request(self):
 		#Initialize variables
 		c = Client()
@@ -1422,14 +1422,99 @@ class PostNotificationsThreadTest(TestCase):
 		ref = str(uuid.uuid4())
 		created = time.time() - 3600*24
 		check_created = created
-		request = G(Requests, reference = self.ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created, private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200)), public_message= ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(100), wing= wing))
-		additional_info= G(AccomodationInformation, notification=request, start_date=1357948800, end_date=1358208000)
-		#Check if profile1 has 1 request and profile2 has 1 request as well...
-		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
-		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
+		strt_date = 1357948800
+		nd_date= 1358208000
+		num_ppl = 1
+		flex_start= False
+		flex_end= False
+		trans= 'Plane'
+		total_msg = 1
+		current_msg= 0
+		#[P, P, X, X, X, P, A, A, A, M, M, M, P, X, P, A, M, X, P, A, M, D, D, D, M, D, A]
+		#[1, 1, 1, 1, 2, 1, 2..]
+		#Let's create our first request.
+		#Now the request is in Pending. Profile 1 can Chat or Cancel. Profile2 can Accept, Maybe or Decline
+		#######Pending-> p2 maybe, decline
+		#Try profile1 Chat
+		#ERRORS: Porfile1 can't Accept, Maybe, Pending. Profile2 can't Pending or Chat
+		#ERRORS: Try prof1 Accept
+		#ERRORS: Try prof1 Maybe
+		#ERRORS: Try prof1 Pending
+		#ERRORS: Try prof2 Pending
+		#ERRORS: Try prof2 Chat
+		#Try profile1 Cancel		
+		#Now the request is canceled. Profile1 can now put it into Pending or Chat. Profile2 can only Chat...
+		#Try profile1 Chat
+		#Try profile2 Chat
+		#ERRORS: Profile1 can't Accept, Maybe, Cancel. Profile2 can't Accept, Maybe, Decline or Pending
+		#ERRORS: Try prof1 Accept
+		#ERRORS: Try prof1 Maybe
+		#ERRORS: Try prof1 Cancel
+		#ERRORS: Try prof2 Accept
+		#ERRORS: Try prof2 Maybe
+		#ERRORS: Try prof2 Decline
+		#ERRORS: Try prof2 Pending
+		#Try profile1 Pending
+		#Now we have the request in Pending again... 
+		#Let's try to do something we can't, like Accept, Maybe, Pending
+		#ERRORS: We already checked them
+		#Try prof2 Accept
+		#Now the request is accepted. Prof1 can Chat, Maybe and Cancel. Prof2 can Chat, Maybe and Decline
+		##########Accepted->p2 maybe, decline
+		#Try prof1 Chat
+		#Try prof2 Chat
+		#ERRORS: Profile1 can't Accept and Pending. Profile2 can't Accept and Pending
+		#ERRORS: Prof1 Accept
+		#ERRORS: Prof1 Pending
+		#ERRORS: Prof2 Accept
+		#ERRORS: Prof2 Pending
+		#Try prof1 Maybe
+		#Now, prof1 has put Maybe. This means prof2 could Decline and Chat. Prof1 could Pending, Chat and Cancel
+		#Try prof1 Chat
+		#Try prof2 Chat
+		#ERRORS: Prof1 can't Accept. Prof2 can't Accept, Maybe or Pending
+		#ERRORS: Prof1 Accept
+		#ERRORS: Prof2 Accept
+		#ERRORS: Prof2 Maybe
+		#ERRORS: Prof2 Pending
+		#Try prof1 Accept
+		#Now its back to Accept! 
+		#Try prof1 Cancel
+		#Try prof1 Pending
+		#try prof2 Accept
+		#Try prof1 Maybe
+		#Try prof1 Cancel
+		#Try prof1 Pending
+		#try prof2 Accept
+		#Try prof1 Maybe
+		#Try prof2 Decline
+		#Now profile2 has Declined! Prof1 can only Chat and prof2 can Accept, Maybe, Chat
+		#Try Prof1 Chat
+		#try Prof2 Chat
+		#ERRORS: Prof1 can't Accept, Maybe, Decline and Pending. Prof2 can't Cancel or Pending
+		#ERRORS: Prof1 Accept
+		#ERRORS: Prof1 Maybe
+		#ERRORS: Prof1 Decline
+		#ERRORS: Prof1 Pending
+		#ERRORS: Prof2 Cancel
+		#ERRORS: Prof2 Pending
+		#Try prof2 Maybe
+		#Try prof2 Decline
+		#Try prof2 Accept
+		#Back to Accepted!
 
-		#profile1 responds the request. He can only respond with a "Chat" or "Cancel/Decline"
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "request", "reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"start_date": 1357948800, "end_date": 1358208000, "capacity": 1, "flexibleStartDate": False, "flexibleEndDate": False}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+
+		#Let's create our first request.
+		request = G(Requests, reference = ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=created, private_message = content1, public_message= content2, wing= wing)
+		additional_info= G(AccomodationInformation, notification=request, start_date=strt_date, end_date=nd_date, transport= trans, num_people= num_ppl)
+		#Check if profile1 has 1 request and profile2 has 1 request as well...
+		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)###########################################
+		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)###########################################
+		#Now the request is in Pending. Profile 1 can Chat or Cancel. Profile2 can Accept, Maybe or Decline
+		#######Pending-> p2 maybe, decline
+		#Try profile1 Chat
+		time.sleep(1)
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
 		self.assertEqual(r1.status_code, 200)
 		js = json.loads(r1.content)
 		self.assertTrue(js.has_key('status'))
@@ -1437,95 +1522,1078 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(js.has_key('code'))
 		self.assertEqual(js['code'], 200)
 		self.assertTrue(js.has_key('data'))
-		self.assertEqual(js['data'], "Message sent succesfully")
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
 		#Check if it's OK
-		req_list = Requests.objects.filter(reference= self.ref).order_by('created')
-		self.assertEqual(len(req), 2)
-		req = req_list[1]
-		self.assertEqual(req.state, 'P')
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		
+		
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'P')###############################################################
 		self.assertEqual(req.sender.pk, self.profile1.pk)
 		self.assertEqual(req.receiver.pk, self.profile2.pk)
 		##
 		self.assertEqual(req.public_message, "")
-		self.assertNotEqual(req.private_message, "")
+		self.assertEqual(req.private_message, content1) 
 		self.assertEqual(req.make_public, False)
 		##
 		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
-		self.assertEqual(len(ai), 1)
+		self.assertEqual(len(ai_list), 1)
 		ai = ai_list[0]
-		self.assertEqual(ai.start_date, 1357948800)
-		self.assertEqual(ai.end_date, 1358208000)
-		self.assertEqual(ai.num_people, 1)
-		self.assertEqual(ai.flexible_start, )
-		self.assertEqual(ai.flexible_end, )
-
-
-
-		#Make the call to test our API (ACCEPT)
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"kind": "request", "reference": ref, "data": {"content": content1, "wingType": "accomodation", "state": "A", "wingParameters": {"wingId": wing.pk, "start_date": 1357948800, "end_date": 1358208000, "capacity": 1}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
-		self.assertEqual(r1.status_code, 200)
-		js = json.loads(r1.content)
-		self.assertTrue(js.has_key('status'))
-		self.assertEqual(js['status'], True)
-		self.assertTrue(js.has_key('code'))
-		self.assertEqual(js['code'], 200)
-		self.assertTrue(js.has_key('data'))
-		self.assertEqual(js['data'], "Message sent succesfully")
-		#Check if the call has been made succesfully
-		#Then we are gonna check if the request has been sent...
-		#Check if profile1 has 2 request and profile2 has 2 request as well...
-		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 2)
-		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 2)
-		#Check if the newest request is the one we've just sended
-		req = Requests.objects.filter(reference = ref).order_by('created')[1]
-		self.assertEqual(req.private_message, content1)
-		self.assertEqual(req.reference, ref)
-		#Check if its ordered correctly (oldest first)
-		self.assertEqual(req.read, False)
-		self.assertEqual(req.kind, 'request')
-		self.assertEqual(req.first_sender, self.profile2)
-		self.assertEqual(req.first_sender_visible, True)
-		self.assertEqual(req.second_sender_visible, True)
-		self.assertEqual(req.private_message, content1)
-		self.assertEqual(req.public_message, None)
-		self.assertEqual(req.make_pulic, False)
-		self.assertEqual(req.state, 'A')
-		#We accepted the message, so the state has to propagate through all the thread
-		for i in Requests.objects.filter(reference = ref):
-			assertEqual(i.state, 'A')
-		#Respond the request above, mabeying it
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"idReceiver": self.profile2.pk, "kind": "request", "reference": ref, "data": {"content": content2, "wingType": "accomodation", "state": "A", "wingParameters": {"wingId": wing.pk, "start_date": 1357948800, "end_date": 1358208000, "capacity": 1}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
-		self.assertEqual(r1.status_code, 200)
-		js = json.loads(r1.content)
-		self.assertTrue(js.has_key('status'))
-		self.assertEqual(js['status'], True)
-		self.assertTrue(js.has_key('code'))
-		self.assertEqual(js['code'], 200)
-		self.assertTrue(js.has_key('data'))
-		self.assertEqual(js['data'], "Message sent succesfully")
-		#Check if the call has been made succesfully
-		#Then we are gonna check if the request has been sent...
-		#Check if profile1 has 2 request and profile2 has 2 request as well...
-		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 3)
-		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 3)
-		#Check if the newest request is the one we've just sended
-		req = Requests.objects.filter(reference = ref).order_by('created')[2]
-		self.assertEqual(req.private_message, content2)
-		self.assertEqual(req.reference, ref)
-		#Check if its ordered correctly (oldest first)
-		self.assertEqual(req.read, False)
-		self.assertEqual(req.kind, 'request')
-		self.assertEqual(req.first_sender, self.profile2)
-		self.assertEqual(req.first_sender_visible, True)
-		self.assertEqual(req.second_sender_visible, True)
-		self.assertEqual(req.private_message, content2)
-		self.assertEqual(req.public_message, None)
-		self.assertEqual(req.make_pulic, False)
-		self.assertEqual(req.state, 'M')
-		#We accepted the message, so the state has to propagate through all the thread
-		for i in Requests.objects.filter(reference = ref):
-			assertEqual(i.state, 'M')
-		#Decline it
-		#Change Additional Information
-		"""
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
 		
+		
+		#ERRORS: Porfile1 can't Accept, Maybe,. Profile2 can't Pending or Chat
+		#ERRORS: Try prof1 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof2 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#Try profile1 Cancel
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		
+		
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Now the request is canceled. Profile1 can now put it into Pending or Chat. Profile2 can only Chat...
+		#Try profile1 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		
+		
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try profile2 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#ERRORS: Profile1 can't Accept, Maybe, Cancel. Profile2 can't Accept, Maybe, Decline or Pending
+		#ERRORS: Try prof1 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof2 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof2 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Try prof2 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#Try profile1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		
+		
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'P')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#Now we have the request in Pending again... 
+		#Let's try to do something we can't, like Accept, Maybe, Pending
+		#ERRORS: We already checked them
+		time.sleep(1)
+		#Try prof2 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#Now the request is accepted. Prof1 can Chat, Maybe and Cancel. Prof2 can Chat, Maybe and Decline
+		##########Accepted->p2 maybe, decline
+		time.sleep(1)
+		#Try prof1 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof2 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#ERRORS: Profile1 can't Accept and Pending. Profile2 can't Accept and Pending
+		#ERRORS: Prof1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Prof2 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#Try prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#Now, prof1 has put Maybe. This means prof2 could Decline and Chat. Prof1 could Accept, Chat and Cancel
+		time.sleep(1)
+		#Try prof1 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		
+		
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof2 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		
+		
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#ERRORS: Prof1 can't Pending. Prof2 can't Pending
+		#ERRORS: Prof2 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#ERRORS: Prof1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#Check if it's OK
+		#Try Prof1 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#Now its back to Pending! 
+		time.sleep(1)
+		#Try prof1 Cancel
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'P')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#try prof2 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof1 Cancel
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'P')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#try prof2 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof2 Decline
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'D')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Now profile2 has Declined! Prof1 can only Chat and prof2 can Accept, Maybe, Chat
+		#Try Prof1 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'D')###############################################################
+		self.assertEqual(req.sender.pk, self.profile1.pk)
+		self.assertEqual(req.receiver.pk, self.profile2.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#try Prof2 Chat
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'D')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#ERRORS: Prof1 can't Accept, Maybe, Decline and Pending. Prof2 can't Cancel or Pending
+		#ERRORS: Prof1 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Prof1 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Prof1 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		#ERRORS: Prof2 Pending
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], False)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 400)
+		self.assertTrue(js.has_key('errors'))
+		self.assertEqual(js['errors'], "The operation you requested is not valid")
+		time.sleep(1)
+		#Try prof2 Maybe
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'M')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof2 Decline
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'D')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		time.sleep(1)
+		#Try prof2 Accept
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		total_msg = total_msg + 1
+		current_msg = current_msg + 1
+		#Check if it's OK
+		req_list = Requests.objects.filter(reference= ref).order_by('created')
+		self.assertEqual(len(req_list), total_msg) 
+		req = req_list[current_msg]
+		self.assertEqual(req.state, 'A')###############################################################
+		self.assertEqual(req.sender.pk, self.profile2.pk)
+		self.assertEqual(req.receiver.pk, self.profile1.pk)
+		##
+		self.assertEqual(req.public_message, "")
+		self.assertEqual(req.private_message, content1) 
+		self.assertEqual(req.make_public, False)
+		##
+		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
+		self.assertEqual(len(ai_list), 1)
+		ai = ai_list[0]
+		self.assertEqual(ai.start_date, strt_date)
+		self.assertEqual(ai.end_date, nd_date)
+		self.assertEqual(ai.num_people, num_ppl)
+		self.assertEqual(ai.flexible_start, flex_start)
+		self.assertEqual(ai.flexible_end, flex_end)
+		strt_date = strt_date + 1
+		
+		#Back to Accepted!
+
+
