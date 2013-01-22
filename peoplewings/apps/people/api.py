@@ -321,8 +321,6 @@ class UniversityResource(ModelResource):
     			return self.create_response(request, {"code":400, "status":False, "errors": e}, response_class=HttpResponse)
 		return self.create_response(request, {"code":200, "status":True, "data": data}, response_class=HttpResponse)
 
->>>>>>> notifications
-
 class UserUniversityResource(ModelResource):
 	university = fields.ToOneField(UniversityResource, 'university', full=True)
 	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
@@ -1111,8 +1109,6 @@ class UserProfileResource(ModelResource):
 				return self._handle_500(request, e)
 
 		return wrapper
-<<<<<<< HEAD
-
 
 class ContactResource(ModelResource):
 	
@@ -1177,8 +1173,3 @@ class ContactResource(ModelResource):
 				return self._handle_500(request, e)
 
 		return wrapper
-
-=======
->>>>>>> notifications
-
-

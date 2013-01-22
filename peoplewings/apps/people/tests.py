@@ -10,7 +10,7 @@ from django.utils.timezone import utc
 from django.test import TestCase, Client
 from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
-from people.models import UserProfile
+from people.models import UserProfile, University
 from notifications.models import Notifications, Requests, Invites, Messages
 from wings.models import Wing
 from peoplewings.libs.customauth.models import ApiToken
