@@ -13,11 +13,6 @@ class NotificationsList(object):
 		## Request/inv specific
 		self.state = None
 		self.flag_direction = None
-		self.start_date = None
-		self.end_date = None
-		self.num_people = None
-		self.message = None
-		self.wing_type =  None
 		## Msg/req/inv specific
 		self.content = None
 		#Profile specific
@@ -30,6 +25,18 @@ class NotificationsList(object):
 		self.connected = None
 		## URLs
 		self.thread_url = None
+		#Wing Params
+		self.wing_parameters = {}
+		self.wing_parameters['start_date'] = None
+		self.wing_parameters['end_date'] = None
+		self.wing_parameters['num_people'] = None
+		self.wing_parameters['message'] = None
+		self.wing_parameters['wing_type'] = None
+		self.wing_parameters['wing_city'] = None
+		self.wing_parameters['modified'] = None
+
+		#sender
+		self.sender = None
 
 	def gen_key(self, key):
 		buff = key.replace("_", " ")
@@ -132,6 +139,7 @@ class RequestThread(object):
 		self.wing['parameters']['arrivingVia']= None
 		self.wing['parameters']['flexibleStartDate']= None
 		self.wing['parameters']['flexibleEndDate']= None
+		self.wing['parameters']['modified']= None
 		self.options= {}
 		self.options['canAccept']= None
 		self.options['canMaybe']= None

@@ -142,6 +142,23 @@ class GetListNotificationsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['code'], 200)
 		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
 		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), 0)
 
 		
 
@@ -760,6 +777,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(params.has_key('arrivingVia'))
 			self.assertTrue(params.has_key('flexibleStartDate'))
 			self.assertTrue(params.has_key('flexibleEndDate'))
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))			
 
 		self.assertEqual(data.has_key('options'), True)
 		self.assertTrue(isinstance(data['options'], dict))
@@ -878,6 +897,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(params.has_key('arrivingVia'))
 			self.assertTrue(params.has_key('flexibleStartDate'))
 			self.assertTrue(params.has_key('flexibleEndDate'))
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
 		self.assertTrue(isinstance(data['options'], dict))
@@ -1009,6 +1030,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(params.has_key('arrivingVia'))
 			self.assertTrue(params.has_key('flexibleStartDate'))
 			self.assertTrue(params.has_key('flexibleEndDate'))
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
 		self.assertTrue(isinstance(data['options'], dict))
@@ -1114,6 +1137,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(params.has_key('arrivingVia'))
 			self.assertTrue(params.has_key('flexibleStartDate'))
 			self.assertTrue(params.has_key('flexibleEndDate'))
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
 		self.assertTrue(isinstance(data['options'], dict))
@@ -1615,7 +1640,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Now the request is canceled. Profile1 can now put it into Pending or Chat. Profile2 can only Chat...
 		#Try profile1 Chat
@@ -1652,7 +1677,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		strt_date = strt_date
 		time.sleep(1)
 		#Try profile2 Chat
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -1686,7 +1711,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#ERRORS: Profile1 can't Accept, Maybe, Cancel. Profile2 can't Accept, Maybe, Decline or Pending
 		#ERRORS: Try prof1 Accept
@@ -1774,7 +1799,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#Now we have the request in Pending again... 
 		#Let's try to do something we can't, like Accept, Maybe, Pending
@@ -1813,7 +1838,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#Now the request is accepted. Prof1 can Chat, Maybe and Cancel. Prof2 can Chat, Maybe and Decline
 		##########Accepted->p2 maybe, decline
@@ -1850,7 +1875,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof2 Chat
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -1884,7 +1909,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#ERRORS: Profile1 can't Accept and Pending. Profile2 can't Accept and Pending
 		#ERRORS: Prof1 Pending
@@ -1940,7 +1965,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#Now, prof1 has put Maybe. This means prof2 could Decline and Chat. Prof1 could Accept, Chat and Cancel
 		time.sleep(1)
@@ -1978,7 +2003,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof2 Chat
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2014,7 +2039,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#ERRORS: Prof1 can't Pending. Prof2 can't Pending
 		#ERRORS: Prof2 Pending
@@ -2071,7 +2096,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#Now its back to Pending! 
 		time.sleep(1)
@@ -2107,7 +2132,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof1 Pending
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
@@ -2141,7 +2166,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#try prof2 Accept
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2175,7 +2200,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof1 Maybe
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
@@ -2209,7 +2234,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof1 Cancel
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
@@ -2243,7 +2268,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof1 Pending
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "P", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
@@ -2277,7 +2302,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#try prof2 Accept
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2311,7 +2336,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof1 Maybe
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "M", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
@@ -2345,7 +2370,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof2 Decline
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2379,7 +2404,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Now profile2 has Declined! Prof1 can only Chat and prof2 can Accept, Maybe, Chat
 		#Try Prof1 Chat
@@ -2414,7 +2439,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#try Prof2 Chat
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2448,7 +2473,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#ERRORS: Prof1 can't Accept, Maybe, Decline and Pending. Prof2 can't Cancel or Pending
 		#ERRORS: Prof1 Accept
@@ -2524,7 +2549,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof2 Decline
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "D", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2558,7 +2583,7 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		time.sleep(1)
 		#Try prof2 Accept
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -2592,8 +2617,739 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.num_people, num_ppl)
 		self.assertEqual(ai.flexible_start, flex_start)
 		self.assertEqual(ai.flexible_end, flex_end)
-		strt_date = strt_date + 1
+		
 		
 		#Back to Accepted!
 
+	def test_post_request_param_modification(self):
+		c = Client()
+		content1 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		content2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		#Create the wing related to the request
+		wing = G(Accomodation, city= self.profile2.current_city, author= self.profile2)
+		wing2 = G(Accomodation, city= self.profile2.current_city, author= self.profile2)
+		#Make a thread of requests
+		ref = str(uuid.uuid4())
+		created = time.time() - 3600*24
+		check_created = created
+		strt_date = 1357948800
+		nd_date= 1358208000
+		num_ppl = 1
+		flex_start= False
+		flex_end= False
+		trans= 'Plane'
+		total_msg = 1
+		current_msg= 0
 
+		#Create the first request
+		request = G(Requests, reference = ref, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=created, private_message = content1, public_message= content2, wing= wing, state='P')
+		additional_info= G(AccomodationInformation, notification=request, start_date=strt_date, end_date=nd_date, transport= trans, num_people= num_ppl)
+		#Check if profile1 has 1 request and profile2 has 1 request as well...
+		self.assertEqual(len(self.profile1.notifications_sender.all()) + len(self.profile1.notifications_receiver.all()), 1)
+		self.assertEqual(len(self.profile2.notifications_sender.all()) + len(self.profile2.notifications_receiver.all()), 1)
+		time.sleep(1)
+
+		#Prof2 Accepts, but modifies end_date -> 1358160306
+		nd_date = 1358160306
+		mod = ['endDate']
+		state = 'A'
+		nmod = 1
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		time.sleep(1)
+		#Check the modifications are shown for prof1, but no modifications are shown for profile2
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), 0)
+			for i in params['modified']:
+				self.assertTrue(i in mod)		
+
+		#check also in the notification list, that changes are shown for prof1
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), nmod)
+
+		#Prof1 Accepts (Chats)
+		nd_date = 1358160306
+		mod = []
+		state = 'A'
+		nmod = 0
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		time.sleep(1)
+		#Check the modifications are gone for prof1
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), 0)
+			for i in params['modified']:
+				self.assertTrue(i in mod)		
+
+		#check also in the notification list, that changes are gone for prof1
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), nmod)
+
+		#Prof1 Maybe and changes num_ppl -> 4
+		nd_date = 1358160306
+		num_ppl = 4
+		mod = ['capacity']
+		state = 'M'
+		nmod = 1
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		time.sleep(1)
+		#check prof1 does not see the modified values, but prof2 sees them
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), 0)
+			for i in params['modified']:
+				self.assertTrue(i in mod)
+		#check also in the notification list, that changes are shown for prof2
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), nmod)
+		#Prof2 Maybe
+		nd_date = 1358160306
+		num_ppl = 4
+		mod = []
+		state = 'M'
+		nmod = 0
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertEqual(js['data'], "Request sent succesfully")
+		time.sleep(1)
+		#Check prof2 does not sees any changes
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		#Prof2 declines
+		nd_date = 1358160306
+		num_ppl = 4
+		mod = []
+		state = 'D'
+		nmod = 0
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		time.sleep(1)
+		#Prof2 Accepts, and changes num_ppl -> 3
+		nd_date = 1358160306
+		num_ppl = 3
+		mod = ['capacity']
+		state = 'A'
+		nmod = 1
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		time.sleep(1)
+
+		#Prof2 Accepts, and changes end_date -> 1358208000
+		nd_date = 1358208000
+		num_ppl = 3
+		mod = ['capacity', 'endDate']
+		state = 'A'
+		nmod = 2
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		time.sleep(1)
+
+		#Check Prof1 sees both changes
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), 0)
+			for i in params['modified']:
+				self.assertTrue(i in mod)
+
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), nmod)
+
+		#Prof1 Accepts and changes num_ppl -> 2
+		nd_date = 1358208000
+		num_ppl = 2
+		mod = ['capacity']
+		state = 'A'
+		nmod = 1
+
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		time.sleep(1)
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), nmod)
+			for i in params['modified']:
+				self.assertTrue(i in mod)	
+
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertEqual(js.has_key('data'), True)
+		data = js['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertEqual(js['data'].has_key('wing'), True)
+		self.assertTrue(isinstance(data['wing'], dict))
+		wing_aux = data['wing']
+		self.assertTrue(wing_aux.has_key('type'))
+		self.assertEqual(wing_aux['type'], 'Accomodation')
+		self.assertTrue(wing_aux.has_key('state'))
+		self.assertEqual(wing_aux['state'], state)
+		self.assertTrue(wing_aux.has_key('parameters'))
+		self.assertTrue(isinstance(wing_aux['parameters'], dict))
+		params = wing_aux['parameters']
+		if (wing_aux['type'] == 'Accomodation'):
+			self.assertTrue(params.has_key('wingId'))
+			self.assertEqual(params['wingId'], wing.pk)
+			self.assertTrue(params.has_key('wingName'))
+			self.assertEqual(params['wingName'], wing.name)
+			self.assertTrue(params.has_key('wingCity'))
+			self.assertEqual(params['wingCity'], wing.city.stringify())
+			self.assertTrue(params.has_key('startDate'))
+			self.assertEqual(params['startDate'], strt_date)
+			self.assertTrue(params.has_key('endDate'))
+			self.assertEqual(params['endDate'], nd_date)
+			self.assertTrue(params.has_key('capacity'), num_ppl)
+			self.assertTrue(params.has_key('arrivingVia'), trans)
+			self.assertTrue(params.has_key('flexibleStartDate'), flex_start)
+			self.assertTrue(params.has_key('flexibleEndDate'), flex_end)
+			self.assertTrue(params.has_key('modified'))
+			self.assertTrue(isinstance(params['modified'], list))
+			self.assertEqual(len(params['modified']), 0)
+			for i in params['modified']:
+				self.assertTrue(i in mod)
+
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(isinstance(items, list))
+		self.assertEqual(len(items), 1)
+		first = items[0]
+		self.assertTrue(isinstance(first, dict))
+		self.assertTrue(first.has_key('wingParameters'))
+		params = first['wingParameters']
+		self.assertTrue(isinstance(params, dict))
+		self.assertTrue(params.has_key('modified'))
+		self.assertTrue(params.has_key('wingType'))
+		self.assertTrue(params.has_key('message'))
+		self.assertTrue(params.has_key('endDate'))
+		self.assertTrue(params.has_key('startDate'))
+		self.assertTrue(params.has_key('numPeople'))
+		self.assertTrue(params.has_key('wingCity'))
+		self.assertTrue(isinstance(params['modified'], list))
+		self.assertEqual(len(params['modified']), nmod)
