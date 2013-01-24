@@ -16,6 +16,7 @@ from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites, AccomodationInformation
+from notifications.domain import Automata
 from wings.models import Accomodation, Wing
 from locations.models import City
 from django.contrib.auth.models import User
@@ -781,16 +782,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(isinstance(params['modified'], list))			
 
 		self.assertEqual(data.has_key('options'), True)
-		self.assertTrue(isinstance(data['options'], dict))
+		self.assertTrue(isinstance(data['options'], list))
 		options = data['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'C')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'T')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'T')
 
 		self.assertEqual(js['data'].has_key('items'), True)
 		self.assertEqual(isinstance(data['items'], list), True)
@@ -901,16 +894,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
-		self.assertTrue(isinstance(data['options'], dict))
+		self.assertTrue(isinstance(data['options'], list))
 		options = data['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'C')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'T')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'T')
 
 		self.assertEqual(js['data'].has_key('items'), True)
 		self.assertEqual(isinstance(data['items'], list), True)
@@ -1034,16 +1019,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
-		self.assertTrue(isinstance(data['options'], dict))
+		self.assertTrue(isinstance(data['options'], list))
 		options = data['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'C')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'F')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'T')
 
 		self.assertEqual(js['data'].has_key('items'), True)
 		self.assertEqual(isinstance(data['items'], list), True)
@@ -1141,16 +1118,8 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(isinstance(params['modified'], list))
 
 		self.assertEqual(data.has_key('options'), True)
-		self.assertTrue(isinstance(data['options'], dict))
+		self.assertTrue(isinstance(data['options'], list))
 		options = data['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'T')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'T')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'T')
 
 		self.assertEqual(js['data'].has_key('items'), True)
 		self.assertEqual(isinstance(data['items'], list), True)
@@ -1212,29 +1181,15 @@ class GetNotificationsThreadTest(TestCase):
 		self.request1 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='P', wing= self.wingreq)
 		accominfo1 = G(AccomodationInformation, notification=self.request1, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
 		self.created3 = self.created + 3600
-		self.request2 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='X', wing= self.wingreq)
+		self.request2 = G(Requests, reference = self.ref3, sender=self.profile1, receiver=self.profile2, first_sender=self.profile1, kind="request", created=self.created3, state='D', wing= self.wingreq)
 		accominfo2 = G(AccomodationInformation, notification=self.request2, modified= False, start_date = self.start_date_req, end_date= self.end_date_req)
 		self.created3 = self.created + 3600
 		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		options = json.loads(r1.content)['data']['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'F')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'F')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'T')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'C')
+		self.assertEqual(options, ['Pending', 'Chat'])
 		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
 		options = json.loads(r1.content)['data']['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'F')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'F')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'C')
+		self.assertEqual(options, ['Chat'])
 
 		self.ref3 = str(uuid.uuid4())
 		self.created3 = time.time() - 3600*24
@@ -1251,24 +1206,10 @@ class GetNotificationsThreadTest(TestCase):
 		self.created3 = self.created + 3600
 		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		options = json.loads(r1.content)['data']['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'F')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'F')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'C')
+		self.assertEqual(options, ['Chat'])
 		r1 = c.get('/api/v1/notificationsthread/' + str(self.ref3), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
 		options = json.loads(r1.content)['data']['options']
-		self.assertTrue(options.has_key('canAccept'))
-		self.assertEqual(options['canAccept'], 'T')
-		self.assertTrue(options.has_key('canMaybe'))
-		self.assertEqual(options['canMaybe'], 'T')
-		self.assertTrue(options.has_key('canPending'))
-		self.assertEqual(options['canPending'], 'F')
-		self.assertTrue(options.has_key('canDeny'))
-		self.assertEqual(options['canDeny'], 'C')
+		self.assertEqual(options, ['Accept', 'Maybe', 'Chat'])
 
 		#Now the ERRORS
 		r1 = c.get('/api/v1/notificationsthread/' + str(uuid.uuid4()), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
@@ -1624,7 +1565,7 @@ class PostNotificationsThreadTest(TestCase):
 		
 		self.assertEqual(len(req_list), total_msg) 
 		req = req_list[current_msg]
-		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.state, 'D')###############################################################
 		self.assertEqual(req.sender.pk, self.profile1.pk)
 		self.assertEqual(req.receiver.pk, self.profile2.pk)
 		##
@@ -1661,7 +1602,7 @@ class PostNotificationsThreadTest(TestCase):
 		
 		self.assertEqual(len(req_list), total_msg) 
 		req = req_list[current_msg]
-		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.state, 'D')###############################################################
 		self.assertEqual(req.sender.pk, self.profile1.pk)
 		self.assertEqual(req.receiver.pk, self.profile2.pk)
 		##
@@ -1695,7 +1636,7 @@ class PostNotificationsThreadTest(TestCase):
 		req_list = Requests.objects.filter(reference= ref).order_by('created')
 		self.assertEqual(len(req_list), total_msg) 
 		req = req_list[current_msg]
-		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.state, 'D')###############################################################
 		self.assertEqual(req.sender.pk, self.profile2.pk)
 		self.assertEqual(req.receiver.pk, self.profile1.pk)
 		##
@@ -2116,7 +2057,7 @@ class PostNotificationsThreadTest(TestCase):
 		req_list = Requests.objects.filter(reference= ref).order_by('created')
 		self.assertEqual(len(req_list), total_msg) 
 		req = req_list[current_msg]
-		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.state, 'D')###############################################################
 		self.assertEqual(req.sender.pk, self.profile1.pk)
 		self.assertEqual(req.receiver.pk, self.profile2.pk)
 		##
@@ -2252,7 +2193,7 @@ class PostNotificationsThreadTest(TestCase):
 		req_list = Requests.objects.filter(reference= ref).order_by('created')
 		self.assertEqual(len(req_list), total_msg) 
 		req = req_list[current_msg]
-		self.assertEqual(req.state, 'X')###############################################################
+		self.assertEqual(req.state, 'D')###############################################################
 		self.assertEqual(req.sender.pk, self.profile1.pk)
 		self.assertEqual(req.receiver.pk, self.profile2.pk)
 		##
@@ -2585,40 +2526,6 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(ai.flexible_end, flex_end)
 		
 		time.sleep(1)
-		#Try prof2 Accept
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": "A", "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
-		self.assertEqual(r1.status_code, 200)
-		js = json.loads(r1.content)
-		self.assertTrue(js.has_key('status'))
-		self.assertEqual(js['status'], True)
-		self.assertTrue(js.has_key('code'))
-		self.assertEqual(js['code'], 200)
-		self.assertTrue(js.has_key('data'))
-		self.assertEqual(js['data'], "Request sent succesfully")
-		total_msg = total_msg + 1
-		current_msg = current_msg + 1
-		#Check if it's OK
-		req_list = Requests.objects.filter(reference= ref).order_by('created')
-		self.assertEqual(len(req_list), total_msg) 
-		req = req_list[current_msg]
-		self.assertEqual(req.state, 'A')###############################################################
-		self.assertEqual(req.sender.pk, self.profile2.pk)
-		self.assertEqual(req.receiver.pk, self.profile1.pk)
-		##
-		self.assertEqual(req.public_message, "")
-		self.assertEqual(req.private_message, content1) 
-		self.assertEqual(req.make_public, False)
-		##
-		ai_list = AccomodationInformation.objects.filter(notification__pk= req.pk)
-		self.assertEqual(len(ai_list), 1)
-		ai = ai_list[0]
-		self.assertEqual(ai.start_date, strt_date)
-		self.assertEqual(ai.end_date, nd_date)
-		self.assertEqual(ai.num_people, num_ppl)
-		self.assertEqual(ai.flexible_start, flex_start)
-		self.assertEqual(ai.flexible_end, flex_end)
-		
-		
 		#Back to Accepted!
 
 	def test_post_request_param_modification(self):
@@ -3093,11 +3000,11 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(js.has_key('code'))
 		self.assertEqual(js['code'], 200)
 		time.sleep(1)
-		#Prof2 Accepts, and changes num_ppl -> 3
+		#Prof2 Maybes, and changes num_ppl -> 3
 		nd_date = 1358160306
 		num_ppl = 3
 		mod = ['capacity']
-		state = 'A'
+		state = 'M'
 		nmod = 1
 
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -3109,11 +3016,11 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertEqual(js['code'], 200)
 		time.sleep(1)
 
-		#Prof2 Accepts, and changes end_date -> 1358208000
+		#Prof2 Maybes, and changes end_date -> 1358208000
 		nd_date = 1358208000
 		num_ppl = 3
 		mod = ['capacity', 'endDate']
-		state = 'A'
+		state = 'M'
 		nmod = 2
 
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -3353,3 +3260,15 @@ class PostNotificationsThreadTest(TestCase):
 		self.assertTrue(params.has_key('wingCity'))
 		self.assertTrue(isinstance(params['modified'], list))
 		self.assertEqual(len(params['modified']), nmod)
+
+class AutomataTest(TestCase):
+	def setUp(self):
+		self.profile1 = G(UserProfile, pk=1)
+		#make some users and profiles as example
+		self.sample1 = [['P', 1],['A', 2],['A', 1],['D', 1],['D', 2],['P', 1],['A', 2],['A', 2],['M', 1],['M', 1],['M', 2],['D', 2],['D', 1],['D', 2],['M', 2],['D', 1],['D', 1],['D', 2],['P', 1],['D', 2],['D', 2],['A', 2],['M', 2],['M', 2],['D', 2],['A', 2],['M', 1],['A', 1],['M', 1],['D', 1]]
+		self.sample2 = [['P', 1],['A', 2],['A', 1],['D', 1],['D', 2],['P', 1],['A', 2],['A', 2],['M', 1],['M', 1],['M', 2],['D', 2],['D', 1],['D', 2],['M', 2],['D', 1],['D', 1],['D', 2],['M', 1]]
+
+	def test_post_message(self):
+		a = Automata()
+		self.assertTrue(a.check_P(self.sample1, self.profile1))
+		self.assertFalse(a.check_P(self.sample2, self.profile1))

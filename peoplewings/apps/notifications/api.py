@@ -471,87 +471,54 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
-	def make_options(self, old_mod, me, notifs, is_request):
-		can_accept = None
-		can_maybe = None
-		can_deny = None
-		can_pending = None
-		first_sender = notifs[0].first_sender
-		if is_request:
-			state = Requests.objects.get(pk= notifs[len(notifs) - 1].pk).state
-		else:
-			state = Invites.objects.get(pk= notifs[len(notifs) - 1].pk).state
-		if (first_sender == me):
-			if state == 'P':
-				can_accept = 'C'
-				can_maybe = 'F'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'A':
-				can_accept = 'C'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'M':
-				if old_mod == me:
-					can_accept = 'T'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-				else:
-					can_accept = 'F'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-			elif state == 'D':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'F'
-			elif state == 'X':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'T'
-
-		else:
-			if state == 'P':
-				can_accept = 'T'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'A':
-				can_accept = 'C'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'M':
-				if old_mod == me:
-					can_accept = 'T'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-				else:
-					can_accept = 'F'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'	
-			elif state == 'D':
-				can_accept = 'T'
-				can_maybe = 'T'
-				can_deny = 'C'
-				can_pending = 'F'
-			elif state == 'X':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'F'
-
+	def make_options(self, me, thread):
+		a = Automata()
+		states = []
 		options = {}
-		options['canAccept'] = can_accept
-		options['canMaybe'] = can_maybe
-		options['canDeny'] = can_deny
-		options['canPending'] = can_pending
+		for i in thread:
+			states.append([i.state, i.sender.pk])
+		first_sender = thread[0].first_sender
+		states_copy = list(states)
+		states_copy.append(['A', me.pk])
+		can_accept = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['M', me.pk])
+		can_maybe = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['D', me.pk])
+		can_deny = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['P', me.pk])
+		can_pending = a.check_P(states_copy, first_sender)
+
+		if can_accept is True:
+			if states[len(states)-1][0] == 'A':
+				options['canAccept'] = 'C'
+			else:
+				options['canAccept'] = 'T'
+		else:
+			options['canAccept'] = 'F'
+		if can_maybe is True:
+			if states[len(states)-1][0] == 'M':
+				options['canMaybe'] = 'C'
+			else:
+				options['canMaybe'] = 'T'
+		else:
+			options['canMaybe'] = 'F'
+		if can_deny is True:
+			if states[len(states)-1][0] == 'D':
+				options['canDeny'] = 'C'
+			else:
+				options['canDeny'] = 'T'
+		else:
+			options['canDeny'] = 'F'
+		if can_pending is True:
+			if states[len(states)-1][0] == 'P':
+				options['canPending'] = 'C'
+			else:
+				options['canPending'] = 'T'
+		else:
+			options['canPending'] = 'F'
 		return options
 
 
@@ -764,11 +731,24 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
 			data.wing['parameters']['modified'] = self.make_difs(me, req, data.kind)
 			last_state_mod = self.get_last_state_mod(thread, len(thread))
-			options = self.make_options(last_state_mod, me, notifs, kind == 'request')
-			data.options['canAccept']= options['canAccept']
-			data.options['canMaybe']= options['canMaybe']
-			data.options['canPending']= options['canPending']
-			data.options['canDeny']= options['canDeny']
+			options = self.make_options(me, thread)
+			if options['canAccept'] == 'T':
+				data.options.append('Accept')
+			elif options['canAccept'] == 'C':
+				data.options.append('Chat')
+			if options['canMaybe'] == 'T':
+				data.options.append('Maybe')
+			elif options['canMaybe'] == 'C':
+				data.options.append('Chat')
+			if options['canPending'] == 'T':
+				data.options.append('Pending')
+			elif options['canPending'] == 'C':
+				data.options.append('Chat')
+			if options['canDeny'] == 'T':
+				data.options.append('Deny')
+			elif options['canDeny'] == 'C':
+				data.options.append('Chat')
+
 			data.items = aux_list
 			data = data.jsonable()
 		else:
@@ -802,7 +782,6 @@ class NotificationsThreadResource(ModelResource):
 			receiver = aux.sender
 		else:
 			receiver = aux.receiver
-
 		# Respond the notification
 		if kind == 'message':
 			try:				
@@ -812,7 +791,7 @@ class NotificationsThreadResource(ModelResource):
 
 			return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
 		if kind == 'request':
-			try:				
+			try:	
 				request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
 				if isinstance(request_result, str):
 					return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
