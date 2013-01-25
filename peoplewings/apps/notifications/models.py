@@ -293,6 +293,7 @@ def put_alarm(sender, instance, signal, *args, **kwargs):
 	notif.receiver = instance.receiver
 	notif.notificated = False
 	notif.reference = instance.reference
+	notif.save()
 
 def del_alarm(sender, instance, signal, *args, **kwargs):
 	try:
