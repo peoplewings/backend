@@ -186,6 +186,30 @@ class NotificationsListResource(ModelResource):
 					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
 		return result_dict
 
+	def make_difs_individual(self, first, second):
+		mod = []
+		if first.wing_parameters.has_key('start_date') and second.wing_parameters.has_key('start_date') and not first.wing_parameters['start_date'] == second.wing_parameters['start_date']:
+			mod.append('startDate')
+		if first.wing_parameters.has_key('end_date') and second.wing_parameters.has_key('end_date') and not first.wing_parameters['end_date'] == second.wing_parameters['end_date']:
+			mod.append('endDate')
+		if first.wing_parameters.has_key('num_people') and second.wing_parameters.has_key('num_people') and not first.wing_parameters['num_people'] == second.wing_parameters['num_people']:
+			mod.append('numPeople')
+		return mod
+
+	def make_difs(self, thread, me):
+		mod = []
+		for idx, i in enumerate(thread):			
+			if i.sender == me:
+				break
+			else:
+				if len(thread) > idx+1:
+					mod = mod + self.make_difs_individual(i, thread[idx+1])
+
+		thread[0].wing_parameters['modified'] = mod
+		return thread
+
+
+
 	def get_list(self, request, **kwargs):		
 		## We are doin it the hard way
 		try:
@@ -213,28 +237,30 @@ class NotificationsListResource(ModelResource):
 					req = Requests.objects.get(pk = i.pk)
 					additional_list = i.get_subclass().all()		
 					for additional in additional_list:
-						aux.start_date = additional.start_date
-						aux.end_date = additional.end_date
-						aux.num_people = additional.num_people 
+						aux.wing_parameters['start_date'] = additional.start_date
+						aux.wing_parameters['end_date'] = additional.end_date
+						aux.wing_parameters['num_people'] = additional.num_people 
 						add_class = additional.get_class_name() 
-						aux.wing_type = add_class                             
-					aux.message = '%s (%s in %s)' % (req.wing.name, req.wing.get_class_name(), req.wing.city.name)
+						aux.wing_parameters['wing_type'] = add_class
+						aux.wing_parameters['wing_city'] = req.wing.city.name                           
+					aux.wing_parameters['message'] = req.wing.name
 					aux.state = req.state
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
 					else:
 						aux.flag_direction =   False                                         
-					## Invite specific               
+				## Invite specific               
 				elif aux.kind == 'invite':
 					inv = Invites.objects.get(pk = i.pk) 
-					additional_list = i.get_subclass().all()
+					additional_list = i.get_subclass().all()		
 					for additional in additional_list:
-						aux.start_date = additional.start_date
-						aux.end_date = additional.end_date
-						aux.num_people = additional.num_people  
-						add_class = additional.get_class_name()   
-						aux.wing_type = add_class                                                                            
-					aux.message = '%s (%s in %s)' % (inv.wing.name, inv.wing.get_class_name(), inv.wing.city.name)
+						aux.wing_parameters['start_date'] = additional.start_date
+						aux.wing_parameters['end_date'] = additional.end_date
+						aux.wing_parameters['num_people'] = additional.num_people 
+						add_class = additional.get_class_name() 
+						aux.wing_parameters['wing_type'] = add_class
+						aux.wing_parameters['wing_city'] = inv.wing.city.name                           
+					aux.wing_parameters['message'] = inv.wing.name
 					aux.state = inv.state   
 					if i.first_sender == prof.pk:
 						 aux.flag_direction = True
@@ -258,7 +284,8 @@ class NotificationsListResource(ModelResource):
 				aux.interlocutor_id = prof_aux.pk          
 				aux.avatar =  prof_aux.thumb_avatar
 				aux.age = prof_aux.get_age()
-				aux.verified = False                    
+				aux.verified = False
+				aux.sender = i.sender                   
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 				else: aux.location = "Not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
@@ -268,20 +295,30 @@ class NotificationsListResource(ModelResource):
 				result_dict.append(aux)                
 		except Exception, e:
 			raise e
-			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)   
-		result = []
+			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
+		result = {}
+		result_idx = []
 		#Here we will apply search filter and order_by		
 		result_dict = self.search(request, result_dict)
 		result_dict = self.order_by(request, result_dict)
 		for o in result_dict:
-			if o.reference not in [r.reference for r in result]:
-				result.append(o)
+			if o.reference not in result.keys():				
+				result[o.reference] = [o]
+				result_idx.append(o.reference)
+			else:
+				result[o.reference].append(o)
+		for o in result.keys():
+			o = self.make_difs(result[o], prof)
+
+		final_result = []
+		for i in result_idx:
+			final_result.append(result[i][0])
 		page_size=50
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
-		paginator = Paginator(result, page_size)
+		paginator = Paginator(final_result, page_size)
 		
 		try:
 			page = paginator.page(num_page)
@@ -434,87 +471,54 @@ class NotificationsThreadResource(ModelResource):
 		always_return_data = True     
 		resource_name = 'notificationsthread'
 
-	def make_options(self, old_mod, me, notifs, is_request):
-		can_accept = None
-		can_maybe = None
-		can_deny = None
-		can_pending = None
-		first_sender = notifs[0].first_sender
-		if is_request:
-			state = Requests.objects.get(pk= notifs[len(notifs) - 1].pk).state
-		else:
-			state = Invites.objects.get(pk= notifs[len(notifs) - 1].pk).state
-		if (first_sender == me):
-			if state == 'P':
-				can_accept = 'C'
-				can_maybe = 'F'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'A':
-				can_accept = 'C'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'M':
-				if old_mod == me:
-					can_accept = 'T'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-				else:
-					can_accept = 'F'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-			elif state == 'D':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'F'
-			elif state == 'X':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'T'
-
-		else:
-			if state == 'P':
-				can_accept = 'T'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'A':
-				can_accept = 'C'
-				can_maybe = 'T'
-				can_deny = 'T'
-				can_pending = 'F'
-			elif state == 'M':
-				if old_mod == me:
-					can_accept = 'T'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'
-				else:
-					can_accept = 'F'
-					can_maybe = 'C'
-					can_deny = 'T'
-					can_pending = 'F'	
-			elif state == 'D':
-				can_accept = 'T'
-				can_maybe = 'T'
-				can_deny = 'C'
-				can_pending = 'F'
-			elif state == 'X':
-				can_accept = 'F'
-				can_maybe = 'F'
-				can_deny = 'C'
-				can_pending = 'F'
-
+	def make_options(self, me, thread):
+		a = Automata()
+		states = []
 		options = {}
-		options['canAccept'] = can_accept
-		options['canMaybe'] = can_maybe
-		options['canDeny'] = can_deny
-		options['canPending'] = can_pending
+		for i in thread:
+			states.append([i.state, i.sender.pk])
+		first_sender = thread[0].first_sender
+		states_copy = list(states)
+		states_copy.append(['A', me.pk])
+		can_accept = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['M', me.pk])
+		can_maybe = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['D', me.pk])
+		can_deny = a.check_P(states_copy, first_sender)
+		states_copy = list(states)
+		states_copy.append(['P', me.pk])
+		can_pending = a.check_P(states_copy, first_sender)
+
+		if can_accept is True:
+			if states[len(states)-1][0] == 'A':
+				options['canAccept'] = 'C'
+			else:
+				options['canAccept'] = 'T'
+		else:
+			options['canAccept'] = 'F'
+		if can_maybe is True:
+			if states[len(states)-1][0] == 'M':
+				options['canMaybe'] = 'C'
+			else:
+				options['canMaybe'] = 'T'
+		else:
+			options['canMaybe'] = 'F'
+		if can_deny is True:
+			if states[len(states)-1][0] == 'D':
+				options['canDeny'] = 'C'
+			else:
+				options['canDeny'] = 'T'
+		else:
+			options['canDeny'] = 'F'
+		if can_pending is True:
+			if states[len(states)-1][0] == 'P':
+				options['canPending'] = 'C'
+			else:
+				options['canPending'] = 'T'
+		else:
+			options['canPending'] = 'F'
 		return options
 
 
@@ -592,6 +596,37 @@ class NotificationsThreadResource(ModelResource):
 				return thread_rev[cursor-1].sender
 			cursor = cursor + 1
 		return None
+
+	def make_difs_individual(self, first, second):
+		mod = []		
+		first_ai = AccomodationInformation.objects.get(notification=first.pk)
+		second_ai = AccomodationInformation.objects.get(notification=second.pk)
+
+		if first_ai.start_date and second_ai.start_date and not first_ai.start_date == second_ai.start_date:
+			mod.append('startDate')
+		if first_ai.end_date and second_ai.end_date and not first_ai.end_date == second_ai.end_date:
+			mod.append('endDate')
+		if first_ai.num_people and second_ai.num_people and not first_ai.num_people == second_ai.num_people:
+			mod.append('capacity')
+		return mod
+
+	def make_difs(self, me, req, kind):
+		if kind == 'request':
+			thread = Requests.objects.filter(reference = req.reference).order_by('-created')
+		elif kind == 'invite':
+			thread = Invites.objects.filter(reference = req.reference).order_by('-created')
+
+		mod = []
+		for idx, i in enumerate(thread):			
+			if i.sender == me:
+				break
+			else:
+				if len(thread) > idx+1:
+					mod = mod + self.make_difs_individual(i, thread[idx+1])
+		return mod
+
+
+
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -694,13 +729,26 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
 				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
 				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
-
+			data.wing['parameters']['modified'] = self.make_difs(me, req, data.kind)
 			last_state_mod = self.get_last_state_mod(thread, len(thread))
-			options = self.make_options(last_state_mod, me, notifs, kind == 'request')
-			data.options['canAccept']= options['canAccept']
-			data.options['canMaybe']= options['canMaybe']
-			data.options['canPending']= options['canPending']
-			data.options['canDeny']= options['canDeny']
+			options = self.make_options(me, thread)
+			if options['canAccept'] == 'T':
+				data.options.append('Accept')
+			elif options['canAccept'] == 'C':
+				data.options.append('Chat')
+			if options['canMaybe'] == 'T':
+				data.options.append('Maybe')
+			elif options['canMaybe'] == 'C':
+				data.options.append('Chat')
+			if options['canPending'] == 'T':
+				data.options.append('Pending')
+			elif options['canPending'] == 'C':
+				data.options.append('Chat')
+			if options['canDeny'] == 'T':
+				data.options.append('Deny')
+			elif options['canDeny'] == 'C':
+				data.options.append('Chat')
+
 			data.items = aux_list
 			data = data.jsonable()
 		else:
@@ -718,7 +766,8 @@ class NotificationsThreadResource(ModelResource):
 			return self.create_response(request, {"status":False, "errors": errors, "code":400}, response_class = HttpResponse)
 		kind = Notifications.objects.filter(reference=POST['reference'])[0].kind
 		try:
-			notif = Notifications.objects.filter(reference= POST['reference'])[0]
+			notif_list = Notifications.objects.filter(reference= POST['reference'])
+			notif = notif_list[len(notif_list)-1]
 			if not notif.receiver == me and not notif.sender == me:
 				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
 		except Exception, e:
@@ -733,7 +782,6 @@ class NotificationsThreadResource(ModelResource):
 			receiver = aux.sender
 		else:
 			receiver = aux.receiver
-
 		# Respond the notification
 		if kind == 'message':
 			try:				
@@ -743,15 +791,20 @@ class NotificationsThreadResource(ModelResource):
 
 			return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
 		if kind == 'request':
-			try:				
+			try:	
 				request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
 				if isinstance(request_result, str):
 					return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
 				if request_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)					
-					AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-												num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-												flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+					additional = AccomodationInformation.objects.get(notification = notif.pk)
+					if (POST['data']['state']=='D'):
+						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+													num_people = additional.num_people, transport = additional.transport, 
+													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+					else:				
+						AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
 
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
@@ -762,10 +815,15 @@ class NotificationsThreadResource(ModelResource):
 				if isinstance(request_result, str):
 					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
 				if invite_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)					
-					AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-												num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-												flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+					additional = AccomodationInformation.objects.get(notification = notif.pk)
+					if (POST['data']['state']=='D'):
+						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+													num_people = additional.num_people, transport = additional.transport, 
+													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+					else:						
+						AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
 
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
@@ -777,7 +835,7 @@ class NotificationsThreadResource(ModelResource):
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)     
+				response = callback(request, *args, **kwargs)
 				return response
 			except (BadRequest, fields.ApiFieldError), e:
 				return http.HttpBadRequest(e.args[0])

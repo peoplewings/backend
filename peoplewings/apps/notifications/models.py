@@ -3,6 +3,7 @@ from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.wings.models import Wing
 from django.db.models.signals import post_save, post_delete
 from django.db.models import signals
+from notifications.domain import Automata
 import uuid
 import time
 import copy
@@ -46,46 +47,14 @@ class NotificationsManager(models.Manager):
 			raise e
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = kwargs['reference'], kind = 'message', read = False, first_sender =  fs.first_sender, private_message = kwargs['content'])
 
-	def check_new_state(self, old, old_mod, new, first_sender, me):
-		if first_sender:
-			if old == 'P':
-				if new not in ['P', 'X']: return False
-			if old == 'A':
-				if new not in ['A', 'M', 'X']: return False
-			if old == 'M':
-				if old_mod.pk == me:					
-					if new not in ['A', 'M', 'X']: return False
-				else:					
-					if new not in ['M', 'X']: return False
-			if old == 'D':
-				if new not in ['D']: return False
-			if old == 'X':
-				if new not in ['X', 'P']: return False
-		else:
-			if old == 'P':
-				if new not in ['A', 'M', 'D']: return False
-			if old == 'A':
-				if new not in ['M', 'D', 'A']: return False
-			if old == 'M':
-				if not old_mod.pk == me:
-					if new not in ['A', 'M', 'D']: return False
-				else:
-					if new not in ['M', 'D']: return False
-			if old == 'D':
-				if new not in ['A', 'M', 'D']: return False
-			if old == 'X':
-				if new not in ['X']: return False
-		return True
-
-	def get_last_state_mod(self, thread, thread_len):
-		curr = thread[thread_len-1].state
-		cursor = 0
-		thread_rev = [i for i in thread[::-1]]		
-		for i in thread_rev:
-			if not i.state == curr:
-				return thread_rev[cursor-1].sender
-			cursor = cursor + 1
-		return None
+	def check_new_state(self, me, thread, new):
+		states = []
+		a = Automata()
+		for i in thread:
+			states.append([i.state, i.sender.pk])
+		first_sender = thread[0].first_sender
+		states.append([new, me])
+		return a.check_P(states, first_sender)
 
 	def respond_request(self, **kwargs):		
 		reference = kwargs['reference']
@@ -95,19 +64,13 @@ class NotificationsManager(models.Manager):
 		state = kwargs['state']
 		receiver = UserProfile.objects.get(pk=receiver_id)
 		sender = UserProfile.objects.get(pk=sender_id)
-		thread = Requests.objects.filter(reference= reference)
+		thread = Requests.objects.filter(reference= reference).order_by('created')
 		thread_len = len(thread)
 		last_state = thread[thread_len-1].state
-		last_state_mod = self.get_last_state_mod(thread, thread_len)
 		first_sender = thread[0].first_sender
 		wing = thread[0].wing
-		if sender_id == first_sender.pk: 
-			me = first_sender.pk
-		else:
-			me = receiver_id
-		if sender_id == first_sender.pk and state == 'D' and not last_state == 'D': state = 'X'
-		if last_state == 'X' and state == 'D': state = 'X'
-		if self.check_new_state(last_state, last_state_mod, state, sender_id == first_sender.pk, me):
+
+		if self.check_new_state(sender_id, thread, state):
 			created = time.time()
 			notif = Requests.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, public_message = "", state = state, wing=wing)
 			return notif
