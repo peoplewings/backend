@@ -370,7 +370,7 @@ class NotificationsListResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
 			#create the additional info related with the request
-			if (POST['data']['wingType'] == 'accomodation'):
+			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
 											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'], 
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
@@ -400,7 +400,7 @@ class NotificationsListResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
 			#create the additional info related with the request
-			if (POST['data']['wingType'] == 'accomodation'):
+			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
 											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'], 
 											flexible_end = POST['data']['wingParameters']['flexibleEnd'])
