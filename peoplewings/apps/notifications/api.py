@@ -86,12 +86,12 @@ class NotificationsListResource(ModelResource):
 				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
 				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": errors['publicText']  = 'The request public message cannot be empty'
 				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: errors['publicText']  = 'The request public message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
 			except:
@@ -111,7 +111,7 @@ class NotificationsListResource(ModelResource):
 				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
 				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
 			except:
