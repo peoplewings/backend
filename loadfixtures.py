@@ -16,6 +16,13 @@ sys.argv.pop(0)
 #print 'Argument List:', str(sys.argv)
 
 args = sys.argv
+def drop_DB():
+    os.system('python manage.py flush')
+
+def init(args):
+    drop_DB()
+    load_fixtures(args)
+
 def load_fixtures(args):
     for i in args:
         try:
@@ -34,5 +41,5 @@ def load_fixtures(args):
             print '%s is not a valid choice' % i
             raise e
 
-load_fixtures(args)
+init(args)
 
