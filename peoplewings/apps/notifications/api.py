@@ -86,12 +86,12 @@ class NotificationsListResource(ModelResource):
 				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
 				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": errors['publicText']  = 'The request public message cannot be empty'
 				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: errors['publicText']  = 'The request public message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
 			except:
@@ -111,7 +111,7 @@ class NotificationsListResource(ModelResource):
 				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
 				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				errors['data']  = 'This field is needed'
 			try:
 				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
 			except:
@@ -370,7 +370,7 @@ class NotificationsListResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
 			#create the additional info related with the request
-			if (POST['data']['wingType'] == 'accomodation'):
+			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
 											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'], 
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
@@ -400,7 +400,7 @@ class NotificationsListResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
 			#create the additional info related with the request
-			if (POST['data']['wingType'] == 'accomodation'):
+			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
 											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'], 
 											flexible_end = POST['data']['wingParameters']['flexibleEnd'])
