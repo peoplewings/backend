@@ -4,6 +4,7 @@ from peoplewings.apps.wings.models import Wing
 from django.db.models.signals import post_save, post_delete
 from django.db.models import signals
 from notifications.domain import Automata
+from django.db.models import Q
 import uuid
 import time
 import copy
@@ -253,10 +254,12 @@ class NotificationsAlarm(models.Model):
 
 def put_alarm(sender, instance, signal, *args, **kwargs):
 	notif = NotificationsAlarm()
-	notif.receiver = instance.receiver
-	notif.notificated = False
-	notif.reference = instance.reference
-
+	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
+	if NotificationsAlarm.objects.filter(filters).count() == 0:
+		notif.receiver = instance.receiver
+		notif.notificated = False
+		notif.reference = instance.reference
+		notif.save()
 def del_alarm(sender, instance, signal, *args, **kwargs):
 	try:
 		notifa = NotificationsAlarm.objects.get(reference = instance.reference)
@@ -264,7 +267,9 @@ def del_alarm(sender, instance, signal, *args, **kwargs):
 	except MultipleObjectsReturned:
 		pass
 
-post_save.connect(put_alarm, sender=Notifications)
-post_delete.connect(del_alarm, sender=Notifications)
+post_save.connect(put_alarm, sender=Messages)
+post_save.connect(put_alarm, sender=Requests)
+post_save.connect(put_alarm, sender=Invites)
+#post_delete.connect(del_alarm, sender=Notifications)
 
 
