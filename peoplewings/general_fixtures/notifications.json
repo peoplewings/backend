@@ -465,9 +465,9 @@
         "notification" : 4,
         "modified" : false,
         "start_date" : 1355439600,
-    "end_date" : 1355785200,
+    "end_date" : 1355885200,
     "transport" : "Plane",
-    "num_people" : 3,
+    "num_people" : 1,
     "flexible_start" : false,
     "flexible_end": false
     }
