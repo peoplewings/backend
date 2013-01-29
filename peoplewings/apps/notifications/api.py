@@ -186,6 +186,13 @@ class NotificationsListResource(ModelResource):
 					result_dict = sorted(result_dict, key=attrgetter('wing_type'), reverse=True)
 		return result_dict
 
+	def connected(self, user):
+		state = 'OFF'
+		token = ApiToken.objects.filter(user=user).order_by('-last_js')
+		if len(token) > 0:
+			state = token[0].is_user_connected()	
+		return state
+
 	def get_list(self, request, **kwargs):		
 		## We are doin it the hard way
 		try:
@@ -198,7 +205,7 @@ class NotificationsListResource(ModelResource):
 		filters = self.filter_get(request, filters, prof)
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
-			for i in my_notifications:
+			for i in my_notifications:				
 				aux = NotificationsList()
 				aux.id = i.pk
 				aux.created = i.created
@@ -262,8 +269,7 @@ class NotificationsListResource(ModelResource):
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 				else: aux.location = "Not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
-
-				aux.connected = 'F'
+				aux.connected = self.connected(prof_aux.user)
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
@@ -593,6 +599,13 @@ class NotificationsThreadResource(ModelResource):
 			cursor = cursor + 1
 		return None
 
+	def connected(self, user):
+		state = 'OFF'
+		token = ApiToken.objects.filter(user=user).order_by('-last_js')
+		if len(token) > 0:
+			state = token[0].is_user_connected()
+		return state
+
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
 		filters = Q(reference= ref)
@@ -622,7 +635,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.sender_references = i.sender.references.count()
 				aux.sender_med_avatar = i.sender.medium_avatar
 				aux.sender_small_avatar = i.sender.thumb_avatar
-				aux.sender_connected = 'F'
+				aux.sender_connected = self.connected(i.sender)
 				#receiver info
 				aux.receiver_id = i.receiver.pk
 				aux.receiver_avatar = i.receiver.thumb_avatar
@@ -649,7 +662,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.senderReferences= i.sender.references.count()
 				aux.senderMedAvatar= i.sender.medium_avatar
 				aux.senderSmallAvatar= i.sender.thumb_avatar
-				aux.senderConnected= 'F'
+				aux.senderConnected=  self.connected(i.sender)
 				#receiver info
 				aux.receiverId= i.receiver.pk
 				aux.receiverAvatar= i.receiver.thumb_avatar

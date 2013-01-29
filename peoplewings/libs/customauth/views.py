@@ -46,8 +46,6 @@ class ApiTokenAuthentication(Authentication):
         """
         Finds the user with the API Token.
         """
-        import pprint
-        pprint.pprint(request)
         if not request.META.get('HTTP_AUTHORIZATION'):
             return self._unauthorized()
 
