@@ -3142,17 +3142,7 @@ class PostNotificationsThreadTest(TestCase):
 		state = 'A'
 		nmod = 1
 
-		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
-		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
-		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
-		items = json.loads(r1.content)['data']['items']
-		self.assertTrue(len(items)==1)
-		for i in items:
-			self.assertTrue(i.has_key('connected'))
-			self.assertEqual(i['connected'], 'OFF')
-
-		#User2 logs in...
-		r1 = c.post('/api/v1/auth', json.dumps({"username": self.profile2.user.email, "password":  'asdf'}), content_type='application/json')
+		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		time.sleep(1)
 
 		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -3236,47 +3226,6 @@ class PostNotificationsThreadTest(TestCase):
 			self.assertEqual(len(params['modified']), 0)
 			for i in params['modified']:
 				self.assertTrue(i in mod)
-
-		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
-		self.assertTrue(js.has_key('data'))
-		self.assertTrue(isinstance(js['data'], dict))
-		self.assertTrue(js['data'].has_key('xAuthToken'))
-		xAuth2 = js['data']['xAuthToken']
-
-		#See if user1 sees him connected
-		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth1, content_type='application/json')
-		self.assertEqual(r1.status_code, 200)
-		self.assertEqual(json.loads(r1.content)['status'], True)
-		self.assertEqual(json.loads(r1.content)['code'], 200)
-		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
-		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
-		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
-		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
-		items = json.loads(r1.content)['data']['items']
-		self.assertTrue(len(items)==1)
-		for i in items:
-			self.assertTrue(i.has_key('connected'))
-			self.assertEqual(i['connected'], 'ON')
-
-		#And the other way arround
-		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth2, content_type='application/json')
-		items = json.loads(r1.content)['data']['items']
-		self.assertTrue(isinstance(items, list))
-		self.assertEqual(len(items), 1)
-		first = items[0]
-		self.assertTrue(isinstance(first, dict))
-		self.assertTrue(first.has_key('wingParameters'))
-		params = first['wingParameters']
-		self.assertTrue(isinstance(params, dict))
-		self.assertTrue(params.has_key('modified'))
-		self.assertTrue(params.has_key('wingType'))
-		self.assertTrue(params.has_key('message'))
-		self.assertTrue(params.has_key('endDate'))
-		self.assertTrue(params.has_key('startDate'))
-		self.assertTrue(params.has_key('numPeople'))
-		self.assertTrue(params.has_key('wingCity'))
-		self.assertTrue(isinstance(params['modified'], list))
-		self.assertEqual(len(params['modified']), nmod)
 
 class AutomataTest(TestCase):
 	def setUp(self):
