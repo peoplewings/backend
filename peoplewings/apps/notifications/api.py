@@ -652,7 +652,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 				aux.sender_age = i.sender.get_age()
 				aux.sender_verified = True
-				aux.sender_location = i.sender.current_city.stringify()
+				aux.sender_location = i.sender.current_city.name
 				aux.sender_friends = i.sender.relationships.count()
 				aux.sender_references = i.sender.references.count()
 				aux.sender_med_avatar = i.sender.medium_avatar
@@ -679,7 +679,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 				aux.senderAge= i.sender.get_age()
 				aux.senderVerified= True
-				aux.senderLocation= i.sender.current_city.stringify()
+				aux.senderLocation= i.sender.current_city.name
 				aux.senderFriends= i.sender.relationships.count()
 				aux.senderReferences= i.sender.references.count()
 				aux.senderMedAvatar= i.sender.medium_avatar
