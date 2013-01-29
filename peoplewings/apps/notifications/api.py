@@ -735,7 +735,7 @@ class NotificationsThreadResource(ModelResource):
 			data.wing['state'] = state
 			data.wing['parameters']['wingId']= req.wing.pk
 			data.wing['parameters']['wingName']= req.wing.name
-			data.wing['parameters']['wingCity']= req.wing.city.stringify()
+			data.wing['parameters']['wingCity']= req.wing.city.name
 			if req.wing.get_class_name() == 'Accomodation':
 				data.wing['parameters']['startDate']= req.accomodationinformation_notification.get().start_date
 				data.wing['parameters']['endDate']= req.accomodationinformation_notification.get().end_date
