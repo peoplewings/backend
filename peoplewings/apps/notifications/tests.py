@@ -692,7 +692,6 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
 			self.assertTrue(i.has_key('senderConnected'))
-			self.assertEqual(i['senderConnected'], 'F')
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -813,7 +812,6 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
 			self.assertTrue(i.has_key('senderConnected'))
-			self.assertEqual(i['senderConnected'], 'F')
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -926,7 +924,6 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
 			self.assertTrue(i.has_key('senderConnected'))
-			self.assertEqual(i['senderConnected'], 'F')
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -1050,7 +1047,6 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
 			self.assertTrue(i.has_key('senderConnected'))
-			self.assertEqual(i['senderConnected'], 'F')
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -1150,7 +1146,6 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
 			self.assertTrue(i.has_key('senderConnected'))
-			self.assertEqual(i['senderConnected'], 'F')
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -3148,12 +3143,16 @@ class PostNotificationsThreadTest(TestCase):
 		nmod = 1
 
 		r1 = c.post('/api/v1/notificationsthread/', json.dumps({"reference": ref, "data": {"content": content1, "state": state, "wingParameters": {"startDate": strt_date, "endDate": nd_date, "capacity": num_ppl, "flexibleStartDate": flex_start, "flexibleEndDate": flex_end}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
-		self.assertEqual(r1.status_code, 200)
-		js = json.loads(r1.content)
-		self.assertTrue(js.has_key('status'))
-		self.assertEqual(js['status'], True)
-		self.assertTrue(js.has_key('code'))
-		self.assertEqual(js['code'], 200)
+		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
+		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(len(items)==1)
+		for i in items:
+			self.assertTrue(i.has_key('connected'))
+			self.assertEqual(i['connected'], 'OFF')
+
+		#User2 logs in...
+		r1 = c.post('/api/v1/auth', json.dumps({"username": self.profile2.user.email, "password":  'asdf'}), content_type='application/json')
 		time.sleep(1)
 
 		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')		
@@ -3239,11 +3238,28 @@ class PostNotificationsThreadTest(TestCase):
 				self.assertTrue(i in mod)
 
 		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertTrue(js.has_key('data'))
+		self.assertTrue(isinstance(js['data'], dict))
+		self.assertTrue(js['data'].has_key('xAuthToken'))
+		xAuth2 = js['data']['xAuthToken']
+
+		#See if user1 sees him connected
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], True)
 		self.assertEqual(json.loads(r1.content)['code'], 200)
 		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
 		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
+		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(len(items)==1)
+		for i in items:
+			self.assertTrue(i.has_key('connected'))
+			self.assertEqual(i['connected'], 'ON')
+
+		#And the other way arround
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth2, content_type='application/json')
 		items = json.loads(r1.content)['data']['items']
 		self.assertTrue(isinstance(items, list))
 		self.assertEqual(len(items), 1)
@@ -3346,4 +3362,89 @@ class NumberNotifsTest(TestCase):
 		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
 		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
 		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
+
+
+class UserConnectedTest(TestCase):
+
+	def setUp(self):
+		#make some users and profiles as example
+		self.profile1 = G(UserProfile, user= G(User, password= 'pbkdf2_sha256$10000$j7D5ujAqkyc1$B3wpeZqa7jiu8/AGZylxsX2sXSc6GRUH7X8KMoIYxgM=', is_active= True, last_login= '2012-11-05 09:47:46+01:00'))	
+		self.profile2 = G(UserProfile, user= G(User, password= 'pbkdf2_sha256$10000$j7D5ujAqkyc1$B3wpeZqa7jiu8/AGZylxsX2sXSc6GRUH7X8KMoIYxgM=', is_active= True, last_login= '2012-11-05 09:47:46+01:00'))
+
+		self.req1 = G(Requests, sender = self.profile1, receiver = self.profile2, first_sender= self.profile1, wing= G(Accomodation))
+
+	def test_post_message(self):
+		#Initialize variables
+		c = Client()
+		#User 1 logs in
+		r1 = c.post('/api/v1/auth', json.dumps({"username": self.profile1.user.email, "password":  'asdf'}), content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertTrue(isinstance(js['data'], dict))
+		self.assertTrue(js['data'].has_key('xAuthToken'))
+		xAuth1 = js['data']['xAuthToken']
+
+		#Make a call to notificationslist, see that only 1 req appears and the interlocutor for that req (prof2) is offline
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
+		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(len(items)==1)
+		for i in items:
+			self.assertTrue(i.has_key('connected'))
+			self.assertEqual(i['connected'], 'OFF')
+
+		#User2 logs in...
+		r1 = c.post('/api/v1/auth', json.dumps({"username": self.profile2.user.email, "password":  'asdf'}), content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		js = json.loads(r1.content)
+		self.assertTrue(js.has_key('status'))
+		self.assertEqual(js['status'], True)
+		self.assertTrue(js.has_key('code'))
+		self.assertEqual(js['code'], 200)
+		self.assertTrue(js.has_key('data'))
+		self.assertTrue(isinstance(js['data'], dict))
+		self.assertTrue(js['data'].has_key('xAuthToken'))
+		xAuth2 = js['data']['xAuthToken']
+
+		#See if user1 sees him connected
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
+		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(len(items)==1)
+		for i in items:
+			self.assertTrue(i.has_key('connected'))
+			self.assertEqual(i['connected'], 'ON')
+
+		#And the other way arround
+		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertEqual(len(json.loads(r1.content)['data']['items']), 1)
+		self.assertEqual(json.loads(r1.content)['data']['count'], 1)
+		self.assertTrue(json.loads(r1.content)['data'].has_key('items'))
+		self.assertTrue(isinstance(json.loads(r1.content)['data']['items'], list))
+		items = json.loads(r1.content)['data']['items']
+		self.assertTrue(len(items)==1)
+		for i in items:
+			self.assertTrue(i.has_key('connected'))
+			self.assertEqual(i['connected'], 'ON')
+
 

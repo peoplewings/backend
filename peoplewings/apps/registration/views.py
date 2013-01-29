@@ -5,6 +5,7 @@ Views which allow users to create and activate accounts.
 import random
 import datetime
 from django.utils.timezone import utc
+import time
 
 from django.shortcuts import redirect
 from django.shortcuts import render_to_response
@@ -72,9 +73,9 @@ def login(bundle):
     user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
     ## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
     if 'remember' in bundle.data and bundle.data['remember'] == 'on':
-        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M'))
+        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M'), last_js = time.time())
     else:
-        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now())
+        api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js = time.time())
     ## Links the user to the token
     api_token.save()
     try:
@@ -87,13 +88,28 @@ def login(bundle):
 def api_token_is_authenticated(bundle, **kwargs):
     ##Check if the user exists
     token = bundle.META.get("HTTP_X_AUTH_TOKEN")
-    #apitoken = ApiToken.objects.get(token = token, last > datetime.datetime.utcnow().replace(tzinfo=utc) + 3600)
     try: 
         if (settings.LOGIN_TIME == 0):
             apitoken = ApiToken.objects.get(token = token)
         else:
             apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))        
         apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)
+        apitoken.last_js = time.time()
+        apitoken.save()
+        user = User.objects.get(pk=apitoken.user_id)
+        return user        
+    except:
+        return False
+
+def control_is_authenticated(bundle, **kwargs):
+    ##Check if the user exists
+    token = bundle.META.get("HTTP_X_AUTH_TOKEN")
+    try: 
+        if (settings.LOGIN_TIME == 0):
+            apitoken = ApiToken.objects.get(token = token)
+        else:
+            apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))
+        apitoken.last_JS = time.time()
         apitoken.save()
         user = User.objects.get(pk=apitoken.user_id)
         return user        
