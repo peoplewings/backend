@@ -250,15 +250,17 @@ class NotificationsAlarm(models.Model):
 	receiver = models.ForeignKey(UserProfile, related_name='alarm_receiver', on_delete=models.CASCADE)
 	notificated = models.BooleanField(default=False)
 	reference = models.CharField(max_length=36, blank=False)
-	created = models.DateTimeField(auto_now_add=True, null=True)
+	created = models.BigIntegerField(default=0)
 
 def put_alarm(sender, instance, signal, *args, **kwargs):
 	notif = NotificationsAlarm()
-	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
+	notif_aux= Notifications.objects.get(pk=instance.notifications_ptr.pk)
+	filters = Q(reference= notif_aux.reference)&Q(receiver=notif_aux.receiver)
 	if NotificationsAlarm.objects.filter(filters).count() == 0:
-		notif.receiver = instance.receiver
+		notif.receiver = notif_aux.receiver
 		notif.notificated = False
-		notif.reference = instance.reference
+		notif.reference = notif_aux.reference
+		notif.created = time.time()
 		notif.save()
 def del_alarm(sender, instance, signal, *args, **kwargs):
 	try:
