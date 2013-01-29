@@ -652,7 +652,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 				aux.sender_age = i.sender.get_age()
 				aux.sender_verified = True
-				aux.sender_location = i.sender.current_city.name
+				aux.sender_location = i.sender.current_city.stringify()
 				aux.sender_friends = i.sender.relationships.count()
 				aux.sender_references = i.sender.references.count()
 				aux.sender_med_avatar = i.sender.medium_avatar
@@ -679,7 +679,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 				aux.senderAge= i.sender.get_age()
 				aux.senderVerified= True
-				aux.senderLocation= i.sender.current_city.name
+				aux.senderLocation= i.sender.current_city.stringify()
 				aux.senderFriends= i.sender.relationships.count()
 				aux.senderReferences= i.sender.references.count()
 				aux.senderMedAvatar= i.sender.medium_avatar
@@ -721,7 +721,7 @@ class NotificationsThreadResource(ModelResource):
 			data.wing['state'] = state
 			data.wing['parameters']['wingId']= req.wing.pk
 			data.wing['parameters']['wingName']= req.wing.name
-			data.wing['parameters']['wingCity']= req.wing.city.stringify()
+			data.wing['parameters']['wingCity']= req.wing.city.name
 			if req.wing.get_class_name() == 'Accomodation':
 				data.wing['parameters']['startDate']= req.accomodationinformation_notification.get().start_date
 				data.wing['parameters']['endDate']= req.accomodationinformation_notification.get().end_date
