@@ -15,7 +15,7 @@ from django.test import TestCase, Client
 from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
-from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites, AccomodationInformation
+from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites, AccomodationInformation, NotificationsAlarm
 from notifications.domain import Automata
 from wings.models import Accomodation, Wing
 from locations.models import City
@@ -81,6 +81,7 @@ class PaginationTest(TestCase):
 		token = json.loads(response.content)['data']['xAuthToken']		
 		response = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=token, content_type='application/json')
 		self.assertEqual(response.status_code, 200)
+		self.assertEqual(json.loads(response.content)['status'], True)
 
 	def test_pagination(self):
 		c = Client()		
@@ -3272,3 +3273,77 @@ class AutomataTest(TestCase):
 		a = Automata()
 		self.assertTrue(a.check_P(self.sample1, self.profile1))
 		self.assertFalse(a.check_P(self.sample2, self.profile1))
+
+class NumberNotifsTest(TestCase):
+	def setUp(self):
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_receive_n_notifs(self):
+		c = Client()
+		#Start looking for 0 notis
+		r1 = c.get('/api/v1/notificationslist/', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 0)
+		#p2 adds 1 notif with p1 as a receiver. notifs-> 1
+		ref = uuid.uuid4()
+		notif1 = G(Messages, sender=self.profile2, receiver = self.profile1, reference= str(ref))
+		r1 = c.get('/api/v1/notificationslist/', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
+		#p2 adds 1 more notif in the same thread -> 1
+		notif1 = G(Messages, sender=self.profile2, receiver = self.profile1, reference= str(ref))
+		r1 = c.get('/api/v1/notificationslist/', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
+		#p1 reads the thread-> 0
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 0)
+		#p2 adds 1 notif -> 1
+		notif1 = G(Messages, sender=self.profile2, receiver = self.profile1, reference= str(ref))
+		r1 = c.get('/api/v1/notificationslist/', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
+		#p2 adds another notif, different thread -> 2
+		ref2 = uuid.uuid4()
+		notif1 = G(Messages, sender=self.profile2, receiver = self.profile1, reference= str(ref2))
+		r1 = c.get('/api/v1/notificationslist/', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 2)
+		#p1 reads the second -> 1
+		r1 = c.get('/api/v1/notificationsthread/' + str(ref2), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		self.assertEqual(json.loads(r1.content)['code'], 200)
+		self.assertTrue(isinstance(json.loads(r1.content)['updates'], dict))
+		self.assertTrue(json.loads(r1.content)['updates'].has_key('notifs'))
+		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
+

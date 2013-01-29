@@ -104,6 +104,7 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'peoplewings.libs.middlewares.django-crossdomainxhr-middleware.XsSharing',
+    'peoplewings.apps.notifications.middleware.Notification'
 )
 
 ROOT_URLCONF = 'peoplewings.urls'

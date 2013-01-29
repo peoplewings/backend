@@ -11,7 +11,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed, HttpForbidden
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpApplicationError, HttpMethodNotAllowed
 from tastypie.utils import trailing_slash
 from tastypie.utils import dict_strip_unicode_keys
 
@@ -323,7 +323,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)    
+			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpResponse)    
 		data = {}
 		data["items"] = [i.jsonable() for i in page.object_list]
 		data["count"] = count
@@ -626,7 +626,10 @@ class NotificationsThreadResource(ModelResource):
 		return mod
 
 
-
+	def delete_alarms(self, ref, me):
+		to_delete= NotificationsAlarm.objects.filter(reference = ref, receiver=me)
+		for i in to_delete:
+			i.delete()
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -753,6 +756,8 @@ class NotificationsThreadResource(ModelResource):
 			data = data.jsonable()
 		else:
 			data = {}
+
+		self.delete_alarms(ref, me)
 		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
 
 	def post_list(self, request, **kwargs):
