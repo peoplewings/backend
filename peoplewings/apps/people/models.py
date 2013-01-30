@@ -157,7 +157,7 @@ def createUserProfile(sender, user, request, **kwargs):
     registered_user.first_name = kwargs['firstname']
     registered_user.is_active=False
     registered_user.save()
-    data = UserProfile.objects.create(user=user)
+    data = UserProfile.objects.create(pk=user.pk, user=user)
     data.gender = form.data["gender"]
     data.birthday = datetime(year=int(form.data["birthday_year"]), month=int(form.data["birthday_month"]), day=int(form.data["birthday_day"]))
     # data.birthday = form.data['birthday'] #this should work try it!
