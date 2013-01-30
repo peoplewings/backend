@@ -219,35 +219,47 @@ class UniversitiesTest(TestCase):
 		expected = []
 		r1 = c.get('/api/v1/universities/?name=%s' % name, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')	
 		self.get_universities_success(r1, count=0, expected = expected)
-	
+"""	
 class UserFactory(threading.Thread):
 
-	def __init__(self, i):
+	def __init__(self, tc, i):
 		threading.Thread.__init__(self)
 		self.i = i
+		self.tc = tc
 	def run(self):
-		time.sleep(random.randint(10, 50))
+		#time.sleep(random.randint(10, 50))
 		email = str(random.getrandbits(10))
 		c = Client()
-		r1 = c.get('/api/v1/newuser', {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}, content_type='application/json')
+		r1 = c.post('/api/v1/newuser', {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}, content_type='application/json')
+		self.tc.assertEqual(r1.status_code, 200)
+		self.tc.assertEqual(json.loads(r1.content)['status'], True)
+"""
 
 class UserAndProfileSameIdTest(TestCase):
 
 	def setUp(self):
 		pass
-
+	"""
 	def test_register(self):
 		#Register user1
 		#Check both, user1 and profile1 have the same id
 		#DO IT 1000 times, with threading if necessary
 		import threading
 		print 'Start'
-		for i in range(500):
-			bg = UserFactory(i)
+		for i in range(10):
+			bg = UserFactory(self, i)
 			bg.start()
 		bg.join()
 		print 'Finish'
 		profiles = UserProfile.objects.all()
 		for i in profiles:
 			self.assertEqual(i.pk == i.user.pk)
+	"""
+	def test_register(self):
+		c = Client()
+		email = str(random.getrandbits(10))
+		r1 = c.post('/api/v1/newuser', json.dumps({"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdfasdf01?"}), content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		print r1.content
+		self.assertEqual(json.loads(r1.content)['status'], True)
 
