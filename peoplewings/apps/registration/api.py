@@ -1,5 +1,6 @@
 #Registration API
 import json
+import re
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -55,11 +56,13 @@ class UserSignUpResource(ModelResource):
 		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
 		
 	def obj_create(self, bundle, request=None, **kwargs):
+		print '0.5'
 		request.POST = bundle.data
 		self.is_valid(bundle,request)
 		
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
+		print '1'
 		bundle.obj = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')      
 		return bundle
 
@@ -75,20 +78,91 @@ class UserSignUpResource(ModelResource):
 			bundle.data['data'] = bundle.obj.email        
 		return bundle
 
+	def email_validation(self, email):
+		if len(email) > 7:
+			if re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email) != None:
+				return 1
+		return 0
+
+	def is_valid(self, POST):
+		errors = {}
+		if POST.has_key("birthdayDay"):
+			if POST['birthdayDay'] < 1 or POST['birthdayDay'] > 31:
+				errors['birthdayDay'] = 'Not valid'
+		else: 
+			errors['birthdayDay'] = 'This field is needed'
+
+		if POST.has_key("birthdayMonth"):
+			if POST['birthdayMonth'] < 1 or POST['birthdayMonth'] > 12:
+				errors['birthdayMonth'] = 'Not valid'
+		else: 
+			errors['birthdayMonth'] = 'This field is needed'
+
+		if POST.has_key("birthdayYear"):
+			if POST['birthdayYear'] < 1900 or POST['birthdayYear'] > 2100:
+				errors['birthdayYear'] = 'Not valid'
+		else: 
+			errors['birthdayYear'] = 'This field is needed'
+
+		if POST.has_key("email"):
+			if not self.email_validation(POST['email']):
+				errors['email'] = 'Not valid'
+		else: 
+			errors['email'] = 'This field is needed'	
+
+		if POST.has_key("repeatEmail"):
+			if POST.has_key("email") and not POST['repeatEmail'] == POST['email']:
+				errors['repeatEmail'] = 'Not valid'
+		else: 
+			errors['repeatEmail'] = 'This field is needed'
+
+		if POST.has_key("firstName"):
+			if len(POST['firstName']) < 1 or len(POST['firstName']) > 50:
+				errors['firstName'] = 'Not valid'
+		else: 
+			errors['firstName'] = 'This field is needed'
+
+		if POST.has_key("lastName"):
+			if len(POST['lastName']) < 1 or len(POST['lastName']) > 50:
+				errors['lastName'] = 'Not valid'
+		else: 
+			errors['lastName'] = 'This field is needed'
+
+		if POST.has_key("gender"):
+			if POST['gender'] not in ['Male', 'Female']:
+				errors['gender'] = 'Not valid'
+		else: 
+			errors['gender'] = 'This field is needed'
+
+		if POST.has_key("password"):
+			if len(POST['password']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$"	, POST['password']) == None:
+				errors['password'] = 'Not valid'
+		else: 
+			errors['password'] = 'This field is needed'
+		if len(errors) == 0:
+			return None
+		return errors
+
+	def post_list(self, request, **kwargs):
+
+		POST = json.loads(request.raw_post_data)
+		request.POST = POST
+		errors = None
+		errors = self.is_valid(POST)		
+		if errors is not None:
+			return self.create_response(request, {"status":False, "errors": errors, "code":"400"}, response_class = HttpResponse)		
+		data = register(request, POST, 'peoplewings.apps.registration.backends.custom.CustomBackend')
+		result = {}
+		result['email'] = data
+		return self.create_response(request, {"status":True, "msg": "Account created", "data": result, "code":"200"}, response_class = HttpResponse)
+		
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)
-				content = {}
-				data = {}
-				content['msg'] = "Account created"
-				data['email'] = json.loads(response.content)['data']
-				content['code'] = 200
-				content['status'] = True
-				content['data'] = data                
-				return self.create_response(request, content, response_class = HttpResponse)
+				response = callback(request, *args, **kwargs)         
+				return response
 			except BadRequest, e:
 				content = {}
 				errors = {}
@@ -151,6 +225,7 @@ class UserSignUpResource(ModelResource):
 				# Rather than re-raising, we're going to things similar to
 				# what Django does. The difference is returning a serialized
 				# error message.
+				print e
 				return self._handle_500(request, e)
 
 		return wrapper

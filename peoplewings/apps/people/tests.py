@@ -219,17 +219,21 @@ class UniversitiesTest(TestCase):
 		expected = []
 		r1 = c.get('/api/v1/universities/?name=%s' % name, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')	
 		self.get_universities_success(r1, count=0, expected = expected)
-	
+"""	
 class UserFactory(threading.Thread):
 
-	def __init__(self, i):
+	def __init__(self, tc, i):
 		threading.Thread.__init__(self)
 		self.i = i
+		self.tc = tc
 	def run(self):
-		time.sleep(random.randint(10, 50))
+		#time.sleep(random.randint(10, 50))
 		email = str(random.getrandbits(10))
 		c = Client()
-		r1 = c.get('/api/v1/newuser', {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}, content_type='application/json')
+		r1 = c.post('/api/v1/newuser', {"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdf"}, content_type='application/json')
+		self.tc.assertEqual(r1.status_code, 200)
+		self.tc.assertEqual(json.loads(r1.content)['status'], True)
+"""
 
 class UserAndProfileSameIdTest(TestCase):
 
@@ -237,17 +241,35 @@ class UserAndProfileSameIdTest(TestCase):
 		pass
 
 	def test_register(self):
-		#Register user1
-		#Check both, user1 and profile1 have the same id
-		#DO IT 1000 times, with threading if necessary
-		import threading
-		print 'Start'
-		for i in range(500):
-			bg = UserFactory(i)
-			bg.start()
-		bg.join()
-		print 'Finish'
-		profiles = UserProfile.objects.all()
-		for i in profiles:
-			self.assertEqual(i.pk == i.user.pk)
+		c = Client()
+		email = str(random.getrandbits(10))
+		r1 = c.post('/api/v1/newuser', json.dumps({"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdfasdf01?"}), content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+
+class ReplyRateorTimeTest(TestCase):
+
+	def setUp(self):
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_register(self):
+		c = Client()
+		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('code'))
+		self.assertEqual(content['code'], 200)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		self.assertTrue(content.has_key('data'))
+		data = content['data']
+		self.assertTrue(data.has_key('replyRate'))
+		self.assertTrue(data.has_key('replyTime'))
+		self.assertEqual(data['replyRate'], 'XXX')
+		self.assertEqual(data['replyTime'], 'XXX')
+		
 
