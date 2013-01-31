@@ -707,6 +707,7 @@ class UserProfileResource(ModelResource):
 		
 		a = super(UserProfileResource, self).get_detail(request, **kwargs)
 		data = json.loads(a.content)
+		#print data
 		if 'user' in data: del data['user']
 		if not is_preview: data['pw_state'] = up.pw_state
 		content = {}  
@@ -842,6 +843,7 @@ class UserProfileResource(ModelResource):
 	def get_list(self, request, **kwargs):
 		response = super(UserProfileResource, self).get_list(request, **kwargs)
 		data = json.loads(response.content)
+		print data
 		'''
 		El get_list deberia devolver:
 		- del modelo User: first_name, last_name, last_login
@@ -871,15 +873,15 @@ class UserProfileResource(ModelResource):
 
 	def full_dehydrate(self, bundle):
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-
+		#print bundle.data['reply_time']
 		bundle.data['first_name'] = bundle.obj.user.first_name
 		bundle.data['last_name'] = bundle.obj.user.last_name
 		bundle.data['verified'] = 'XXX'
 		#bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
 		bundle.data['num_friends'] = 'XXX'
 		bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-		bundle.data['reply_rate'] = 'XXX'
-		bundle.data['reply_time'] = 'XXX'
+		bundle.data['reply_rate'] = int(bundle.data['reply_rate'])
+		bundle.data['reply_time'] = int(bundle.data['reply_time'])
 		bundle.data['num_photos'] = 'XXX'
 		bundle.data['age'] = bundle.obj.get_age()
 

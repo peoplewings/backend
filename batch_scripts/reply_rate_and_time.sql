@@ -1,4 +1,7 @@
-﻿drop function batch_reply_rate();
+﻿alter table notifications_notificationsalarm drop column created;
+alter table notifications_notificationsalarm add column created bigint default 0;
+alter table people_userprofile add column reply_rate integer default 0;
+alter table people_userprofile add column reply_time bigint default 0;
 create or replace function batch_reply_rate() returns integer as
 $$
 declare
@@ -33,7 +36,7 @@ begin
 			update people_userprofile set reply_time = -1 where id = l_profiles.id;
 		end if;
 	end loop;
-	return 1;
+	return 1;	
 end;
 $$
 language 'plpgsql' volatile;
