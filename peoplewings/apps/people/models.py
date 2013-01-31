@@ -120,7 +120,7 @@ class UserProfile(models.Model):
 	#Reply rate (between 0 and 1)
 	reply_rate = models.IntegerField(default=0)
 	#Reply time
-	reply_rate = models.BigIntegerField(default=0)
+	reply_time = models.BigIntegerField(default=0)
 
 	def get_age(self):
 		today = date.today()
