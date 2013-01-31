@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, connection, transaction
 from django.contrib.auth.models import User
 from signals import user_deleted
 from django.utils import timezone
@@ -118,14 +118,23 @@ class UserProfile(models.Model):
 	places_wanna_go = models.TextField(max_length=max_long_len, blank=True)
 
 	#Reply rate (between 0 and 1)
-
+	reply_rate = models.IntegerField(default=0)
 	#Reply time
+	reply_rate = models.BigIntegerField(default=0)
 
 	def get_age(self):
 		today = date.today()
 		age = today.year - self.birthday.year
 		if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
 		return age
+	
+	@staticmethod
+	@transaction.commit_manually
+	def cron_reply_rate():
+		cur = connection.cursor()
+		cur.callproc('batch_reply_rate', ())		
+		cur.close()
+		transaction.commit()
 
 
 class Relationship(models.Model):    

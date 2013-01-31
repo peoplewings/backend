@@ -245,7 +245,6 @@ class UserAndProfileSameIdTest(TestCase):
 		email = str(random.getrandbits(10))
 		r1 = c.post('/api/v1/newuser', json.dumps({"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdfasdf01?"}), content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
-		print r1.content
 		self.assertEqual(json.loads(r1.content)['status'], True)
 
 class ReplyRateorTimeTest(TestCase):
@@ -254,10 +253,23 @@ class ReplyRateorTimeTest(TestCase):
 		self.profile1 = G(UserProfile)
 		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
 
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+
 	def test_register(self):
 		c = Client()
 		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
-		print r1.content
-		self.assertEqual(json.loads(r1.content)['status'], True)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('code'))
+		self.assertEqual(content['code'], 200)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		self.assertTrue(content.has_key('data'))
+		data = content['data']
+		self.assertTrue(data.has_key('replyRate'))
+		self.assertTrue(data.has_key('replyTime'))
+		self.assertEqual(data['replyRate'], 'XXX')
+		self.assertEqual(data['replyTime'], 'XXX')
+		
 
