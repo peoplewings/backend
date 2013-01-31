@@ -220,7 +220,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
-			return self.create_response(request, {"status":False, "msg":"Not a valid user", "code":"403"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_USER"}], "code":"403"}, response_class = HttpResponse)
 		result_dict = []     
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
@@ -298,7 +298,7 @@ class NotificationsListResource(ModelResource):
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
-			raise e
+			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}], "code":"403"}, response_class = HttpResponse)
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
 		result = {}
 		result_idx = []
@@ -327,7 +327,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpResponse)    
+			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}], "code":"403"}, response_class = HttpResponse)
 		data = {}
 		data["items"] = [i.jsonable() for i in page.object_list]
 		data["count"] = count
