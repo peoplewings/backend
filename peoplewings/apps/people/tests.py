@@ -12,7 +12,7 @@ from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from people.models import UserProfile, University
 from notifications.models import Notifications, Requests, Invites, Messages
-from wings.models import Wing
+from wings.models import Wing, Accomodation
 from peoplewings.libs.customauth.models import ApiToken
 import threading
 
@@ -235,13 +235,14 @@ class UserAndProfileSameIdTest(TestCase):
 class ReplyRateorTimeTest(TestCase):
 
 	def setUp(self):
-		self.profile1 = G(UserProfile)
+		self.profile1 = G(UserProfile, birthday = '1985-09-12')
 		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.wing1 = G(Accomodation, author=self.profile1, capacity=1, )
 
 		self.profile2 = G(UserProfile)
 		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
 
-	def test_register(self):
+	def test_profiles_detail(self):
 		c = Client()
 		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
@@ -256,5 +257,25 @@ class ReplyRateorTimeTest(TestCase):
 		self.assertTrue(data.has_key('replyTime'))
 		self.assertEqual(data['replyRate'], 0)
 		self.assertEqual(data['replyTime'], 0)
+
+	def test_profiles_search(self):
+		c = Client()
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&page=1', HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('code'))
+		self.assertEqual(content['code'], 200)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		self.assertTrue(content.has_key('data'))
+		data = content['data']
+		self.assertTrue(data.has_key('profiles'))
+		self.assertTrue(isinstance(data['profiles'], list))
+		self.assertTrue(len(data['profiles']) > 0)
+		prof1 = data['profiles'][0]
+		self.assertTrue(isinstance(prof1, dict))
+		self.assertTrue(prof1.has_key('replyRate'))
+		self.assertTrue(prof1.has_key('replyTime'))
+
 		
 

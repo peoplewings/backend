@@ -843,7 +843,6 @@ class UserProfileResource(ModelResource):
 	def get_list(self, request, **kwargs):
 		response = super(UserProfileResource, self).get_list(request, **kwargs)
 		data = json.loads(response.content)
-		print data
 		'''
 		El get_list deberia devolver:
 		- del modelo User: first_name, last_name, last_login
@@ -871,9 +870,8 @@ class UserProfileResource(ModelResource):
 		content['data'] = objects
 		return self.create_response(request, content, response_class=HttpResponse)
 
-	def full_dehydrate(self, bundle):
+	def full_dehydrate(self, bundle):		
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-		#print bundle.data['reply_time']
 		bundle.data['first_name'] = bundle.obj.user.first_name
 		bundle.data['last_name'] = bundle.obj.user.last_name
 		bundle.data['verified'] = 'XXX'
@@ -890,12 +888,11 @@ class UserProfileResource(ModelResource):
 		online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
 		if online: bundle.data['last_login_date'] = "Online"
 		else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-		#print bundle.obj.user.last_login
-		#print datetime.now().timetz()
+
 		if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
 			# venimos de get_list => solamente devolver los campos requeridos
 			bundle.data['pending'] = 'XXX'
-			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'tasa_respuestas', 'resource_uri']
+			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'reply_rate', 'reply_time', 'resource_uri']
 			
 			for key, value in bundle.data.items():
 				if key not in permitted_fields: del bundle.data[key]
