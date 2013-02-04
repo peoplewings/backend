@@ -368,7 +368,7 @@ class AccomodationsResource(ModelResource):
 		trans = PublicTransport.objects.all()
 		a.public_transport = []
 		for i in trans:
-			if bundle.data[i.name]:
+			if i.name in bundle.data.keys():
 				a.public_transport.add(i)
 		
 		#updated_bundle = self.dehydrate(bundle)
