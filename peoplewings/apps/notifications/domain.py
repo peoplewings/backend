@@ -13,7 +13,7 @@ class NotificationsList(object):
 		## Request/inv specific
 		self.state = None
 		self.flag_direction = None
-		## Msg/req/inv specific
+		## Msg specific
 		self.content = None
 		#Profile specific
 		self.interlocutor_id = None
@@ -23,9 +23,7 @@ class NotificationsList(object):
 		self.verified = None
 		self.location = None
 		self.connected = None
-		## URLs
-		self.thread_url = None
-		#Wing Params
+		#Wing Params (req/inv specific)
 		self.wing_parameters = {}
 		self.wing_parameters['start_date'] = None
 		self.wing_parameters['end_date'] = None
@@ -53,8 +51,17 @@ class NotificationsList(object):
 		return res
 
 	def search(self, key):
-		if (self.name is not None and key.lower() in self.name.lower()) or (self.message is not None and key.lower() in self.message.lower()) or (self.content is not None and key.lower() in self.content.lower()):
+		if self.name is not None and key.lower() in self.name.lower():
 			return True
+		if self.wing_parameters['message'] is not None and key.lower() in self.wing_parameters['message'].lower():
+			return True
+		if self.content is not None and key.lower() in self.content.lower():
+			return True
+		if self.wing_parameters['message'] is not None and key.lower() in self.wing_parameters['message'].lower():
+			return True
+		if self.wing_parameters['wing_city'] is not None and key.lower() in self.wing_parameters['wing_city'].lower():
+			return True
+
 		return False
 
 class MessageThread(object):

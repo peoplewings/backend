@@ -79,9 +79,9 @@ class WingResource(ModelResource):
 			errors = self.get_list_validate(request)		
 			if (isinstance(errors, list)):
 				if(len(errors) > 0):
-					return self.create_response(request, {"data": {"items":[]}, "code" : 200, "status" : True}, response_class = HttpResponse)
+					return self.create_response(request, {"data": {"items":[]}, "status" : True}, response_class = HttpResponse)
 			elif (isinstance(errors, str)):
-				return self.create_response(request, {"data": {"items":[]}, "code" : 200, "status" : True}, response_class = HttpResponse)
+				return self.create_response(request, {"data": {"items":[]}, "status" : True}, response_class = HttpResponse)
 			prof = UserProfile.objects.get(pk=request.GET['profile'])
 			w = Wing.objects.filter(author=prof)		
 			objects = []
@@ -93,10 +93,10 @@ class WingResource(ModelResource):
 				objects.append(aux.jsonable())
 			data = {}
 			data['items'] = objects
-			return self.create_response(request, {"msg":"Wings retrieved successfully.", "code": 200, "status":True, "data": data}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
 		except Exception, e:
 			print e
-			return self.create_response(request, {"code": 400, "status":False, "errors": e}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INTERAL_ERROR"}]}, response_class = HttpResponse)
 
 	def dehydrate_wing_type(self, bundle):
 		return bundle.obj.get_type()
