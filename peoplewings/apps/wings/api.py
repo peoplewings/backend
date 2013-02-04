@@ -269,41 +269,6 @@ class AccomodationsResource(ModelResource):
 		bundle = self.build_bundle(obj=a, request=request)
 		return bundle
 
-		"""
-		up = UserProfile.objects.get(user=request.user)
-		kwargs['author_id'] = up.id
-		bundle.obj = self._meta.object_class()
-
-		for key, value in kwargs.items():
-			if hasattr(bundle.obj, key): setattr(bundle.obj, key, value)
-
-		setattr(bundle.obj, 'author', up)
-		
-		loc = {}
-		data = bundle.data['city']
-		for key, value in data.items():            
-			loc[key] = value
-
-		city = City.objects.saveLocation(**loc)
-		setattr(bundle.obj, 'city', city)
-		bundle = self.full_hydrate(bundle)
-		self.is_valid(bundle,request)
-
-		if hasattr(bundle, 'errors') and bundle.errors:
-			self.error_response(bundle.errors, request)
-
-		# Save FKs just in case.
-		self.save_related(bundle)
-
-		# Save parent
-		bundle.obj.save()
-
-		# Now pick up the M2M bits.
-		m2m_bundle = self.hydrate_m2m(bundle)
-		self.save_m2m(m2m_bundle)
-		return bundle
-		"""
-
 	def get_list(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
 			return self.create_response(request, {"msg":"Error: the uri is not correct: missing profile id.", "code" : 413, "status" : False}, response_class=HttpForbidden)

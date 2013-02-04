@@ -843,6 +843,7 @@ class UserProfileResource(ModelResource):
 	def get_list(self, request, **kwargs):
 		response = super(UserProfileResource, self).get_list(request, **kwargs)
 		data = json.loads(response.content)
+		print data
 		'''
 		El get_list deberia devolver:
 		- del modelo User: first_name, last_name, last_login

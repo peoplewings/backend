@@ -1,4 +1,6 @@
 import re
+import pprint
+import json
 
 from django.utils.text import compress_string
 from django.utils.cache import patch_vary_headers
@@ -16,7 +18,7 @@ try:
 except AttributeError:
     XS_SHARING_ALLOWED_ORIGINS = '*'
     XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
-    XS_SHARING_ALLOWED_HEADERS = ['origin', 'content-type', 'accept', 'X-Auth-Token']
+    XS_SHARING_ALLOWED_HEADERS = ['Origin', 'Content-Type', 'Accept', 'X-Auth-Token']
     XS_SHARING_ALLOWED_CREDENTIALS = 'true'
 
 
@@ -37,7 +39,6 @@ class XsSharing(object):
             response['Access-Control-Allow-Headers'] = ",".join( XS_SHARING_ALLOWED_HEADERS )
             response['Access-Control-Allow-Credentials'] = XS_SHARING_ALLOWED_CREDENTIALS
             return response
-
         return None
 
     def process_response(self, request, response):
