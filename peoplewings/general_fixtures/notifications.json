@@ -549,7 +549,7 @@
         "notification" : 13,
         "modified" : false,
         "start_date" : 1355961609,
-    "end_date" : 1356048009,
+    "end_date" : 1356058009,
     "transport" : "Bus",
     "num_people" : 1,
     "flexible_start" : false,
@@ -579,7 +579,7 @@
         "start_date" : 1356134409,
     "end_date" : 1356220809,
     "transport" : "Bus",
-    "num_people" : 1,
+    "num_people" : 3,
     "flexible_start" : false,
     "flexible_end": false
     }
@@ -618,7 +618,7 @@
     "fields": {
         "notification" : 18,
         "modified" : false,
-        "start_date" : 1356087685,
+        "start_date" : 1355087685,
     "end_date" : 1356174085,
     "transport" : "Bus",
     "num_people" : 1,
