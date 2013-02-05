@@ -602,7 +602,7 @@ class NotificationsThreadResource(ModelResource):
 		return None
 
 	def make_difs_individual(self, first, second):
-		mod = []		
+		mod = []
 		first_ai = AccomodationInformation.objects.get(notification=first.pk)
 		second_ai = AccomodationInformation.objects.get(notification=second.pk)
 
