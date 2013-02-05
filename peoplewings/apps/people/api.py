@@ -840,10 +840,16 @@ class UserProfileResource(ModelResource):
 	def put_list(self, request, **kwargs):
 		return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
 
+	def connected(self, user):
+		state = 'OFF'
+		token = ApiToken.objects.filter(user=user).order_by('-last_js')
+		if len(token) > 0:
+			state = token[0].is_user_connected()
+		return state
+
 	def get_list(self, request, **kwargs):
 		response = super(UserProfileResource, self).get_list(request, **kwargs)
 		data = json.loads(response.content)
-		print data
 		'''
 		El get_list deberia devolver:
 		- del modelo User: first_name, last_name, last_login
@@ -883,17 +889,17 @@ class UserProfileResource(ModelResource):
 		bundle.data['reply_time'] = int(bundle.data['reply_time'])
 		bundle.data['num_photos'] = 'XXX'
 		bundle.data['age'] = bundle.obj.get_age()
-
+		bundle.data['online'] = self.connected(bundle.obj.user)
 		from datetime import timedelta
 		d = timedelta(hours=1)
 		online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-		if online: bundle.data['last_login_date'] = "Online"
+		if online: bundle.data['last_login_date'] = "ON"
 		else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
 
 		if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
 			# venimos de get_list => solamente devolver los campos requeridos
 			bundle.data['pending'] = 'XXX'
-			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'reply_rate', 'reply_time', 'resource_uri']
+			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'reply_rate', 'reply_time', 'resource_uri', 'online']
 			
 			for key, value in bundle.data.items():
 				if key not in permitted_fields: del bundle.data[key]
