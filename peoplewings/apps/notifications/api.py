@@ -163,8 +163,8 @@ class NotificationsListResource(ModelResource):
 				list_value = value.split(' ')
 				search_list = []
 				for k in list_value:
-					aux_dict_small = [o.thread_url for o in result_dict if o.search(k)]
-					aux_dict_extended = [o for o in result_dict if o.thread_url in aux_dict_small]
+					aux_dict_small = [o.reference for o in result_dict if o.search(k)]
+					aux_dict_extended = [o for o in result_dict if o.reference in aux_dict_small]
 					search_list += aux_dict_extended
 				return search_list
 		return result_dict
@@ -602,7 +602,7 @@ class NotificationsThreadResource(ModelResource):
 		return None
 
 	def make_difs_individual(self, first, second):
-		mod = []		
+		mod = []
 		first_ai = AccomodationInformation.objects.get(notification=first.pk)
 		second_ai = AccomodationInformation.objects.get(notification=second.pk)
 

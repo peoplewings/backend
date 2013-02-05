@@ -530,7 +530,7 @@
   },
   {
     "model": "notifications.AccomodationInformation",
-    "pk": 12,
+    "pk": 9,
     "fields": {
         "notification" : 12,
         "modified" : false,
@@ -544,7 +544,7 @@
   },
     {
     "model": "notifications.AccomodationInformation",
-    "pk": 9,
+    "pk": 10,
     "fields": {
         "notification" : 13,
         "modified" : false,
@@ -558,7 +558,7 @@
   },
     {
     "model": "notifications.AccomodationInformation",
-    "pk": 10,
+    "pk": 11,
     "fields": {
         "notification" : 14,
         "modified" : false,
@@ -572,7 +572,7 @@
   },
       {
     "model": "notifications.AccomodationInformation",
-    "pk": 11,
+    "pk": 12,
     "fields": {
         "notification" : 15,
         "modified" : false,
@@ -586,7 +586,7 @@
   },
       {
     "model": "notifications.AccomodationInformation",
-    "pk": 12,
+    "pk": 13,
     "fields": {
         "notification" : 16,
         "modified" : false,
@@ -600,7 +600,7 @@
   },
         {
     "model": "notifications.AccomodationInformation",
-    "pk": 13,
+    "pk": 14,
     "fields": {
         "notification" : 17,
         "modified" : false,
@@ -614,7 +614,7 @@
   },
           {
     "model": "notifications.AccomodationInformation",
-    "pk": 14,
+    "pk": 15,
     "fields": {
         "notification" : 18,
         "modified" : false,

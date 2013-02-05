@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 import json
 
 
@@ -23,8 +24,6 @@ class NotificationsList(object):
 		self.verified = None
 		self.location = None
 		self.connected = None
-		## URLs
-		self.thread_url = None
 		#Wing Params
 		self.wing_parameters = {}
 		self.wing_parameters['start_date'] = None
@@ -53,8 +52,31 @@ class NotificationsList(object):
 		return res
 
 	def search(self, key):
-		if (self.name is not None and key.lower() in self.name.lower()) or (self.message is not None and key.lower() in self.message.lower()) or (self.content is not None and key.lower() in self.content.lower()):
+		if (self.name is not None and key.lower() in self.name.lower()):
 			return True
+		if (self.age is not None and key == self.age):
+			return True
+		if (self.location is not None and key.lower in self.location.lower()):
+			return True
+		if (self.content is not None and key.lower in self.content.lower()):
+			return True
+		if (self.wing_parameters['start_date'] is not None and key in self.wing_parameters['start_date']):
+			return True
+		if (self.wing_parameters['end_date'] is not None and key in self.wing_parameters['end_date']):
+			return True
+		if (self.wing_parameters['wing_type'] is not None and key.lower() in self.wing_parameters['wing_type'].lower()):
+			return True
+		if (self.wing_parameters['wing_city'] is not None and key.lower() in self.wing_parameters['wing_city'].lower()):
+			return True
+		if (self.wing_parameters['message'] is not None and key.lower() in self.wing_parameters['message'].lower()):
+			return True
+		if (self.id is not None and self.kind is not None and self.kind == 'request' or self.kind == 'invite'):
+			filters_req = Q(pk=self.id)&(Q(private_message__icontaints=key)|Q(public_message__icontaints=key))
+			filters_inv = Q(pk=self.id)&Q(private_message__icontaints=key)
+			if self.kind == 'request' and len(Requests.objects.filter(filters_req)) > 0:
+				return True
+			elif self.kind == 'invite' and len(Invites.objects.filter(filters_inv)) > 0:
+				return True
 		return False
 
 class MessageThread(object):

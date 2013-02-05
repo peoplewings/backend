@@ -123,7 +123,6 @@ class PaginationTest(TestCase):
 
 		# checking unexisting pages...
 		r3 = c.get('/api/v1/notificationslist?page=4', HTTP_X_AUTH_TOKEN=token, content_type='application/json')
-		self.assertEqual(json.loads(r3.content)['msg'], "Sorry, no results on that page.")
 		self.assertEqual(json.loads(r3.content)['status'], False)
 
 class GetListNotificationsTest(TestCase):
