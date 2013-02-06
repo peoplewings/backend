@@ -32,6 +32,7 @@ from peoplewings.apps.registration.views import register, activate, login, logou
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, ForgotForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
+from registration.signals import user_deleted
 
 class UserSignUpResource(ModelResource):
 	
@@ -56,13 +57,11 @@ class UserSignUpResource(ModelResource):
 		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
 		
 	def obj_create(self, bundle, request=None, **kwargs):
-		print '0.5'
 		request.POST = bundle.data
 		self.is_valid(bundle,request)
 		
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
-		print '1'
 		bundle.obj = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')      
 		return bundle
 
@@ -86,20 +85,25 @@ class UserSignUpResource(ModelResource):
 
 	def is_valid(self, POST):
 		errors = {}
+		if POST.has_key("hasAcceptedTerms") and isinstance(POST['hasAcceptedTerms'], bool) and POST['hasAcceptedTerms'] == True:
+			pass
+		else:
+			errors['hasAcceptedTerms'] = 'Not valid'
+			
 		if POST.has_key("birthdayDay"):
-			if POST['birthdayDay'] < 1 or POST['birthdayDay'] > 31:
+			if int(POST['birthdayDay']) < 1 or int(POST['birthdayDay']) > 31:
 				errors['birthdayDay'] = 'Not valid'
 		else: 
 			errors['birthdayDay'] = 'This field is needed'
 
 		if POST.has_key("birthdayMonth"):
-			if POST['birthdayMonth'] < 1 or POST['birthdayMonth'] > 12:
+			if int(POST['birthdayMonth']) < 1 or int(POST['birthdayMonth']) > 12:
 				errors['birthdayMonth'] = 'Not valid'
 		else: 
 			errors['birthdayMonth'] = 'This field is needed'
 
 		if POST.has_key("birthdayYear"):
-			if POST['birthdayYear'] < 1900 or POST['birthdayYear'] > 2100:
+			if int(POST['birthdayYear']) < 1900 or int(POST['birthdayYear']) > 2100:
 				errors['birthdayYear'] = 'Not valid'
 		else: 
 			errors['birthdayYear'] = 'This field is needed'
@@ -144,7 +148,6 @@ class UserSignUpResource(ModelResource):
 		return errors
 
 	def post_list(self, request, **kwargs):
-
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
 		errors = None
@@ -154,7 +157,7 @@ class UserSignUpResource(ModelResource):
 		data = register(request, POST, 'peoplewings.apps.registration.backends.custom.CustomBackend')
 		result = {}
 		result['email'] = data
-		return self.create_response(request, {"status":True, "msg": "Account created", "data": result, "code":"200"}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -674,7 +677,8 @@ class AccountResource(ModelResource):
 			content['errors'] = errors
 			return self.create_response(request, content, response_class=HttpResponse)
 
-		super(AccountResource, self).delete_detail(request, **kwargs)    
+		super(AccountResource, self).delete_detail(request, **kwargs) 
+		user_deleted.send(sender=self.__class__, user=request.user, request=request)
 		contents = {}
 		data = {}       
 		contents['msg'] = 'Account deleted'        
