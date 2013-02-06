@@ -294,7 +294,7 @@ class NotificationsListResource(ModelResource):
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 				else: aux.location = "Not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
-				aux.connected = self.connected(prof_aux.user)
+				aux.online = self.connected(prof_aux.user)
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
@@ -671,7 +671,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.sender_references = i.sender.references.count()
 				aux.sender_med_avatar = i.sender.medium_avatar
 				aux.sender_small_avatar = i.sender.thumb_avatar
-				aux.sender_connected = self.connected(i.sender)
+				aux.sender_online = self.connected(i.sender)
 				#receiver info
 				aux.receiver_id = i.receiver.pk
 				aux.receiver_avatar = i.receiver.thumb_avatar
@@ -698,7 +698,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.senderReferences= i.sender.references.count()
 				aux.senderMedAvatar= i.sender.medium_avatar
 				aux.senderSmallAvatar= i.sender.thumb_avatar
-				aux.senderConnected=  self.connected(i.sender)
+				aux.senderOnline=  self.connected(i.sender)
 				#receiver info
 				aux.receiverId= i.receiver.pk
 				aux.receiverAvatar= i.receiver.thumb_avatar

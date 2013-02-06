@@ -689,7 +689,7 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
-			self.assertTrue(i.has_key('senderConnected'))
+			self.assertTrue(i.has_key('senderOnline'))
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -809,7 +809,7 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
-			self.assertTrue(i.has_key('senderConnected'))
+			self.assertTrue(i.has_key('senderOnline'))
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -921,7 +921,7 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
-			self.assertTrue(i.has_key('senderConnected'))
+			self.assertTrue(i.has_key('senderOnline'))
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -1044,7 +1044,7 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
-			self.assertTrue(i.has_key('senderConnected'))
+			self.assertTrue(i.has_key('senderOnline'))
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -1143,7 +1143,7 @@ class GetNotificationsThreadTest(TestCase):
 			self.assertEqual(i['senderMedAvatar'], expected_sender.medium_avatar)
 			self.assertTrue(i.has_key('senderSmallAvatar'))
 			self.assertEqual(i['senderSmallAvatar'], expected_sender.thumb_avatar)
-			self.assertTrue(i.has_key('senderConnected'))
+			self.assertTrue(i.has_key('senderOnline'))
 			self.assertTrue(i.has_key('receiverId'))
 			self.assertEqual(i['receiverId'], expected_receiver.pk)
 			self.assertTrue(i.has_key('receiverAvatar'))
@@ -3311,7 +3311,7 @@ class NumberNotifsTest(TestCase):
 		self.assertEqual(json.loads(r1.content)['updates']['notifs'], 1)
 
 
-class UserConnectedTest(TestCase):
+class UseronlineTest(TestCase):
 
 	def setUp(self):
 		#make some users and profiles as example
@@ -3348,8 +3348,8 @@ class UserConnectedTest(TestCase):
 		items = json.loads(r1.content)['data']['items']
 		self.assertTrue(len(items)==1)
 		for i in items:
-			self.assertTrue(i.has_key('connected'))
-			self.assertEqual(i['connected'], 'OFF')
+			self.assertTrue(i.has_key('online'))
+			self.assertEqual(i['online'], 'OFF')
 
 		#User2 logs in...
 		r1 = c.post('/api/v1/auth', json.dumps({"username": self.profile2.user.email, "password":  'asdf'}), content_type='application/json')
@@ -3364,7 +3364,7 @@ class UserConnectedTest(TestCase):
 		self.assertTrue(js['data'].has_key('xAuthToken'))
 		xAuth2 = js['data']['xAuthToken']
 
-		#See if user1 sees him connected
+		#See if user1 sees him online
 		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], True)
@@ -3376,8 +3376,8 @@ class UserConnectedTest(TestCase):
 		items = json.loads(r1.content)['data']['items']
 		self.assertTrue(len(items)==1)
 		for i in items:
-			self.assertTrue(i.has_key('connected'))
-			self.assertEqual(i['connected'], 'ON')
+			self.assertTrue(i.has_key('online'))
+			self.assertEqual(i['online'], 'ON')
 
 		#And the other way arround
 		r1 = c.get('/api/v1/notificationslist', HTTP_X_AUTH_TOKEN=xAuth2, content_type='application/json')
@@ -3391,7 +3391,7 @@ class UserConnectedTest(TestCase):
 		items = json.loads(r1.content)['data']['items']
 		self.assertTrue(len(items)==1)
 		for i in items:
-			self.assertTrue(i.has_key('connected'))
-			self.assertEqual(i['connected'], 'ON')
+			self.assertTrue(i.has_key('online'))
+			self.assertEqual(i['online'], 'ON')
 
 
