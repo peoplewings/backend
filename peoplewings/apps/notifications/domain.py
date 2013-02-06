@@ -23,7 +23,7 @@ class NotificationsList(object):
 		self.age = None
 		self.verified = None
 		self.location = None
-		self.connected = None
+		self.online = None
 		#Wing Params
 		self.wing_parameters = {}
 		self.wing_parameters['start_date'] = None
@@ -92,7 +92,7 @@ class MessageThread(object):
 		self.sender_references = None
 		self.sender_med_avatar = None
 		self.sender_small_avatar = None
-		self.sender_connected = None
+		self.sender_online = None
 		#receiver info
 		self.receiver_id = None
 		self.receiver_avatar = None
@@ -128,7 +128,7 @@ class RequestItem(object):
 		self.senderReferences= None
 		self.senderMedAvatar= None
 		self.senderSmallAvatar= None
-		self.senderConnected= None
+		self.senderOnline= None
 		self.content= {}
 		self.content['message']= None
 		self.receiverId= None
