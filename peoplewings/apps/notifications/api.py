@@ -238,6 +238,7 @@ class NotificationsListResource(ModelResource):
 					aux.read = i.read
 				aux.kind = i.kind
 				## Request specific
+				import pdb; pdb.set_trace()
 				if aux.kind == 'request':
 					req = Requests.objects.get(pk = i.pk)
 					additional_list = i.get_subclass().all()		
@@ -253,7 +254,7 @@ class NotificationsListResource(ModelResource):
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
 					else:
-						aux.flag_direction =   False                                         
+						aux.flag_direction =   False           					                            
 				## Invite specific               
 				elif aux.kind == 'invite':
 					inv = Invites.objects.get(pk = i.pk) 
@@ -267,7 +268,7 @@ class NotificationsListResource(ModelResource):
 						aux.wing_parameters['wing_city'] = inv.wing.city.name                           
 					aux.wing_parameters['message'] = inv.wing.name
 					aux.state = inv.state   
-					if i.first_sender == prof.pk:
+					if i.first_sender == prof:
 						 aux.flag_direction = True
 					else:
 						aux.flag_direction =   False          
