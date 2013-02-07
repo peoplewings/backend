@@ -237,7 +237,7 @@
     "model": "notifications.Requests",
     "pk": 1,
     "fields": {
-        "state" : "M",
+        "state" : "P",
         "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
         "private_message" : "Hi Joan! I've just saw your accomodation wing in Barcelona. Can I go?",
         "make_public" : true,
@@ -249,7 +249,7 @@
     "pk": 2,
     "fields": {
         "state" : "M",
-        "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
+        "public_message" : "",
         "private_message" : "Mhmhm, I don't know it yet. Let me check sumthing...",
         "make_public" : true,
         "wing" : 2
@@ -260,7 +260,7 @@
     "pk": 3,
     "fields": {
         "state" : "M",
-        "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
+        "public_message" : "",
         "private_message" : "OK, tell me something ASAP pls",
         "make_public" : true,
         "wing" : 2
@@ -271,7 +271,7 @@
     "pk": 4,
     "fields": {
         "state" : "A",
-        "public_message" : "Hellow everyone, I'm Eze and I'm interested in a accomodation in or near Barcelona for 2 days",
+        "public_message" : "",
         "private_message" : "Hey! Its all ok. You can come!",
         "make_public" : true,
         "wing" : 2
@@ -281,7 +281,7 @@
     "model": "notifications.Requests",
     "pk": 5,
     "fields": {
-        "state" : "P",
+        "state" : "A",
         "public_message" : "",
         "private_message" : "Can you give me accomodation in Berlin?",
         "make_public" : false,
@@ -292,7 +292,7 @@
     "model": "notifications.Requests",
     "pk": 6,
     "fields": {
-        "state" : "M",
+        "state" : "A",
         "public_message" : "",
         "private_message" : "Need to check it first. Tell u ASAP",
         "make_public" : false,
@@ -304,7 +304,7 @@
     "pk": 10,
     "fields": {
         "state" : "P",
-        "public_message" : "",
+        "public_message" : "Im a big nerd",
         "private_message" : "Need a room in Barcelona, in the center if possible",
         "make_public" : false,
         "wing" : 2
@@ -315,7 +315,7 @@
     "pk": 11,
     "fields": {
         "state" : "P",
-        "public_message" : "",
+        "public_message" : "Im poor",
         "private_message" : "I'm cold. Need a warm bed.",
         "make_public" : false,
         "wing" : 2
@@ -325,8 +325,8 @@
     "model": "notifications.Requests",
     "pk": 12,
     "fields": {
-        "state" : "A",
-        "public_message" : "",
+        "state" : "P",
+        "public_message" : "I'm having a party",
         "private_message" : "Hey Eze, there's a party in my current house.. Can I come over your place?",
         "make_public" : false,
         "wing" : 1
@@ -347,8 +347,8 @@
     "model": "notifications.Requests",
     "pk": 14,
     "fields": {
-        "state" : "D",
-        "public_message" : "",
+        "state" : "P",
+        "public_message" : "Fuck you",
         "private_message" : "Can you give me accomodation in the posh side?",
         "make_public" : false,
         "wing" : 3
@@ -379,7 +379,7 @@
     "model": "notifications.Invites",
     "pk": 17,
     "fields": {
-        "state" : "M",
+        "state" : "P",
         "private_message" : "I see you are really british",
         "wing" : 2
 
