@@ -32,7 +32,7 @@ from peoplewings.apps.registration.views import register, activate, login, logou
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, ForgotForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
-from registration.signals import user_deleted
+from peoplewings.apps.registration.signals import user_deleted
 
 class UserSignUpResource(ModelResource):
 	
