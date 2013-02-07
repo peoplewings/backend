@@ -708,7 +708,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.content['message'] = req.public_message + '\n' + req.private_message 
 				else:
 					aux.content['message'] = req.private_message 		
-				#Generic info
+				#Generic info				
 				aux.created= i.created
 			else:
 				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
@@ -725,7 +725,7 @@ class NotificationsThreadResource(ModelResource):
 		elif kind == 'request' or kind == 'invite':
 			data = RequestThread()
 			data.reference = ref
-			data.kind= 'request'
+			data.kind= kind
 			data.firstSender= req.first_sender.pk	
 			data.wing['type'] = req.wing.get_class_name()
 			if req.state == 'X':
