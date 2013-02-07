@@ -238,7 +238,6 @@ class NotificationsListResource(ModelResource):
 					aux.read = i.read
 				aux.kind = i.kind
 				## Request specific
-				import pdb; pdb.set_trace()
 				if aux.kind == 'request':
 					req = Requests.objects.get(pk = i.pk)
 					additional_list = i.get_subclass().all()		
