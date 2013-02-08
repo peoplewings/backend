@@ -253,7 +253,7 @@ class NotificationsListResource(ModelResource):
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
 					else:
-						aux.flag_direction =   False                                         
+						aux.flag_direction =   False           					                            
 				## Invite specific               
 				elif aux.kind == 'invite':
 					inv = Invites.objects.get(pk = i.pk) 
@@ -267,7 +267,7 @@ class NotificationsListResource(ModelResource):
 						aux.wing_parameters['wing_city'] = inv.wing.city.name                           
 					aux.wing_parameters['message'] = inv.wing.name
 					aux.state = inv.state   
-					if i.first_sender == prof.pk:
+					if i.first_sender == prof:
 						 aux.flag_direction = True
 					else:
 						aux.flag_direction =   False          
@@ -708,7 +708,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.content['message'] = req.public_message + '\n' + req.private_message 
 				else:
 					aux.content['message'] = req.private_message 		
-				#Generic info
+				#Generic info				
 				aux.created= i.created
 			else:
 				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
@@ -725,7 +725,7 @@ class NotificationsThreadResource(ModelResource):
 		elif kind == 'request' or kind == 'invite':
 			data = RequestThread()
 			data.reference = ref
-			data.kind= 'request'
+			data.kind= kind
 			data.firstSender= req.first_sender.pk	
 			data.wing['type'] = req.wing.get_class_name()
 			if req.state == 'X':
@@ -771,7 +771,7 @@ class NotificationsThreadResource(ModelResource):
 		self.delete_alarms(ref, me)
 		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
 
-	def post_list(self, request, **kwargs):
+	def post_list(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
 		arriving_via = None
@@ -828,12 +828,12 @@ class NotificationsThreadResource(ModelResource):
 		if kind == 'invite':
 			try:				
 				invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(request_result, str):
+				if isinstance(invite_result, str):
 					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
 				if invite_result.wing.get_class_name() == 'Accomodation':
 					additional = AccomodationInformation.objects.get(notification = notif.pk)
 					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+						AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
 													num_people = additional.num_people, transport = additional.transport, 
 													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
 					else:						

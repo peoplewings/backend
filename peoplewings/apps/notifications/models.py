@@ -86,21 +86,15 @@ class NotificationsManager(models.Manager):
 		state = kwargs['state']
 		receiver = UserProfile.objects.get(pk=receiver_id)
 		sender = UserProfile.objects.get(pk=sender_id)
-		thread = Requests.objects.filter(reference= reference)
+		thread = Invites.objects.filter(reference= reference)		
 		thread_len = len(thread)
 		last_state = thread[thread_len-1].state
-		last_state_mod = self.get_last_state_mod(thread, thread_len)
 		first_sender = thread[0].first_sender
 		wing = thread[0].wing
-		if sender_id == first_sender.pk: 
-			me = first_sender.pk
-		else:
-			me = receiver_id
-		if sender_id == first_sender.pk and state == 'D' and not last_state == 'D': state = 'X'
-		if last_state == 'X' and state == 'D': state = 'X'
-		if self.check_new_state(last_state, last_state_mod, state, sender_id == first_sender.pk, me):
+
+		if self.check_new_state(sender_id, thread, state):
 			created = time.time()
-			notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
+			notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'invite', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
 			return notif
 		else:
 			return "The operation you requested is not valid"
