@@ -772,7 +772,7 @@ class NotificationsThreadResource(ModelResource):
 		self.delete_alarms(ref, me)
 		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
 
-	def post_list(self, request, **kwargs):
+	def post_list(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
 		arriving_via = None
