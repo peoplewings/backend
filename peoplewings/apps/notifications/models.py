@@ -86,7 +86,7 @@ class NotificationsManager(models.Manager):
 		state = kwargs['state']
 		receiver = UserProfile.objects.get(pk=receiver_id)
 		sender = UserProfile.objects.get(pk=sender_id)
-		thread = Requests.objects.filter(reference= reference)
+		thread = Invites.objects.filter(reference= reference)		
 		thread_len = len(thread)
 		last_state = thread[thread_len-1].state
 		last_state_mod = self.get_last_state_mod(thread, thread_len)
