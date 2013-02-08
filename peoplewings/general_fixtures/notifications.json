@@ -379,7 +379,7 @@
     "model": "notifications.Invites",
     "pk": 17,
     "fields": {
-        "state" : "M",
+        "state" : "P",
         "private_message" : "I see you are really british",
         "wing" : 2
 
