@@ -828,12 +828,12 @@ class NotificationsThreadResource(ModelResource):
 		if kind == 'invite':
 			try:				
 				invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(request_result, str):
+				if isinstance(invite_result, str):
 					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
 				if invite_result.wing.get_class_name() == 'Accomodation':
 					additional = AccomodationInformation.objects.get(notification = notif.pk)
 					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+						AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
 													num_people = additional.num_people, transport = additional.transport, 
 													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
 					else:						
