@@ -239,7 +239,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
-			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_USER"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['user']}]}, response_class = HttpResponse)
 		result_dict = []     
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
@@ -346,7 +346,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"NO_CONTENT"}]}, response_class = HttpResponse)
 		data = {}
 		data["items"] = [i.jsonable() for i in page.object_list]
 		data["count"] = count
@@ -369,19 +369,19 @@ class NotificationsListResource(ModelResource):
 			try:
 				Notifications.objects.create_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'])
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_RECEIVER"}]}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		elif POST['kind'] == 'request':
 			#Check that the receiver exists
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
 			except:
-				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_RECEIVER"}]}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			#Check that the wing we entered is owned by the receiver
 			try:
 				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
 				if check_wing.author.pk != POST['idReceiver']:
-					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_WING"}]}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
 			except:	
 				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
 			try:
@@ -406,12 +406,12 @@ class NotificationsListResource(ModelResource):
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
 			except:
-				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_RECEIVER"}]}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			#Check that the wing we entered is owned by the sender
 			try:
 				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
 				if check_wing.author.pk != request.user.pk:
-					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_WING"}]}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
 			except:
 				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
 			try:
@@ -426,7 +426,7 @@ class NotificationsListResource(ModelResource):
 
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		else:
-			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID_KIND"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['kind']}]}, response_class = HttpResponse)
 
 	def put_list(self, request, **kwargs):
 		#This call comes from the DELETE
@@ -546,6 +546,7 @@ class NotificationsThreadResource(ModelResource):
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
 		too_long = {"type":"TOO_LONG", "extras":[]}
 		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		invalid = {"type":'INVALID', 'extras':[]}
 		kind = None	
 		if not POST.has_key('reference'):
 			field_req['extras'].append('reference')
@@ -554,7 +555,7 @@ class NotificationsThreadResource(ModelResource):
 			if(len(notif) > 0):
 				kind = notif[0].kind
 			else: 
-				errors.append({"type":"INVALID_REFERENCE"})
+				invalid['extras'].append('reference')
 
 		if not POST.has_key('data'):
 			field_req['extras'].append('data')
@@ -580,7 +581,7 @@ class NotificationsThreadResource(ModelResource):
 					not_empty['extras'].append('content')
 			if data.has_key('state'): 
 				if data['state'] not in ['P', 'A', 'M', 'D']:
-					errors.append({"type":"INVALID_KIND"})
+					invalid['extras'].append('kind')
 			else:
 				field_req['extras'].append('state')
 			if data.has_key('wingParameters'):
@@ -597,7 +598,7 @@ class NotificationsThreadResource(ModelResource):
 					errors.append({"type":"START_DATE_GT_END_DATE"})
 				if params.has_key('capacity'):
 					if params['capacity'] == 0:
-						errors.append({"type":"INVALID_CAPACITY"})
+						invalid['extras'].append('capacity')
 				else:
 					field_req['extras'].append('capacity')
 				if not params.has_key('flexibleStartDate'):
@@ -612,6 +613,8 @@ class NotificationsThreadResource(ModelResource):
 			errors.append(too_long)
 		if len(not_empty['extras']) > 0:
 			errors.append(not_empty)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
 		return errors
 
 	def get_last_state_mod(self, thread, thread_len):
@@ -673,7 +676,7 @@ class NotificationsThreadResource(ModelResource):
 
 		notifs = Notifications.objects.filter(filters).order_by('created')
 		if not notifs:
-			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID_REFERENCE"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 		kind = None
 		data = {}
 		thread = []
@@ -734,7 +737,7 @@ class NotificationsThreadResource(ModelResource):
 				#Generic info
 				aux.created= i.created
 			else:
-				return self.create_response(request, {"status":False, "errors":[{"type":"INVALID_REFERENCE"}]}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 			#Once we filled the aux object, we have to add it to the list
 			if i.receiver.pk == me.pk:
 				i.read = True
@@ -808,7 +811,7 @@ class NotificationsThreadResource(ModelResource):
 			if not notif.receiver == me and not notif.sender == me:
 				return self.create_response(request, {"status":False, "errors": [{"type":"FORBIDDEN", "extras":[POST['reference']]}]}, response_class = HttpResponse)
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_REFERENCE"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 
 		#Get the receiver of the notification
 		aux = notif_list[0]
@@ -862,7 +865,7 @@ class NotificationsThreadResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
-		return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_KIND"}]}, response_class = HttpResponse)
+		return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['kind']}]}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
