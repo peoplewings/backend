@@ -470,6 +470,7 @@ class UserProfileResource(ModelResource):
 		return query
 
 	def apply_filters(self, request, applicable_filters):
+
 		base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
 		#if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
 		# capacity, start age, end age, language and type are OBLIGATORY        
@@ -847,35 +848,202 @@ class UserProfileResource(ModelResource):
 			state = token[0].is_user_connected()
 		return state
 
-	def get_list(self, request, **kwargs):
-		response = super(UserProfileResource, self).get_list(request, **kwargs)
-		data = json.loads(response.content)
-		'''
-		El get_list deberia devolver:
-		- del modelo User: first_name, last_name, last_login
-		- de UserProfile: avatar, age, languages + levels, occupation, all_about_you, uri, current_city
+	def parse_date(self, initial_date):
+		try:			
+			year = initial_date[:4]
+			month = initial_date[5:7]
+			day = initial_date[8:10]
+			result = int(time.mktime(time.strptime('%s-%s-%s 00:00:00' % (year, month, day), '%Y-%m-%d %H:%M:%S'))) - time.timezone
+		except:
+			result = None
+		return result
 
-		+ correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
-		+ futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
-		'''
-		page_size = 10
+	def validate_search(self, GET):
+		errors = []
+		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
+		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
+		invalid_field = {"type": 'INVALID_FIELD', "extras":[]}
+
+		#Mandatory params
+		if GET.has_key('capacity'):
+			if GET['capacity'] == "":
+				not_empty['extras'].append('capacity')
+		else:
+			field_req['extras'].append('capacity')
+
+		if GET.has_key('startAge'):
+			if GET['startAge'] == "":
+				not_empty['extras'].append('startAge')
+		else:
+			field_req['extras'].append('startAge')
+
+		if GET.has_key('endAge'):
+			if GET['endAge'] == "":
+				not_empty['extras'].append('endAge')
+		else:
+			field_req['extras'].append('endAge')
+
+		if GET.has_key('language'):
+			if GET['language'] == "":
+				not_empty['extras'].append('language')
+		else:
+			field_req['extras'].append('language')
+
+		if GET.has_key('type'):
+			if GET['type'] == "":
+				not_empty['extras'].append('type')
+		else:
+			field_req['extras'].append('type')
+
+		if GET.has_key('page'):
+			if GET['page'] == "":
+				not_empty['extras'].append('page')
+		else:
+			field_req['extras'].append('page')
+
+		if GET.has_key('gender'):
+			if GET['gender'] == "":
+				not_empty['extras'].append('gender')
+		else:
+			field_req['extras'].append('gender')
+
+		#Optional params
+		if GET.has_key('startDate'):
+			if GET['startDate'] == "":
+				not_empty['extras'].append('startDate')
+
+		if GET.has_key('endDate'):
+			if GET['endDate'] == "":
+				not_empty['extras'].append('endDate')
+
+		if GET.has_key('wings'):
+			if GET['wings'] == "":
+				not_empty['extras'].append('wings')
+
+		#Other checks
+		#capacity >= 1
+		if GET.has_key('capacity') and GET['capacity'] < 1:
+			invalid_field['extras'].append('capacity')
+		#startAge >=18
+		if GET.has_key('startAge') and GET['startAge'] < 1:
+			invalid_field['extras'].append('startAge')
+		#endAge >= 18
+		if GET.has_key('endAge') and GET['endAge'] < 1:
+			invalid_field['extras'].append('endAge')
+		#startAge >= endAge
+		if GET.has_key('startAge') and GET.has_key('endAge') and GET['endAge'] < GET['startAge']:
+			invalid_field['extras'].append('age')
+		#startDate >=today		
+		if GET.has_key('startDate') and self.parse_date(GET['startDate']) is not None and self.parse_date(GET['startDate']) < time.time():
+			invalid_field['extras'].append('startDate')
+		#endDate >= today
+		if GET.has_key('endDate') and self.parse_date(GET['endDate']) is not None and self.parse_date(GET['endDate']) < time.time():
+			invalid_field['extras'].append('endDate')
+		#startDate >= endDate
+		if GET.has_key('startDate') and GET.has_key('endDate') and self.parse_date(GET['endDate']) is not None and self.parse_date(GET['startDate']) is not None:
+			endDate = self.parse_date(GET['endDate'])
+			startDate = self.parse_date(GET['startDate'])
+			if endDate < startDate:
+				invalid_field['extras'].append('date')
+
+		#gender in male, female both
+		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
+			invalid_field['extras'].append('gender')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid_field['extras']) > 0:
+			errors.append(invalid_field)
+
+		return errors
+
+	def make_search_filters(self, GET):
+		#We have to filter by: birthday (UP)*, language (up)*, gender( up)*, capacity (w)*, location (w), start_date & end_date (w), type*
+		min_year = datetime.today().year
+		min_month = datetime.today().month
+		min_day = datetime.today().day
+		min_year = min_year - int(GET['startAge'])
+		max_year = datetime.today().year
+		max_month = datetime.today().month
+		max_day = datetime.today().day
+		max_year = max_year - int(GET['endAge'])
+		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
+		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)		
+		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])
+		if GET['language'] != 'all':
+			result = result &Q(languages__name= GET['language'])
+		if GET['gender'] != 'Both':
+			result = result & Q(gender=GET['gender'])		
+		if 'location' in GET:
+			result = result & Q(wing__city__name=GET['location'])
+		if 'startDate' in GET:
+			result = result & (Q(wing__date_start__lte=GET['startDate'])|Q(wing__date_start__isnull=True))
+		if 'endDate' in GET:
+			result = result & (Q(wing__date_end__gte=GET['endDate'])|Q(wing__date_end__isnull=True))
+		return result
+
+	def parse_languages(self, prof):
+		res = []
+		langs = UserLanguage.objects.filter(user_profile=prof)
+		for i in langs:
+			res.append({"name": i.language.name, "level": i.level})
+		return res
+
+	def paginate(self, data, GET):
+		page_size=50
+		num_page = int(GET.get('page', 1))
 		count = len(data)
-		num_page = int(request.GET.get('page', 1))
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
-		#startResult = endResult - (num_page - 1)*page_size
 		paginator = Paginator(data, page_size)
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-		objects = {'count':count, 'startResult': startResult, 'endResult': endResult, 'profiles':page.object_list}
-		content = {}  
-		content['msg'] = 'Profiles retrieved successfully.'      
-		content['status'] = True
-		content['code'] = 200
-		content['data'] = objects
-		return self.create_response(request, content, response_class=HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}], "code":"403"}, response_class = HttpResponse)
+		data = {}
+		data["profiles"] = [i for i in page.object_list]
+		data["count"] = count
+		data["startResult"] = startResult
+		data["endResult"] = endResult
+
+		return data
+
+	def get_list(self, request, **kwargs):		
+		errors = self.validate_search(request.GET)		
+		if len(errors) > 0:
+			return self.create_response(request, {"errors": errors, "code":400, "status":False}, response_class=HttpForbidden)		
+		#We have no problem with the given filters
+		filters = self.make_search_filters(request.GET)		
+		try:			
+			search_list = SearchObjectManager()
+			profiles = UserProfile.objects.filter(filters).distinct()		
+			
+			for i in profiles:
+				search_obj = SearchObject()
+				search_obj.profile_id = i.pk
+				search_obj.user = i.user
+				search_obj.first_name = i.user.first_name
+				search_obj.last_name = i.user.last_name
+				search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				search_obj.avatar = i.medium_avatar
+				search_obj.age = i.get_age()
+				search_obj.online = self.connected(i.user)
+				search_obj.reply_rate = i.reply_rate
+				search_obj.reply_time = i.reply_time
+				search_obj.languages = self.parse_languages(i)
+				search_obj.all_about_you = i.all_about_you
+				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+				search_list.objects.append(search_obj)
+		except Exception, e:
+			return self.create_response(request, {"errors": errors, "code":400, "status":False}, response_class=HttpApplicationError)
+
+		data = self.paginate(search_list.jsonable(), request.GET)
+		if isinstance(data, HttpResponse): return data
+		return self.create_response(request, {"data": data, "code":200, "status":True}, response_class=HttpResponse)
+		#filters = Q()
+		#for i in request.GET.keys():		
 
 	def full_dehydrate(self, bundle):		
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
