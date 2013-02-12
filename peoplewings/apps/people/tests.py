@@ -228,7 +228,7 @@ class UserAndProfileSameIdTest(TestCase):
 	def test_register(self):
 		c = Client()
 		email = str(random.getrandbits(10))
-		r1 = c.post('/api/v1/newuser', json.dumps({"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdfasdf01?"}), content_type='application/json')
+		r1 = c.post('/api/v1/newuser', json.dumps({"birthdayDay":5, "birthdayMonth":3, "birthdayYear":1999, "email":"%s@peoplewings.com" % email, "repeatEmail":"%s@peoplewings.com" % email, "firstName":"Ez", "gender":"Male", "lastName":"Pz", "password":"asdfasdf01?", "hasAcceptedTerms": True}), content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		self.assertEqual(json.loads(r1.content)['status'], True)
 

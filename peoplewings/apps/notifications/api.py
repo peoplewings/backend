@@ -218,7 +218,7 @@ class NotificationsListResource(ModelResource):
 	def make_difs(self, thread, me):
 		mod = []
 		for idx, i in enumerate(thread):			
-			if i.sender == me:
+			if i._sender == me:
 				break
 			else:
 				if len(thread) > idx+1:
@@ -304,7 +304,8 @@ class NotificationsListResource(ModelResource):
 					prof_aux = UserProfile.objects.get(pk = i.receiver.pk)                   
 				else:
 					## YOU are the receiver. Need the sender info  
-					prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
+					prof_aux = UserProfile.objects.get(pk = i.sender.pk)    
+				aux._sender = i.sender 
 				aux.interlocutor_id = prof_aux.pk          
 				aux.avatar =  prof_aux.thumb_avatar
 				aux.age = prof_aux.get_age()
@@ -796,7 +797,8 @@ class NotificationsThreadResource(ModelResource):
 		self.delete_alarms(ref, me)
 		return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
 
-	def post_list(self, request, **kwargs):		
+	def post_list(self, request, **kwargs):
+		a = Automata()		
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
 		arriving_via = None
@@ -828,39 +830,47 @@ class NotificationsThreadResource(ModelResource):
 			return self.create_response(request, {"status":True}, response_class = HttpResponse) 
 		if kind == 'request':
 			try:	
-				request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(request_result, str):
-					return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
-				if request_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)
-					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
-													num_people = additional.num_people, transport = additional.transport, 
-													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-					else:				
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				thread = Requests.objects.filter(reference= POST['reference']).order_by('created')
+				if a.check_new_state(me.pk, thread, POST['data']['state']):
+					request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+					if isinstance(request_result, str):
+						return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
+					if request_result.wing.get_class_name() == 'Accomodation':
+						additional = AccomodationInformation.objects.get(notification = notif.pk)
+						if (POST['data']['state']=='D'):
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+														num_people = additional.num_people, transport = additional.transport, 
+														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+						else:				
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				else:
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
 
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		if kind == 'invite':
 			try:				
-				invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(invite_result, str):
-					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
-				if invite_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)
-					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
-													num_people = additional.num_people, transport = additional.transport, 
-													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-					else:						
-						AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
-
+				thread = Invites.objects.filter(reference= POST['reference']).order_by('created')
+				if a.check_new_state(me.pk, thread, POST['data']['state']):
+					invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+					if isinstance(invite_result, str):
+						return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
+					if invite_result.wing.get_class_name() == 'Accomodation':
+						additional = AccomodationInformation.objects.get(notification = notif.pk)
+						if (POST['data']['state']=='D'):
+							AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
+														num_people = additional.num_people, transport = additional.transport, 
+														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+						else:						
+							AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				else:
+					
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
