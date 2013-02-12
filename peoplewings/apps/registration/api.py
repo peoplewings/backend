@@ -84,65 +84,82 @@ class UserSignUpResource(ModelResource):
 		return 0
 
 	def is_valid(self, POST):
-		errors = {}
-		if POST.has_key("hasAcceptedTerms") and isinstance(POST['hasAcceptedTerms'], bool) and POST['hasAcceptedTerms'] == True:
-			pass
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras": []}
+		too_long = {"type":"TOO_LONG", "extras": []}
+		invalid = {"type":"INVALID_FIELD", "extras": []}
+
+		if POST.has_key("hasAcceptedTerms") and isinstance(POST['hasAcceptedTerms'], bool):
+			if POST['hasAcceptedTerms'] == True:
+				pass
+			else:
+				invalid['extras'].append('hasAcceptedTerms')
 		else:
-			errors['hasAcceptedTerms'] = 'Not valid'
+			field_req['extras'].append('hasAcceptedTerms')
 			
 		if POST.has_key("birthdayDay"):
 			if int(POST['birthdayDay']) < 1 or int(POST['birthdayDay']) > 31:
-				errors['birthdayDay'] = 'Not valid'
+				invalid['extras'].append('birthdayDay')
 		else: 
-			errors['birthdayDay'] = 'This field is needed'
+			field_req['extras'].append('birthdayDay')
 
 		if POST.has_key("birthdayMonth"):
 			if int(POST['birthdayMonth']) < 1 or int(POST['birthdayMonth']) > 12:
-				errors['birthdayMonth'] = 'Not valid'
+				invalid['extras'].append('birthdayMonth')
 		else: 
-			errors['birthdayMonth'] = 'This field is needed'
+			field_req['extras'].append('birthdayMonth')
 
 		if POST.has_key("birthdayYear"):
 			if int(POST['birthdayYear']) < 1900 or int(POST['birthdayYear']) > 2100:
-				errors['birthdayYear'] = 'Not valid'
+				invalid['extras'].append('birthdayYear')
 		else: 
-			errors['birthdayYear'] = 'This field is needed'
+			field_req['extras'].append('birthdayYear')
 
 		if POST.has_key("email"):
 			if not self.email_validation(POST['email']):
-				errors['email'] = 'Not valid'
+				invalid['extras'].append('email')
 		else: 
-			errors['email'] = 'This field is needed'	
+			field_req['extras'].append('email')
 
 		if POST.has_key("repeatEmail"):
 			if POST.has_key("email") and not POST['repeatEmail'] == POST['email']:
-				errors['repeatEmail'] = 'Not valid'
+				invalid['extras'].append('repeatEmail')
 		else: 
-			errors['repeatEmail'] = 'This field is needed'
+			field_req['extras'].append('repeatEmail')
 
 		if POST.has_key("firstName"):
 			if len(POST['firstName']) < 1 or len(POST['firstName']) > 50:
-				errors['firstName'] = 'Not valid'
+				too_long['extras'].append('firstName')
 		else: 
-			errors['firstName'] = 'This field is needed'
+			field_req['extras'].append('firstName')
 
 		if POST.has_key("lastName"):
 			if len(POST['lastName']) < 1 or len(POST['lastName']) > 50:
-				errors['lastName'] = 'Not valid'
+				too_long['extras'].append('lastName')
 		else: 
-			errors['lastName'] = 'This field is needed'
+			field_req['extras'].append('lastName')
 
 		if POST.has_key("gender"):
 			if POST['gender'] not in ['Male', 'Female']:
-				errors['gender'] = 'Not valid'
+				invalid['extras'].append('gender')
 		else: 
-			errors['gender'] = 'This field is needed'
+			field_req['extras'].append('gender')
 
 		if POST.has_key("password"):
 			if len(POST['password']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$"	, POST['password']) == None:
-				errors['password'] = 'Not valid'
+				invalid['extras'].append('password')
 		else: 
-			errors['password'] = 'This field is needed'
+			field_req['extras'].append('password')
+
+		if len(field_req) > 0:
+			errors.append(field_req)
+
+		if len(invalid) > 0:
+			errors.append(invalid)
+
+		if len(too_long) > 0:
+			errors.append(too_long)
+
 		if len(errors) == 0:
 			return None
 		return errors
@@ -153,7 +170,7 @@ class UserSignUpResource(ModelResource):
 		errors = None
 		errors = self.is_valid(POST)		
 		if errors is not None:
-			return self.create_response(request, {"status":False, "errors": errors, "code":"400"}, response_class = HttpResponse)		
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
 		data = register(request, POST, 'peoplewings.apps.registration.backends.custom.CustomBackend')
 		result = {}
 		result['email'] = data
@@ -168,68 +185,57 @@ class UserSignUpResource(ModelResource):
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields"
-				errors['errors'] = json.loads(e.messages)                
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
-				content['error'] = errors
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)                               
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
 					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				else: 
 					content = {}
-					errors = {}
-					content['msg'] = "Error in some fields"
-					errors['errors'] = json.loads(e.response)                
-					content['code'] = 410
+					errors = [{"type": "VALIDATION_ERROR"}]
+					errors['errors'] = errors
 					content['status'] = False
-					content['error'] = errors
 					return self.create_response(request, content, response_class = HttpResponse)
 			except BadParameters, e:
 				# This exception occurs when the provided key has expired
 				content = {}
-				errors = {}
-				content['msg'] = "Emails don't match"               
-				content['code'] = 400
+				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['msg'] = "No JSON could be decoded"               
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ExistingUser, e:
 				# This exception occurs when the provided key has expired
 				content = {}
-				errors = {}
-				content['msg'] = "The email is already being used"               
-				content['code'] = 400
+				errors = [{"type": "EMAIL_IN_USE"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)       
 			except Exception, e:
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				print e
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)  
 
 		return wrapper
 
