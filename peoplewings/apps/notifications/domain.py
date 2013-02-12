@@ -14,7 +14,7 @@ class NotificationsList(object):
 		## Request/inv specific
 		self.state = None
 		self.flag_direction = None
-		## Msg/req/inv specific
+		## Msg specific
 		self.content = None
 		#Profile specific
 		self.interlocutor_id = None
@@ -34,9 +34,6 @@ class NotificationsList(object):
 		self.wing_parameters['wing_city'] = None
 		self.wing_parameters['modified'] = None
 
-		#sender
-		self.sender = None
-
 	def gen_key(self, key):
 		buff = key.replace("_", " ")
 		buff = buff.split()
@@ -52,6 +49,7 @@ class NotificationsList(object):
 		return res
 
 	def search(self, key):
+
 		if (self.name is not None and key.lower() in self.name.lower()):
 			return True
 		if (self.age is not None and key == self.age):
