@@ -37,6 +37,7 @@ from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation
+from django.contrib.auth.models import User
 
 class RelationshipResource(ModelResource):
 	class Meta:
@@ -1013,7 +1014,7 @@ class UserProfileResource(ModelResource):
 	def get_list(self, request, **kwargs):		
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
-			return self.create_response(request, {"errors": errors, "code":400, "status":False}, response_class=HttpForbidden)		
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
 		#We have no problem with the given filters
 		filters = self.make_search_filters(request.GET)		
 		try:			
@@ -1023,7 +1024,7 @@ class UserProfileResource(ModelResource):
 			for i in profiles:
 				search_obj = SearchObject()
 				search_obj.profile_id = i.pk
-				search_obj.user = i.user
+				search_obj.ctrl_user = i.user
 				search_obj.first_name = i.user.first_name
 				search_obj.last_name = i.user.last_name
 				search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
@@ -1035,16 +1036,18 @@ class UserProfileResource(ModelResource):
 				search_obj.languages = self.parse_languages(i)
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-				search_obj._online =  self.connected(request.user) in ['ON', 'AFK']
+				search_obj.ctrl_online =  self.connected(i.user) in ['ON', 'AFK']
 				search_list.objects.append(search_obj)
 		except Exception, e:
-			return self.create_response(request, {"errors": errors, "code":400, "status":False}, response_class=HttpApplicationError)
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
+
+		if not isinstance(request.user, User):
+			search_list.make_dirty()
 
 		data = self.paginate(search_list.jsonable(), request.GET)
+
 		if isinstance(data, HttpResponse): return data
-		return self.create_response(request, {"data": data, "code":200, "status":True}, response_class=HttpResponse)
-		#filters = Q()
-		#for i in request.GET.keys():		
+		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
 
 	def full_dehydrate(self, bundle):		
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)

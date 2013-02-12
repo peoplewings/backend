@@ -3,6 +3,7 @@ from django.conf import settings
 import json
 from notifications.models import Notifications
 from django.db.models import Q
+from people.models import UserProfile
 
 class Contacts(object):
 	
@@ -33,13 +34,13 @@ class SearchObject(object):
 		self.all_about_you = None
 		self.date_joined = None
 
-		self._user = None
-		self._online = None
+		self.ctrl_user = None
+		self.ctrl_online = None
 
 	def jsonable(self):
-		res = dict()
+		res = dict()			
 		for key, value in self.__dict__.items():   
-			if value is not None and not key.startswith('_'):       
+			if value is not None and not key.startswith('ctrl_'):       
 				res[key] = value
 		return res
 		
@@ -49,8 +50,8 @@ class SearchObjectManager(object):
 
 	def jsonable_item(self, obj):
 		res = dict()
-		for key, value in obj.__dict__.items():   
-			if value is not None and not key.startswith('_'):         
+		for key, value in obj.__dict__.items():
+			if value is not None and not key.startswith('ctrl_'):         
 				res[key] = value
 		return res
 
@@ -226,4 +227,24 @@ class SearchObjectManager(object):
 		offline = self.order_by_relevance_plus_news(offline)
 
 		return online + offline
+
+	def make_dirty(self):
+		import string, random
+
+		for i in self.objects:
+			if i.first_name is not None:
+				len_fn = len(i.first_name)
+				i.first_name = [random.choice(string.ascii_lowercase) for n in xrange(len_fn)]
+				i.first_name = "".join(i.first_name)
+				i.first_name = i.first_name.capitalize()
+
+			if i.last_name is not None:
+				len_ln = len(i.last_name)
+				i.last_name = [random.choice(string.ascii_lowercase) for n in xrange(len_ln)]
+				i.last_name = "".join(i.last_name)
+				i.last_name = i.last_name.capitalize()
+
+			i.profile_id = None
+
+
 
