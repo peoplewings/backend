@@ -1035,6 +1035,7 @@ class UserProfileResource(ModelResource):
 				search_obj.languages = self.parse_languages(i)
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+				search_obj._online =  self.connected(request.user) in ['ON', 'AFK']
 				search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": errors, "code":400, "status":False}, response_class=HttpApplicationError)
