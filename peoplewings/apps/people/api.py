@@ -854,7 +854,7 @@ class UserProfileResource(ModelResource):
 			year = initial_date[:4]
 			month = initial_date[5:7]
 			day = initial_date[8:10]
-			result = int(time.mktime(time.strptime('%s-%s-%s 00:00:00' % (year, month, day), '%Y-%m-%d %H:%M:%S'))) - time.timezone
+			result = int(time.mktime(time.strptime('%s-%s-%s 23:59:59' % (year, month, day), '%Y-%m-%d %H:%M:%S'))) - time.timezone
 		except:
 			result = None
 		return result
