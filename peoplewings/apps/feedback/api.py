@@ -95,7 +95,7 @@ class FeedbackResource(ModelResource):
 					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
-				   content = {}
+					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
 					content['errors'] = errors                             
 					content['status'] = False                    
@@ -108,22 +108,22 @@ class FeedbackResource(ModelResource):
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpBadRequest)):
 					content = {}
-				            errors = [{"type": "INTERNAL_ERROR"}]
-				            content['errors'] = errors               
-				            content['status'] = False
-                				return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				else:
 					content = {}
-				            errors = [{"type": "INTERNAL_ERROR"}]
-				            content['errors'] = errors               
-				            content['status'] = False
-				            return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
-			            errors = [{"type": "INTERNAL_ERROR"}]
-			            content['errors'] = errors               
-			            content['status'] = False
-			            return self.create_response(request, content, response_class = HttpResponse)
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper    
    
 

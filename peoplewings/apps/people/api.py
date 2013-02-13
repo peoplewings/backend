@@ -10,7 +10,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed, HttpResponse
 from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
@@ -52,13 +52,13 @@ class RelationshipResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
-			return self.create_response(request, {"status" : False, "errors": [{"type":"AUTH_REQUIRED"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		try:
 			super(RelationshipResource, self).post_list(request, **kwargs)
 		except IntegrityError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		except FriendYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
 		dic = {"status":True}
 		return self.create_response(request, dic)
@@ -77,9 +77,9 @@ class RelationshipResource(ModelResource):
 		try:
 			super(RelationshipResource, self).put_detail(request, **kwargs)
 		except CannotAcceptOrRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		except InvalidAcceptRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["type"]}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["type"]}]}, response_class=HttpResponse)
 		
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
@@ -108,7 +108,7 @@ class RelationshipResource(ModelResource):
 		try:
 			super(RelationshipResource, self).delete_detail(request, **kwargs)
 		except ObjectDoesNotExist, e:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
 		dic = {"status":True}
 		return self.create_response(request, dic)  
@@ -127,7 +127,7 @@ class RelationshipResource(ModelResource):
 		elif status == 'pendings':
 			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
 		else:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["status"]}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["status"]}]}, response_class=HttpResponse)
 		res = []
 		for r in rels:
 			if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
@@ -181,7 +181,7 @@ class ReferenceResource(ModelResource):
 		try:
 			super(ReferenceResource, self).post_list(request, **kwargs)
 		except CommentYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}], response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
 		dic = {"status":True}
 		return self.create_response(request, dic)
@@ -892,7 +892,7 @@ class UserProfileResource(ModelResource):
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}], "code":"403"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
 		data = {}
 		data["profiles"] = [i for i in page.object_list]
 		data["count"] = count

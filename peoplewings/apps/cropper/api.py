@@ -84,16 +84,16 @@ class CroppedResource(ModelResource):
 					up.blur_avatar = new_url_blur
 					up.save()
 				else:
-					return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]]}, response_class = HttpResponse)            
+					return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)            
 				data = dict()
 				data['url'] = up.avatar
 				data['width'] = cropped_img.w
 				data['height'] = cropped_img.h
 				return self.create_response(request, {"status":True, "data":data}, response_class = HttpResponse)
 			except Exception, e:
-				return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]]}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 		else:
-			return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -103,7 +103,7 @@ class CroppedResource(ModelResource):
 				response = callback(request, *args, **kwargs)              
 
 				return response
-		   except BadRequest, e:
+		   	except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
 				content['errors'] = errors               
