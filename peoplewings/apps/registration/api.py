@@ -625,19 +625,15 @@ class AccountResource(ModelResource):
 		content = {} 
 		content['msg'] = 'Account updated'       
 		content['status'] = True
-		content['code'] = 200
 		return self.create_response(request, content, response_class=HttpResponse)
 
 	def delete_detail(self, request, **kwargs):
 		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
 			pass
 		else:
-			errors = {}
+			errors = [{"type": "INCORRECT_PASSWORD"}]
 			content = {} 
-			errors['currentPassword'] = ['Incorrect current password']            
-			content['msg'] = 'Cannot delete'       
 			content['status'] = False
-			content['code'] = 200
 			content['errors'] = errors
 			return self.create_response(request, content, response_class=HttpResponse)
 
@@ -647,7 +643,6 @@ class AccountResource(ModelResource):
 		data = {}       
 		contents['msg'] = 'Account deleted'        
 		contents['status'] = True
-		contents['code'] = 200
 		return self.create_response(request, contents, response_class = HttpResponse)
 
 	def is_valid_password(self, password, request):
@@ -682,78 +677,61 @@ class AccountResource(ModelResource):
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				contents['msg'] = e.args[0]               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				contents['msg'] = "Error in some fields"
-				errors['errors'] = json.loads(e.messages)                
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
-				content['error'] = errors
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
-			
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['msg'] = "No JSON could be decoded"               
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
-					content['status'] = False
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse) 
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
-					errors = {}
-					content['msg'] = "Unauthorized"                               
-					content['code'] = 413
-					content['status'] = False
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = {}
-					contents['msg'] = "Can't update"                               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				elif (isinstance(e.response, HttpBadRequest)):
+				else:               
 					content = {}
-					errors = {}
-					content['msg'] = "Error"               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					errors = json.loads(e.response.content)['accounts']
-					content['error'] = errors
-					return self.create_response(request, content, response_class = HttpResponse)
-				else:
-					content = {}
-					content['msg'] = "Error"               
-					content['code'] = 400
-					content['status'] = False                                 
 					return self.create_response(request, content, response_class = HttpResponse)
 			except DupplicateEmailException, e:
-					content = {}
-					content['msg'] = "The new email is already being used"               
-					content['code'] = 400
-					content['status'] = False                                 
+					ccontent = {}
+					errors = [{"type": "EMAIL_IN_USE"}]
+					content['errors'] = errors               
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper    
 	
 class ForgotResource(ModelResource):       
@@ -791,7 +769,7 @@ class ForgotResource(ModelResource):
 			filters = request.GET.copy()
 			self.build_filters(filters=filters)
 		if check_forgot_token(filters, 'peoplewings.apps.registration.backends.custom.CustomBackend'):                             
-			bundle = {"code":200, "status":True, "data":"The link is valid"}                      
+			bundle = {"status":True}                      
 		else:            
 			raise KeyExpired()
 		return self.create_response(request, bundle)           
@@ -808,37 +786,24 @@ class ForgotResource(ModelResource):
 				request.user = user
 			except:
 				bundle.data = {}
-				bundle.data['status'] = False
-				bundle.data['code'] = 400
-				bundle.data['data'] = 'Invalid email'
-				raise BadParameters(bundle.data)
+				bundle.data['status'] = True
+				return bundle
 
 			res = forgot_password(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')
 			if res:
 				return bundle
 
 			bundle.data = {}
-			bundle.data['status'] = False
-			bundle.data['code'] = 400
-			bundle.data['errors'] = 'Invalid email'
 			raise BadParameters(bundle.data)
 		else:
 			self.method = 'PATCH'
-			if len(bundle.data['new_password']) < 1: raise BadRequest('{"newPassword":["This field cannot be empty"]}')
+			if len(bundle.data['new_password']) < 8: raise BadRequest('{"newPassword":["This field cannot be empty"]}')
 			change_password(bundle.data)
 			return bundle
 
 	def full_dehydrate(self, bundle):
-		if self.method and self.method == 'POST':
-			bundle.data = {}
-			bundle.data['status'] = True
-			bundle.data['code'] = 202
-			bundle.data['data'] = 'Email sent'
-		elif self.method and self.method == 'PATCH':
-			bundle.data = {}
-			bundle.data['status'] = True
-			bundle.data['code'] = 200
-			bundle.data['data'] = 'Password changed'      
+		bundle.data = {}
+		bundle.data['status'] = True
 		self.method = None
 		return bundle
 
@@ -849,100 +814,83 @@ class ForgotResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}
-				data = {}
-				content['msg'] = json.loads(response.content)['data']                                
-				content['code'] = 200
 				content['status'] = True
 				return self.create_response(request, content, response_class = HttpResponse)
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields"
-				errors['errors'] = json.loads(e.args[0])               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields"
-				errors['errors'] = json.loads(e.messages)                
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['msg'] = "No JSON could be decoded"               
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
-					errors = {}
-					content['msg'] = "Unauthorized"                               
-					content['code'] = 413
-					content['status'] = False
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = {}
-					content['msg'] = "Error"                               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse) 
+					return self.create_response(request, content, response_class = HttpResponse)
 				else:               
 					content = {}
-					errors = {}
-					content['msg'] = "Error in some fields"
-					errors['errors'] = json.loads(e.response)                
-					content['code'] = 410
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					content['error'] = errors
 					return self.create_response(request, content, response_class = HttpResponse)
 			except DeletedAccount, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]                               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except BadParameters, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]['data']                                               
-				content['code'] = 400
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except NotAKey:
 				content = {}
-				errors = {}
-				content['msg'] = "Not a key"                               
-				content['code'] = 400
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except KeyExpired:
 				content = {}
-				errors = {}
-				content['msg'] = "The key has expired"                               
-				content['code'] = 400
+				errors = [{"type": "EXPIRED_KEY"}]
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)                            
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)                         
 			except Exception, e:
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper     
 
 
@@ -971,27 +919,22 @@ class ControlResource(ModelResource):
 				response = callback(request, *args, **kwargs)     
 				return response
 			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+				content = {}
+				errors = [{"type":"VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
