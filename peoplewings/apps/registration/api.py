@@ -456,10 +456,11 @@ class LoginResource(ModelResource):
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)                
 			except Exception, e:
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 
 		return wrapper     
 
