@@ -22,7 +22,7 @@ class ContactsTest(TestCase):
 	
 	def setUp(self):
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
  
 	def test_get_shortwings(self):
 		c = Client()
@@ -137,7 +137,7 @@ class UniversitiesTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		
 		self.uni1 = G(University, name='Universitat Politecnica de Catalunya')
 		self.uni2 = G(University, name='Universitat Politecnica de Madrid')
@@ -219,11 +219,11 @@ class ReplyRateorTimeTest(TestCase):
 
 	def setUp(self):
 		self.profile1 = G(UserProfile, birthday = '1985-09-12')
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		self.wing1 = G(Accomodation, author=self.profile1, capacity=1, )
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_profiles_detail(self):
 		c = Client()
@@ -276,7 +276,7 @@ class SearchFineTest(TestCase):
 
 	def test_search_filtering(self):
 		c = Client()
-		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		c_count= 4
 		# Basci search, we dont check the sorting yet...
 		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')

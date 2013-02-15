@@ -38,6 +38,8 @@ try:
     from env_settings import *    
 except IOError:
     exit("No configuration file found for env '%s'" % ENV)
+except Exception:
+    exit("No env variable found")
 ## 
 
 TIME_ZONE = 'Europe/Madrid'

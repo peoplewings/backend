@@ -104,7 +104,7 @@ class PaginationTest(TestCase):
 class GetListNotificationsTest(TestCase):
 	def setUp(self):
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		self.profile2 = G(UserProfile, user=G(User, first_name= 'Macho'))
 
 		self.wing1 = G(Accomodation, author= self.profile1, city=G(City, name='Barcelona'))
@@ -200,12 +200,12 @@ class GetListMessagesTest(TestCase):
 	def setUp(self):
 		#make some messages as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		for i in range(100):
 			self.msg1 = G(Messages, sender=self.profile1, reference = i%5)
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_get_messages(self):
 		c = Client()
@@ -222,10 +222,10 @@ class PostListMessagesTest(TestCase):
 	def setUp(self):
 		#make some messages as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_post_messages(self):
 		c = Client()
@@ -277,10 +277,10 @@ class PostListRequestsTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		
 
 	def test_post_requests(self):
@@ -464,10 +464,10 @@ class DeleteNotificationsTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_delete_notifications(self):
 		#Initialize method vars
@@ -575,10 +575,10 @@ class GetNotificationsThreadTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 		#First make a thread of messages
 		self.ref = str(uuid.uuid4())
@@ -1204,10 +1204,10 @@ class PostNotificationsThreadTest(TestCase):
 	def setUp(self):
 		#make some users and profiles as example
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 
 	def test_post_message(self):
@@ -2993,10 +2993,10 @@ class AutomataTest(TestCase):
 class NumberNotifsTest(TestCase):
 	def setUp(self):
 		self.profile1 = G(UserProfile)
-		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token		
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
 
 		self.profile2 = G(UserProfile)
-		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M')).token
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_receive_n_notifs(self):
 		c = Client()
