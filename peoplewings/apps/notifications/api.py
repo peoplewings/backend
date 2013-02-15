@@ -448,29 +448,58 @@ class NotificationsListResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)              
 				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+			
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
@@ -883,30 +912,58 @@ class NotificationsThreadResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+			
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
-
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper
 
 

@@ -54,7 +54,7 @@ class PaginationTest(TestCase):
 	def test_not_logged_in(self):
 		c = Client()
 		response = c.get('/api/v1/notificationslist', content_type='application/json')
-		self.assertEqual(response.status_code, 401)
+		self.assertEqual(response.status_code, 200)
  
 	def test_logged_in(self):
 		c = Client()
