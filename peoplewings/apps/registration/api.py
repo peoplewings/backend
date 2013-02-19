@@ -58,7 +58,7 @@ class UserSignUpResource(ModelResource):
 		
 	def obj_create(self, bundle, request=None, **kwargs):
 		request.POST = bundle.data
-		self.is_valid(bundle,request)
+		self.is_valid(bundle)
 		
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
@@ -262,7 +262,7 @@ class ActivationResource(ModelResource):
 
 	def obj_create(self, bundle, request=None, **kwargs):
 		request.POST = bundle.data
-		self.is_valid(bundle,request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
@@ -376,7 +376,7 @@ class LoginResource(ModelResource):
 		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
 
 	def obj_create(self, bundle, request=None, **kwargs):
-		self.is_valid(bundle,request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)        
 		bundle.data = login(bundle)
@@ -776,7 +776,7 @@ class ForgotResource(ModelResource):
 		return self.create_response(request, bundle)           
 
 	def obj_create(self, bundle, request, **kwargs):
-		self.is_valid(bundle,request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
