@@ -30,23 +30,24 @@ class DebugMiddleware(object):
 			logging.critical('%s %s %s %s' % (request.META['REQUEST_METHOD'], request.META['PATH_INFO'], token, 'NO_STATUS_FIELD'))
 
 	def process_response(self, request, response):		
-		debug = getattr(settings, 'DEBUG', False)		
-		if debug:
-			#Debug == True. We will only log bad requests
-			self.log_fine(request, response)
-		else:
-			#Debug != False. We log AND take out the content of the response
-			self.log_fine(request, response)
-			content = json.loads(response.content)
-			if content.has_key('status'):
-				if content['status'] == False:
-					errors = []
-					errors_allowed = ["EMAIL_IN_USE", "AUTH_REQUIRED", "USED_KEY", "EXPIRED_KEY", "INVALID_USER_OR_PASS", "INACTIVE_USER", "AUTH_REQUIRED"]
-					if content.has_key('errors'):
-						for i in content['errors']:
-							if i['type'] in errors_allowed:
-								errors.append(i)
-					response.content = json.dumps({"status":False, "errors": errors})
+		debug = getattr(settings, 'DEBUG', False)
+		if 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' not in request.META:		
+			if debug:
+				#Debug == True. We will only log bad requests
+				self.log_fine(request, response)
+			else:
+				#Debug != False. We log AND take out the content of the response
+				self.log_fine(request, response)
+				content = json.loads(response.content)
+				if content.has_key('status'):
+					if content['status'] == False:
+						errors = []
+						errors_allowed = ["EMAIL_IN_USE", "AUTH_REQUIRED", "USED_KEY", "EXPIRED_KEY", "INVALID_USER_OR_PASS", "INACTIVE_USER", "AUTH_REQUIRED"]
+						if content.has_key('errors'):
+							for i in content['errors']:
+								if i['type'] in errors_allowed:
+									errors.append(i)
+						response.content = json.dumps({"status":False, "errors": errors})
 
 		return response
 
