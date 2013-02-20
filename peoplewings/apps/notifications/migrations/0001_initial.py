@@ -18,13 +18,14 @@ class Migration(SchemaMigration):
             ('read', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('kind', self.gf('django.db.models.fields.CharField')(max_length=15, null=True)),
             ('first_sender', self.gf('django.db.models.fields.related.ForeignKey')(related_name='notifications_first_sender', null=True, to=orm['people.UserProfile'])),
+            ('first_sender_visible', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('second_sender_visible', self.gf('django.db.models.fields.BooleanField')(default=True)),
         ))
         db.send_create_signal('notifications', ['Notifications'])
 
         # Adding model 'Requests'
         db.create_table('notifications_requests', (
             ('notifications_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['notifications.Notifications'], unique=True, primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('state', self.gf('django.db.models.fields.CharField')(default='P', max_length=1)),
             ('public_message', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('private_message', self.gf('django.db.models.fields.TextField')(blank=True)),
@@ -36,7 +37,6 @@ class Migration(SchemaMigration):
         # Adding model 'Invites'
         db.create_table('notifications_invites', (
             ('notifications_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['notifications.Notifications'], unique=True, primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('state', self.gf('django.db.models.fields.CharField')(default='P', max_length=1)),
             ('private_message', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('wing', self.gf('django.db.models.fields.related.ForeignKey')(related_name='invites_wing', to=orm['wings.Wing'])),
@@ -66,6 +66,8 @@ class Migration(SchemaMigration):
             ('end_date', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
             ('transport', self.gf('django.db.models.fields.CharField')(max_length=50)),
             ('num_people', self.gf('django.db.models.fields.IntegerField')(default=1)),
+            ('flexible_start', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('flexible_end', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal('notifications', ['AccomodationInformation'])
 
@@ -75,7 +77,7 @@ class Migration(SchemaMigration):
             ('receiver', self.gf('django.db.models.fields.related.ForeignKey')(related_name='alarm_receiver', to=orm['people.UserProfile'])),
             ('notificated', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('reference', self.gf('django.db.models.fields.CharField')(max_length=36)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
+            ('created', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
         ))
         db.send_create_signal('notifications', ['NotificationsAlarm'])
 
@@ -162,6 +164,8 @@ class Migration(SchemaMigration):
         'notifications.accomodationinformation': {
             'Meta': {'object_name': 'AccomodationInformation'},
             'end_date': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
+            'flexible_end': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'flexible_start': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'notification': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'accomodationinformation_notification'", 'to': "orm['notifications.Notifications']"}),
@@ -179,7 +183,6 @@ class Migration(SchemaMigration):
             'notifications_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['notifications.Notifications']", 'unique': 'True', 'primary_key': 'True'}),
             'private_message': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'state': ('django.db.models.fields.CharField', [], {'default': "'P'", 'max_length': '1'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'wing': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'invites_wing'", 'to': "orm['wings.Wing']"})
         },
         'notifications.messages': {
@@ -191,16 +194,18 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Notifications'},
             'created': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'first_sender': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'notifications_first_sender'", 'null': 'True', 'to': "orm['people.UserProfile']"}),
+            'first_sender_visible': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'kind': ('django.db.models.fields.CharField', [], {'max_length': '15', 'null': 'True'}),
             'read': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'receiver': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'notifications_receiver'", 'to': "orm['people.UserProfile']"}),
             'reference': ('django.db.models.fields.CharField', [], {'max_length': '36'}),
+            'second_sender_visible': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'sender': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'notifications_sender'", 'to': "orm['people.UserProfile']"})
         },
         'notifications.notificationsalarm': {
             'Meta': {'object_name': 'NotificationsAlarm'},
-            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
+            'created': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'notificated': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'receiver': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'alarm_receiver'", 'to': "orm['people.UserProfile']"}),
@@ -213,7 +218,6 @@ class Migration(SchemaMigration):
             'private_message': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'public_message': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'state': ('django.db.models.fields.CharField', [], {'default': "'P'", 'max_length': '1'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'wing': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'requests_wing'", 'to': "orm['wings.Wing']"})
         },
         'people.instantmessage': {
@@ -273,7 +277,6 @@ class Migration(SchemaMigration):
         },
         'people.userprofile': {
             'Meta': {'object_name': 'UserProfile'},
-            'age': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'avatar': ('django.db.models.fields.CharField', [], {'default': "'http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg'", 'max_length': '250'}),
             'birthday': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
@@ -311,6 +314,8 @@ class Migration(SchemaMigration):
             'references': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'references+'", 'symmetrical': 'False', 'through': "orm['people.Reference']", 'to': "orm['people.UserProfile']"}),
             'relationships': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.UserProfile']", 'through': "orm['people.Relationship']", 'symmetrical': 'False'}),
             'religion': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
+            'reply_rate': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'reply_time': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'sharing': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'show_birthday': ('django.db.models.fields.CharField', [], {'default': "'F'", 'max_length': '100'}),
             'social_networks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.SocialNetwork']", 'through': "orm['people.UserSocialNetwork']", 'symmetrical': 'False'}),
@@ -337,6 +342,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Wing'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"}),
             'best_days': ('django.db.models.fields.CharField', [], {'default': "'A'", 'max_length': '1'}),
+            'city': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.City']", 'on_delete': 'models.PROTECT'}),
             'date_end': ('django.db.models.fields.DateField', [], {'null': 'True'}),
             'date_start': ('django.db.models.fields.DateField', [], {'null': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
