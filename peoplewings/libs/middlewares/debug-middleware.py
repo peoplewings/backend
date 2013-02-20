@@ -29,7 +29,8 @@ class DebugMiddleware(object):
 		else:
 			logging.critical('%s %s %s %s' % (request.META['REQUEST_METHOD'], request.META['PATH_INFO'], token, 'NO_STATUS_FIELD'))
 
-	def process_response(self, request, response):		
+	def process_response(self, request, response):
+		#import pdb; pdb.set_trace()	
 		debug = getattr(settings, 'DEBUG', False)
 		if 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' not in request.META:		
 			if debug:
