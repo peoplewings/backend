@@ -641,7 +641,6 @@ class UserProfileResource(ModelResource):
 
 	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
-		import pdb; pdb.set_trace()
 		if request.user.is_anonymous(): 
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 
