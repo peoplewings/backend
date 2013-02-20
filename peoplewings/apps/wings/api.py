@@ -221,7 +221,7 @@ class AccomodationsResource(ModelResource):
 		if 'profile_id' not in kwargs:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
@@ -329,7 +329,7 @@ class AccomodationsResource(ModelResource):
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
 
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 		try:

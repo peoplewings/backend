@@ -174,7 +174,7 @@ class ReferenceResource(ModelResource):
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
@@ -641,13 +641,14 @@ class UserProfileResource(ModelResource):
 
 	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
+		import pdb; pdb.set_trace()
 		if request.user.is_anonymous(): 
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
