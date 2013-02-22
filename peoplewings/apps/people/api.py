@@ -1,6 +1,7 @@
 #People API
 import json
 import re
+import copy
 from datetime import date, datetime
 from pprint import pprint
 from tastypie import fields
@@ -10,7 +11,7 @@ from tastypie.authorization import *
 from tastypie.serializers import Serializer
 from tastypie.validation import FormValidation
 from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
-from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed
+from tastypie.http import HttpBadRequest, HttpUnauthorized, HttpAccepted, HttpForbidden, HttpApplicationError, HttpApplicationError, HttpMethodNotAllowed, HttpResponse
 from tastypie.utils import dict_strip_unicode_keys, trailing_slash
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import simplejson
@@ -36,7 +37,8 @@ from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.libs.customauth.models import ApiToken
-from peoplewings.apps.wings.models import Accomodation
+from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
+from django.contrib.auth.models import User
 
 class RelationshipResource(ModelResource):
 	class Meta:
@@ -51,15 +53,15 @@ class RelationshipResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
-			return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized"}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		try:
 			super(RelationshipResource, self).post_list(request, **kwargs)
 		except IntegrityError:
-			return self.create_response(request, {"msg":"The relationship already exists." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		except FriendYourselfError:
-			return self.create_response(request, {"msg":"Cannot be friend of yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
-		dic = {"msg":"Invitation sent. Pending to be accepted.", "status":True, "code":200}
+		dic = {"status":True}
 		return self.create_response(request, dic)
 
 	@transaction.commit_on_success
@@ -76,17 +78,14 @@ class RelationshipResource(ModelResource):
 		try:
 			super(RelationshipResource, self).put_detail(request, **kwargs)
 		except CannotAcceptOrRejectError:
-			return self.create_response(request, {"msg":"That relationship is not pending." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		except InvalidAcceptRejectError:
-			return self.create_response(request, {"msg":"Invalid type." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["type"]}]}, response_class=HttpResponse)
 		
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		tipo = bundle.data['type']
-		if tipo == "Accepted": txt = "Invitation accepted."
-		else: txt = "Invitation rejected."
-		dic = {"msg":txt, "status":True, "code":200}
+		dic = {"status":True}
 		return self.create_response(request, dic)        
 
 	@transaction.commit_on_success
@@ -110,9 +109,9 @@ class RelationshipResource(ModelResource):
 		try:
 			super(RelationshipResource, self).delete_detail(request, **kwargs)
 		except ObjectDoesNotExist, e:
-			return self.create_response(request, {"msg":"That relationship doesn't exist." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
-		dic = {"msg":"You are not friend of that user anymore.", "status":True, "code":200}
+		dic = {"status":True}
 		return self.create_response(request, dic)  
 
 	def obj_delete(self, request=None, **kwargs):
@@ -120,17 +119,6 @@ class RelationshipResource(ModelResource):
 		sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
 		Relationship.objects.get((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver)), relationship_type="Accepted").delete()
 
-	"""
-	def obj_get_list(self, request=None, **kwargs):
-		u = request.user
-		rels = Relationship.objects.filter(Q(sender=u) | Q(receiver=u))
-		res = []
-		for r in rels:
-			if r.sender == u: res.append(r.receiver)
-			else: res.append(r.sender)
-
-		return res
-	"""
 	def get_list(self, request, **kwargs):
 		up = UserProfile.objects.get(user=request.user)
 		# miramos si el cliente quiere listar las invitaciones pendientes o los amigos
@@ -140,7 +128,7 @@ class RelationshipResource(ModelResource):
 		elif status == 'pendings':
 			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
 		else:
-			return self.create_response(request, {'msg':"Status not valid, must be either 'friends' or 'pendings' ", 'status':False, 'code':200}, response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["status"]}]}, response_class=HttpResponse)
 		res = []
 		for r in rels:
 			if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
@@ -149,10 +137,7 @@ class RelationshipResource(ModelResource):
 			res.append(bundle)
 
 		content = {}  
-		if status == 'friends': content['msg'] = 'Friends retrieved successfully.'
-		else: content['msg'] = 'Invitations retrieved successfully.'
 		content['status'] = True
-		content['code'] = 200
 		content['data'] = res
 		return self.create_response(request, content, response_class=HttpResponse)
 
@@ -161,11 +146,6 @@ class RelationshipResource(ModelResource):
 		bundle.data['last_name'] = bundle.obj.user.last_name
 		bundle.data['resource_uri'] = bundle.data['resource_uri'].replace('relationship', 'profiles')
 		return bundle
-
-	"""
-	def apply_authorization_limits(self, request, object_list=None):
-		return object_list.filter(Q(sender=request.user) | Q(receiver=request.user))
-	"""
 
 	def alter_list_data_to_serialize(self, request, data):
 		return data['objects']
@@ -195,16 +175,16 @@ class ReferenceResource(ModelResource):
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
 		try:
 			super(ReferenceResource, self).post_list(request, **kwargs)
 		except CommentYourselfError:
-			return self.create_response(request, {"msg":"Cannot comment yourself." ,"code" : 410, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 		
-		dic = {"msg":"Your reference has been posted.", "status":True, "code":200}
+		dic = {"status":True}
 		return self.create_response(request, dic)
 
 	@transaction.commit_on_success
@@ -225,9 +205,7 @@ class ReferenceResource(ModelResource):
 			res.append(bundle)
 
 		content = {}  
-		content['msg'] = 'References retrieved successfully.'
 		content['status'] = True
-		content['code'] = 200
 		content['data'] = res
 		return self.create_response(request, content, response_class=HttpResponse)
 
@@ -299,8 +277,11 @@ class UniversityResource(ModelResource):
 
 	def validate(self, GET):
 		errors = []
+		field_req = {"type": "FIELD_REQUIRED", "extras":[]}
 		if not GET.has_key('name'):
-			errors['name'] = 'This field is required'
+			field_req['extras'].append('name')
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
 		return errors
 
 	def get_list(self, request, **kwargs):
@@ -308,7 +289,7 @@ class UniversityResource(ModelResource):
 		for k, v in request.GET.items():
 			GET[k]=v
 		errors = self.validate(GET)
-		if len(errors) > 0: return self.create_response(request, {"code":400, "status":False, "errors": errors}, response_class=HttpResponse)
+		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
 		data = []
 		qset = Q(name__icontains=GET['name'])
 		try:
@@ -318,8 +299,8 @@ class UniversityResource(ModelResource):
     				data.append({"name": uni.name})
     			if len(GET['name']) == 0: data = []
     		except Exception, e:
-    			return self.create_response(request, {"code":400, "status":False, "errors": e}, response_class=HttpResponse)
-		return self.create_response(request, {"code":200, "status":True, "data": data}, response_class=HttpResponse)
+    			field_req = {"type": "INTERNAL_ERROR", "extras":[]}
+		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
 
 class UserUniversityResource(ModelResource):
 	university = fields.ToOneField(UniversityResource, 'university', full=True)
@@ -355,9 +336,7 @@ class LanguageResource(ModelResource):
 		response = super(LanguageResource, self).get_list(request, **kwargs)
 		data = json.loads(response.content)
 		content = {}  
-		content['msg'] = 'Languages retrieved successfully.'      
 		content['status'] = True
-		content['code'] = 200
 		content['data'] = []
 		for lang in data:
 			content['data'].append(lang['name'])
@@ -365,7 +344,6 @@ class LanguageResource(ModelResource):
 
 	def alter_list_data_to_serialize(self, request, data):
 		return data["objects"]
-
 
 
 class UserLanguageResource(ModelResource):
@@ -382,12 +360,7 @@ class UserLanguageResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 		validation = FormValidation(form_class=UserLanguageForm)
-		"""
-		filtering = {
-			"level": ['exact'],
-			"language": ALL_WITH_RELATIONS,
-		}
-		"""
+
 class InterestsResource(ModelResource):
 	class Meta:
 		object_class = Interests
@@ -404,8 +377,6 @@ class UserProfileResource(ModelResource):
 	user = fields.ToOneField(AccountResource, 'user')
 
 	languages = fields.ToManyField(LanguageResource, 'languages', full=True)
-	#through_query = lambda bundle: UserLanguage.objects.filter(user_profile=bundle.obj)
-	#userlanguages = fields.ToManyField(UserLanguageResource, attribute=through_query, full=True)
 
 	education = fields.ToManyField(UniversityResource, 'universities' , full=True)
 	social_networks = fields.ToManyField(SocialNetworkResource, 'social_networks', full=True)
@@ -438,21 +409,9 @@ class UserProfileResource(ModelResource):
 	def normalize_query(self, query_string,
 					findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
 					normspace=re.compile(r'\s{2,}').sub):
-		''' Splits the query string in invidual keywords, getting rid of unecessary spaces
-			and grouping quoted words together.
-			Example:
-			
-			>>> normalize_query('  some random  words "with   quotes  " and   spaces')
-			['some', 'random', 'words', 'with quotes', 'and', 'spaces']
-		
-		'''
 		return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)] 
 
 	def get_query(self, query_string, search_fields):
-		''' Returns a query, that is a combination of Q objects. That combination
-			aims to search keywords within a model by testing the given search fields.
-		
-		'''
 		query = None # Query to search for every search term        
 		terms = self.normalize_query(query_string)
 		for term in terms:
@@ -470,9 +429,8 @@ class UserProfileResource(ModelResource):
 		return query
 
 	def apply_filters(self, request, applicable_filters):
-		base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)
-		#if not request.user.is_anonymous(): base_object_list = base_object_list.exclude(user=request.user)
-		# capacity, start age, end age, language and type are OBLIGATORY        
+
+		base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)     
 		city = request.GET.get('wings', None)
 		start_date = request.GET.get('startDate', None)
 		end_date = request.GET.get('endDate', None)
@@ -483,10 +441,6 @@ class UserProfileResource(ModelResource):
 		gender = request.GET.get('gender', None)
 		tipo = request.GET.get('type', None)
 		
-		# QuerySets are lazy. This means that we can stack filters and there will be no database activity
-		# until the queryset is evaluated.
-		
-		# filter by profile's parameters: start age, end age, language, gender
 		if language and language != 'all':
 			entry_query = self.get_query(language, ['userlanguage__language__name'])
 			base_object_list = base_object_list.filter(entry_query).distinct()
@@ -497,13 +451,6 @@ class UserProfileResource(ModelResource):
 			for i in base_object_list:
 				if i.get_age() >= start_age and i.get_age() <= end_age: aux.append(i.id)
 			base_object_list = base_object_list.filter(pk__in=aux)
-			'''
-			from datetime import timedelta, date
-			s_date = date.today() - timedelta(days=365.25*int(start_age))
-			e_date = date.today() - timedelta(days=365.25*int(end_age))
-			base_object_list = base_object_list.filter(birthday__lte=s_date, birthday__gte=e_date).distinct()
-			#base_object_list = base_object_list.filter(age__gte=int(start_age), age__lte=int(end_age)).distinct()
-			'''
 
 		if gender:
 			entry_query = self.get_query(gender, ['gender'])
@@ -620,17 +567,6 @@ class UserProfileResource(ModelResource):
 			d['sn_username'] = u.social_network_username
 			res.append(d)
 		return res
-		"""
-		for i in bundle.data['social_networks']: 
-			# i.data = {id: id_social_networks, name:'Facebook'}
-			sn = i.obj
-			usn = UserSocialNetwork.objects.get(social_network=sn, user_profile=bundle.obj)
-			i.data['sn_username'] = usn.social_network_username
-			i.data['social_network'] = i.data['name']
-			i.data.pop('name')
-			i.data.pop('id')
-		return bundle.data['social_networks']
-		"""
 
 	def dehydrate_instant_messages(self, bundle):
 		uim = UserInstantMessage.objects.filter(user_profile=bundle.obj)
@@ -641,17 +577,6 @@ class UserProfileResource(ModelResource):
 			d['im_username'] = u.instant_message_username
 			res.append(d)
 		return res
-		"""
-		for i in bundle.data['instant_messages']: 
-			# i.data = {id: id_instant_message, name:'Whatsapp'}
-			im = i.obj
-			uim = UserInstantMessage.objects.get(instant_message=im, user_profile=bundle.obj)
-			i.data['im_username'] = uim.instant_message_username
-			i.data['instant_message'] = i.data['name']
-			i.data.pop('name')
-			i.data.pop('id')
-		return bundle.data['instant_messages']
-		"""
 	
 	def dehydrate_current(self, bundle):
 		if bundle.data['current'] is None: return {} 
@@ -693,17 +618,17 @@ class UserProfileResource(ModelResource):
 
 	def apply_authorization_limits(self, request, object_list=None):
 		if request.user.is_anonymous() and request.method not in ('GET'):
-			return self.create_response(request, {"msg":"Error: anonymous users can only view profiles.", "status":False, "code":413}, response_class=HttpForbidden)
+			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		elif not request.user.is_anonymous() and request.method not in ('GET'):
 			return object_list.filter(user=request.user)
 		return object_list
 
 	def get_detail(self, request, **kwargs):
 		
-		if request.user.is_anonymous(): return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+		if request.user.is_anonymous(): return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		up = UserProfile.objects.get(user=request.user)
 		is_preview = request.path.split('/')[-1] == 'preview'
-		if not is_preview and int(kwargs['pk']) != up.id: return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+		if not is_preview and int(kwargs['pk']) != up.id: return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
 		
 		a = super(UserProfileResource, self).get_detail(request, **kwargs)
 		data = json.loads(a.content)
@@ -711,28 +636,19 @@ class UserProfileResource(ModelResource):
 		if 'user' in data: del data['user']
 		if not is_preview: data['pw_state'] = up.pw_state
 		content = {}  
-		content['msg'] = 'Profile retrieved successfully.'      
 		content['status'] = True
-		content['code'] = 200
 		content['data'] = data
 		return self.create_response(request, content, response_class=HttpResponse)
-		"""
-		result = UserProfile.objects.get(pk=kwargs['pk'])
-		bundle = self.build_bundle(obj=result, request=request)
-		updated_bundle = self.dehydrate(bundle)
-		updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-		return self.create_response(request,{"msg":"Get OK.", "status":True, "code":200, "data":bundle.obj.__dict__})
-		"""
 
 	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
 		if request.user.is_anonymous(): 
-			return self.create_response(request, {"msg":"Error: anonymous users have no profile.", "status":False, "code":413}, response_class=HttpForbidden)
+			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 
@@ -750,7 +666,7 @@ class UserProfileResource(ModelResource):
 				try:
 					UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name__iexact=lang['name']).id, level=lang['level'])
 				except:
-					return self.create_response(request, {"msg":"Error: repeated languages.", "status":False, "code":413}, response_class=HttpForbidden)
+					return self.create_response(request, {"status":False, "errors":[{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
 			bundle.data.pop('languages')
 		
 		if 'education' in bundle.data:
@@ -775,29 +691,11 @@ class UserProfileResource(ModelResource):
 		if 'current' in bundle.data:
 			ccity = City.objects.saveLocation(**bundle.data['current'])
 			up.current_city = ccity
-			"""
-			if 'city' in bundle.data['current'] and 'region' in bundle.data['current'] and 'country' in bundle.data['current']:
-				country, b = Country.objects.get_or_create(name=bundle.data['current']['country'])
-				region, b = Region.objects.get_or_create(name=bundle.data['current']['region'], country=country)
-				city, b = City.objects.get_or_create(name=bundle.data['current']['city'], region=region)
-				up.current_city = city
-			else:
-				up.current_city = None
-			"""
 			bundle.data.pop('current')
 
 		if 'hometown' in bundle.data:
 			hcity = City.objects.saveLocation(**bundle.data['hometown'])
 			up.hometown = hcity
-			"""
-			if 'city' in bundle.data['hometown'] and 'region' in bundle.data['hometown'] and 'country' in bundle.data['hometown']:
-				country, b = Country.objects.get_or_create(name=bundle.data['hometown']['country'])
-				region, b = Region.objects.get_or_create(name=bundle.data['hometown']['region'], country=country)
-				city, b = City.objects.get_or_create(name=bundle.data['hometown']['city'], region=region)
-				up.hometown = city
-			else:
-				up.hometown = None
-			"""
 			bundle.data.pop('hometown')
 
 		if 'last_login' in bundle.data:
@@ -809,11 +707,6 @@ class UserProfileResource(ModelResource):
 			up.other_locations = []
 			for ol in bundle.data['other_locations']:
 				ocity = City.objects.saveLocation(**ol)
-				"""
-				country, b = Country.objects.get_or_create(name=ol['country'])
-				region, b = Region.objects.get_or_create(name=ol['region'], country=country)
-				city, b = City.objects.get_or_create(name=ol['city'], region=region)
-				"""
 				if ocity is not None: up.other_locations.add(ocity)
 			bundle.data.pop('other_locations')
 
@@ -832,13 +725,13 @@ class UserProfileResource(ModelResource):
 
 		updated_bundle = self.dehydrate(bundle)
 		updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-		return self.create_response(request,{"msg":"Your profile has been successfully updated.", "code":200, "status":True}, response_class=HttpAccepted) 
+		return self.create_response(request, {"status":True}, response_class=HttpResponse) 
 	
 	def post_list(self, request, **kwargs):
-		return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
+		return self.create_response(request, {"status":False, "errors":[{"type":"METHOD_NOT_ALLOWED"}]}, response_class=HttpResponse)
 
 	def put_list(self, request, **kwargs):
-		return self.create_response(request, {"msg":"Error: operation not allowed.", "code":413, "status":False}, response_class=HttpForbidden)
+		return self.create_response(request, {"status":False, "errors":[{"type":"METHOD_NOT_ALLOWED"}]}, response_class=HttpResponse)
 
 	def connected(self, user):
 		state = 'OFF'
@@ -847,35 +740,265 @@ class UserProfileResource(ModelResource):
 			state = token[0].is_user_connected()
 		return state
 
-	def get_list(self, request, **kwargs):
-		response = super(UserProfileResource, self).get_list(request, **kwargs)
-		data = json.loads(response.content)
-		'''
-		El get_list deberia devolver:
-		- del modelo User: first_name, last_name, last_login
-		- de UserProfile: avatar, age, languages + levels, occupation, all_about_you, uri, current_city
+	def parse_date(self, initial_date):
+		try:			
+			year = initial_date[:4]
+			month = initial_date[5:7]
+			day = initial_date[8:10]
+			result = int(time.mktime(time.strptime('%s-%s-%s 23:59:59' % (year, month, day), '%Y-%m-%d %H:%M:%S'))) - time.timezone
+		except:
+			result = None
+		return result
 
-		+ correcciones: elegir entre last_login y online, si online => localizacion actual en vez de current_city
-		+ futuro: resto de fotos, num_friends, num_references, verificado, tasa de respuestas, pending/accepted... de la misma ala que busco
-		'''
-		page_size = 10
+	def validate_search(self, GET):
+		errors = []
+		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
+		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
+		invalid_field = {"type": 'INVALID_FIELD', "extras":[]}
+
+		#Mandatory params
+		if GET.has_key('capacity'):
+			if GET['capacity'] == "":
+				not_empty['extras'].append('capacity')
+		else:
+			field_req['extras'].append('capacity')
+
+		if GET.has_key('startAge'):
+			if GET['startAge'] == "":
+				not_empty['extras'].append('startAge')
+		else:
+			field_req['extras'].append('startAge')
+
+		if GET.has_key('endAge'):
+			if GET['endAge'] == "":
+				not_empty['extras'].append('endAge')
+		else:
+			field_req['extras'].append('endAge')
+
+		if GET.has_key('language'):
+			if GET['language'] == "":
+				not_empty['extras'].append('language')
+		else:
+			field_req['extras'].append('language')
+
+		if GET.has_key('type'):
+			if GET['type'] == "":
+				not_empty['extras'].append('type')
+			if GET['type'] not in ['Host', 'Applicant']: 
+				invalid_field['extras'].append('type')
+		else:
+			field_req['extras'].append('type')
+
+		if GET.has_key('page'):
+			if GET['page'] == "":
+				not_empty['extras'].append('page')
+		else:
+			field_req['extras'].append('page')
+
+		if GET.has_key('gender'):
+			if GET['gender'] == "":
+				not_empty['extras'].append('gender')
+		else:
+			field_req['extras'].append('gender')
+
+		#Optional params
+		if GET.has_key('startDate'):
+			if GET['startDate'] == "":
+				not_empty['extras'].append('startDate')
+
+		if GET.has_key('endDate'):
+			if GET['endDate'] == "":
+				not_empty['extras'].append('endDate')
+
+		if GET.has_key('wings'):
+			if GET['wings'] == "":
+				not_empty['extras'].append('wings')
+
+		#Other checks
+		#capacity >= 1
+		if GET.has_key('capacity') and GET['capacity'] < 1:
+			invalid_field['extras'].append('capacity')
+		#startAge >=18
+		if GET.has_key('startAge') and GET['startAge'] < 1:
+			invalid_field['extras'].append('startAge')
+		#endAge >= 18
+		if GET.has_key('endAge') and GET['endAge'] < 1:
+			invalid_field['extras'].append('endAge')
+		#startAge >= endAge
+		if GET.has_key('startAge') and GET.has_key('endAge') and GET['endAge'] < GET['startAge']:
+			invalid_field['extras'].append('age')
+		#startDate >=today		
+		if GET.has_key('startDate') and self.parse_date(GET['startDate']) is not None and self.parse_date(GET['startDate']) < time.time():
+			invalid_field['extras'].append('startDate')
+		#endDate >= today
+		if GET.has_key('endDate') and self.parse_date(GET['endDate']) is not None and self.parse_date(GET['endDate']) < time.time():
+			invalid_field['extras'].append('endDate')
+		#startDate >= endDate
+		if GET.has_key('startDate') and GET.has_key('endDate') and self.parse_date(GET['endDate']) is not None and self.parse_date(GET['startDate']) is not None:
+			endDate = self.parse_date(GET['endDate'])
+			startDate = self.parse_date(GET['startDate'])
+			if endDate < startDate:
+				invalid_field['extras'].append('date')
+
+		#gender in male, female both
+		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
+			invalid_field['extras'].append('gender')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid_field['extras']) > 0:
+			errors.append(invalid_field)
+
+		return errors
+
+	def make_search_filters(self, GET):
+		#We have to filter by: birthday (UP)*-OK, language (up)*-OK, gender( up)*-OK, capacity (w)*-OK, wings (w)-OK, start_date & end_date (w)-OK, type*
+		min_year = datetime.today().year
+		min_month = datetime.today().month
+		min_day = datetime.today().day
+		min_year = min_year - int(GET['startAge'])
+		max_year = datetime.today().year
+		max_month = datetime.today().month
+		max_day = datetime.today().day
+		max_year = max_year - int(GET['endAge'])
+		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
+		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
+		if GET['type'] == 'Host':		
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])
+			if GET['language'] != 'all':
+				result = result &Q(languages__name= GET['language'])
+			if GET['gender'] != 'Both':
+				result = result & Q(gender=GET['gender'])		
+			if 'wings' in GET:
+				result = result & Q(wing__city__name=GET['wings'])
+			if 'startDate' in GET:
+				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & (Q(wing__date_start__lte=date_start)|Q(wing__date_start__isnull=True))
+			if 'endDate' in GET:
+				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & (Q(wing__date_end__gte=date_end)|Q(wing__date_end__isnull=True))
+		else:
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])
+			if GET['language'] != 'all':
+				result = result &Q(languages__name= GET['language'])
+			if GET['gender'] != 'Both':
+				result = result & Q(gender=GET['gender'])		
+			if 'wings' in GET:
+				result = result & Q(publicrequestwing__city__name=GET['wings'])
+			if 'startDate' in GET:
+				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_end__gte=date_start)
+			else:
+				date_start_mod = datetime.today()
+				date_start_year = date_start_mod.year
+				date_start_month = date_start_mod.month
+				date_start_day = date_start_mod.day				
+				date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_end__gte=date_start)
+			if 'endDate' in GET:
+				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_start__lte=date_end)
+		return result
+
+	def make_publicreq_search_filters(self, GET, prof):
+		result = Q(capacity__gte= GET['capacity']) & Q(author=prof)
+		if 'wings' in GET:
+			result = result & Q(city__name=GET['wings'])
+		if 'startDate' in GET:
+			date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+			result = result & Q(date_end__gte=date_start)
+		else:
+			date_start_mod = datetime.today()
+			date_start_year = date_start_mod.year
+			date_start_month = date_start_mod.month
+			date_start_day = date_start_mod.day				
+			date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
+			result = result & Q(date_end__gte=date_start)
+		if 'endDate' in GET:
+			date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+			result = result & Q(date_start__lte=date_end)
+		return result
+
+
+	def parse_languages(self, prof):
+		res = []
+		langs = UserLanguage.objects.filter(user_profile=prof)
+		for i in langs:
+			res.append({"name": i.language.name, "level": i.level})
+		return res
+
+	def paginate(self, data, GET):
+		page_size=50
+		num_page = int(GET.get('page', 1))
 		count = len(data)
-		num_page = int(request.GET.get('page', 1))
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
-		#startResult = endResult - (num_page - 1)*page_size
 		paginator = Paginator(data, page_size)
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"msg":"Sorry, no results on that page.", "code":413, "status":False}, response_class=HttpForbidden)
-		objects = {'count':count, 'startResult': startResult, 'endResult': endResult, 'profiles':page.object_list}
-		content = {}  
-		content['msg'] = 'Profiles retrieved successfully.'      
-		content['status'] = True
-		content['code'] = 200
-		content['data'] = objects
-		return self.create_response(request, content, response_class=HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
+		data = {}
+		data["profiles"] = [i for i in page.object_list]
+		data["count"] = count
+		data["startResult"] = startResult
+		data["endResult"] = endResult
+
+		return data
+
+	def get_list(self, request, **kwargs):		
+		errors = self.validate_search(request.GET)		
+		if len(errors) > 0:
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
+		#We have no problem with the given filters
+		filters = self.make_search_filters(request.GET)	
+		try:			
+			search_list = SearchObjectManager()
+			profiles = UserProfile.objects.filter(filters).distinct()		
+			
+			for i in profiles:
+				search_obj = SearchObject()
+				search_obj.profile_id = i.pk
+				search_obj.ctrl_user = i.user
+				search_obj.first_name = i.user.first_name
+				search_obj.last_name = i.user.last_name
+				search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				search_obj.avatar = i.medium_avatar
+				search_obj.age = i.get_age()
+				search_obj.online = self.connected(i.user)
+				search_obj.reply_rate = i.reply_rate
+				search_obj.reply_time = i.reply_time
+				search_obj.languages = self.parse_languages(i)
+				search_obj.all_about_you = i.all_about_you
+				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+				search_obj.ctrl_online =  self.connected(i.user) in ['ON', 'AFK']
+
+				if request.GET['type'] == 'Applicant':										
+					filters = self.make_publicreq_search_filters(request.GET, i)
+					prw = PublicRequestWing.objects.filter(filters)
+					for pw in prw:
+						cpy = copy.deepcopy(search_obj)
+						cpy.wing_introduction = pw.introduction
+						cpy.wing_type = pw.wing_type
+						cpy.wing_city = pw.city
+						cpy.wing_start_date = pw.date_start
+						cpy.wing_end_date = pw.date_end
+						cpy.wing_capacity = pw.capacity
+						search_list.objects.append(cpy)
+				else:
+					search_list.objects.append(search_obj)
+		except Exception, e:
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
+
+		if not isinstance(request.user, User):
+			search_list.make_dirty()
+
+		data = self.paginate(search_list.jsonable(), request.GET)
+
+		if isinstance(data, HttpResponse): return data
+		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
 
 	def full_dehydrate(self, bundle):		
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
@@ -959,14 +1082,6 @@ class UserProfileResource(ModelResource):
 	def alter_list_data_to_serialize(self, request, data):
 		return data["objects"]
 
-	"""
-	def alter_detail_data_to_serialize(self, request, data):
-		if 'blur_avatar' in data.data: del data.data['blur_avatar']
-		if 'medium_avatar' in data.data: del data.data['medium_avatar']
-		if 'thumb_avatar' in data.data: del data.data['thumb_avatar']
-		return self
-	"""
-
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):    
@@ -976,70 +1091,55 @@ class UserProfileResource(ModelResource):
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields validation"
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
-				content['errors'] = json.loads(e.messages)
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
-				content['msg'] = e
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
-					errors = {}
-					content['msg'] = "Unauthorized"                               
-					content['code'] = 413
-					content['status'] = False
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = {}
-					content['msg'] = "Can't logout"                               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				else:               
-					content = {}
-					errors = []
-					content['msg'] = "Error in some fields."               
-					content['code'] = 400
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					#for i in e.response.content: print i
-					for k, v in json.loads(e.response.content).items():
-						errors.append(v)
-					"""
-					print json.loads(e.response.content)['profiles/me/accomodations']
-					print e.response.content
-					if 'profiles' in e.response.content: errors = json.loads(e.response.content)['profiles']
-					elif 'accomodations' in e.response.content: errors = json.loads(e.response.content)['accomodations']
-					else: errors = json.loads(e.response.content)['reference']
-					"""
-					content['errors'] = errors
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
@@ -1072,7 +1172,7 @@ class ContactResource(ModelResource):
 			aux.name = i.user.first_name
 			aux.lastName = i.user.last_name
 			result['items'].append(aux.jsonable())
-		return self.create_response(request, {"status":True, "msg": "Candidates retrieved successfully", "code":200, "data": result}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -1081,28 +1181,56 @@ class ContactResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)              
 				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper

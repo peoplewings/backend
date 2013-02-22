@@ -3,6 +3,7 @@ import json
 import pprint
 from tastypie import http
 from operator import itemgetter, attrgetter
+import datetime
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -30,7 +31,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.people.models import UserProfile
-from wings.models import Wing
+from wings.models import Wing, PublicRequestWing
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation, Friendship
 
 from peoplewings.apps.ajax.utils import json_response
@@ -56,76 +57,93 @@ class NotificationsListResource(ModelResource):
 		resource_name = 'notificationslist'               
 
 	def validate(self, kind, POST):
-		errors = {}
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
 		if kind == 'message':
 			#Messages need idReceiver and data. data needs content and content cannot be empty
 			try:
-				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": not_empty['extras'].append('idReceiver')
 			except KeyError:
-				errors['idReceiver'] = 'This field is needed'
+				field_req['extras'].append('idReceiver')
 			try:
-				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+				if POST['data'] is not None and POST['data'] == "": not_empty['extras'].append('data')
 			except KeyError:
-				errors['data'] = 'This field is needed'
+				field_req['extras'].append('data')
 			try:
-				if POST['data']['content'] is not None and POST['data']['content']  == "": errors['content']  = 'The message cannot be empty'
-				elif POST['data']['content'] is not None and len(POST['data']['content'])  > 1500: errors['content']  = 'The message is too long'
+				if POST['data']['content'] is not None and POST['data']['content']  == "": not_empty['extras'].append('content')
+				elif POST['data']['content'] is not None and len(POST['data']['content'])  > 1500: too_long['extras'].append('content')
 			except KeyError:
-				errors['content']  = 'This field is needed'
+				field_req['extras'].append('content')
 		if kind == 'request':
 			#Request need idReceiver and data. data needs content and content cannot be empty
 			try:
-				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": not_empty['extras'].append('idReceiver')
 			except KeyError:
-				errors['idReceiver'] = 'This field is needed'
+				field_req['extras'].append('idReceiver')
 			try:
-				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+				if POST['data'] is not None and POST['data'] == "": not_empty['extras'].append('data')
 			except KeyError:
-				errors['data'] = 'This field is needed'
+				field_req['extras'].append('data')
 			try:
-				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
-				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
+				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": not_empty['extras'].append('privateText')
+				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: too_long['extras'].append('privateText')
 			except KeyError:
-				errors['data']  = 'This field is needed'
+				field_req['extras'].append('privateText')
 			try:
-				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": errors['publicText']  = 'The request public message cannot be empty'
-				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: errors['publicText']  = 'The request public message is too long'
+				if POST['data']['publicText'] is not None and POST['data']['publicText']  == "": not_empty['extras'].append('publicText')
+				elif POST['data']['publicText'] is not None and len(POST['data']['publicText'])  > 1500: too_long['extras'].append('publicText')
 			except KeyError:
-				errors['data']  = 'This field is needed'
+				field_req['extras'].append('publicText')
 			try:
-				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
+				if POST['data']['makePublic'] is not None and POST['data']['makePublic'] not in [True, False]: invalid['extras'].append('data')
+			except KeyError:
+				field_req['extras'].append('makePublic')
+			try:
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors.append({"type":"START_DATE_GT_END_DATE"})
 			except:
-				errors['startDate'] = 'This field is needed'
-				errors['endDate'] = 'This field is needed'	
+				field_req['extras'].append('startdate')
+				field_req['extras'].append('endDate')
 		if kind == 'invite':
 			#Invites need idReceiver and data. data needs content and content cannot be empty
 			try:
-				if POST['idReceiver'] is not None and POST['idReceiver'] == "": errors['idReceiver'] = 'This field cannot be empty'
+				if POST['idReceiver'] is not None and POST['idReceiver'] == "": not_empty['extras'].append('idReceiver')
 			except KeyError:
-				errors['idReceiver'] = 'This field is needed'
+				field_req['extras'].append('idReceiver')
 			try:
-				if POST['data'] is not None and POST['data'] == "": errors['data'] = 'This field cannot be empty'
+				if POST['data'] is not None and POST['data'] == "": not_empty['extras'].append('data')
 			except KeyError:
-				errors['data'] = 'This field is needed'
+				field_req['extras'].append('data')
 			try:
-				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": errors['privateText']  = 'The request private message cannot be empty'
-				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: errors['privateText']  = 'The request private message is too long'
+				if POST['data']['privateText'] is not None and POST['data']['privateText']  == "": not_empty['extras'].append('privateText')
+				elif POST['data']['privateText'] is not None and len(POST['data']['privateText'])  > 1500: too_long['extras'].append('privateText')
 			except KeyError:
-				errors['data']  = 'This field is needed'
+				field_req['extras'].append('privateText')
 			try:
-				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors['endDate'] = 'This field should be greater or equal than the starting date'	
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors.append({"type":"START_DATE_GT_END_DATE"})	
 			except:
-				errors['startDate'] = 'This field is needed'
-				errors['endDate'] = 'This field is needed'	
+				field_req['extras'].append('startdate')
+				field_req['extras'].append('endDate')	
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
 		return errors		
 
 	def put_list_validate(self, PUT, user):
-		errors = {}
+		errors = []
 		if not PUT.has_key('threads'):
-			errors['threads'] = "This field is required"
+			errors.append({"type": "FIELD_REQUIRED", "extra":["threads"]})
 			return errors
 		else:		
 			#We check, for each thread, if they are owned by the user
+			err = {"type":"FORBIDDEN", "extras":[]}
 			for i in PUT['threads']:
 				try:
 					notif = Notifications.objects.get(reference = i)
@@ -133,7 +151,9 @@ class NotificationsListResource(ModelResource):
 					notif = None
 				if notif is not None:
 					if (notif.receiver != user and notif.sender != user):
-						errors[notif.reference] = "This reference is not owned by the user thus it can't be deleted"
+						err['extras'].append(i)
+			if len(err['extras']) > 0:
+				errors.append(err)
 		return errors
 
 	def filter_get(self, request, filters, prof):
@@ -162,8 +182,11 @@ class NotificationsListResource(ModelResource):
 			if key == 'search':
 				list_value = value.split(' ')
 				search_list = []
+
 				for k in list_value:
+					#We search within each notification (domain) if the element has the value
 					aux_dict_small = [o.reference for o in result_dict if o.search(k)]
+					#We put all the notifications where the reference is in aux_dict_small in another list
 					aux_dict_extended = [o for o in result_dict if o.reference in aux_dict_small]
 					search_list += aux_dict_extended
 				return search_list
@@ -199,7 +222,7 @@ class NotificationsListResource(ModelResource):
 	def make_difs(self, thread, me):
 		mod = []
 		for idx, i in enumerate(thread):			
-			if i.sender == me:
+			if i._sender == me:
 				break
 			else:
 				if len(thread) > idx+1:
@@ -220,7 +243,7 @@ class NotificationsListResource(ModelResource):
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
-			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID_USER"}], "code":"403"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['user']}]}, response_class = HttpResponse)
 		result_dict = []     
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
@@ -285,12 +308,12 @@ class NotificationsListResource(ModelResource):
 					prof_aux = UserProfile.objects.get(pk = i.receiver.pk)                   
 				else:
 					## YOU are the receiver. Need the sender info  
-					prof_aux = UserProfile.objects.get(pk = i.sender.pk)     
+					prof_aux = UserProfile.objects.get(pk = i.sender.pk)    
+				aux._sender = i.sender 
 				aux.interlocutor_id = prof_aux.pk          
 				aux.avatar =  prof_aux.thumb_avatar
 				aux.age = prof_aux.get_age()
-				aux.verified = False
-				aux.sender = i.sender                   
+				aux.verified = False         
 				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 				else: aux.location = "Not specified"
 				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
@@ -298,7 +321,7 @@ class NotificationsListResource(ModelResource):
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}], "code":"403"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
 		result = {}
 		result_idx = []
@@ -327,52 +350,50 @@ class NotificationsListResource(ModelResource):
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
-			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}], "code":"403"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"NO_CONTENT"}]}, response_class = HttpResponse)
 		data = {}
 		data["items"] = [i.jsonable() for i in page.object_list]
 		data["count"] = count
 		data["startResult"] = startResult
 		data["endResult"] = endResult
-		return self.create_response(request, {"status":True, "msg":"OK", "data" : data, "code":200}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "data" : data}, response_class = HttpResponse)
 					  	
 
 	def post_list(self, request, **kwargs):
-		##check if the request has the mandatory parameters
+		##check if the request has the mandatory parameters		
 		POST = json.loads(request.raw_post_data)
-		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":{"kind": ["This field is required"]}, "code":410}, response_class = HttpResponse)
+		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":[{"type":"FIELD_REQUIRED", "extras":["kind"]}]}, response_class = HttpResponse)
 
 		errors = self.validate(POST['kind'], POST)
-		if len(errors.keys()) > 0:
-			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
+		if len(errors) > 0:
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
 		# Create the notification
 		
 		if POST['kind'] == 'message':
 			try:
 				Notifications.objects.create_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'])
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": "The receiver of the message does not exists", "code":403}, response_class = HttpResponse)
-			return self.create_response(request, {"status":True, "data":"The message has been sent succesfully", "code":200}, response_class = HttpResponse)
-		elif POST['kind'] == 'request':
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		elif POST['kind'] == 'request':						
 			#Check that the receiver exists
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
 			except:
-				return self.create_response(request, {"status":False, "errors": "The receiver of the request does not exists", "code":403}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			#Check that the wing we entered is owned by the receiver
 			try:
 				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
 				if check_wing.author.pk != POST['idReceiver']:
-					return self.create_response(request, {"status":False, "errors": "The selected wing is not a valid choice", "code":410}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
 			except:	
-				errors = {}
-				errors['wingId'] = 'This field is required'
-				return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)									
+				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
 			try:
 				notif = Notifications.objects.create_request(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], 
 										private_message = POST['data']['privateText'], public_message = POST['data']['publicText'], 
 										make_public = POST['data']['makePublic'])
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			#create the additional info related with the request
 			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
@@ -380,51 +401,58 @@ class NotificationsListResource(ModelResource):
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
 			if POST['data']['makePublic'] is True:
-				#we have to create a new wing...
-				pass
-				#TODO
-			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
+				#we have to create a new PublicRequestWing	
+				date_start_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['startDate'])
+				date_start_year = date_start_mod.year
+				date_start_month = date_start_mod.month
+				date_start_day = date_start_mod.day
+				date_end_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['endDate'])
+				date_end_year = date_end_mod.year
+				date_end_month = date_end_mod.month
+				date_end_day = date_end_mod.day		
+				date_start = datetime.datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')			
+				date_end = datetime.datetime.strptime('%s/%s/%s 23:59:59' % (date_end_year, date_end_month, date_end_day), '%Y/%m/%d %H:%M:%S')			
+				pw= PublicRequestWing.objects.create(author=UserProfile.objects.get(user=request.user), wing_type=POST['data']['wingType'], city=check_wing.city, date_start=date_start, date_end=date_end, capacity=POST['data']['wingParameters']['capacity'], introduction= POST['data']['publicText'])
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		elif POST['kind'] == 'invite':
 			#Check that the receiver exists
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
 			except:
-				return self.create_response(request, {"status":False, "errors": "The receiver of the request does not exists", "code":403}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			#Check that the wing we entered is owned by the sender
 			try:
 				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
 				if check_wing.author.pk != request.user.pk:
-					return self.create_response(request, {"status":False, "errors": "The selected wing is not a valid choice", "code":410}, response_class = HttpResponse)
-			except:	
-				errors = {}
-				errors['wingId'] = 'This field is required'
-				return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)									
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
+			except:
+				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
 			try:
 				notif = Notifications.objects.create_invite(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], private_message = POST['data']['privateText'])
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": e, "code":500}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			#create the additional info related with the request
 			if (POST['data']['wingType'] == 'Accomodation'):
 				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
 											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'], 
 											flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
-			return self.create_response(request, {"status":True, "data":"The request has been sent succesfully", "code":200}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		else:
-			return self.create_response(request, {"status":False, "data":"Not implemented", "code":400}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['kind']}]}, response_class = HttpResponse)
 
 	def put_list(self, request, **kwargs):
 		#This call comes from the DELETE
 		profile = UserProfile.objects.get(user = request.user)
 		PUT = json.loads(request.raw_post_data)
 		errors = self.put_list_validate(PUT, profile)
-		if len(errors.keys()) > 0:
-			return self.create_response(request, {"status":False, "errors":errors, "code":400}, response_class = HttpResponse)
+		if len(errors) > 0:
+			return self.create_response(request, {"status":False, "errors":errors}, response_class = HttpResponse)
 		#We have this shit validated, let's move on		
 		refs = PUT["threads"]
 		for i in refs:
 			Notifications.objects.invisible_notification(i, profile)
-		return self.create_response(request, {"status":True, "data": "The notifications have been deleted succesfully", "code":200}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 	
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -433,29 +461,58 @@ class NotificationsListResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)              
 				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+			
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
@@ -527,68 +584,79 @@ class NotificationsThreadResource(ModelResource):
 
 
 	def validate_post_list(self, POST):
-		errors = {}	
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		invalid = {"type":'INVALID', 'extras':[]}
 		kind = None	
 		if not POST.has_key('reference'):
-			errors['reference']= 'This field is required'
+			field_req['extras'].append('reference')
 		else:
 			notif = Notifications.objects.filter(reference=POST['reference'])
 			if(len(notif) > 0):
 				kind = notif[0].kind
 			else: 
-				return "The requested message does not exists"
+				invalid['extras'].append('reference')
 
 		if not POST.has_key('data'):
-			errors['data'] = 'This field is required'
+			field_req['extras'].append('data')
 
 		if kind and kind == 'message' and POST.has_key('data'):
 			if not POST['data'].has_key('content'):
-				errors['content']= 'This field is required'
+				field_req['extras'].append('content')
 			else:
 				if len(POST['data']['content']) > 1500:
-					return "The message of the notification is too long"
+					too_long['extras'].append('content')
 				elif len(POST['data']['content']) == 0:
-					return "The message of the notification cannot be empty"
+					not_empty['extras'].append('content')
 		elif (kind == 'request' or kind == 'invite') and POST.has_key('data'):
 			data = POST['data']
 			start = None
 			end = None
 			if not data.has_key('content'):
-				errors['content']= 'This field is required'
+				field_req['extras'].append('content')
 			else:
 				if data.has_key('content') and len(data['content']) > 1500:
-					return "The message of the notification is too long"
+					too_long['extras'].append('content')
 				if data.has_key('content') and len(data['content']) == 0:
-					return "The message of the notification cannot be empty"
+					not_empty['extras'].append('content')
 			if data.has_key('state'): 
 				if data['state'] not in ['P', 'A', 'M', 'D']:
-					errors['state'] = 'The submited value is not valid'
+					invalid['extras'].append('kind')
 			else:
-				errors['state'] = 'This field is required'
+				field_req['extras'].append('state')
 			if data.has_key('wingParameters'):
 				params = data['wingParameters']
+				if params.has_key('startDate') and isinstance(params['startDate'], int):
+					start = params['startDate']
+				else:
+					field_req['extras'].append('startDate')
+				if params.has_key('endDate') and isinstance(params['endDate'], int):
+					end = params['endDate']
+				else:
+					field_req['extras'].append('endDate')
+				if start > end:
+					errors.append({"type":"START_DATE_GT_END_DATE"})
+				if params.has_key('capacity'):
+					if params['capacity'] == 0:
+						invalid['extras'].append('capacity')
+				else:
+					field_req['extras'].append('capacity')
+				if not params.has_key('flexibleStartDate'):
+					field_req['extras'].append('flexibleStartDate')
+				if not params.has_key('flexibleEndDate'):
+					field_req['extras'].append('flexibleEndDate')
 			else:
-				errors['wingParameters'] = 'This field is required'
-				return errors
-			if params.has_key('startDate') and isinstance(params['startDate'], int):
-				start = params['startDate']
-			else:
-				errors['startDate'] = 'This field is required'
-			if params.has_key('endDate') and isinstance(params['endDate'], int):
-				end = params['endDate']
-			else:
-				errors['endDate'] = 'This field is required'
-			if start > end:
-				errors['date'] = 'The starting date cannot be greater than the end date'
-			if params.has_key('capacity'):
-				if params['capacity'] == 0:
-					errors['capacity'] = 'This field cannot be zero'
-			else:
-				params['capacity'] = 'This field is required'
-			if not params.has_key('flexibleStartDate'):
-				errors['flexibleStartDate'] = 'This field is required'
-			if not params.has_key('flexibleEndDate'):
-				errors['flexibleEndDate'] = 'This field is required'				
+				field_req['extras'].append('wingParameters')
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
 		return errors
 
 	def get_last_state_mod(self, thread, thread_len):
@@ -650,14 +718,14 @@ class NotificationsThreadResource(ModelResource):
 
 		notifs = Notifications.objects.filter(filters).order_by('created')
 		if not notifs:
-			return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 		kind = None
 		data = {}
 		thread = []
 
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
-				return self.create_response(request, {"status":False, "errors":"You are not allowed to visualize the notification with that reference", "code":400}, response_class = HttpResponse)			
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN", "extras":[ref]}]}, response_class = HttpResponse)			
 			if i.kind == 'message':
 				kind = 'message'
 				aux = MessageThread()
@@ -711,7 +779,7 @@ class NotificationsThreadResource(ModelResource):
 				#Generic info				
 				aux.created= i.created
 			else:
-				return self.create_response(request, {"status":False, "errors":"The notification with that reference does not exists", "code":400}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 			#Once we filled the aux object, we have to add it to the list
 			if i.receiver.pk == me.pk:
 				i.read = True
@@ -769,31 +837,27 @@ class NotificationsThreadResource(ModelResource):
 			data = {}
 
 		self.delete_alarms(ref, me)
-		return self.create_response(request, {"status":True, "data": data, "code":200}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
 
-	def post_list(self, request, **kwargs):		
+	def post_list(self, request, **kwargs):
+		a = Automata()		
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
 		arriving_via = None
 		me = UserProfile.objects.get(user= request.user)
-		if isinstance(errors, dict) and len(errors.keys()) > 0:		
-			return self.create_response(request, {"status":False, "errors": errors, "code":410}, response_class = HttpResponse)
-		elif isinstance(errors, str):
-			return self.create_response(request, {"status":False, "errors": errors, "code":400}, response_class = HttpResponse)
+		if len(errors) > 0:
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
 		kind = Notifications.objects.filter(reference=POST['reference'])[0].kind
 		try:
 			notif_list = Notifications.objects.filter(reference= POST['reference'])
 			notif = notif_list[len(notif_list)-1]
 			if not notif.receiver == me and not notif.sender == me:
-				return self.create_response(request, {"status":False, "errors": "You are not permitted to respond in a thread that is not yours", "code":400}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"FORBIDDEN", "extras":[POST['reference']]}]}, response_class = HttpResponse)
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors": "The requested message does not exists", "code":400}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 
 		#Get the receiver of the notification
-		try:
-			aux = Notifications.objects.filter(reference= POST['reference'])[0]
-		except:
-			return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+		aux = notif_list[0]
 		if aux.receiver == me:
 			receiver = aux.sender
 		else:
@@ -803,48 +867,56 @@ class NotificationsThreadResource(ModelResource):
 			try:				
 				Notifications.objects.respond_message(receiver = receiver.pk, sender = request.user, content = POST['data']['content'], reference= POST['reference'])
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": e, "code":403}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 
-			return self.create_response(request, {"status":True, "data": "Message sent succesfully", "code":200}, response_class = HttpResponse) 
+			return self.create_response(request, {"status":True}, response_class = HttpResponse) 
 		if kind == 'request':
 			try:	
-				request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(request_result, str):
-					return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
-				if request_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)
-					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
-													num_people = additional.num_people, transport = additional.transport, 
-													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-					else:				
-						AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				thread = Requests.objects.filter(reference= POST['reference']).order_by('created')
+				if a.check_new_state(me.pk, thread, POST['data']['state']):
+					request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+					if isinstance(request_result, str):
+						return self.create_response(request, {"status":False, "errors": request_result, "code":400}, response_class = HttpResponse)
+					if request_result.wing.get_class_name() == 'Accomodation':
+						additional = AccomodationInformation.objects.get(notification = notif.pk)
+						if (POST['data']['state']=='D'):
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
+														num_people = additional.num_people, transport = additional.transport, 
+														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+						else:				
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				else:
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
 
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
-			return self.create_response(request, {"status":True, "data": "Request sent succesfully", "code":200}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		if kind == 'invite':
 			try:				
-				invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
-				if isinstance(invite_result, str):
-					return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
-				if invite_result.wing.get_class_name() == 'Accomodation':
-					additional = AccomodationInformation.objects.get(notification = notif.pk)
-					if (POST['data']['state']=='D'):
-						AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
-													num_people = additional.num_people, transport = additional.transport, 
-													flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-					else:						
-						AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-													num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
-													flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
-
+				thread = Invites.objects.filter(reference= POST['reference']).order_by('created')
+				if a.check_new_state(me.pk, thread, POST['data']['state']):
+					invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
+					if isinstance(invite_result, str):
+						return self.create_response(request, {"status":False, "errors": invite_result, "code":400}, response_class = HttpResponse)
+					if invite_result.wing.get_class_name() == 'Accomodation':
+						additional = AccomodationInformation.objects.get(notification = notif.pk)
+						if (POST['data']['state']=='D'):
+							AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
+														num_people = additional.num_people, transport = additional.transport, 
+														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
+						else:						
+							AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
+				else:
+					
+					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
 			except Exception, e:
-				return self.create_response(request, {"status":False, "errors": e, "code":404}, response_class = HttpResponse)
-			return self.create_response(request, {"status":True, "data": "Invite sent succesfully", "code":200}, response_class = HttpResponse)
-		return self.create_response(request, {"status":False, "errors": "Not implemented", "code":400}, response_class = HttpResponse) 
+				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['kind']}]}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -853,30 +925,58 @@ class NotificationsThreadResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				return response
-			except (BadRequest, fields.ApiFieldError), e:
-				return http.HttpBadRequest(e.args[0])
+			
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
-				return http.HttpBadRequest(', '.join(e.messages))
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				if hasattr(e, 'response'):
-					return e.response
-
-				# A real, non-expected exception.
-				# Handle the case where the full traceback is more helpful
-				# than the serialized error.
-				if settings.DEBUG and getattr(settings, 'TASTYPIE_FULL_DEBUG', False):
-					raise
-
-				# Re-raise the error to get a proper traceback when the error
-				# happend during a test case
-				if request.META.get('SERVER_NAME') == 'testserver':
-					raise
-
-				# Rather than re-raising, we're going to things similar to
-				# what Django does. The difference is returning a serialized
-				# error message.
-				return self._handle_500(request, e)
-
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper
 
 

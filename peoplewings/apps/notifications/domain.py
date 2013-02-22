@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 import json
+from notifications.models import Requests, Invites
 
 
 class NotificationsList(object):
@@ -14,7 +15,7 @@ class NotificationsList(object):
 		## Request/inv specific
 		self.state = None
 		self.flag_direction = None
-		## Msg/req/inv specific
+		## Msg specific
 		self.content = None
 		#Profile specific
 		self.interlocutor_id = None
@@ -34,8 +35,7 @@ class NotificationsList(object):
 		self.wing_parameters['wing_city'] = None
 		self.wing_parameters['modified'] = None
 
-		#sender
-		self.sender = None
+		self._sender = None
 
 	def gen_key(self, key):
 		buff = key.replace("_", " ")
@@ -47,18 +47,19 @@ class NotificationsList(object):
 	def jsonable(self):
 		res = dict()
 		for key, value in self.__dict__.items():   
-			if value is not None:         
+			if value is not None and not key.startswith('_'):         
 				res[key] = value
 		return res
 
 	def search(self, key):
+
 		if (self.name is not None and key.lower() in self.name.lower()):
 			return True
 		if (self.age is not None and key == self.age):
 			return True
-		if (self.location is not None and key.lower in self.location.lower()):
+		if (self.location is not None and key.lower() in self.location.lower()):
 			return True
-		if (self.content is not None and key.lower in self.content.lower()):
+		if (self.content is not None and key.lower() in self.content.lower()):
 			return True
 		if (self.wing_parameters['start_date'] is not None and key in self.wing_parameters['start_date']):
 			return True
@@ -71,8 +72,8 @@ class NotificationsList(object):
 		if (self.wing_parameters['message'] is not None and key.lower() in self.wing_parameters['message'].lower()):
 			return True
 		if (self.id is not None and self.kind is not None and self.kind == 'request' or self.kind == 'invite'):
-			filters_req = Q(pk=self.id)&(Q(private_message__icontaints=key)|Q(public_message__icontaints=key))
-			filters_inv = Q(pk=self.id)&Q(private_message__icontaints=key)
+			filters_req = Q(pk=self.id)&(Q(private_message__icontains=key)|Q(public_message__icontains=key))
+			filters_inv = Q(pk=self.id)&Q(private_message__icontains=key)
 			if self.kind == 'request' and len(Requests.objects.filter(filters_req)) > 0:
 				return True
 			elif self.kind == 'invite' and len(Invites.objects.filter(filters_inv)) > 0:
@@ -372,6 +373,14 @@ class Automata(object):
 					return False
 		else:
 			return False
+
+	def check_new_state(self, me, thread, new):
+		states = []
+		for i in thread:
+			states.append([i.state, i.sender.pk])
+		first_sender = thread[0].first_sender
+		states.append([new, me])
+		return self.check_P(states, first_sender)
 
 
 

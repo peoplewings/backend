@@ -63,25 +63,32 @@ class WingResource(ModelResource):
 
 	def get_list_validate(self, request):
 		errors = {}
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		invalid = {"type":"INVALID_FIELD", "extras":[]}
 		if(request.GET.has_key('profile')):
 			prof = request.GET['profile']
 			try:
 				up = UserProfile.objects.get(pk= prof)
 			except:
-				errors['profile'] = 'A profile with the specified identifier does not exists'
+				invalid['extras'].append('profile')
 		else:
-			return 'Invalid request'
+			field_req['extras'].append('profile')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
 		return errors
 
 	def get_list(self, request, **kwargs):
 		errors = None
 		try:
 			errors = self.get_list_validate(request)		
-			if (isinstance(errors, list)):
-				if(len(errors) > 0):
-					return self.create_response(request, {"data": {"items":[]}, "code" : 200, "status" : True}, response_class = HttpResponse)
-			elif (isinstance(errors, str)):
-				return self.create_response(request, {"data": {"items":[]}, "code" : 200, "status" : True}, response_class = HttpResponse)
+			if len(errors) > 0:
+					return self.create_response(request, {"status" : False, "errors": errors}, response_class = HttpResponse)
+
 			prof = UserProfile.objects.get(pk=request.GET['profile'])
 			w = Wing.objects.filter(author=prof)		
 			objects = []
@@ -93,10 +100,10 @@ class WingResource(ModelResource):
 				objects.append(aux.jsonable())
 			data = {}
 			data['items'] = objects
-			return self.create_response(request, {"msg":"Wings retrieved successfully.", "code": 200, "status":True, "data": data}, response_class = HttpResponse)
+			return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
 		except Exception, e:
 			print e
-			return self.create_response(request, {"code": 400, "status":False, "errors": e}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INTERAL_ERROR"}]}, response_class = HttpResponse)
 
 	def dehydrate_wing_type(self, bundle):
 		return bundle.obj.get_type()
@@ -110,71 +117,58 @@ class WingResource(ModelResource):
 			try:
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
-
-				varies = getattr(self._meta.cache, "varies", [])
-
-				if varies:
-					patch_vary_headers(response, varies)             
-
-				if request.is_ajax() and not response.has_header("Cache-Control"):
-					patch_cache_control(response, no_cache=True)
-
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields"
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
-				content['errors'] = json.loads(e.messages)
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['msg'] = "No JSON could be decoded"               
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
-					errors = {}
-					content['msg'] = "Unauthorized"                               
-					content['code'] = 413
-					content['status'] = False
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = {}
-					content['msg'] = "Can't logout"                               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				else:               
-					content = {}
-					errors = {}
-					content['msg'] = "Error in some fields."               
-					content['code'] = 400
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					errors = json.loads(e.response.content)['wings']
-					content['errors'] = errors
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 	
@@ -223,18 +217,12 @@ class AccomodationsResource(ModelResource):
 		return object_list
 
 	def obj_create(self, bundle, request=None, **kwargs):
-
 		if 'profile_id' not in kwargs:
-			return self.create_response(request, {"msg":"Error: missing profile id." ,"code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
-
-
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
  
 		up = UserProfile.objects.get(user=request.user)
  
@@ -271,19 +259,19 @@ class AccomodationsResource(ModelResource):
 
 	def get_list(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
-			return self.create_response(request, {"msg":"Error: the uri is not correct: missing profile id.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
 		up = UserProfile.objects.get(user=request.user)        
 		if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
 
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if not is_preview and int(kwargs['profile_id']) != up.id: 
-			return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 
 		try:
 			accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
 		except:
-			return self.create_response(request, {"msg":"Error: User not found.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID_FIELD", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
 		objects = []
 		for i in accomodations:
@@ -295,37 +283,46 @@ class AccomodationsResource(ModelResource):
 				dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
 				bundle.data = dic
 			objects.append(bundle.data)
-		return self.create_response(request, {"msg":"Accommodations retrieved successfully.", "code":200, "status":True, "data":objects})
+		return self.create_response(request, {"status":True, "data":objects})
 	
 	def post_list(self, request, **kwargs):
 		up = UserProfile.objects.get(user=request.user)
-		'''
-		if 'profile_id' not in kwargs or kwargs['profile_id'] not in ('me', str(up.id)):
-			return self.create_response(request, {"code" : 401, "status" : False, "msg": "Unauthorized", "up.id":up.id, "kwargs[profile_id]":kwargs['profile_id']}, response_class=HttpForbidden)
-		'''
-		a = super(AccomodationsResource, self).post_list(request, **kwargs)
+
+		deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+		deserialized = self.alter_deserialized_detail_data(request, deserialized)
+		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+		updated_bundle = self.obj_create(bundle, request, **self.remove_api_resource_names(kwargs))
+		location = self.get_resource_uri(updated_bundle)
+
+		if not self._meta.always_return_data:
+			a = http.HttpCreated(location=location)
+		else:
+			updated_bundle = self.full_dehydrate(updated_bundle)
+			updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
+			a = self.create_response(request, updated_bundle, response_class=http.HttpCreated, location=location)
+
 		data = {}
 		data['id'] = json.loads(a.content)['id']
-		dic = {"msg":"Accommodation created successfully.", "data":data, "status":True, "code":200}
+		dic = {"data":data, "status":True}
 		return self.create_response(request, dic)
 
 	def get_detail(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
-			return self.create_response(request, {"msg":"Error: the uri provided is not correct: missing profile id", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
 		up = UserProfile.objects.get(user=request.user)
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if not is_preview and int(kwargs['profile_id']) != up.id: 
-			return self.create_response(request, {"msg":"Error: operation not allowed", "code":413, "status":False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 		
 		if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
 		try:
 			a = Accomodation.objects.get(author_id=kwargs['profile_id'], pk=kwargs['wing_id'])
 		except Exception, e:
-			return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "BAD_REQUEST"}]}, response_class=HttpResponse)
 		bundle = self.build_bundle(obj=a, request=request)
 		bundle = self.full_dehydrate(bundle)
-		return self.create_response(request, {"msg":"Accommodation retrieved successfully.", "code":200, "status":True, "data":bundle})
+		return self.create_response(request, {"status":True, "data":bundle})
 
 	def patch_detail(self, request, **kwargs):
 		return self.put_detail(request, **kwargs)    
@@ -333,19 +330,19 @@ class AccomodationsResource(ModelResource):
 	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
-			return self.create_response(request, {"msg":"Error: the uri provided is not correct: profile id missing.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 
 		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
 		deserialized = self.alter_deserialized_detail_data(request, deserialized)
 		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
 
-		self.is_valid(bundle, request)
+		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
 		try:
 			a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
 		except:
-			return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 		if 'city' in bundle.data:
 			loc = {}
 			data = bundle.data['city']
@@ -358,12 +355,6 @@ class AccomodationsResource(ModelResource):
 		forbidden_fields_update = ['author_id', 'id']
 		for i in bundle.data:
 			if hasattr(a, i) and i not in forbidden_fields_update:
-				"""               
-				if i == 'dateStart' or i == 'dateEnd':
-					aux = datetime.strptime(bundle.data.get(i), '%Y-%m-%d')
-					setattr(a, i, aux)
-				else: setattr(a, i, bundle.data.get(i))
-				"""
 				setattr(a, i, bundle.data.get(i))
 		trans = PublicTransport.objects.all()
 		a.public_transport = []
@@ -375,20 +366,20 @@ class AccomodationsResource(ModelResource):
 		#updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
 		a.save()
 		self.save_related(bundle)
-		bundle = {"code" : 200, "status" : True, "msg" : "Accommodation updated successfully."}
-		return self.create_response(request, bundle, response_class=HttpAccepted)
+		bundle = {"status" : True}
+		return self.create_response(request, bundle, response_class=HttpResponse)
 
 	@transaction.commit_on_success
 	def delete_detail(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
-			return self.create_response(request, {"msg":"Error: uri incorrect: profile id is missing." , "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		up = UserProfile.objects.get(user=request.user)
 		try:
 			a = Accomodation.objects.get(author_id=up.id, pk=kwargs['wing_id'])
 		except:
-			return self.create_response(request, {"msg":"Error: Wing not found for that user.", "code" : 413, "status" : False}, response_class=HttpForbidden)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 		a.delete()
-		bundle = self.build_bundle(data={"code": 200, "status": True, "msg":"Accommodation deleted successfully."}, request=request)
+		bundle = self.build_bundle(data={"status": True}, request=request)
 		return self.create_response(request, bundle, response_class = HttpResponse)
 
 	def dehydrate_city(self, bundle):
@@ -402,12 +393,6 @@ class AccomodationsResource(ModelResource):
 		bundle.data['city']['lat'] = city.lat
 		bundle.data['city']['lon'] = city.lon
 		return bundle.data['city']
-
-	'''
-	def dehydrate_resource_uri(self, bundle):
-		bundle.data['resource_uri'] = str.replace(self._meta.resource_name, 'me', str(bundle.obj.id))
-		return bundle.data['resource_uri']
-	'''
 	
 	def full_dehydrate(self, bundle):
 		format = '%Y-%m-%d'
@@ -441,71 +426,58 @@ class AccomodationsResource(ModelResource):
 			try:
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
-
-				varies = getattr(self._meta.cache, "varies", [])
-
-				if varies:
-					patch_vary_headers(response, varies)             
-
-				if request.is_ajax() and not response.has_header("Cache-Control"):
-					patch_cache_control(response, no_cache=True)
-
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = {}
-				content['msg'] = e.args[0]               
-				content['code'] = 400
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
 			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
 				content = {}
-				errors = {}
-				content['msg'] = "Error in some fields"
-				content['code'] = 410
+				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
-				content['errors'] = json.loads(e.messages)
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = {}
-				content['msg'] = "No JSON could be decoded"               
-				content['code'] = 411
+				errors = [{"type": "JSON_ERROR"}]          
 				content['status'] = False
+				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
-					errors = {}
-					content['msg'] = "Method not allowed"                               
-					content['code'] = 412
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
-					errors = {}
-					content['msg'] = "Unauthorized"                               
-					content['code'] = 413
-					content['status'] = False
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = {}
-					content['msg'] = "Can't logout"                               
-					content['code'] = 400
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				else:               
-					content = {}
-					errors = {}
-					content['msg'] = "Error in some fields."               
-					content['code'] = 400
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
 					content['status'] = False
-					errors = json.loads(e.response.content)['accomodations']
-					content['errors'] = errors
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-				return self._handle_500(request, e)
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 	

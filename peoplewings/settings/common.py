@@ -35,9 +35,11 @@ elif HOSTNAME in LOCAL_HOSTNAMES:
 
 try:
     config = imp.load_source('env_settings', get_environment_file_path(ENV))
-    from env_settings import *
+    from env_settings import *    
 except IOError:
     exit("No configuration file found for env '%s'" % ENV)
+except Exception:
+    exit("No env variable found")
 ## 
 
 TIME_ZONE = 'Europe/Madrid'
@@ -104,6 +106,7 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'peoplewings.apps.notifications.middleware.Notification',
+    #'peoplewings.libs.middlewares.debug-middleware.DebugMiddleware',
     'peoplewings.libs.middlewares.django-crossdomainxhr-middleware.XsSharing',    
 )
 

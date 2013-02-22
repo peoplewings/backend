@@ -8,68 +8,38 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'PublicTransport'
-        db.create_table('wings_publictransport', (
+        # Adding model 'Original'
+        db.create_table('cropper_original', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(default='Not specified', max_length=50)),
+            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['people.UserProfile'])),
+            ('image', self.gf('django.db.models.fields.files.ImageField')(max_length=100)),
+            ('image_width', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
+            ('image_height', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
         ))
-        db.send_create_signal('wings', ['PublicTransport'])
+        db.send_create_signal('cropper', ['Original'])
 
-        # Deleting field 'Accomodation.underground'
-        db.delete_column('wings_accomodation', 'underground')
-
-        # Deleting field 'Accomodation.bus'
-        db.delete_column('wings_accomodation', 'bus')
-
-        # Deleting field 'Accomodation.train'
-        db.delete_column('wings_accomodation', 'train')
-
-        # Deleting field 'Accomodation.others'
-        db.delete_column('wings_accomodation', 'others')
-
-        # Deleting field 'Accomodation.tram'
-        db.delete_column('wings_accomodation', 'tram')
-
-        # Adding M2M table for field public_transport on 'Accomodation'
-        db.create_table('wings_accomodation_public_transport', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('accomodation', models.ForeignKey(orm['wings.accomodation'], null=False)),
-            ('publictransport', models.ForeignKey(orm['wings.publictransport'], null=False))
+        # Adding model 'Cropped'
+        db.create_table('cropper_cropped', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('original', self.gf('django.db.models.fields.related.ForeignKey')(related_name='cropped', null=True, on_delete=models.SET_NULL, to=orm['cropper.Original'])),
+            ('image_big', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True)),
+            ('image_med', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True)),
+            ('image_small', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True)),
+            ('image_med_blur', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True)),
+            ('x', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
+            ('y', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
+            ('w', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
+            ('h', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
         ))
-        db.create_unique('wings_accomodation_public_transport', ['accomodation_id', 'publictransport_id'])
+        db.send_create_signal('cropper', ['Cropped'])
 
 
     def backwards(self, orm):
-        # Deleting model 'PublicTransport'
-        db.delete_table('wings_publictransport')
+        # Deleting model 'Original'
+        db.delete_table('cropper_original')
 
-        # Adding field 'Accomodation.underground'
-        db.add_column('wings_accomodation', 'underground',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'Accomodation.bus'
-        db.add_column('wings_accomodation', 'bus',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'Accomodation.train'
-        db.add_column('wings_accomodation', 'train',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'Accomodation.others'
-        db.add_column('wings_accomodation', 'others',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'Accomodation.tram'
-        db.add_column('wings_accomodation', 'tram',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Removing M2M table for field public_transport on 'Accomodation'
-        db.delete_table('wings_accomodation_public_transport')
+        # Deleting model 'Cropped'
+        db.delete_table('cropper_cropped')
 
 
     models = {
@@ -108,6 +78,27 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        'cropper.cropped': {
+            'Meta': {'object_name': 'Cropped'},
+            'h': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'image_big': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
+            'image_med': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
+            'image_med_blur': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
+            'image_small': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True'}),
+            'original': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'cropped'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': "orm['cropper.Original']"}),
+            'w': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'x': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
+            'y': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'})
+        },
+        'cropper.original': {
+            'Meta': {'object_name': 'Original'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100'}),
+            'image_height': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
+            'image_width': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"})
         },
         'locations.city': {
             'Meta': {'object_name': 'City'},
@@ -222,6 +213,8 @@ class Migration(SchemaMigration):
             'references': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'references+'", 'symmetrical': 'False', 'through': "orm['people.Reference']", 'to': "orm['people.UserProfile']"}),
             'relationships': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.UserProfile']", 'through': "orm['people.Relationship']", 'symmetrical': 'False'}),
             'religion': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
+            'reply_rate': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'reply_time': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'sharing': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'show_birthday': ('django.db.models.fields.CharField', [], {'default': "'F'", 'max_length': '100'}),
             'social_networks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.SocialNetwork']", 'through': "orm['people.UserSocialNetwork']", 'symmetrical': 'False'}),
@@ -243,45 +236,7 @@ class Migration(SchemaMigration):
             'social_network': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.SocialNetwork']"}),
             'social_network_username': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'user_profile': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"})
-        },
-        'wings.accomodation': {
-            'Meta': {'object_name': 'Accomodation', '_ormbases': ['wings.Wing']},
-            'about': ('django.db.models.fields.TextField', [], {'max_length': '1000', 'blank': 'True'}),
-            'additional_information': ('django.db.models.fields.TextField', [], {'max_length': '1000', 'blank': 'True'}),
-            'address': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'blankets': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'capacity': ('django.db.models.fields.CharField', [], {'default': '1', 'max_length': '1'}),
-            'city': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['locations.City']", 'on_delete': 'models.PROTECT'}),
-            'i_have_pet': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'live_center': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '10', 'blank': 'True'}),
-            'pets_allowed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'postal_code': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'preferred_female': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'preferred_male': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'public_transport': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['wings.PublicTransport']", 'symmetrical': 'False'}),
-            'sharing_once': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'smoking': ('django.db.models.fields.CharField', [], {'default': "'N'", 'max_length': '1'}),
-            'wheelchair': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'where_sleeping_type': ('django.db.models.fields.CharField', [], {'default': "'C'", 'max_length': '1'}),
-            'wing_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['wings.Wing']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'wings.publictransport': {
-            'Meta': {'object_name': 'PublicTransport'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'default': "'Not specified'", 'max_length': '50'})
-        },
-        'wings.wing': {
-            'Meta': {'object_name': 'Wing'},
-            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['people.UserProfile']"}),
-            'best_days': ('django.db.models.fields.CharField', [], {'default': "'A'", 'max_length': '1'}),
-            'date_end': ('django.db.models.fields.DateField', [], {'null': 'True'}),
-            'date_start': ('django.db.models.fields.DateField', [], {'null': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_request': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'name': ('django.db.models.fields.CharField', [], {'default': "'Wing'", 'max_length': '200'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "'Y'", 'max_length': '1'})
         }
     }
 
-    complete_apps = ['wings']
+    complete_apps = ['cropper']

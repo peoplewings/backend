@@ -3,7 +3,6 @@ from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.wings.models import Wing
 from django.db.models.signals import post_save, post_delete
 from django.db.models import signals
-from notifications.domain import Automata
 from django.db.models import Q
 import uuid
 import time
@@ -48,15 +47,6 @@ class NotificationsManager(models.Manager):
 			raise e
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = kwargs['reference'], kind = 'message', read = False, first_sender =  fs.first_sender, private_message = kwargs['content'])
 
-	def check_new_state(self, me, thread, new):
-		states = []
-		a = Automata()
-		for i in thread:
-			states.append([i.state, i.sender.pk])
-		first_sender = thread[0].first_sender
-		states.append([new, me])
-		return a.check_P(states, first_sender)
-
 	def respond_request(self, **kwargs):		
 		reference = kwargs['reference']
 		receiver_id = kwargs['receiver']
@@ -71,12 +61,9 @@ class NotificationsManager(models.Manager):
 		first_sender = thread[0].first_sender
 		wing = thread[0].wing
 
-		if self.check_new_state(sender_id, thread, state):
-			created = time.time()
-			notif = Requests.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, public_message = "", state = state, wing=wing)
-			return notif
-		else:
-			return "The operation you requested is not valid"
+		created = time.time()
+		notif = Requests.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, public_message = "", state = state, wing=wing)
+		return notif
 
 	def respond_invite(self, **kwargs):		
 		reference = kwargs['reference']
@@ -92,12 +79,9 @@ class NotificationsManager(models.Manager):
 		first_sender = thread[0].first_sender
 		wing = thread[0].wing
 
-		if self.check_new_state(sender_id, thread, state):
-			created = time.time()
-			notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'invite', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
-			return notif
-		else:
-			return "The operation you requested is not valid"
+		created = time.time()
+		notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'invite', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
+		return notif
 
 	def create_request(self, **kwargs):
 		try:

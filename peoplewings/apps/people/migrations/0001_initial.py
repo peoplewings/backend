@@ -86,7 +86,6 @@ class Migration(SchemaMigration):
         db.create_table('people_userprofile', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], unique=True)),
-            ('age', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('pw_state', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('avatar', self.gf('django.db.models.fields.CharField')(default='http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg', max_length=250)),
             ('medium_avatar', self.gf('django.db.models.fields.CharField')(default='http://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg', max_length=250, blank=True)),
@@ -121,6 +120,8 @@ class Migration(SchemaMigration):
             ('places_visited', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
             ('places_gonna_go', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
             ('places_wanna_go', self.gf('django.db.models.fields.TextField')(max_length=250, blank=True)),
+            ('reply_rate', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('reply_time', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
         ))
         db.send_create_signal('people', ['UserProfile'])
 
@@ -327,7 +328,6 @@ class Migration(SchemaMigration):
         },
         'people.userprofile': {
             'Meta': {'object_name': 'UserProfile'},
-            'age': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'all_about_you': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'avatar': ('django.db.models.fields.CharField', [], {'default': "'http://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg'", 'max_length': '250'}),
             'birthday': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
@@ -365,6 +365,8 @@ class Migration(SchemaMigration):
             'references': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'references+'", 'symmetrical': 'False', 'through': "orm['people.Reference']", 'to': "orm['people.UserProfile']"}),
             'relationships': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.UserProfile']", 'through': "orm['people.Relationship']", 'symmetrical': 'False'}),
             'religion': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
+            'reply_rate': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'reply_time': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'sharing': ('django.db.models.fields.TextField', [], {'max_length': '250', 'blank': 'True'}),
             'show_birthday': ('django.db.models.fields.CharField', [], {'default': "'F'", 'max_length': '100'}),
             'social_networks': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['people.SocialNetwork']", 'through': "orm['people.UserSocialNetwork']", 'symmetrical': 'False'}),

@@ -68,35 +68,6 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
-
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
@@ -114,3 +85,39 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
 LOGIN_TIME = 3600
+
+PHOTO_SCORE = 5
+MAX_UPLOADED_PHOTOS = 25
+REPLY_RATE_100 = 500
+REPLY_RATE_90 = 400
+REPLY_RATE_80 = 300
+REPLY_RATE_70 = 100
+REPLY_RATE_60 = 50
+REPLY_RATE_50 = 25
+REPLY_RATE_sub50 = 0 
+
+REPLY_TIME_1H = 500
+REPLY_TIME_4H = 400
+REPLY_TIME_12H = 300
+REPLY_TIME_24H = 100
+REPLY_TIME_48H = 50
+REPLY_TIME_1W = 25
+REPLY_TIME_super1W = 0
+
+POPULARITY_24H_0 = 500
+POPULARITY_24H_1 = 500
+POPULARITY_24H_5 = -250
+POPULARITY_24H_10 = -500
+POPULARITY_24H_15 = -750
+POPULARITY_24H_20 = -1000
+POPULARITY_24H_super20 = -1000
+
+POPULARITY_1W_0 = 750
+POPULARITY_1W_5 = 250
+POPULARITY_1W_10 = 100
+POPULARITY_1W_15 = 0
+POPULARITY_1W_20 = -100
+POPULARITY_1W_25 = -250
+POPULARITY_1W_30 = -500
+POPULARITY_1W_50 = -750
+POPULARITY_1W_70 = -1000
