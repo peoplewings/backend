@@ -948,7 +948,7 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):			
+	def get_list(self, request, **kwargs):		
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
@@ -975,8 +975,7 @@ class UserProfileResource(ModelResource):
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.ctrl_online =  self.connected(i.user) in ['ON', 'AFK']
 
-				if request.GET['type'] == 'Applicant':		
-					#import pdb; pdb.set_trace()			
+				if request.GET['type'] == 'Applicant':										
 					filters = self.make_publicreq_search_filters(request.GET, i)
 					prw = PublicRequestWing.objects.filter(filters)
 					for pw in prw:
