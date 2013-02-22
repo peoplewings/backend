@@ -267,6 +267,29 @@ class ActivationResource(ModelResource):
 			self.error_response(bundle.errors, request)
 		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
 		return bundle
+
+	def is_valid(self, POST):
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
+
+		if 'activation_key' in POST:
+			r = RegistrationProfile.objects.filter(activation_key = POST['activation_key'])
+			if len(r) == 0:
+				invalid['extras'].append('activation_key')
+		else:
+			field_req['extras'].append('activation_key')
+	def post_list(self, request, **kwargs):
+		import pdb; pdb.set_trace()
+		POST = json.loads(request.raw_post_data)
+		request.POST = POST
+		errors = None
+		errors = self.is_valid(POST)		
+		if errors is not None:
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
+		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activation_key'])        
+		result = {}
+		result['email'] = data
+		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
 	def dehydrate(self, bundle):
 		bundle.data = {}
