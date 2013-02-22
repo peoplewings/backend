@@ -3,6 +3,7 @@ import json
 import pprint
 from tastypie import http
 from operator import itemgetter, attrgetter
+import datetime
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -30,7 +31,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.people.models import UserProfile
-from wings.models import Wing
+from wings.models import Wing, PublicRequestWing
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation, Friendship
 
 from peoplewings.apps.ajax.utils import json_response
@@ -60,6 +61,7 @@ class NotificationsListResource(ModelResource):
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
 		not_empty = {"type":"NOT_EMPTY", "extras":[]}
 		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
 		if kind == 'message':
 			#Messages need idReceiver and data. data needs content and content cannot be empty
 			try:
@@ -96,9 +98,9 @@ class NotificationsListResource(ModelResource):
 			except KeyError:
 				field_req['extras'].append('publicText')
 			try:
-				if POST['data'] is not None and POST['data'] == "": not_empty['extras'].append('data')
+				if POST['data']['makePublic'] is not None and POST['data']['makePublic'] not in [True, False]: invalid['extras'].append('data')
 			except KeyError:
-				field_req['extras'].append('data')
+				field_req['extras'].append('makePublic')
 			try:
 				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors.append({"type":"START_DATE_GT_END_DATE"})
 			except:
@@ -126,6 +128,8 @@ class NotificationsListResource(ModelResource):
 				field_req['extras'].append('endDate')	
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
 		if len(not_empty['extras']) > 0:
 			errors.append(not_empty)
 		if len(too_long['extras']) > 0:
@@ -356,7 +360,7 @@ class NotificationsListResource(ModelResource):
 					  	
 
 	def post_list(self, request, **kwargs):
-		##check if the request has the mandatory parameters
+		##check if the request has the mandatory parameters		
 		POST = json.loads(request.raw_post_data)
 		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":[{"type":"FIELD_REQUIRED", "extras":["kind"]}]}, response_class = HttpResponse)
 
@@ -371,7 +375,7 @@ class NotificationsListResource(ModelResource):
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
-		elif POST['kind'] == 'request':
+		elif POST['kind'] == 'request':						
 			#Check that the receiver exists
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
@@ -397,9 +401,18 @@ class NotificationsListResource(ModelResource):
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
 			if POST['data']['makePublic'] is True:
-				#we have to create a new wing...
-				pass
-				#TODO
+				#we have to create a new PublicRequestWing	
+				date_start_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['startDate'])
+				date_start_year = date_start_mod.year
+				date_start_month = date_start_mod.month
+				date_start_day = date_start_mod.day
+				date_end_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['endDate'])
+				date_end_year = date_end_mod.year
+				date_end_month = date_end_mod.month
+				date_end_day = date_end_mod.day		
+				date_start = datetime.datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')			
+				date_end = datetime.datetime.strptime('%s/%s/%s 23:59:59' % (date_end_year, date_end_month, date_end_day), '%Y/%m/%d %H:%M:%S')			
+				pw= PublicRequestWing.objects.create(author=UserProfile.objects.get(user=request.user), wing_type=POST['data']['wingType'], city=check_wing.city, date_start=date_start, date_end=date_end, capacity=POST['data']['wingParameters']['capacity'], introduction= POST['data']['publicText'])
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		elif POST['kind'] == 'invite':
 			#Check that the receiver exists

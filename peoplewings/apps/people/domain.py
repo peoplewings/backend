@@ -34,6 +34,13 @@ class SearchObject(object):
 		self.all_about_you = None
 		self.date_joined = None
 
+		self.wing_introduction = None
+		self.wing_type = None
+		self.wing_city = None
+		self.wing_start_date = None
+		self.wing_end_date = None
+		self.wing_capacity = None
+
 		self.ctrl_user = None
 		self.ctrl_online = None
 

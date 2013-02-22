@@ -4,7 +4,7 @@ import json
 import uuid
 import time
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils.timezone import utc
 
 from django.test import TestCase, Client
@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from people.models import UserProfile, University, Language, UserLanguage
 from locations.models import City
 from notifications.models import Notifications, Requests, Invites, Messages
-from wings.models import Wing, Accomodation
+from wings.models import Wing, Accomodation, PublicRequestWing
 from peoplewings.libs.customauth.models import ApiToken
 import threading
 
@@ -428,4 +428,136 @@ class SearchFineTest(TestCase):
 			#Check if the values are correct....
 			aux_prof = UserProfile.objects.filter(pk=i['profileId'])
 			self.assertEqual(len(aux_prof), 1)
+
+class PublicRequestTest(TestCase):
+
+	def setUp(self):
+		self.lang1 = G(Language, name= 'english')
+		self.lang2 = G(Language, name= 'spanish')
+		self.lang3 = G(Language, name= 'french')
+		self.lang4 = G(Language, name= 'catalan')
+		self.lang5 = G(Language, name= 'japanese')
+
+		self.city1 = G(City, name='Barcelona')
+		self.city2 = G(City, name='Tokyo')
+		self.city3 = G(City, name='Tolouse')
+		self.city4 = G(City, name='London')
+		self.city5 = G(City, name='Fachadolid')
+
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male') ## 27 ays
+		self.lang1_1 = G(UserLanguage, user_profile= self.profile1, language=self.lang1)
+		self.wing1 = G(PublicRequestWing, author=self.profile1, capacity=1, date_start=datetime.today() - timedelta(days=5), date_end=datetime.today() - timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA")	#NO	
+
+		self.profile2 = G(UserProfile, birthday = '1981-09-12', gender= 'Female') ## 31 anys
+		self.lang2_1 = G(UserLanguage, user_profile= self.profile2, language=self.lang2)
+		self.wing2 = G(PublicRequestWing, author=self.profile2, capacity=2, date_start=datetime.today() + timedelta(days=1), date_end=datetime.today() + timedelta(days=4), city=self.city1, type='Accomodation', introduction="HOLA") #YES
+
+		self.profile3 = G(UserProfile, birthday = '1989-09-12', gender= 'Male') ## 23 anys
+		self.lang3_1 = G(UserLanguage, user_profile= self.profile3, language=self.lang3)
+		self.wing3 = G(PublicRequestWing, author=self.profile3, capacity=3, date_start=datetime.today(), date_end=datetime.today() + timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA") #YES
+
+		self.profile4 = G(UserProfile, birthday = '1965-09-12', gender= 'Female') ##47 anys
+		self.lang4_1 = G(UserLanguage, user_profile= self.profile4, language=self.lang4)
+		self.wing4 = G(PublicRequestWing, author=self.profile4, capacity=4, date_start=datetime.today() - timedelta(days=1), date_end=datetime.today() + timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA") #YES
+
+		self.profile5 = G(UserProfile, birthday = '1975-09-12', gender= 'Male') ## 37 anys
+		self.lang5_1 = G(UserLanguage, user_profile= self.profile5, language=self.lang5)
+		self.wing5 = G(PublicRequestWing, author=self.profile5, capacity=5, date_start=datetime.today() + timedelta(days=2), date_end=datetime.today() + timedelta(days=4), city=self.city2, type='Accomodation', introduction="HOLA") #NO
+
+	def test_search_filtering(self):
+		c = Client()
+		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+		c_count= 4
+		start_date = datetime.today()
+		end_date = datetime.today() + timedelta(days=8)
+		# Basci search, we dont check the sorting yet...
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Applicant&gender=Both&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		self.assertTrue(content.has_key('data'))		
+		data = content['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertTrue(data.has_key('count'))
+		self.assertEqual(data['count'], c_count)
+		self.assertTrue(data.has_key('endResult'))
+		self.assertEqual(data['endResult'], c_count)
+		self.assertTrue(data.has_key('profiles'))
+		profiles = data['profiles']
+		self.assertTrue(isinstance(profiles, list))
+		self.assertEqual(len(profiles), c_count)
+		for i in profiles:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('age'))
+			self.assertTrue(i.has_key('allAboutYou'))
+			self.assertTrue(i.has_key('avatar'))
+			self.assertTrue(i.has_key('current'))
+			self.assertTrue(isinstance(i['current'], dict))
+			self.assertTrue(i.has_key('firstName'))
+			self.assertTrue(i.has_key('lastName'))
+			self.assertTrue(i.has_key('languages'))
+			self.assertTrue(isinstance(i['languages'], list))
+			self.assertTrue(i.has_key('online'))
+			self.assertTrue(i.has_key('replyRate'))
+			self.assertTrue(i.has_key('replyTime'))
+			self.assertTrue(i.has_key('profileId'))
+			self.assertTrue(i.has_key('dateJoined'))
+			self.assertTrue(i.has_key('wingIntroduction'))
+			self.assertTrue(i.has_key('wingType'))
+			self.assertTrue(i.has_key('wingCity'))
+			self.assertTrue(i.has_key('wingStartDate'))
+			self.assertTrue(i.has_key('wingEndDate'))
+			self.assertTrue(i.has_key('wingCapacity'))
+			#Check if the values are correct....
+			aux_prof = UserProfile.objects.filter(pk=i['profileId'])
+			self.assertEqual(len(aux_prof), 1)
+
+
+		c_count= 3
+		start_date = datetime.today()
+		end_date = datetime.today() + timedelta(days=8)
+		# Only Barcelona
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Applicant&gender=Both&page=1&wings=Barcelona', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		self.assertTrue(content.has_key('data'))		
+		data = content['data']
+		self.assertTrue(isinstance(data, dict))
+		self.assertTrue(data.has_key('count'))
+		self.assertEqual(data['count'], c_count)
+		self.assertTrue(data.has_key('endResult'))
+		self.assertEqual(data['endResult'], c_count)
+		self.assertTrue(data.has_key('profiles'))
+		profiles = data['profiles']
+		self.assertTrue(isinstance(profiles, list))
+		self.assertEqual(len(profiles), c_count)
+		for i in profiles:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('age'))
+			self.assertTrue(i.has_key('allAboutYou'))
+			self.assertTrue(i.has_key('avatar'))
+			self.assertTrue(i.has_key('current'))
+			self.assertTrue(isinstance(i['current'], dict))
+			self.assertTrue(i.has_key('firstName'))
+			self.assertTrue(i.has_key('lastName'))
+			self.assertTrue(i.has_key('languages'))
+			self.assertTrue(isinstance(i['languages'], list))
+			self.assertTrue(i.has_key('online'))
+			self.assertTrue(i.has_key('replyRate'))
+			self.assertTrue(i.has_key('replyTime'))
+			self.assertTrue(i.has_key('profileId'))
+			self.assertTrue(i.has_key('dateJoined'))
+			self.assertTrue(i.has_key('wingIntroduction'))
+			self.assertTrue(i.has_key('wingType'))
+			self.assertTrue(i.has_key('wingCity'))
+			self.assertTrue(i.has_key('wingStartDate'))
+			self.assertTrue(i.has_key('wingEndDate'))
+			self.assertTrue(i.has_key('wingCapacity'))
+			#Check if the values are correct....
+			aux_prof = UserProfile.objects.filter(pk=i['profileId'])
+			self.assertEqual(len(aux_prof), 1)
+
 

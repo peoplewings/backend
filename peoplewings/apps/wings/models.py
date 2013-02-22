@@ -43,3 +43,13 @@ class Accomodation(Wing):
 	number = models.CharField(max_length=max_ultra_short_len, blank=True)
 	additional_information = models.TextField(max_length=max_text_msg_len, blank=True)   
 	postal_code = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='ZIP / Postal code') 
+
+class PublicRequestWing(models.Model):
+	author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+	date_start = models.DateField(null=True)
+	date_end = models.DateField(null=True)
+	city = models.ForeignKey(City, on_delete=models.PROTECT, null = True)
+	wing_type = models.CharField(max_length=50, unique=False, default="Accomodation", blank=True)
+	capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=1)
+	introduction= models.TextField(max_length=max_text_msg_len, blank=True)
+
