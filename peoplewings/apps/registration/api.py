@@ -279,7 +279,6 @@ class ActivationResource(ModelResource):
 		else:
 			field_req['extras'].append('activation_key')
 	def post_list(self, request, **kwargs):
-		import pdb; pdb.set_trace()
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
 		errors = None
