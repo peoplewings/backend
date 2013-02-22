@@ -1,6 +1,7 @@
 #People API
 import json
 import re
+import copy
 from datetime import date, datetime
 from pprint import pprint
 from tastypie import fields
@@ -36,7 +37,7 @@ from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.libs.customauth.models import ApiToken
-from peoplewings.apps.wings.models import Accomodation
+from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
 
 class RelationshipResource(ModelResource):
@@ -783,6 +784,8 @@ class UserProfileResource(ModelResource):
 		if GET.has_key('type'):
 			if GET['type'] == "":
 				not_empty['extras'].append('type')
+			if GET['type'] not in ['Host', 'Applicant']: 
+				invalid_field['extras'].append('type')
 		else:
 			field_req['extras'].append('type')
 
@@ -851,7 +854,7 @@ class UserProfileResource(ModelResource):
 		return errors
 
 	def make_search_filters(self, GET):
-		#We have to filter by: birthday (UP)*, language (up)*, gender( up)*, capacity (w)*, location (w), start_date & end_date (w), type*
+		#We have to filter by: birthday (UP)*-OK, language (up)*-OK, gender( up)*-OK, capacity (w)*-OK, wings (w)-OK, start_date & end_date (w)-OK, type*
 		min_year = datetime.today().year
 		min_month = datetime.today().month
 		min_day = datetime.today().day
@@ -861,19 +864,63 @@ class UserProfileResource(ModelResource):
 		max_day = datetime.today().day
 		max_year = max_year - int(GET['endAge'])
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
-		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)		
-		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])
-		if GET['language'] != 'all':
-			result = result &Q(languages__name= GET['language'])
-		if GET['gender'] != 'Both':
-			result = result & Q(gender=GET['gender'])		
-		if 'location' in GET:
-			result = result & Q(wing__city__name=GET['location'])
-		if 'startDate' in GET:
-			result = result & (Q(wing__date_start__lte=GET['startDate'])|Q(wing__date_start__isnull=True))
-		if 'endDate' in GET:
-			result = result & (Q(wing__date_end__gte=GET['endDate'])|Q(wing__date_end__isnull=True))
+		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
+		if GET['type'] == 'Host':		
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])
+			if GET['language'] != 'all':
+				result = result &Q(languages__name= GET['language'])
+			if GET['gender'] != 'Both':
+				result = result & Q(gender=GET['gender'])		
+			if 'wings' in GET:
+				result = result & Q(wing__city__name=GET['wings'])
+			if 'startDate' in GET:
+				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & (Q(wing__date_start__lte=date_start)|Q(wing__date_start__isnull=True))
+			if 'endDate' in GET:
+				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & (Q(wing__date_end__gte=date_end)|Q(wing__date_end__isnull=True))
+		else:
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])
+			if GET['language'] != 'all':
+				result = result &Q(languages__name= GET['language'])
+			if GET['gender'] != 'Both':
+				result = result & Q(gender=GET['gender'])		
+			if 'wings' in GET:
+				result = result & Q(publicrequestwing__city__name=GET['wings'])
+			if 'startDate' in GET:
+				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_end__gte=date_start)
+			else:
+				date_start_mod = datetime.today()
+				date_start_year = date_start_mod.year
+				date_start_month = date_start_mod.month
+				date_start_day = date_start_mod.day				
+				date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_end__gte=date_start)
+			if 'endDate' in GET:
+				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+				result = result & Q(publicrequestwing__date_start__lte=date_end)
 		return result
+
+	def make_publicreq_search_filters(self, GET, prof):
+		result = Q(capacity__gte= GET['capacity']) & Q(author=prof)
+		if 'wings' in GET:
+			result = result & Q(city__name=GET['wings'])
+		if 'startDate' in GET:
+			date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
+			result = result & Q(date_end__gte=date_start)
+		else:
+			date_start_mod = datetime.today()
+			date_start_year = date_start_mod.year
+			date_start_month = date_start_mod.month
+			date_start_day = date_start_mod.day				
+			date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
+			result = result & Q(date_end__gte=date_start)
+		if 'endDate' in GET:
+			date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
+			result = result & Q(date_start__lte=date_end)
+		return result
+
 
 	def parse_languages(self, prof):
 		res = []
@@ -901,12 +948,12 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):		
+	def get_list(self, request, **kwargs):			
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
 		#We have no problem with the given filters
-		filters = self.make_search_filters(request.GET)		
+		filters = self.make_search_filters(request.GET)	
 		try:			
 			search_list = SearchObjectManager()
 			profiles = UserProfile.objects.filter(filters).distinct()		
@@ -927,7 +974,22 @@ class UserProfileResource(ModelResource):
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.ctrl_online =  self.connected(i.user) in ['ON', 'AFK']
-				search_list.objects.append(search_obj)
+
+				if request.GET['type'] == 'Applicant':		
+					#import pdb; pdb.set_trace()			
+					filters = self.make_publicreq_search_filters(request.GET, i)
+					prw = PublicRequestWing.objects.filter(filters)
+					for pw in prw:
+						cpy = copy.deepcopy(search_obj)
+						cpy.wing_introduction = pw.introduction
+						cpy.wing_type = pw.wing_type
+						cpy.wing_city = pw.city
+						cpy.wing_start_date = pw.date_start
+						cpy.wing_end_date = pw.date_end
+						cpy.wing_capacity = pw.capacity
+						search_list.objects.append(cpy)
+				else:
+					search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
 

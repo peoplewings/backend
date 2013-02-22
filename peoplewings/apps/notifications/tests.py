@@ -17,7 +17,7 @@ from django.core.urlresolvers import reverse
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.notifications.models import Notifications, Messages, Requests, Invites, AccomodationInformation, NotificationsAlarm
 from notifications.domain import Automata
-from wings.models import Accomodation, Wing
+from wings.models import Accomodation, Wing, PublicRequestWing
 from locations.models import City
 from django.contrib.auth.models import User
 from people.models import UserProfile
@@ -3132,5 +3132,114 @@ class UseronlineTest(TestCase):
 		for i in items:
 			self.assertTrue(i.has_key('online'))
 			self.assertEqual(i['online'], 'ON')
+
+class PostListRequestsTest(TestCase):
+
+	def setUp(self):
+		#make some users and profiles as example
+		self.profile1 = G(UserProfile)
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token		
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+		
+
+	def test_post_public_requests(self):
+		c = Client()
+		self.wing2 = G(Accomodation, author=self.profile2)
+		wing3 = G(Accomodation)
+		private_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		public_message = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(200))
+		make_public = True
+		#What happens?
+		#Check that profile1 has no requests
+		self.assertEqual(self.profile1.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile1.notifications_sender.count(), 0)
+		#Check that profile2 has no requests
+		self.assertEqual(self.profile2.notifications_receiver.count(), 0)
+		self.assertEqual(self.profile2.notifications_sender.count(), 0)
+		#When a user (profile1), sends a request to another user (profile2):
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": 1357603200, "endDate": 1357862400, "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		#Response is well formed
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], True)
+		#Profile 1 has 1 new message as a sender
+		self.assertEqual(self.profile1.notifications_sender.count(), 1)
+		#Profile 2 has 1 new message as a receiver
+		self.assertEqual(self.profile2.notifications_receiver.count(), 1)
+		#The request has a unique reference
+		self.assertNotEqual(self.profile2.notifications_receiver.get().reference, None)
+		#The request is well formed
+		self.assertNotEqual(self.profile2.notifications_receiver.get().receiver, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().sender, None)
+		self.assertNotEqual(self.profile2.notifications_receiver.get().created, None)
+		self.assertEqual(self.profile2.notifications_receiver.get().kind, "request")
+		#The request has read = false
+		self.assertEqual(self.profile2.notifications_receiver.get().read, False)
+		#The first sender of the request is profile1
+		self.assertEqual(self.profile2.notifications_receiver.get().first_sender, self.profile1)
+		#As a request the state of it should be in "Pending"
+		self.assertEqual(self.profile2.notifications_receiver.get().requests.state, "P")
+		#As a request the wing should be the same we entered
+		self.assertEqual(self.profile2.notifications_receiver.get().requests.wing.pk, self.wing2.pk)
+		#As a request the public message should not be None or empty
+		self.assertNotEqual(self.profile2.notifications_receiver.get().requests.public_message, None)
+		#As a request the private message should not be None or empty
+		self.assertNotEqual(self.profile2.notifications_receiver.get().requests.private_message, None)
+		#We put make_public = false, we should check it
+		self.assertNotEqual(self.profile2.notifications_receiver.get().requests.make_public, False)
+
+		#Check if the additional information (related with the wing, request and wing type) is correct
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get_or_none(), None)
+		#Check if the start_date is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().start_date, None)
+		#Check if the end_date is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().end_date, None)
+		#Check if the transport is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().transport, None)
+		#Check if the transport is not null
+		self.assertNotEqual(self.profile2.notifications_receiver.get().accomodationinformation_notification.get().num_people, None)	
+		#Check if a PublicRequestWing has been created
+		try:
+			pw= PublicRequestWing.objects.filter(author=self.profile1)
+		except:
+			pass
+		self.assertEqual(len(pw), 1)
+		self.assertEqual(pw.get().author, self.profile1)
+		self.assertNotEqual(pw.get().date_start, None)
+		self.assertNotEqual(pw.get().date_end, None)
+		self.assertNotEqual(pw.get().city, None)
+		self.assertNotEqual(pw.get().wing_type, None)
+		self.assertNotEqual(pw.get().capacity, None)
+		self.assertNotEqual(pw.get().introduction, None)
+
+		#Errors show up properly:
+		#The receiver of the request does not exists
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": 456, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#The request private message cannot be empty
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": "", "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#The private message is too long
+		private_message2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message2, "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#The public message is too long
+		public_message2 = ''.join(random.choice(string.letters + string.digits + string.whitespace) for x in range(10000))
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message2, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#Date start cannot be greater than date end
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": self.wing2.pk, "startDate": "1357603200", "endDate": "1357562400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#The selected wing is not a valid choice
+		r1 = c.post('/api/v1/notificationslist', json.dumps({"idReceiver": self.profile2.pk, "kind": "request",  "data": { "privateText": private_message, "publicText": public_message, "makePublic": make_public, "wingType": "Accomodation",   "wingParameters": {"wingId": wing3.pk, "startDate": "1357603200", "endDate": "1357862400", "capacity": 2, "arrivingVia": "Plane", "flexibleStart": False, "flexibleEnd": False}}}), HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')		
+		self.assertEqual(r1.status_code, 200)
+		self.assertEqual(json.loads(r1.content)['status'], False)
+		#Now we want to send a request with make public = True
 
 
