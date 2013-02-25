@@ -560,4 +560,24 @@ class PublicRequestTest(TestCase):
 			aux_prof = UserProfile.objects.filter(pk=i['profileId'])
 			self.assertEqual(len(aux_prof), 1)
 
+class ControlTest(TestCase):
+
+	def setUp(self):		
+
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male') ## 27 ays
+		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_search_filtering(self):
+		c = Client()
+		
+		c_count= 4
+		start_date = datetime.today()
+		end_date = datetime.today() + timedelta(days=8)
+		# Basci search, we dont check the sorting yet...
+		r1 = c.get('/api/v1/control', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
 
