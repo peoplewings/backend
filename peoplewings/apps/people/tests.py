@@ -518,7 +518,7 @@ class PublicRequestTest(TestCase):
 		start_date = datetime.today()
 		end_date = datetime.today() + timedelta(days=8)
 		# Only Barcelona
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Applicant&gender=Both&page=1&wings=Barcelona', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Applicant&gender=Both&page=1&wings=bArcelona', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
