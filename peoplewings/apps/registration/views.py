@@ -95,7 +95,7 @@ def api_token_is_authenticated(bundle, **kwargs):
 		else:
 			apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))        
 		apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)
-		apitoken.last_js = time.time()
+		apitoken.last_JS = time.time()
 		apitoken.save()
 		user = User.objects.get(pk=apitoken.user_id)
 		return user        
@@ -110,7 +110,7 @@ def control_is_authenticated(bundle, **kwargs):
 			apitoken = ApiToken.objects.get(token = token)
 		else:
 			apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))
-		apitoken.last_JS = time.time()
+		apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)		
 		apitoken.save()
 		user = User.objects.get(pk=apitoken.user_id)
 		return user        

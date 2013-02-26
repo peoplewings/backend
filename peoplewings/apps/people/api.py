@@ -872,7 +872,7 @@ class UserProfileResource(ModelResource):
 			if GET['gender'] != 'Both':
 				result = result & Q(gender=GET['gender'])		
 			if 'wings' in GET:
-				result = result & Q(wing__city__name=GET['wings'])
+				result = result & Q(wing__city__name__icontains=GET['wings'])
 			if 'startDate' in GET:
 				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & (Q(wing__date_start__lte=date_start)|Q(wing__date_start__isnull=True))
@@ -886,7 +886,7 @@ class UserProfileResource(ModelResource):
 			if GET['gender'] != 'Both':
 				result = result & Q(gender=GET['gender'])		
 			if 'wings' in GET:
-				result = result & Q(publicrequestwing__city__name=GET['wings'])
+				result = result & Q(publicrequestwing__city__name__icontains=GET['wings'])
 			if 'startDate' in GET:
 				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & Q(publicrequestwing__date_end__gte=date_start)
@@ -905,7 +905,7 @@ class UserProfileResource(ModelResource):
 	def make_publicreq_search_filters(self, GET, prof):
 		result = Q(capacity__gte= GET['capacity']) & Q(author=prof)
 		if 'wings' in GET:
-			result = result & Q(city__name=GET['wings'])
+			result = result & Q(city__name__icontains=GET['wings'])
 		if 'startDate' in GET:
 			date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 			result = result & Q(date_end__gte=date_start)
@@ -982,7 +982,7 @@ class UserProfileResource(ModelResource):
 						cpy = copy.deepcopy(search_obj)
 						cpy.wing_introduction = pw.introduction
 						cpy.wing_type = pw.wing_type
-						cpy.wing_city = pw.city
+						cpy.wing_city = pw.city.name
 						cpy.wing_start_date = pw.date_start
 						cpy.wing_end_date = pw.date_end
 						cpy.wing_capacity = pw.capacity

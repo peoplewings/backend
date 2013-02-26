@@ -85,7 +85,7 @@ AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
 S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'http://0.0.0.0:5000/media/'
+MEDIA_URL = 'http://197.168.1.47:5000/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"

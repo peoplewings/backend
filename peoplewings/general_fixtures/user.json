@@ -78,5 +78,21 @@
         "last_login" : "2012-11-05 09:47:46",
         "date_joined" : "2012-10-23 16:45:36"
     }
+  },
+  {
+    "model": "auth.User",
+    "pk": 6,
+    "fields": {
+        "username" : "Miquelangello.23112",
+        "first_name" : "Mi",
+        "last_name" : "Guelito",
+        "email" : "miguelangel@peoplewings.com",
+        "password" : "pbkdf2_sha256$10000$oamODDXVZUsr$jUQ1N0IIlELfMrCypxXBAxk+txvO4qljfRwTSoLhHMY=",
+        "is_staff" : false,
+        "is_active" : true,
+        "is_superuser" : false,
+        "last_login" : "2012-11-05 09:47:46",
+        "date_joined" : "2012-10-23 16:45:36"
+    }
   }
 ]
