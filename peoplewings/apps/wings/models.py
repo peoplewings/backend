@@ -16,7 +16,7 @@ class Wing(models.Model):
 	best_days = models.CharField(max_length=1, choices=BETTER_DAYS_CHOICES, default='A', verbose_name='Better days to host')
 	is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
 	city = models.ForeignKey(City, on_delete=models.PROTECT)
-
+	active = models.BooleanField(default = True)
 	def get_class_name(self):
 		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
 	

@@ -25,6 +25,7 @@ from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 
 from peoplewings.apps.people.models import UserProfile
+from wings.models import Wing
 
 from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser, DupplicateEmailException
 from peoplewings.apps.registration.models import RegistrationProfile
@@ -574,7 +575,7 @@ class AccountResource(ModelResource):
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
-		allowed_methods = ['get', 'put', 'delete']
+		allowed_methods = ['get', 'put', 'post']
 		include_resource_uri = False
 		resource_name = 'accounts'
 		serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -597,8 +598,39 @@ class AccountResource(ModelResource):
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 	
 	def post_list(self, request, **kwargs):
-		##DO NOTHING
-		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
+		#import pdb; pdb.set_trace()
+		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
+			pass
+		else:
+			errors = [{"type": "INCORRECT_PASSWORD"}]
+			content = {} 
+			content['status'] = False
+			content['errors'] = errors
+			return self.create_response(request, content, response_class=HttpResponse)
+
+		#We need to:
+		#Invalidate the user so he can't login
+		##Delete email
+		user = request.user
+		user.email = '%s-deleted@peoplewings.com' % user.username
+		##Delete pass
+		user.password = request.user.username
+		user.save()
+		#Invalidate his profile,
+		##Put inactive = True (modify code so it does not appear)
+		pf = UserProfile.objects.get(user=user)
+		pf.active = False
+		pf.save()
+		#Invalidate his wings
+		##Put inactive = True
+		wings = Wing.objects.filter(author = pf)
+		for i in wings:
+			i.active = False
+			i.save()
+		#Invalidate his notifications
+		contents = {}
+		contents['status'] = True
+		return self.create_response(request, contents, response_class = HttpResponse)
 	
 	def post_detail(self, request, **kwargs):
 		##DO NOTHING
@@ -651,22 +683,8 @@ class AccountResource(ModelResource):
 		return self.create_response(request, content, response_class=HttpResponse)
 
 	def delete_detail(self, request, **kwargs):
-		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
-			pass
-		else:
-			errors = [{"type": "INCORRECT_PASSWORD"}]
-			content = {} 
-			content['status'] = False
-			content['errors'] = errors
-			return self.create_response(request, content, response_class=HttpResponse)
-
-		super(AccountResource, self).delete_detail(request, **kwargs) 
-		user_deleted.send(sender=self.__class__, user=request.user, request=request)
-		contents = {}
-		data = {}       
-		contents['msg'] = 'Account deleted'        
-		contents['status'] = True
-		return self.create_response(request, contents, response_class = HttpResponse)
+		##DO NOTHING
+		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 
 	def is_valid_password(self, password, request):
 		#print authenticate(username=request.user.email, password=password)
@@ -750,7 +768,7 @@ class AccountResource(ModelResource):
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
-					ccontent = {}
+					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
 					content['errors'] = errors               
 					content['status'] = False

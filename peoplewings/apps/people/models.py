@@ -122,7 +122,9 @@ class UserProfile(models.Model):
 	#Reply time
 	reply_time = models.BigIntegerField(default=0)
 
-	def get_age(self):
+	active = models.BooleanField(default=True)
+
+	def get_age(self):			
 		today = date.today()
 		age = today.year - self.birthday.year
 		if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
