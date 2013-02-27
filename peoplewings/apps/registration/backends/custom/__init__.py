@@ -81,7 +81,7 @@ class CustomBackend(object):
 		"""
 	   
 		username, email, password, last_name, first_name = kwargs['username'], kwargs['email'], kwargs['password'], kwargs['lastName'], kwargs['firstName']
-		site = settings.SITE
+		site = getattr(settings, 'SITE', "No site")
 
 		new_user = RegistrationProfile.objects.create_inactive_user(username, email, password, site)											
 		signals.user_registered.send(sender=self.__class__,
@@ -149,7 +149,7 @@ class CustomBackend(object):
 
 	def forgot_password(self, request, **kwargs):
 						   
-		site = settings.SITE
+		site = getattr(settings, 'SITE', "No site")
 		
 		sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
 		return sent
