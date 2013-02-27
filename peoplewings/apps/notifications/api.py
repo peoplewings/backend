@@ -4,6 +4,7 @@ import pprint
 from tastypie import http
 from operator import itemgetter, attrgetter
 import datetime
+from django.conf import settings
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -240,6 +241,7 @@ class NotificationsListResource(ModelResource):
 
 	def get_list(self, request, **kwargs):		
 		## We are doin it the hard way
+		#import pdb; pdb.set_trace()
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
@@ -270,8 +272,11 @@ class NotificationsListResource(ModelResource):
 						aux.wing_parameters['num_people'] = additional.num_people 
 						add_class = additional.get_class_name() 
 						aux.wing_parameters['wing_type'] = add_class
-						aux.wing_parameters['wing_city'] = req.wing.city.name                           
-					aux.wing_parameters['message'] = req.wing.name
+						aux.wing_parameters['wing_city'] = req.wing.city.name     
+					if req.wing.active is False:
+						aux.wing_parameters['message'] = "Deleted Wing"
+					else:                      
+						aux.wing_parameters['message'] = req.wing.name
 					aux.state = req.state
 					if i.first_sender == prof:                           
 						aux.flag_direction = True
@@ -288,7 +293,10 @@ class NotificationsListResource(ModelResource):
 						add_class = additional.get_class_name() 
 						aux.wing_parameters['wing_type'] = add_class
 						aux.wing_parameters['wing_city'] = inv.wing.city.name                           
-					aux.wing_parameters['message'] = inv.wing.name
+					if inv.wing.active is False:
+						aux.wing_parameters['message'] = "Deleted Wing"
+					else:                      
+						aux.wing_parameters['message'] = inv.wing.name
 					aux.state = inv.state   
 					if i.first_sender == prof:
 						 aux.flag_direction = True
@@ -309,15 +317,24 @@ class NotificationsListResource(ModelResource):
 				else:
 					## YOU are the receiver. Need the sender info  
 					prof_aux = UserProfile.objects.get(pk = i.sender.pk)    
-				aux._sender = i.sender 
-				aux.interlocutor_id = prof_aux.pk          
-				aux.avatar =  prof_aux.thumb_avatar
-				aux.age = prof_aux.get_age()
-				aux.verified = False         
-				if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
-				else: aux.location = "Not specified"
-				aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
-				aux.online = self.connected(prof_aux.user)
+				aux._sender = i.sender
+				if prof_aux.active is False:
+					aux.interlocutor_id = ""          
+					aux.avatar =  getattr(settings, "ANONYMOUS_THUMB")
+					aux.age = ""
+					aux.verified = ""
+					aux.location = ""
+					aux.name = "Unknown User"
+					aux.online = "F"
+				else:
+					aux.interlocutor_id = prof_aux.pk          
+					aux.avatar =  prof_aux.thumb_avatar
+					aux.age = prof_aux.get_age()
+					aux.verified = False         
+					if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
+					else: aux.location = "Not specified"
+					aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
+					aux.online = self.connected(prof_aux.user)
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
@@ -682,7 +699,7 @@ class NotificationsThreadResource(ModelResource):
 			mod.append('capacity')
 		return mod
 
-	def make_difs(self, me, req, kind):
+	def make_difs(self, me, req, kind):		
 		if kind == 'request':
 			thread = Requests.objects.filter(reference = req.reference).order_by('-created')
 		elif kind == 'invite':
@@ -710,7 +727,7 @@ class NotificationsThreadResource(ModelResource):
 			state = token[0].is_user_connected()
 		return state
 
-	def get_detail(self, request, **kwargs):
+	def get_detail(self, request, **kwargs):		
 		ref = kwargs['pk']
 		filters = Q(reference= ref)
 		aux_list = []
@@ -730,19 +747,35 @@ class NotificationsThreadResource(ModelResource):
 				kind = 'message'
 				aux = MessageThread()
 				#sender info
-				aux.sender_id = i.sender.pk
-				aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
-				aux.sender_age = i.sender.get_age()
-				aux.sender_verified = True
-				aux.sender_location = i.sender.current_city.stringify()
-				aux.sender_friends = i.sender.relationships.count()
-				aux.sender_references = i.sender.references.count()
-				aux.sender_med_avatar = i.sender.medium_avatar
-				aux.sender_small_avatar = i.sender.thumb_avatar
-				aux.sender_online = self.connected(i.sender)
+				if i.sender.active is True:
+					aux.sender_id = i.sender.pk
+					aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+					aux.sender_age = i.sender.get_age()
+					aux.sender_verified = True
+					aux.sender_location = i.sender.current_city.stringify()
+					aux.sender_friends = i.sender.relationships.count()
+					aux.sender_references = i.sender.references.count()
+					aux.sender_med_avatar = i.sender.medium_avatar
+					aux.sender_small_avatar = i.sender.thumb_avatar
+					aux.sender_online = self.connected(i.sender)
+				else:
+					aux.sender_id = ""
+					aux.sender_name = "Unknown User"
+					aux.sender_age = ""
+					aux.sender_verified = ""
+					aux.sender_location = ""
+					aux.sender_friends = "-"
+					aux.sender_references = "-"
+					aux.sender_med_avatar = getattr(settings, "ANONYMOUS_AVATAR")
+					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_THUMB")
+					aux.sender_online = "F"
 				#receiver info
-				aux.receiver_id = i.receiver.pk
-				aux.receiver_avatar = i.receiver.thumb_avatar
+				if i.receiver.active is True:
+					aux.receiver_id = i.receiver.pk
+					aux.receiver_avatar = i.receiver.thumb_avatar
+				else:
+					aux.receiver_id = ""
+					aux.receiver_avatar =getattr(settings, "ANONYMOUS_THUMB")
 				#message info
 				msg = Messages.objects.get(pk = i.pk)
 				aux.content['message'] = msg.private_message
@@ -757,19 +790,36 @@ class NotificationsThreadResource(ModelResource):
 					req = Invites.objects.get(pk=i.pk)
 				thread.append(req)
 				aux = RequestItem()
-				aux.senderId= i.sender.pk
-				aux.senderName= '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
-				aux.senderAge= i.sender.get_age()
-				aux.senderVerified= True
-				aux.senderLocation= i.sender.current_city.stringify()
-				aux.senderFriends= i.sender.relationships.count()
-				aux.senderReferences= i.sender.references.count()
-				aux.senderMedAvatar= i.sender.medium_avatar
-				aux.senderSmallAvatar= i.sender.thumb_avatar
-				aux.senderOnline=  self.connected(i.sender)
+
+				if i.sender.active is True:
+					aux.sender_id = i.sender.pk
+					aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
+					aux.sender_age = i.sender.get_age()
+					aux.sender_verified = True
+					aux.sender_location = i.sender.current_city.stringify()
+					aux.sender_friends = i.sender.relationships.count()
+					aux.sender_references = i.sender.references.count()
+					aux.sender_med_avatar = i.sender.medium_avatar
+					aux.sender_small_avatar = i.sender.thumb_avatar
+					aux.sender_online = self.connected(i.sender)
+				else:
+					aux.sender_id = ""
+					aux.sender_name = "Unknown User"
+					aux.sender_age = ""
+					aux.sender_verified = ""
+					aux.sender_location = ""
+					aux.sender_friends = "-"
+					aux.sender_references = "-"
+					aux.sender_med_avatar = getattr(settings, "ANONYMOUS_AVATAR")
+					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_THUMB")
+					aux.sender_online = "F"
 				#receiver info
-				aux.receiverId= i.receiver.pk
-				aux.receiverAvatar= i.receiver.thumb_avatar
+				if i.receiver.active is True:
+					aux.receiver_id = i.receiver.pk
+					aux.receiver_avatar = i.receiver.thumb_avatar
+				else:
+					aux.receiver_id = ""
+					aux.receiver_avatar =getattr(settings, "ANONYMOUS_THUMB")
 				#Contents info
 				aux.content= {}
 				if i.kind == 'request':
@@ -810,7 +860,7 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['capacity']= req.accomodationinformation_notification.get().num_people
 				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
 				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
-				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
+				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end			
 			data.wing['parameters']['modified'] = self.make_difs(me, req, data.kind)
 			last_state_mod = self.get_last_state_mod(thread, len(thread))
 			options = self.make_options(me, thread)

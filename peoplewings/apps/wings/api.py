@@ -20,6 +20,7 @@ from tastypie.exceptions import NotRegistered, BadRequest, ImmediateHttpResponse
 from tastypie.http import HttpBadRequest, HttpApplicationError, HttpAccepted, HttpResponse, HttpForbidden
 from tastypie.utils import trailing_slash, dict_strip_unicode_keys
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS
+from django.db.models import Q
 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.wings.models import Accomodation, PublicTransport, Wing
@@ -89,8 +90,8 @@ class WingResource(ModelResource):
 			if len(errors) > 0:
 					return self.create_response(request, {"status" : False, "errors": errors}, response_class = HttpResponse)
 
-			prof = UserProfile.objects.get(pk=request.GET['profile'])
-			w = Wing.objects.filter(author=prof)		
+			prof = UserProfile.objects.get(pk=request.GET['profile'])			
+			w = Wing.objects.filter(Q(author=prof)&Q(active=True))		
 			objects = []
 			for i in w:
 				aux = ShortWings()
@@ -263,13 +264,14 @@ class AccomodationsResource(ModelResource):
 		
 		up = UserProfile.objects.get(user=request.user)        
 		if kwargs['profile_id'] == 'me': kwargs['profile_id'] = up.id
+		up_target = UserProfile.objects.filter(pk=kwargs['profile_id'])
 
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if not is_preview and int(kwargs['profile_id']) != up.id: 
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 
 		try:
-			accomodations = Accomodation.objects.filter(author_id=kwargs['profile_id'])
+			accomodations = Accomodation.objects.filter(Q(author_id=kwargs['profile_id'])&Q(active=True))
 		except:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID_FIELD", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
