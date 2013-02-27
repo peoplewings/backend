@@ -624,17 +624,18 @@ class UserProfileResource(ModelResource):
 		return object_list
 
 	def get_detail(self, request, **kwargs):
-		
 		if request.user.is_anonymous(): return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
-		up = UserProfile.objects.get(user=request.user)
+		pf = UserProfile.objects.get(user=request.user)
 		is_preview = request.path.split('/')[-1] == 'preview'
-		if not is_preview and int(kwargs['pk']) != up.id: return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
-		
+		if not is_preview and int(kwargs['pk']) != pf.id: return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+		pf2 = UserProfile.objects.filter(pk=kwargs['pk'])
+		if len(pf2)==1 and pf2[0].active == False:			
+			return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
 		a = super(UserProfileResource, self).get_detail(request, **kwargs)
 		data = json.loads(a.content)
 		#print data
 		if 'user' in data: del data['user']
-		if not is_preview: data['pw_state'] = up.pw_state
+		if not is_preview: data['pw_state'] = pf.pw_state
 		content = {}  
 		content['status'] = True
 		content['data'] = data
@@ -866,7 +867,7 @@ class UserProfileResource(ModelResource):
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
 		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
 		if GET['type'] == 'Host':		
-			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])&Q(active=True)
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
@@ -880,7 +881,7 @@ class UserProfileResource(ModelResource):
 				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & (Q(wing__date_end__gte=date_end)|Q(wing__date_end__isnull=True))
 		else:
-			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])&Q(active=True)
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
@@ -1162,7 +1163,7 @@ class ContactResource(ModelResource):
 		me = UserProfile.objects.get(user=request.user)
 		result = {}
 		result['items'] = []
-		filters = Q(notifications_receiver__sender=me)|Q(notifications_sender__receiver=me)
+		filters = (Q(notifications_receiver__sender=me)|Q(notifications_sender__receiver=me))&Q(active=True)
 		if (request.GET.has_key('type') and request.GET['type'] == 'request'):
 			filters = (filters) & ~Q(wing= None)
 		contacts = UserProfile.objects.filter(filters).distinct().order_by('user__first_name', 'user__last_name')
