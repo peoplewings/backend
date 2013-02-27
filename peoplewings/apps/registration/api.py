@@ -1,6 +1,7 @@
 #Registration API
 import json
 import re
+import random, string
 
 from tastypie import fields
 from tastypie.authentication import *
@@ -614,7 +615,7 @@ class AccountResource(ModelResource):
 		user = request.user
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
-		user.password = request.user.username
+		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
 		user.save()
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
