@@ -1,7 +1,7 @@
 Thank you for registering an account at {{ site }}.
 To activate your registration, please visit the following page:
 
-{{ site }}/#/activate/{{ activation_key }}
+{{ site }}#/activate/{{ activation_key }}
 
 This page will expire in {{ expiration_days }} day{{ expiration_days|pluralize }}.
 

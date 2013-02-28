@@ -287,7 +287,7 @@ class ActivationResource(ModelResource):
 		errors = self.is_valid(POST)		
 		if errors is not None:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activation_key'])        
+		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
 		result = {}
 		result['email'] = data
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
@@ -302,7 +302,7 @@ class ActivationResource(ModelResource):
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
-			try:
+			try:				
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}
