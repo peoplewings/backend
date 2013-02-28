@@ -816,32 +816,40 @@ class ForgotResource(ModelResource):
 			raise KeyExpired()
 		return self.create_response(request, bundle)           
 
-	def obj_create(self, bundle, request, **kwargs):
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
+	def is_valid_post(self, POST):
+		errors = []
+		invalid = {"type": "INVALID_FIELD", "extras": []}
+		field_req = {"type": "FIELD_REQUIRED", "extras": []}
+		if POST.has_key('email'):
+			if len(User.objects.filter(email=POST['email'])) != 1: 
+				invalid['extras'].append("email")
+		elif POST.has_key('newPassword'):
+			if len(POST['newPassword']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$", POST['newPassword']) == None:
+				invalid['extras'].append("newPassword")
+			if POST.has_key("forgotToken"):
+				if len(RegistrationProfile.objects.filter(activation_key = POST['forgotToken'])) != 1:
+					invalid['extras'].append('forgotToken')
+			else:
+				field_req['extras'].append('forgotToken')
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		return errors
 
-		if bundle.data.get('email'):
-			self.method = 'POST'
-			try:
-				user = User.objects.get(email=bundle.data['email'])
-				request.user = user
-			except:
-				bundle.data = {}
-				bundle.data['status'] = True
-				return bundle
-
-			res = forgot_password(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')
-			if res:
-				return bundle
-
-			bundle.data = {}
-			raise BadParameters(bundle.data)
+	def post_list(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		errors = self.is_valid_post(POST)
+		if len(errors) > 0:
+			pass
 		else:
-			self.method = 'PATCH'
-			if len(bundle.data['new_password']) < 8: raise BadRequest('{"newPassword":["This field cannot be empty"]}')
-			change_password(bundle.data)
-			return bundle
+			if POST.has_key("email"):
+				user = User.objects.get(email=json.loads(request.raw_post_data)['email'])
+				res = forgot_password(user, 'peoplewings.apps.registration.backends.custom.CustomBackend')
+			elif POST.has_key("newPassword"):
+				change_password(POST['newPassword'], POST['forgotToken'])
+
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
 
 	def full_dehydrate(self, bundle):
 		bundle.data = {}
@@ -853,6 +861,7 @@ class ForgotResource(ModelResource):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
+				#import pdb; pdb.set_trace()
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}

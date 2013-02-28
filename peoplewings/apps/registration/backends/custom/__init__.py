@@ -147,11 +147,11 @@ class CustomBackend(object):
 		"""
 		return ('registration_activation_complete', (), {})
 
-	def forgot_password(self, request, **kwargs):
+	def forgot_password(self, user, **kwargs):
 						   
 		site = getattr(settings, 'SITE', "No site")
 		
-		sent = RegistrationProfile.objects.create_forgot_user(request.user, site)
+		sent = RegistrationProfile.objects.create_forgot_user(user, site)
 		return sent
 
 	def check_forgot_token(self, filters):

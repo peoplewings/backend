@@ -152,13 +152,13 @@ def check_forgot_token(filters, backend):
 	backend = get_backend(backend)
 	return backend.check_forgot_token(filters)
 
-def change_password(data):
+def change_password(new_password, forgot_token):
 	try:
-		reg = RegistrationProfile.objects.get(activation_key = data['forgot_token'])
+		reg = RegistrationProfile.objects.get(activation_key = forgot_token)
 		reg.activation_key = 'ALREADY ACTIVE'
 		reg.save()
 		user = User.objects.get(pk = reg.user_id)
-		user.set_password(data['new_password'])
+		user.set_password(new_password)
 		user.is_active = True
 		user.save()
 	except:
