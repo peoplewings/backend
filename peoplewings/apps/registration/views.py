@@ -140,10 +140,10 @@ def delete_account(user=None):
 		token.delete()
 	return
 
-def forgot_password(request, backend, **kwargs):
-	if request.user and User.objects.get(pk = request.user.id):
+def forgot_password(user, backend, **kwargs):
+	if user and User.objects.get(pk = user.id):
 		backend = get_backend(backend)
-		sent = backend.forgot_password(request, **kwargs)
+		sent = backend.forgot_password(user, **kwargs)
 		if sent:
 			return True
 	return False
