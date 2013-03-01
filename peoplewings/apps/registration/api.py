@@ -981,6 +981,19 @@ class ControlResource(ModelResource):
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['status'] = False
+					content['errors'] = errors
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['status'] = False
+					content['errors'] = errors
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
