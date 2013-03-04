@@ -57,7 +57,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 #SITE
-SITE = 'http://peoplewings-frontend.herokuapp.com'
+SITE = 'http://peoplewings-frontend.herokuapp.com/'
 BACKEND_SITE = 'https://peoplewings-backend.herokuapp.com/api/v1/'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
