@@ -15,8 +15,10 @@ from peoplewings.libs.customauth.models import ApiToken
 from wings.models import Accomodation
 from people.models import UserProfile
 from django.contrib.auth.models import User
+from registration.models import RegistrationProfile
 from notifications.models import Requests, Invites, AccomodationInformation
 from django.contrib.auth.hashers import make_password
+from registration.models import RegistrationProfile
 
  
 class DeleteAccountTest(TestCase):
@@ -374,6 +376,37 @@ class DeleteAccountTest(TestCase):
 		items = content['data']['items']
 		self.assertTrue(isinstance(items, list))
 		self.assertTrue(len(items),2)
+
+class DeleteInactiveAccountTest(TestCase):
+	
+	def setUp(self):
+		pass
+ 
+	def test_login(self):
+		c = Client()
+		#Check if we can log in with the user...
+		response = c.post('/api/v1/newuser', json.dumps({"firstName":"Piti","lastName":"Fly","password":"adsfasdf01","confirm_password":"asdfasdf01","email":"pitifli@yopmail.com","repeatEmail":"pitifli@yopmail.com","birthdayMonth":3,"birthdayDay":4,"birthdayYear":1990,"gender":"Male","hasAcceptedTerms":True}), content_type='application/json')
+		self.assertEqual(response.status_code, 200)
+		content = json.loads(response.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		#Touch the newly created account and make it old
+		try:
+			user = User.objects.get(email='pitifli@yopmail.com')
+			registration = RegistrationProfile.objects.get(user=user)
+			registration.key_timestamp -= timedelta(days=8)
+			registration.save()
+		except:
+			self.assertTrue(False)
+		#Then execute the script and see if the user still exists
+		RegistrationProfile.cron_delete_inactive_accounts()
+		#Check if it still exists
+		try:
+			user = User.objects.get(email='pitifli@yopmail.com')
+			self.assertTrue(False)
+		except:
+			pass
+
 
 
 
