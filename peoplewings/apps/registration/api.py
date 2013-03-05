@@ -3,6 +3,8 @@ import json
 import re
 import random, string
 
+from django.conf import settings
+
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -35,6 +37,8 @@ from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
+from peoplewings.libs import S3Custom
+from peoplewings.libs.customauth.models import ApiToken
 
 class UserSignUpResource(ModelResource):
 	
@@ -600,6 +604,7 @@ class AccountResource(ModelResource):
 	
 	def post_list(self, request, **kwargs):
 		#import pdb; pdb.set_trace()
+		#import pdb; pdb.set_trace()
 		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
 			pass
 		else:
@@ -611,8 +616,12 @@ class AccountResource(ModelResource):
 
 		#We need to:
 		#Invalidate the user so he can't login
-		##Delete email
+		#Delete auth token
 		user = request.user
+		tokens = ApiToken.objects.filter(user=user)
+		for i in tokens:
+			i.delete()
+		##Delete email		
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
@@ -620,7 +629,17 @@ class AccountResource(ModelResource):
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
 		pf = UserProfile.objects.get(user=user)
-		pf.active = False
+		pf.active = False		
+		#Delete the photos
+		#s3 = S3Custom()
+		#s3.delete_file(pf.avatar)
+		#s3.delete_file(pf.medium_avatar)
+		#s3.delete_file(pf.thumb_avatar)
+		#s3.delete_file(pf.blur_avatar)
+		pf.avatar = getattr(settings, "ANONYMOUS_AVATAR")
+		pf.medium_avatar = getattr(settings, "ANONYMOUS_BIG")
+		pf.thumb_avatar = getattr(settings, "ANONYMOUS_THUMB")
+		pf.blur_avatar = getattr(settings, "ANONYMOUS_BLUR")
 		pf.save()
 		#Invalidate his wings
 		##Put inactive = True

@@ -309,7 +309,6 @@ class RegistrationProfile(models.Model):
 		return True
 
 	@staticmethod
-	@transaction.commit_manually
 	def cron_delete_inactive_accounts():
 		import datetime
 		from django.contrib.auth.models import User
