@@ -59,7 +59,7 @@ class UserProfile(models.Model):
 
 	avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
 	medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
-	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
+	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
 	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True)
 	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
