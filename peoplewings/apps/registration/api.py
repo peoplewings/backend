@@ -291,9 +291,9 @@ class ActivationResource(ModelResource):
 		errors = self.is_valid(POST)		
 		if errors is not None:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
+		data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
 		result = {}
-		result['email'] = data
+		result['email'] = data.email
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
 	def dehydrate(self, bundle):

@@ -3,6 +3,7 @@ import random
 import json
 import uuid
 import time
+from django.conf import settings
 
 from datetime import datetime, timedelta
 from django.utils.timezone import utc
@@ -407,6 +408,30 @@ class DeleteInactiveAccountTest(TestCase):
 		except:
 			pass
 
+class ActivateAccountTest(TestCase):
+	
+	def setUp(self):
+		pass
+ 
+	def test_login(self):
+		c = Client()
+		#Check if we can log in with the user...
+		response = c.post('/api/v1/newuser', json.dumps({"firstName":"Piti","lastName":"Fly","password":"adsfasdf01","confirm_password":"asdfasdf01","email":"pitifli@yopmail.com","repeatEmail":"pitifli@yopmail.com","birthdayMonth":3,"birthdayDay":4,"birthdayYear":1990,"gender":"Male","hasAcceptedTerms":True}), content_type='application/json')
+		self.assertEqual(response.status_code, 200)
+		content = json.loads(response.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+		#Get the activation token...
+		user = User.objects.get(email="pitifli@yopmail.com")
+		token = RegistrationProfile.objects.get(user=user)
+		#Make the activation using the given token...
+		site = getattr(settings, "SITE", "")
+		self.assertNotEqual(site, "")
+		response = c.post('/api/v1/activation',  json.dumps({"activationKey":token.activation_key}), content_type='application/json')
+		self.assertEqual(response.status_code, 200)
+		content = json.loads(response.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
 
 
 
