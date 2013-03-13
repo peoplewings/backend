@@ -283,8 +283,17 @@ class AccomodationsResource(ModelResource):
 				aux_wing.id = i.pk		
 				aux_wing.name = i.name
 				aux_wing.status = i.status
-				aux_wing.date_start = i.date_start
-				aux_wing.date_end = i.date_end
+
+				if i.date_start is None:
+					aux_wing.date_start = "null"
+				else:
+					aux_wing.date_start = i.date_end
+
+				if i.date_end is None:
+					aux_wing.date_end = "null"
+				else:
+					aux_wing.date_end = i.date_end
+
 				aux_wing.best_days = i.best_days
 				aux_wing.is_request = i.is_request
 				city = {}
@@ -324,6 +333,7 @@ class AccomodationsResource(ModelResource):
 				aux_wing.number = i.number
 				aux_wing.additional_information = i.additional_information
 				aux_wing.postal_code = i.postal_code
+				aux_wing.resource_uri = "/api/v1/profiles/%s/accomodations/%s" % (up.pk, i.pk)
 				objects.append(aux_wing.jsonable())
 			else:
 				bundle = self.build_bundle(obj=i, request=request)

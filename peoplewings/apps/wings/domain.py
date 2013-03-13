@@ -51,6 +51,8 @@ class AccomodationWingEditable(object):
 		self.boat = False
 		self.others = False
 
+		self.resource_uri = None
+
 	def jsonable(self):
 		res = dict()
 		for key, value in self.__dict__.items():   
