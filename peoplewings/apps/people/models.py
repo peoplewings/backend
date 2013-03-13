@@ -50,7 +50,7 @@ class UserProfileStudiedUniversity(models.Model):
 	degree = models.CharField(max_length=max_medium_len, blank=True)
 
 class Interests(models.Model):
-	gender = models.CharField(max_length = 6, choices = GENDER_CHOICES, unique = True)
+	gender = models.CharField(max_length = 6, choices = PREFERRED_GENDER_CHOICES, unique = True)
 
 class UserProfile(models.Model):
 
