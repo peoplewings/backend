@@ -50,7 +50,7 @@ class UserProfileStudiedUniversity(models.Model):
 	degree = models.CharField(max_length=max_medium_len, blank=True)
 
 class Interests(models.Model):
-	gender = models.CharField(max_length = 6, choices = GENDER_CHOICES, unique = True)
+	gender = models.CharField(max_length = 6, choices = PREFERRED_GENDER_CHOICES, unique = True)
 
 class UserProfile(models.Model):
 
@@ -59,7 +59,7 @@ class UserProfile(models.Model):
 
 	avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
 	medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
-	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
+	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
 	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True)
 	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
 	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")

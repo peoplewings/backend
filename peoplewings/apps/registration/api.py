@@ -3,6 +3,8 @@ import json
 import re
 import random, string
 
+from django.conf import settings
+
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -35,6 +37,8 @@ from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
+from peoplewings.libs.S3Custom import *
+from peoplewings.libs.customauth.models import ApiToken
 
 class UserSignUpResource(ModelResource):
 	
@@ -287,9 +291,9 @@ class ActivationResource(ModelResource):
 		errors = self.is_valid(POST)		
 		if errors is not None:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activation_key'])        
+		data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
 		result = {}
-		result['email'] = data
+		result['email'] = data.email
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
 	def dehydrate(self, bundle):
@@ -302,7 +306,7 @@ class ActivationResource(ModelResource):
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
-			try:
+			try:				
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}
@@ -599,7 +603,6 @@ class AccountResource(ModelResource):
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 	
 	def post_list(self, request, **kwargs):
-		#import pdb; pdb.set_trace()
 		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
 			pass
 		else:
@@ -611,8 +614,12 @@ class AccountResource(ModelResource):
 
 		#We need to:
 		#Invalidate the user so he can't login
-		##Delete email
+		#Delete auth token
 		user = request.user
+		tokens = ApiToken.objects.filter(user=user)
+		for i in tokens:
+			i.delete()
+		##Delete email		
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
@@ -620,7 +627,31 @@ class AccountResource(ModelResource):
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
 		pf = UserProfile.objects.get(user=user)
-		pf.active = False
+		pf.active = False		
+		#Delete the photos		
+		s3 = S3Custom()
+		route_list = []
+		route_list.append(getattr(settings, "ANONYMOUS_BIG"))
+		route_list.append(getattr(settings, "ANONYMOUS_AVATAR"))
+		route_list.append(getattr(settings, "ANONYMOUS_THUMB"))
+		route_list.append(getattr(settings, "ANONYMOUS_AVATAR"))
+
+		if pf.avatar not in route_list:
+			aux = pf.avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.avatar = getattr(settings, "ANONYMOUS_BIG")
+		if pf.medium_avatar not in route_list:
+			aux = pf.medium_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.medium_avatar = getattr(settings, "ANONYMOUS_AVATAR")
+		if pf.thumb_avatar not in route_list:
+			aux = pf.thumb_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.thumb_avatar = getattr(settings, "ANONYMOUS_THUMB")
+		if pf.blur_avatar not in route_list:
+			aux = pf.blur_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.blur_avatar = getattr(settings, "ANONYMOUS_AVATAR")
 		pf.save()
 		#Invalidate his wings
 		##Put inactive = True
@@ -816,32 +847,40 @@ class ForgotResource(ModelResource):
 			raise KeyExpired()
 		return self.create_response(request, bundle)           
 
-	def obj_create(self, bundle, request, **kwargs):
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
+	def is_valid_post(self, POST):
+		errors = []
+		invalid = {"type": "INVALID_FIELD", "extras": []}
+		field_req = {"type": "FIELD_REQUIRED", "extras": []}
+		if POST.has_key('email'):
+			if len(User.objects.filter(email=POST['email'])) != 1: 
+				invalid['extras'].append("email")
+		elif POST.has_key('newPassword'):
+			if len(POST['newPassword']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$", POST['newPassword']) == None:
+				invalid['extras'].append("newPassword")
+			if POST.has_key("forgotToken"):
+				if len(RegistrationProfile.objects.filter(activation_key = POST['forgotToken'])) != 1:
+					invalid['extras'].append('forgotToken')
+			else:
+				field_req['extras'].append('forgotToken')
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		return errors
 
-		if bundle.data.get('email'):
-			self.method = 'POST'
-			try:
-				user = User.objects.get(email=bundle.data['email'])
-				request.user = user
-			except:
-				bundle.data = {}
-				bundle.data['status'] = True
-				return bundle
-
-			res = forgot_password(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')
-			if res:
-				return bundle
-
-			bundle.data = {}
-			raise BadParameters(bundle.data)
+	def post_list(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		errors = self.is_valid_post(POST)
+		if len(errors) > 0:
+			pass
 		else:
-			self.method = 'PATCH'
-			if len(bundle.data['new_password']) < 8: raise BadRequest('{"newPassword":["This field cannot be empty"]}')
-			change_password(bundle.data)
-			return bundle
+			if POST.has_key("email"):
+				user = User.objects.get(email=json.loads(request.raw_post_data)['email'])
+				res = forgot_password(user, 'peoplewings.apps.registration.backends.custom.CustomBackend')
+			elif POST.has_key("newPassword"):
+				change_password(POST['newPassword'], POST['forgotToken'])
+
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
 
 	def full_dehydrate(self, bundle):
 		bundle.data = {}
@@ -853,6 +892,7 @@ class ForgotResource(ModelResource):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
+				#import pdb; pdb.set_trace()
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}
@@ -972,6 +1012,19 @@ class ControlResource(ModelResource):
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['status'] = False
+					content['errors'] = errors
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['status'] = False
+					content['errors'] = errors
+					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]

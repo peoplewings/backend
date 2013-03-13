@@ -22,7 +22,7 @@ DATABASES = {
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I18N = False
 
 INSTALLED_APPS = (
     # Standard django apps
@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'south',
     'tastypie',
     'storages',
+    'compressor',       
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -50,11 +51,19 @@ INSTALLED_APPS = (
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
+    'peoplewings.apps.notifications',
 
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
 
+# Storages IMG
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+
+#SITE
+SITE = 'http://peoplewings-frontend.s3-website-eu-west-1.amazonaws.com/'
+BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
 # SMTP settings
 EMAIL_HOST = 'smtp.1and1.es' #probar con .com
 EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
@@ -63,26 +72,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
 SERVER_EMAIL = 'emailconfirm@peoplewings.com'
-
-#SITE
-SITE = 'http://peoplewings.herokuapp.com'
-BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
-
-"""
-# Compressor IMG
-COMPRESS_ENABLED = True
-if COMPRESS_ENABLED:
-    COMPRESS_CSS_FILTERS = [
-        'compressor.filters.css_default.CssAbsoluteFilter',
-        'compressor.filters.cssmin.CSSMinFilter',
-    ]
-    COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-    COMPRESS_URL = STATIC_URL
-    COMPRESS_OFFLINE = True
-"""
-# Storages IMG
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
@@ -101,3 +90,39 @@ ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
 LOGIN_TIME = 3600
+
+PHOTO_SCORE = 5
+MAX_UPLOADED_PHOTOS = 25
+REPLY_RATE_100 = 500
+REPLY_RATE_90 = 400
+REPLY_RATE_80 = 300
+REPLY_RATE_70 = 100
+REPLY_RATE_60 = 50
+REPLY_RATE_50 = 25
+REPLY_RATE_sub50 = 0 
+
+REPLY_TIME_1H = 500
+REPLY_TIME_4H = 400
+REPLY_TIME_12H = 300
+REPLY_TIME_24H = 100
+REPLY_TIME_48H = 50
+REPLY_TIME_1W = 25
+REPLY_TIME_super1W = 0
+
+POPULARITY_24H_0 = 500
+POPULARITY_24H_1 = 500
+POPULARITY_24H_5 = -250
+POPULARITY_24H_10 = -500
+POPULARITY_24H_15 = -750
+POPULARITY_24H_20 = -1000
+POPULARITY_24H_super20 = -1000
+
+POPULARITY_1W_0 = 750
+POPULARITY_1W_5 = 250
+POPULARITY_1W_10 = 100
+POPULARITY_1W_15 = 0
+POPULARITY_1W_20 = -100
+POPULARITY_1W_25 = -250
+POPULARITY_1W_30 = -500
+POPULARITY_1W_50 = -750
+POPULARITY_1W_70 = -1000

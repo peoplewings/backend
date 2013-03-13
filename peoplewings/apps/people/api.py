@@ -492,6 +492,9 @@ class UserProfileResource(ModelResource):
 			# PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('accomodation_collection'), name="api_list_wings"),
+			# VIEW ALL WINGS FOR EDDITING: GET /profiles/2/accomodations/preview
+			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('accomodation_collection'), name="api_list_wings"),
 			# GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('wing_collection'), name="api_list_wings"),
@@ -642,7 +645,7 @@ class UserProfileResource(ModelResource):
 		return self.create_response(request, content, response_class=HttpResponse)
 
 	@transaction.commit_on_success
-	def put_detail(self, request, **kwargs):
+	def put_detail(self, request, **kwargs):			
 		if request.user.is_anonymous(): 
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 
@@ -711,7 +714,7 @@ class UserProfileResource(ModelResource):
 				if ocity is not None: up.other_locations.add(ocity)
 			bundle.data.pop('other_locations')
 
-		forbidden_fields_update = ['avatar', 'id', 'user']
+		forbidden_fields_update = ['avatar', 'id', 'user', 'reply_rate', 'reply_time', 'avatar', 'medium_avatar', 'thumb_avatar', 'blur_avatar', 'active']
 		#not_empty_fields = ['pw_state', 'gender']
 
 		if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
@@ -722,6 +725,8 @@ class UserProfileResource(ModelResource):
 		for i in bundle.data:
 			if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
 		#if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
+		userp = up
+		#import pdb; pdb.set_trace()		
 		up.save()
 
 		updated_bundle = self.dehydrate(bundle)
@@ -1135,7 +1140,7 @@ class UserProfileResource(ModelResource):
 					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
+			except Exception, e:				
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
 				content['errors'] = errors               

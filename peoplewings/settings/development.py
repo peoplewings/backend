@@ -35,7 +35,7 @@ else:
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I18N = False
 
 INSTALLED_APPS = (
     # Standard django apps
@@ -66,7 +66,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
-SITE = 'http://peoplewings-frontend.herokuapp.com'
+SITE = 'http://peoplewings-frontend.herokuapp.com/'
 BACKEND_SITE = 'http://0.0.0.0:5000/api/v1/'
 
 # SMTP settings
