@@ -492,6 +492,9 @@ class UserProfileResource(ModelResource):
 			# PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('accomodation_collection'), name="api_list_wings"),
+			# VIEW ALL WINGS FOR EDDITING: GET /profiles/2/accomodations/preview
+			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('accomodation_collection'), name="api_list_wings"),
 			# GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('wing_collection'), name="api_list_wings"),
