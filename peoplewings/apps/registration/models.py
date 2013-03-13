@@ -308,6 +308,25 @@ class RegistrationProfile(models.Model):
 		self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
 		return True
 
+	@staticmethod
+	def cron_delete_inactive_accounts():
+		import datetime
+		from django.contrib.auth.models import User
+		from registration.models import RegistrationProfile
+		from people.models import UserProfile
+		from django.db.models import Q
+		try:
+			accounts = RegistrationProfile.objects.exclude(Q(activation_key__icontains='ACTIV')&Q(key_timestamp__gt=datetime.datetime.now() - datetime.timedelta(days=7)))
+			for i in accounts:
+				user_account = User.objects.get(pk=i.user_id)
+				if user_account and user_account.date_joined == user_account.last_login:
+					i.delete()
+					prof = UserProfile.objects.get(user= user_account)
+					prof.delete()
+					user_account.delete()
+		except:
+			pass
+
 class TermsAndConditions(models.Model):	
 	user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 	email = models.CharField(max_length=75)

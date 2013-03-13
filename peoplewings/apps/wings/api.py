@@ -29,6 +29,7 @@ from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.locations.api import CityResource
+from wings.domain import AccomodationWingEditable
 
 from wings.domain import *
 
@@ -277,14 +278,40 @@ class AccomodationsResource(ModelResource):
 		
 		objects = []
 		for i in accomodations:
-			bundle = self.build_bundle(obj=i, request=request)
-			bundle = self.full_dehydrate(bundle)
 			if not is_preview:
-				dic = {}
-				dic['name'] = bundle.data['name']
-				dic['uri'] = str.replace(bundle.data['resource_uri'], 'me', str(up.id))
-				bundle.data = dic
-			objects.append(bundle.data)
+				aux_wing = AccomodationWingEditable()
+				aux_wing.id_wing = i.pk		
+				aux_wing.name = i.name
+				aux_wing.status = i.status
+				aux_wing.date_start = i.date_start
+				aux_wing.date_end = i.date_end
+				aux_wing.best_days = i.best_days
+				aux_wing.is_request = i.is_request
+				aux_wing.city = i.city.stringify()
+				aux_wing.active = i.active
+				aux_wing.sharing_once = i.sharing_once
+				aux_wing.capacity = i.capacity
+				aux_wing.preferred_male = i.preferred_male
+				aux_wing.preferred_female = i.preferred_female
+				aux_wing.wheelchair = i.wheelchair
+				aux_wing.where_sleeping_type = i.where_sleeping_type
+				aux_wing.smoking = i.smoking
+				aux_wing.i_have_pet = i.i_have_pet
+				aux_wing.pets_allowed = i.pets_allowed
+				aux_wing.blankets = i.blankets
+				aux_wing.live_center = i.live_center
+				for j in i.public_transport.filter():
+					aux_wing.public_transport.append(j.name)
+				aux_wing.about = i.about
+				aux_wing.address = i.address
+				aux_wing.number = i.number
+				aux_wing.additional_information = i.additional_information
+				aux_wing.postal_code = i.postal_code
+				objects.append(aux_wing.jsonable())
+			else:
+				bundle = self.build_bundle(obj=i, request=request)
+				bundle = self.full_dehydrate(bundle)
+				objects.append(bundle.data)
 		return self.create_response(request, {"status":True, "data":objects})
 	
 	def post_list(self, request, **kwargs):

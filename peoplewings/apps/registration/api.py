@@ -3,6 +3,8 @@ import json
 import re
 import random, string
 
+from django.conf import settings
+
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -35,6 +37,8 @@ from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
+from peoplewings.libs.S3Custom import *
+from peoplewings.libs.customauth.models import ApiToken
 
 class UserSignUpResource(ModelResource):
 	
@@ -287,9 +291,9 @@ class ActivationResource(ModelResource):
 		errors = self.is_valid(POST)		
 		if errors is not None:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
+		data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
 		result = {}
-		result['email'] = data
+		result['email'] = data.email
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
 	def dehydrate(self, bundle):
@@ -599,7 +603,6 @@ class AccountResource(ModelResource):
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 	
 	def post_list(self, request, **kwargs):
-		#import pdb; pdb.set_trace()
 		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
 			pass
 		else:
@@ -611,8 +614,12 @@ class AccountResource(ModelResource):
 
 		#We need to:
 		#Invalidate the user so he can't login
-		##Delete email
+		#Delete auth token
 		user = request.user
+		tokens = ApiToken.objects.filter(user=user)
+		for i in tokens:
+			i.delete()
+		##Delete email		
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
@@ -620,7 +627,31 @@ class AccountResource(ModelResource):
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
 		pf = UserProfile.objects.get(user=user)
-		pf.active = False
+		pf.active = False		
+		#Delete the photos		
+		s3 = S3Custom()
+		route_list = []
+		route_list.append(getattr(settings, "ANONYMOUS_BIG"))
+		route_list.append(getattr(settings, "ANONYMOUS_AVATAR"))
+		route_list.append(getattr(settings, "ANONYMOUS_THUMB"))
+		route_list.append(getattr(settings, "ANONYMOUS_AVATAR"))
+
+		if pf.avatar not in route_list:
+			aux = pf.avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.avatar = getattr(settings, "ANONYMOUS_BIG")
+		if pf.medium_avatar not in route_list:
+			aux = pf.medium_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.medium_avatar = getattr(settings, "ANONYMOUS_AVATAR")
+		if pf.thumb_avatar not in route_list:
+			aux = pf.thumb_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.thumb_avatar = getattr(settings, "ANONYMOUS_THUMB")
+		if pf.blur_avatar not in route_list:
+			aux = pf.blur_avatar.split("/", 3)
+			s3.delete_file(aux[3])
+			pf.blur_avatar = getattr(settings, "ANONYMOUS_AVATAR")
 		pf.save()
 		#Invalidate his wings
 		##Put inactive = True
