@@ -280,14 +280,20 @@ class AccomodationsResource(ModelResource):
 		for i in accomodations:
 			if not is_preview:
 				aux_wing = AccomodationWingEditable()
-				aux_wing.id_wing = i.pk		
+				aux_wing.id = i.pk		
 				aux_wing.name = i.name
 				aux_wing.status = i.status
 				aux_wing.date_start = i.date_start
 				aux_wing.date_end = i.date_end
 				aux_wing.best_days = i.best_days
 				aux_wing.is_request = i.is_request
-				aux_wing.city = i.city.stringify()
+				city = {}
+				city['lat'] = i.city.lat
+				city['lon'] = i.city.lon
+				city['name'] = i.city.name
+				city['country'] = i.city.region.name
+				city['region'] = i.city.region.country.name
+				aux_wing.city = city
 				aux_wing.active = i.active
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
@@ -300,8 +306,19 @@ class AccomodationsResource(ModelResource):
 				aux_wing.pets_allowed = i.pets_allowed
 				aux_wing.blankets = i.blankets
 				aux_wing.live_center = i.live_center
-				for j in i.public_transport.filter():
-					aux_wing.public_transport.append(j.name)
+				for j in i.public_transport.filter():#####
+					if j.name == 'bus':
+						self.bus = True
+					if j.name == 'tram':
+						self.tram = True
+					if j.name == 'train':
+						self.train = True
+					if j.name == 'boat':
+						self.boat = True
+					if j.name == 'underground':
+						self.undeground = True
+					if j.name == 'others':
+						self.others = True
 				aux_wing.about = i.about
 				aux_wing.address = i.address
 				aux_wing.number = i.number
