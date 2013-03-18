@@ -11,11 +11,12 @@ from django.test import TestCase, Client
 from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
 from people.models import UserProfile, University, Language, UserLanguage
-from locations.models import City
+from locations.models import City, Region, Country
 from notifications.models import Notifications, Requests, Invites, Messages
 from wings.models import Wing, Accomodation, PublicRequestWing
 from peoplewings.libs.customauth.models import ApiToken
 import threading
+from django.contrib.auth.models import User
 
  
 class ContactsTest(TestCase):
@@ -279,7 +280,7 @@ class SearchFineTest(TestCase):
 		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		c_count= 4
 		# Basci search, we dont check the sorting yet...
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -317,7 +318,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select english speakers
 		c_count = 1
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -355,7 +356,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select male
 		c_count = 2
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -393,7 +394,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we select capacity >=3 and language english
 		c_count = 0
-		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -580,4 +581,428 @@ class ControlTest(TestCase):
 		self.assertTrue(content.has_key('status'))
 		self.assertEqual(content['status'], True)	
 
+
+class ProfileTest(TestCase):
+
+	def setUp(self):		
+
+		self.user1 = G(User, first_name='Joan', last_name= 'Roca', email='fr33d4n@peoplewings.com', is_active=True)
+		self.city1 = G(City, name='Barcelona', lat=41.1, lon=1.2, region=G(Region, name='Catalonia', country=G(Country, name='Spain')))
+		self.profile1 = G(UserProfile, pk= self.user1.pk, user= self.user1, pw_state = 'Y', birthday = '1985-09-12', show_birthday= 'F', gender= 'Male', civil_state='SI', current_city = self.city1, hometown=self.city1, email='fuck@you.com', phone='606762696') ## 27 ays
+		self.token1 = ApiToken.objects.create(user=self.user1, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+
+		self.profile2 = G(UserProfile)
+		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+
+	def test_profiles_id(self):
+		c = Client()
+		#Let's check if we can see our own profile
+		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
+		self.assertTrue(content.has_key('data'))
+		self.assertTrue(isinstance(content['data'], dict))
+		data = content['data']
+
+		self.assertTrue(data.has_key("interestedIn"))
+		self.assertTrue(isinstance(data['interestedIn'], list))
+		for i in data['interestedIn']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('gender'))
+
+		self.assertTrue(data.has_key("hometown"))
+		self.assertTrue(isinstance(data['hometown'], dict))
+		self.assertTrue(data['hometown'].has_key('lat'))
+		self.assertEqual(data['hometown']['lat'], str(self.city1.lat))
+		self.assertTrue(data['hometown'].has_key('lon'))
+		self.assertEqual(data['hometown']['lon'], str(self.city1.lon))
+		self.assertTrue(data['hometown'].has_key('region'))
+		self.assertEqual(data['hometown']['region'], self.city1.region.name)
+		self.assertTrue(data['hometown'].has_key('country'))
+		self.assertEqual(data['hometown']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("replyTime"))
+		self.assertEqual(data["replyTime"], self.profile1.reply_time)
+
+		self.assertTrue(data.has_key("mainMission"))
+		self.assertEqual(data["mainMission"], self.profile1.main_mission)
+		
+		self.assertTrue(data.has_key("birthMonth"))
+		self.assertEqual(data["birthMonth"], str(self.profile1.birthday.month))
+
+		self.assertTrue(data.has_key("civilState"))
+		self.assertEqual(data["civilState"], self.profile1.civil_state)
+
+		self.assertTrue(data.has_key("personalPhilosophy"))
+		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosphy)
+
+		self.assertTrue(data.has_key("lastLoginDate"))
+		self.assertEqual(data["lastLoginDate"], 'ON')
+
+		self.assertTrue(data.has_key("education"))
+		self.assertTrue(isinstance(data['education'], list))
+		for i in data['education']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('institution'))
+			self.assertTrue(i.has_key('degree'))
+
+		self.assertTrue(data.has_key("id"))
+		self.assertEqual(data['id'], self.profile1.pk)
+
+		self.assertTrue(data.has_key("occupation"))
+		self.assertEqual(data['occupation'], self.profile1.occupation)
+
+		self.assertTrue(data.has_key("current"))
+		self.assertTrue(isinstance(data['current'], dict))
+		self.assertTrue(data['current'].has_key('lat'))
+		self.assertEqual(data['current']['lat'], str(self.city1.lat))
+		self.assertTrue(data['current'].has_key('lon'))
+		self.assertEqual(data['current']['lon'], str(self.city1.lon))
+		self.assertTrue(data['current'].has_key('region'))
+		self.assertEqual(data['current']['region'], self.city1.region.name)
+		self.assertTrue(data['current'].has_key('country'))
+		self.assertEqual(data['current']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("pwState"))
+		self.assertEqual(data['pwState'], self.profile1.pw_state)
+
+		self.assertTrue(data.has_key("incredible"))
+		self.assertEqual(data['incredible'], self.profile1.incredible)
+
+		self.assertTrue(data.has_key("otherLocations"))
+		self.assertTrue(isinstance(data['otherLocations'], list))
+		for i in data['otherLocations']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('lat'))
+		self.assertTrue(i.has_key('lon'))
+		self.assertTrue(i.has_key('region'))
+		self.assertTrue(i.has_key('country'))
+
+		self.assertTrue(data.has_key("sports"))
+		self.assertEqual(data['sports'], self.profile1.sports)
+
+		self.assertTrue(data.has_key("languages"))
+		self.assertTrue(isinstance(data['languages'], list))
+		for i in data['languages']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('name'))
+		self.assertTrue(i.has_key('level'))
+
+		self.assertTrue(data.has_key("birthYear"))
+		self.assertEqual(data['birthYear'], str(self.profile1.birthday.year))
+
+		self.assertTrue(data.has_key("quotes"))
+		self.assertEqual(data['quotes'], self.profile1.quotes)
+
+		self.assertTrue(data.has_key("socialNetworks"))
+		self.assertTrue(isinstance(data['socialNetworks'], list))
+		for i in data['socialNetworks']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('snUsername'))
+		self.assertTrue(i.has_key('socialNetwork'))
+
+		self.assertTrue(data.has_key("online"))
+		self.assertEqual(data['online'], 'ON')
+
+		self.assertTrue(data.has_key("sharing"))
+		self.assertEqual(data['sharing'], self.profile1.sharing)	  
+		  
+		self.assertTrue(data.has_key("pwOpinion"))
+		self.assertEqual(data['pwOpinion'], self.profile1.pw_opinion)	  
+
+		self.assertTrue(data.has_key("politicalOpinion"))
+		self.assertEqual(data['politicalOpinion'], self.profile1.political_opinion)	  
+
+		self.assertTrue(data.has_key("company"))
+		self.assertEqual(data['company'], self.profile1.company)	  
+
+		self.assertTrue(data.has_key("replyRate"))
+		self.assertEqual(data['replyRate'], self.profile1.reply_rate)	  
+
+		self.assertTrue(data.has_key("instantMessages"))
+		self.assertTrue(isinstance(data['instantMessages'], list))
+		for i in data['instantMessages']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('imUsername'))
+		self.assertTrue(i.has_key('instantMessage'))
+
+		self.assertTrue(data.has_key("phone"))
+		self.assertEqual(data['phone'], self.profile1.phone)
+
+		self.assertTrue(data.has_key("active"))
+		self.assertEqual(data['active'], self.profile1.active)
+
+		self.assertTrue(data.has_key("emails"))
+		self.assertEqual(data['emails'], self.profile1.emails)
+
+		self.assertTrue(data.has_key("inspiredBy"))
+		self.assertEqual(data['inspiredBy'], self.profile1.inspired_by)
+
+		self.assertTrue(data.has_key("otherPages"))
+		self.assertEqual(data['otherPages'], self.profile1.other_pages)
+
+		self.assertTrue(data.has_key("firstName"))
+		self.assertEqual(data['firstName'], self.profile1.first_name)
+
+		self.assertTrue(data.has_key("enjoyPeople"))
+		self.assertEqual(data['enjoyPeople'], self.profile1.enjoy_people)
+
+		self.assertTrue(data.has_key("gender"))
+		self.assertEqual(data['gender'], self.profile1.gender)
+
+		self.assertTrue(data.has_key("age"))
+		self.assertEqual(data['age'], "27")
+
+		self.assertTrue(data.has_key("allAboutYou"))
+		self.assertEqual(data['allAboutYou'], self.profile1.all_about_you)
+
+		self.assertTrue(data.has_key("movies"))
+		self.assertEqual(data['movies'], self.profile1.movies)
+
+		self.assertTrue(data.has_key("birthDay"))
+		self.assertEqual(data['birthDay'], str(self.profile1.birthday.day))
+
+		self.assertTrue(data.has_key("avatar"))
+		self.assertEqual(data['avatar'], self.profile1.avatar)
+
+		self.assertTrue(data.has_key("lastLogin"))
+		self.assertTrue(isinstance(data['lastLogin'], dict))
+		self.assertTrue(data['lastLogin'].has_key('lat'))
+		self.assertEqual(data['lastLogin']['lat'], str(self.city1.lat))
+		self.assertTrue(data['lastLogin'].has_key('lon'))
+		self.assertEqual(data['lastLogin']['lon'], str(self.city1.lon))
+		self.assertTrue(data['lastLogin'].has_key('region'))
+		self.assertEqual(data['lastLogin']['region'], self.city1.region.name)
+		self.assertTrue(data['lastLogin'].has_key('country'))
+		self.assertEqual(data['lastLogin']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("lastName"))
+		self.assertEqual(data['lastName'], self.profile1.last_name)
+
+		self.assertTrue(data.has_key("religion"))
+		self.assertEqual(data['religion'], self.profile1.religion)
+
+		self.assertTrue(data.has_key("showBirthday"))
+		self.assertEqual(data['showBirthday'], self.profile1.show_birthday)	
+
+		#Lets see what happens if another user besides me tryes to see my profile (without preview) (AUTH REQUIRED)
+		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token2, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], False)	
+
+	def test_profiles_id_preview(self):
+		c = Client()
+		#Let's check if we can see our own profile as preview
+		r1 = c.get('/api/v1/profiles/%s/preview' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
+		self.assertTrue(content.has_key('data'))
+		self.assertTrue(isinstance(content['data'], dict))
+		data = content['data']
+
+		self.assertTrue(data.has_key("interestedIn"))
+		self.assertTrue(isinstance(data['interestedIn'], list))
+		for i in data['interestedIn']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('gender'))
+
+		self.assertTrue(data.has_key("hometown"))
+		self.assertTrue(isinstance(data['hometown'], dict))
+		self.assertTrue(data['hometown'].has_key('lat'))
+		self.assertEqual(data['hometown']['lat'], str(self.city1.lat))
+		self.assertTrue(data['hometown'].has_key('lon'))
+		self.assertEqual(data['hometown']['lon'], str(self.city1.lon))
+		self.assertTrue(data['hometown'].has_key('region'))
+		self.assertEqual(data['hometown']['region'], self.city1.region.name)
+		self.assertTrue(data['hometown'].has_key('country'))
+		self.assertEqual(data['hometown']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("replyTime"))
+		self.assertEqual(data["replyTime"], self.profile1.reply_time)
+
+		self.assertTrue(data.has_key("mainMission"))
+		self.assertEqual(data["mainMission"], self.profile1.main_mission)
+
+		self.assertTrue(data.has_key("civilState"))
+		self.assertEqual(data["civilState"], self.profile1.civil_state)
+
+		self.assertTrue(data.has_key("personalPhilosophy"))
+		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosphy)
+
+		self.assertTrue(data.has_key("lastLoginDate"))
+		self.assertEqual(data["lastLoginDate"], 'ON')
+
+		self.assertTrue(data.has_key("education"))
+		self.assertTrue(isinstance(data['education'], list))
+		for i in data['education']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('institution'))
+			self.assertTrue(i.has_key('degree'))
+
+		self.assertTrue(data.has_key("id"))
+		self.assertEqual(data['id'], self.profile1.pk)
+
+		self.assertTrue(data.has_key("occupation"))
+		self.assertEqual(data['occupation'], self.profile1.occupation)
+
+		self.assertTrue(data.has_key("current"))
+		self.assertTrue(isinstance(data['current'], dict))
+		self.assertTrue(data['current'].has_key('lat'))
+		self.assertEqual(data['current']['lat'], str(self.city1.lat))
+		self.assertTrue(data['current'].has_key('lon'))
+		self.assertEqual(data['current']['lon'], str(self.city1.lon))
+		self.assertTrue(data['current'].has_key('region'))
+		self.assertEqual(data['current']['region'], self.city1.region.name)
+		self.assertTrue(data['current'].has_key('country'))
+		self.assertEqual(data['current']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("pwState"))
+		self.assertEqual(data['pwState'], self.profile1.pw_state)
+
+		self.assertTrue(data.has_key("incredible"))
+		self.assertEqual(data['incredible'], self.profile1.incredible)
+
+		self.assertTrue(data.has_key("otherLocations"))
+		self.assertTrue(isinstance(data['otherLocations'], list))
+		for i in data['otherLocations']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('lat'))
+		self.assertTrue(i.has_key('lon'))
+		self.assertTrue(i.has_key('region'))
+		self.assertTrue(i.has_key('country'))
+
+		self.assertTrue(data.has_key("sports"))
+		self.assertEqual(data['sports'], self.profile1.sports)
+
+		self.assertTrue(data.has_key("languages"))
+		self.assertTrue(isinstance(data['languages'], list))
+		for i in data['languages']:
+			self.assertTrue(isinstance(i, dict))
+			self.assertTrue(i.has_key('name'))
+		self.assertTrue(i.has_key('level'))
+
+		self.assertTrue(data.has_key("birthday"))
+		self.assertEqual(data['birthday'],  '1985-09-12')
+
+		self.assertTrue(data.has_key("quotes"))
+		self.assertEqual(data['quotes'], self.profile1.quotes)
+
+		self.assertFalse(data.has_key("socialNetworks"))
+
+		self.assertTrue(data.has_key("online"))
+		self.assertEqual(data['online'], 'ON')
+
+		self.assertTrue(data.has_key("sharing"))
+		self.assertEqual(data['sharing'], self.profile1.sharing)	  
+		  
+		self.assertTrue(data.has_key("pwOpinion"))
+		self.assertEqual(data['pwOpinion'], self.profile1.pw_opinion)	  
+
+		self.assertTrue(data.has_key("politicalOpinion"))
+		self.assertEqual(data['politicalOpinion'], self.profile1.political_opinion)	  
+
+		self.assertTrue(data.has_key("company"))
+		self.assertEqual(data['company'], self.profile1.company)	  
+
+		self.assertTrue(data.has_key("replyRate"))
+		self.assertEqual(data['replyRate'], self.profile1.reply_rate)	  
+
+		self.assertFalse(data.has_key("instantMessages"))
+
+		self.assertFalse(data.has_key("phone"))
+
+		self.assertTrue(data.has_key("active"))
+		self.assertEqual(data['active'], self.profile1.active)
+
+		self.assertFalse(data.has_key("emails"))
+
+		self.assertTrue(data.has_key("inspiredBy"))
+		self.assertEqual(data['inspiredBy'], self.profile1.inspired_by)
+
+		self.assertTrue(data.has_key("otherPages"))
+		self.assertEqual(data['otherPages'], self.profile1.other_pages)
+
+		self.assertTrue(data.has_key("firstName"))
+		self.assertEqual(data['firstName'], self.profile1.first_name)
+
+		self.assertTrue(data.has_key("enjoyPeople"))
+		self.assertEqual(data['enjoyPeople'], self.profile1.enjoy_people)
+
+		self.assertTrue(data.has_key("gender"))
+		self.assertEqual(data['gender'], self.profile1.gender)
+
+		self.assertTrue(data.has_key("age"))
+		self.assertEqual(data['age'], "27")
+
+		self.assertTrue(data.has_key("allAboutYou"))
+		self.assertEqual(data['allAboutYou'], self.profile1.all_about_you)
+
+		self.assertTrue(data.has_key("movies"))
+		self.assertEqual(data['movies'], self.profile1.movies)
+
+		self.assertTrue(data.has_key("avatar"))
+		self.assertEqual(data['avatar'], self.profile1.avatar)
+
+		self.assertTrue(data.has_key("lastLogin"))
+		self.assertTrue(isinstance(data['lastLogin'], dict))
+		self.assertTrue(data['lastLogin'].has_key('lat'))
+		self.assertEqual(data['lastLogin']['lat'], str(self.city1.lat))
+		self.assertTrue(data['lastLogin'].has_key('lon'))
+		self.assertEqual(data['lastLogin']['lon'], str(self.city1.lon))
+		self.assertTrue(data['lastLogin'].has_key('region'))
+		self.assertEqual(data['lastLogin']['region'], self.city1.region.name)
+		self.assertTrue(data['lastLogin'].has_key('country'))
+		self.assertEqual(data['lastLogin']['country'], self.city1.region.country.name)
+
+		self.assertTrue(data.has_key("lastName"))
+		self.assertEqual(data['lastName'], self.profile1.last_name)
+
+		self.assertTrue(data.has_key("religion"))
+		self.assertEqual(data['religion'], self.profile1.religion)
+
+		self.assertFalse(data.has_key("showBirthday"))
+
+		#Let's change the show birthday attr. Let's put it in Partial (P)
+		self.profile1.show.birthday = 'P'
+		self.profile1.save()
+
+		r1 = c.get('/api/v1/profiles/%s/preview' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
+		self.assertTrue(content.has_key('data'))
+		self.assertTrue(isinstance(content['data'], dict))
+		data = content['data']
+
+		self.assertTrue(data.has_key("birthday"))
+		self.assertEqual(data['birthday'],  '09-12')
+
+		#Let's change the show birthday attr. Let's put it in None (N)
+		self.profile1.show.birthday = 'N'
+		self.profile1.save()
+
+		r1 = c.get('/api/v1/profiles/%s/preview' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
+		self.assertTrue(content.has_key('data'))
+		self.assertTrue(isinstance(content['data'], dict))
+		data = content['data']
+
+		self.assertTrue(data.has_key("birthday"))
+		self.assertEqual(data['birthday'],  '')
+
+		
 

@@ -272,7 +272,7 @@ class AccomodationsResource(ModelResource):
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 
 		try:
-			accomodations = Accomodation.objects.filter(Q(author_id=kwargs['profile_id'])&Q(active=True))
+			accomodations = Accomodation.objects.filter(Q(author_id=kwargs['profile_id'])&Q(active=True)).order_by('pk')
 		except:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID_FIELD", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
@@ -300,8 +300,8 @@ class AccomodationsResource(ModelResource):
 				city['lat'] = i.city.lat
 				city['lon'] = i.city.lon
 				city['name'] = i.city.name
-				city['country'] = i.city.region.name
-				city['region'] = i.city.region.country.name
+				city['region'] = i.city.region.name
+				city['country'] = i.city.region.country.name
 				aux_wing.city = city
 				aux_wing.active = i.active
 				aux_wing.sharing_once = i.sharing_once
@@ -315,7 +315,7 @@ class AccomodationsResource(ModelResource):
 				aux_wing.pets_allowed = i.pets_allowed
 				aux_wing.blankets = i.blankets
 				aux_wing.live_center = i.live_center
-				for j in i.public_transport.filter():#####
+				for j in i.public_transport.filter():
 					if j.name == 'bus':
 						self.bus = True
 					if j.name == 'tram':
