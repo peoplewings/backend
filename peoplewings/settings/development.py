@@ -83,7 +83,7 @@ AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
 
-S3_URL = 'http://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
+S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
 MEDIA_URL = 'http://197.168.1.47:5000/media/'
 

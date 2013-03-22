@@ -10,7 +10,7 @@ from django.utils.timezone import utc
 from django.test import TestCase, Client
 from django_dynamic_fixture import G, get, F
 from django.core.urlresolvers import reverse
-from people.models import UserProfile, University, Language, UserLanguage
+from people.models import UserProfile, University, Language, UserLanguage, Interests, SocialNetwork, InstantMessage, UserSocialNetwork, UserInstantMessage, UserProfileStudiedUniversity
 from locations.models import City, Region, Country
 from notifications.models import Notifications, Requests, Invites, Messages
 from wings.models import Wing, Accomodation, PublicRequestWing
@@ -280,7 +280,7 @@ class SearchFineTest(TestCase):
 		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		c_count= 4
 		# Basci search, we dont check the sorting yet...
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -318,7 +318,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select english speakers
 		c_count = 1
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -356,7 +356,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select male
 		c_count = 2
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -394,7 +394,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we select capacity >=3 and language english
 		c_count = 0
-		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-15&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -586,15 +586,38 @@ class ProfileTest(TestCase):
 
 	def setUp(self):		
 
+		G(Interests, gender='Male')
+		G(Interests, gender='Female')
+		G(Interests, gender='Both')
+
+		G(Language, name='english')
+		G(Language, name='french')
+		G(Language, name='catalan')
+		G(Language, name='spanish')
+		G(Language, name='japanese')
+		G(Language, name='armenian')
+
+		G(SocialNetwork, name='Facebook')
+		G(SocialNetwork, name='LinkedIn')
+		G(SocialNetwork, name='VK')
+
+		G(InstantMessage, name='Facetime')
+		G(InstantMessage, name='Skype')
+		G(InstantMessage, name='Gchat')
+
 		self.user1 = G(User, first_name='Joan', last_name= 'Roca', email='fr33d4n@peoplewings.com', is_active=True)
 		self.city1 = G(City, name='Barcelona', lat=41.1, lon=1.2, region=G(Region, name='Catalonia', country=G(Country, name='Spain')))
-		self.profile1 = G(UserProfile, pk= self.user1.pk, user= self.user1, pw_state = 'Y', birthday = '1985-09-12', show_birthday= 'F', gender= 'Male', civil_state='SI', current_city = self.city1, hometown=self.city1, email='fuck@you.com', phone='606762696') ## 27 ays
-		self.token1 = ApiToken.objects.create(user=self.user1, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
+		self.profile1 = G(UserProfile, pk= self.user1.pk, user= self.user1, pw_state = 'Y', birthday = '1985-09-12', show_birthday= 'F', gender= 'Male', civil_state='SI', current_city = self.city1, hometown=self.city1, email='fuck@you.com', phone='606762696', last_login=self.city1) ## 27 ays
+		self.apitoken1 = ApiToken.objects.create(user=self.user1, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M'))
+		self.token1 = self.apitoken1.token
+		self.apitoken1.last_js = time.time()
+		self.apitoken1.save()
 
 		self.profile2 = G(UserProfile)
 		self.token2 = ApiToken.objects.create(user=self.profile2.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_profiles_id(self):
+		import dateutil.parser
 		c = Client()
 		#Let's check if we can see our own profile
 		r1 = c.get('/api/v1/profiles/%s' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
@@ -631,13 +654,13 @@ class ProfileTest(TestCase):
 		self.assertEqual(data["mainMission"], self.profile1.main_mission)
 		
 		self.assertTrue(data.has_key("birthMonth"))
-		self.assertEqual(data["birthMonth"], str(self.profile1.birthday.month))
+		self.assertEqual(data["birthMonth"], dateutil.parser.parse(self.profile1.birthday).month)
 
 		self.assertTrue(data.has_key("civilState"))
 		self.assertEqual(data["civilState"], self.profile1.civil_state)
 
 		self.assertTrue(data.has_key("personalPhilosophy"))
-		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosphy)
+		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosophy)
 
 		self.assertTrue(data.has_key("lastLoginDate"))
 		self.assertEqual(data["lastLoginDate"], 'ON')
@@ -677,9 +700,9 @@ class ProfileTest(TestCase):
 		for i in data['otherLocations']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('lat'))
-		self.assertTrue(i.has_key('lon'))
-		self.assertTrue(i.has_key('region'))
-		self.assertTrue(i.has_key('country'))
+			self.assertTrue(i.has_key('lon'))
+			self.assertTrue(i.has_key('region'))
+			self.assertTrue(i.has_key('country'))
 
 		self.assertTrue(data.has_key("sports"))
 		self.assertEqual(data['sports'], self.profile1.sports)
@@ -689,10 +712,10 @@ class ProfileTest(TestCase):
 		for i in data['languages']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('name'))
-		self.assertTrue(i.has_key('level'))
+			self.assertTrue(i.has_key('level'))
 
 		self.assertTrue(data.has_key("birthYear"))
-		self.assertEqual(data['birthYear'], str(self.profile1.birthday.year))
+		self.assertEqual(data['birthYear'], dateutil.parser.parse(self.profile1.birthday).year)
 
 		self.assertTrue(data.has_key("quotes"))
 		self.assertEqual(data['quotes'], self.profile1.quotes)
@@ -702,7 +725,7 @@ class ProfileTest(TestCase):
 		for i in data['socialNetworks']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('snUsername'))
-		self.assertTrue(i.has_key('socialNetwork'))
+			self.assertTrue(i.has_key('socialNetwork'))
 
 		self.assertTrue(data.has_key("online"))
 		self.assertEqual(data['online'], 'ON')
@@ -727,13 +750,10 @@ class ProfileTest(TestCase):
 		for i in data['instantMessages']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('imUsername'))
-		self.assertTrue(i.has_key('instantMessage'))
+			self.assertTrue(i.has_key('instantMessage'))
 
 		self.assertTrue(data.has_key("phone"))
 		self.assertEqual(data['phone'], self.profile1.phone)
-
-		self.assertTrue(data.has_key("active"))
-		self.assertEqual(data['active'], self.profile1.active)
 
 		self.assertTrue(data.has_key("emails"))
 		self.assertEqual(data['emails'], self.profile1.emails)
@@ -745,7 +765,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['otherPages'], self.profile1.other_pages)
 
 		self.assertTrue(data.has_key("firstName"))
-		self.assertEqual(data['firstName'], self.profile1.first_name)
+		self.assertEqual(data['firstName'], self.profile1.user.first_name)
 
 		self.assertTrue(data.has_key("enjoyPeople"))
 		self.assertEqual(data['enjoyPeople'], self.profile1.enjoy_people)
@@ -754,7 +774,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['gender'], self.profile1.gender)
 
 		self.assertTrue(data.has_key("age"))
-		self.assertEqual(data['age'], "27")
+		self.assertEqual(data['age'], 27)
 
 		self.assertTrue(data.has_key("allAboutYou"))
 		self.assertEqual(data['allAboutYou'], self.profile1.all_about_you)
@@ -763,7 +783,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['movies'], self.profile1.movies)
 
 		self.assertTrue(data.has_key("birthDay"))
-		self.assertEqual(data['birthDay'], str(self.profile1.birthday.day))
+		self.assertEqual(data['birthDay'], dateutil.parser.parse(self.profile1.birthday).day)
 
 		self.assertTrue(data.has_key("avatar"))
 		self.assertEqual(data['avatar'], self.profile1.avatar)
@@ -780,7 +800,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['lastLogin']['country'], self.city1.region.country.name)
 
 		self.assertTrue(data.has_key("lastName"))
-		self.assertEqual(data['lastName'], self.profile1.last_name)
+		self.assertEqual(data['lastName'], self.profile1.user.last_name)
 
 		self.assertTrue(data.has_key("religion"))
 		self.assertEqual(data['religion'], self.profile1.religion)
@@ -835,7 +855,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data["civilState"], self.profile1.civil_state)
 
 		self.assertTrue(data.has_key("personalPhilosophy"))
-		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosphy)
+		self.assertEqual(data["personalPhilosophy"], self.profile1.personal_philosophy)
 
 		self.assertTrue(data.has_key("lastLoginDate"))
 		self.assertEqual(data["lastLoginDate"], 'ON')
@@ -864,9 +884,6 @@ class ProfileTest(TestCase):
 		self.assertTrue(data['current'].has_key('country'))
 		self.assertEqual(data['current']['country'], self.city1.region.country.name)
 
-		self.assertTrue(data.has_key("pwState"))
-		self.assertEqual(data['pwState'], self.profile1.pw_state)
-
 		self.assertTrue(data.has_key("incredible"))
 		self.assertEqual(data['incredible'], self.profile1.incredible)
 
@@ -875,9 +892,9 @@ class ProfileTest(TestCase):
 		for i in data['otherLocations']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('lat'))
-		self.assertTrue(i.has_key('lon'))
-		self.assertTrue(i.has_key('region'))
-		self.assertTrue(i.has_key('country'))
+			self.assertTrue(i.has_key('lon'))
+			self.assertTrue(i.has_key('region'))
+			self.assertTrue(i.has_key('country'))
 
 		self.assertTrue(data.has_key("sports"))
 		self.assertEqual(data['sports'], self.profile1.sports)
@@ -887,7 +904,7 @@ class ProfileTest(TestCase):
 		for i in data['languages']:
 			self.assertTrue(isinstance(i, dict))
 			self.assertTrue(i.has_key('name'))
-		self.assertTrue(i.has_key('level'))
+			self.assertTrue(i.has_key('level'))
 
 		self.assertTrue(data.has_key("birthday"))
 		self.assertEqual(data['birthday'],  '1985-09-12')
@@ -919,9 +936,6 @@ class ProfileTest(TestCase):
 
 		self.assertFalse(data.has_key("phone"))
 
-		self.assertTrue(data.has_key("active"))
-		self.assertEqual(data['active'], self.profile1.active)
-
 		self.assertFalse(data.has_key("emails"))
 
 		self.assertTrue(data.has_key("inspiredBy"))
@@ -931,7 +945,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['otherPages'], self.profile1.other_pages)
 
 		self.assertTrue(data.has_key("firstName"))
-		self.assertEqual(data['firstName'], self.profile1.first_name)
+		self.assertEqual(data['firstName'], self.profile1.user.first_name)
 
 		self.assertTrue(data.has_key("enjoyPeople"))
 		self.assertEqual(data['enjoyPeople'], self.profile1.enjoy_people)
@@ -940,7 +954,7 @@ class ProfileTest(TestCase):
 		self.assertEqual(data['gender'], self.profile1.gender)
 
 		self.assertTrue(data.has_key("age"))
-		self.assertEqual(data['age'], "27")
+		self.assertEqual(data['age'], 27)
 
 		self.assertTrue(data.has_key("allAboutYou"))
 		self.assertEqual(data['allAboutYou'], self.profile1.all_about_you)
@@ -951,19 +965,8 @@ class ProfileTest(TestCase):
 		self.assertTrue(data.has_key("avatar"))
 		self.assertEqual(data['avatar'], self.profile1.avatar)
 
-		self.assertTrue(data.has_key("lastLogin"))
-		self.assertTrue(isinstance(data['lastLogin'], dict))
-		self.assertTrue(data['lastLogin'].has_key('lat'))
-		self.assertEqual(data['lastLogin']['lat'], str(self.city1.lat))
-		self.assertTrue(data['lastLogin'].has_key('lon'))
-		self.assertEqual(data['lastLogin']['lon'], str(self.city1.lon))
-		self.assertTrue(data['lastLogin'].has_key('region'))
-		self.assertEqual(data['lastLogin']['region'], self.city1.region.name)
-		self.assertTrue(data['lastLogin'].has_key('country'))
-		self.assertEqual(data['lastLogin']['country'], self.city1.region.country.name)
-
 		self.assertTrue(data.has_key("lastName"))
-		self.assertEqual(data['lastName'], self.profile1.last_name)
+		self.assertEqual(data['lastName'], self.profile1.user.last_name)
 
 		self.assertTrue(data.has_key("religion"))
 		self.assertEqual(data['religion'], self.profile1.religion)
@@ -971,7 +974,7 @@ class ProfileTest(TestCase):
 		self.assertFalse(data.has_key("showBirthday"))
 
 		#Let's change the show birthday attr. Let's put it in Partial (P)
-		self.profile1.show.birthday = 'P'
+		self.profile1.show_birthday = 'P'
 		self.profile1.save()
 
 		r1 = c.get('/api/v1/profiles/%s/preview' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
@@ -985,10 +988,10 @@ class ProfileTest(TestCase):
 		data = content['data']
 
 		self.assertTrue(data.has_key("birthday"))
-		self.assertEqual(data['birthday'],  '09-12')
+		self.assertEqual(data['birthday'],  '9-12')
 
 		#Let's change the show birthday attr. Let's put it in None (N)
-		self.profile1.show.birthday = 'N'
+		self.profile1.show_birthday = 'N'
 		self.profile1.save()
 
 		r1 = c.get('/api/v1/profiles/%s/preview' % self.profile1.pk, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
@@ -1003,6 +1006,238 @@ class ProfileTest(TestCase):
 
 		self.assertTrue(data.has_key("birthday"))
 		self.assertEqual(data['birthday'],  '')
+
+	def test_profiles_put(self):
+		import dateutil.parser
+		c = Client()
+		#Let's check if we can see our own profile as preview
+		json_obj = json.dumps(	{"interestedIn": [
+						{
+				            		"gender": "Both"
+				        		}
+				    	],
+				    	"hometown": {
+				        		"lat": "41.387917000",
+				        		"country": "Spain",
+				        		"region": "Catalonia",
+				        		"lon": "2.169919000",
+				        		"name": "Barcelona"
+				    	},
+				    	"replyTime": 0,
+				    	"mainMission": "Promote electronic sports.",
+				    	"birthMonth": "12",
+				    	"civilState": "IR",
+				    	"personalPhilosophy": "Be yourself and try to live happyly. But before all, be yourself.",
+				    	"lastLoginDate": "ON",
+				    	"education": [
+				        		{
+				            		"institution": "Universitat Politecnica de Catalunya",
+				            		"degree": "Licensed"
+				        		}
+				    	],
+				    	"id": 2,
+				    	"occupation": "Software Engineer",
+				    	"current": {
+				        		"lat": "41.387917000",
+				        		"country": "Spain",
+				        		"region": "Catalonia",
+				        		"lon": "2.169919000",
+				        		"name": "Barcelona"
+				    	},
+				    	"pwState": "C",
+				    	"incredible": "The rise of internet",
+				    	"otherLocations": [],
+				    	"sports": "Starcraft",
+				    	"languages": [
+				        		{
+				            		"name": "english",
+				            		"level": "intermediate"
+				        		},
+				        		{
+				            		"name": "spanish",
+				            		"level": "expert"
+				        		},
+				        		{
+				            		"name": "catalan",
+				            		"level": "expert"
+				        		},
+				        		{
+				            		"name": "japanese",
+				            		"level": "expert"
+				        		}
+				    	],
+				    	"birthYear": "1985",
+				    	"quotes": "Hakuna Matata",
+				    	"socialNetworks": [
+				        		{
+				            		"snUsername": "fr33d4n",
+				            		"socialNetwork": "Facebook"
+				        		}
+				    	],
+				    	"online": "OFF",
+				    	"sharing": "My humble place, and some of my time as well",
+				    	"pwOpinion": "Sergi se estresa mucho",
+				    	"politicalOpinion": "Politicians are the cancer of my coutry.",
+				    	"company": "PeopleWings",
+				    	"replyRate": 0,
+				    	"instantMessages": [
+				        		{
+				            		"imUsername": "fr33d4n",
+				            		"instantMessage": "Facetime"
+				        		}
+				    	],
+				    	"phone": "616162696",
+				    	"emails": "fr33d4n@gmail.com",
+				    	"inspiredBy": "No real inspiration",
+				    	"otherPages": "http://mangareader.com",
+				    	"firstName": "Choni",
+				    	"enjoyPeople": "I like being alone",
+				    	"gender": "Female",
+				    	"age": 27,
+				    	"allAboutYou": "I'm a nerd guy. From Barcelona. I like to play videogames and party rock.",
+				    	"movies": "Princess Mononoke",
+				    	"birthDay": "20",
+				    	"avatar": "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
+				    	"lastLogin": {
+				        		"lat": "41.387917000",
+				        		"country": "Spain",
+				        		"region": "Catalonia",
+				        		"lon": "2.169919000",
+				        		"name": "Barcelona"
+				    	},
+				    	"lastName": "Pichoni",
+				    	"religion": "Atheist",
+				    	"showBirthday": "P",
+				    	"birthdayVerbose": "12-20",
+				    	"wingsCollection": [
+				        		{
+				            		"address": "Deu i Mata Street",
+				            		"number": "12",
+				            		"liveCenter": False,
+				            		"id": 2,
+				            		"boat": False,
+				            		"city": {
+				                			"lat": "41.387917000",
+				                			"country": "Spain",
+				                			"region": "Catalonia",
+				                			"lon": "2.169919000",
+				                			"name": "Barcelona"
+				            		},
+				            	"capacity": "2",
+					            "whereSleepingType": "P",
+					            "dateEnd": "null",
+					            "bestDays": "F",
+					            "postalCode": "08028",
+					            "status": "M",
+					            "wheelchair": True,
+					            "resourceUri": "/api/v1/profiles/2/accomodations/2",
+					            "dateStart": "null",
+					            "bus": True,
+					            "underground": False,
+					            "train": False,
+					            "petsAllowed": False,
+					            "others": False,
+					            "active": True,
+					            "smoking": "S",
+					            "iHavePet": False,
+					            "blankets": True,
+					            "about": "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.",
+					            "name": "fr33d4n's houz",
+					            "tram": False,
+					            "isRequest": False,
+					            "sharingOnce": False,
+					            "preferredMale": False,
+					            "preferredFemale": True,
+					            "additionalInformation": "The house has a nice terrace",
+					            "bestDaysVerbose": "From Monday to Friday",
+					            "smokingVerbose": "I smoke",
+					            "whereSleepingTypeVerbose": "Private area",
+					            "statusVerbose": "Maybe"
+				        		}
+					]
+				})
+
+		r1 = c.put('/api/v1/profiles/%s' % self.profile1.pk, json_obj, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(r1.status_code, 200)
+		content = json.loads(r1.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)	
+
+		#Lets chek if the params are modified
+		updated_prof = UserProfile.objects.get(pk=self.profile1.pk)
+
+		self.assertEqual(updated_prof.user, self.user1)
+		self.assertEqual(updated_prof.avatar, "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg")
+		self.assertNotEqual(updated_prof.medium_avatar, "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg")
+		self.assertNotEqual(updated_prof.thumb_avatar, "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg")
+		self.assertNotEqual(updated_prof.blur_avatar, "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg")
+		self.assertEqual(str(updated_prof.birthday), "1985-12-20")
+		self.assertEqual(updated_prof.show_birthday, "P")
+		self.assertEqual(updated_prof.gender, "Female")
+		interested_in = Interests.objects.get(gender="Both")
+		self.assertEqual(updated_prof.interested_in.get(), interested_in)
+
+		self.assertEqual(updated_prof.civil_state, "IR")
+
+		langs = UserLanguage.objects.filter(user_profile=self.profile1, level="intermediate", language__name="english")
+		self.assertEqual(len(langs), 1)
+		langs = UserLanguage.objects.filter(user_profile=self.profile1, level="expert", language__name="spanish")
+		self.assertEqual(len(langs), 1)
+		langs = UserLanguage.objects.filter(user_profile=self.profile1, level="expert", language__name="catalan")
+		self.assertEqual(len(langs), 1)
+		langs = UserLanguage.objects.filter(user_profile=self.profile1, level="expert", language__name="japanese")
+		self.assertEqual(len(langs), 1)
+
+		# Locations
+		city = City.objects.get(name="Barcelona", region__name="Catalonia")
+		self.assertEqual(updated_prof.current_city, city)
+		self.assertEqual(updated_prof.hometown, city)
+		self.assertEqual(len(updated_prof.other_locations.filter()), 0)
+		self.assertEqual(updated_prof.last_login, city)
+
+		# Contact info
+		self.assertEqual(updated_prof.emails, "fr33d4n@gmail.com")
+		self.assertEqual(updated_prof.phone, "616162696")
+
+		sn = UserSocialNetwork.objects.filter(user_profile = self.profile1, social_network= SocialNetwork.objects.get(name="Facebook"), social_network_username= "fr33d4n")
+		self.assertEqual(len(sn), 1)
+
+		im = UserInstantMessage.objects.filter(user_profile = self.profile1, instant_message= InstantMessage.objects.get(name="Facetime"), instant_message_username= "fr33d4n")
+		self.assertEqual(len(im), 1)
+
+		# About me
+		self.assertEqual(updated_prof.all_about_you, "I'm a nerd guy. From Barcelona. I like to play videogames and party rock.")
+		self.assertEqual(updated_prof.main_mission, "Promote electronic sports.")
+		self.assertEqual(updated_prof.occupation, "Software Engineer")
+		self.assertEqual(updated_prof.company, "PeopleWings")
+
+		univ = UserProfileStudiedUniversity.objects.filter(user_profile= self.profile1, university__name= "Universitat Politecnica de Catalunya", degree= "Licensed")
+		self.assertEqual(len(univ), 1)
+
+		self.assertEqual(updated_prof.personal_philosophy, "Be yourself and try to live happyly. But before all, be yourself.")
+		self.assertEqual(updated_prof.political_opinion, "Politicians are the cancer of my coutry.")
+		self.assertEqual(updated_prof.religion, "Atheist")
+		
+		# Likes
+		self.assertEqual(updated_prof.enjoy_people, "I like being alone")
+		# peliculas, libros, series, videojuegos, musica
+		self.assertEqual(updated_prof.movies,  "Princess Mononoke")
+		# deportes y actividades favoritas
+		self.assertEqual(updated_prof.sports, "Starcraft")
+		self.assertEqual(updated_prof.other_pages, "http://mangareader.com")
+		# que te gusta compartir o ensenyar
+		self.assertEqual(updated_prof.sharing, "My humble place, and some of my time as well")
+		# cosas increibles que hayas hecho o visto
+		self.assertEqual(updated_prof.incredible, "The rise of internet")
+		self.assertEqual(updated_prof.inspired_by, "No real inspiration")
+		# citas
+		self.assertEqual(updated_prof.quotes, "Hakuna Matata")
+		# opinion sobre peoplewings
+		self.assertEqual(updated_prof.pw_opinion, "Sergi se estresa mucho")
+
+		
+
+
 
 		
 
