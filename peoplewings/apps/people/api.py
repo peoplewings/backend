@@ -465,10 +465,12 @@ class UserProfileResource(ModelResource):
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		else:
-			if is_preview:				
+			if is_preview:			
 				prof = UserProfile.objects.filter(pk= kwargs['pk'])
 				if len(prof) > 0:
 					prof = prof[0]
+					if prof.active is False:
+						return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
 					prof_obj = PreviewProfileObject()
 
 					interests = prof.interested_in.filter()
@@ -575,6 +577,8 @@ class UserProfileResource(ModelResource):
 					prof = UserProfile.objects.filter(user=request.user)
 					if len(prof) > 0:
 						prof = prof[0]
+						if prof.active is False:
+							return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
 						prof_obj = EditProfileObject()
 
 						interests = prof.interested_in.filter()
@@ -995,6 +999,8 @@ class UserProfileResource(ModelResource):
 
 		#We need to update the needed fields
 		prof = UserProfile.objects.get(pk=kwargs['pk'])
+		if prof.active is False:
+			return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
 
 		"""
 		TODO

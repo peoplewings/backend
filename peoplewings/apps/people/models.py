@@ -30,7 +30,7 @@ class UserInstantMessage(models.Model):
 
 # LANGUAGE
 class Language(models.Model):
-	name = models.CharField(max_length=max_medium_len, unique=True)  
+	name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserLanguage(models.Model):
 	user_profile = models.ForeignKey('UserProfile')

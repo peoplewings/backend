@@ -219,7 +219,7 @@ class UserAndProfileSameIdTest(TestCase):
 class ReplyRateorTimeTest(TestCase):
 
 	def setUp(self):
-		self.profile1 = G(UserProfile, birthday = '1985-09-12')
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', active=True)
 		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		self.wing1 = G(Accomodation, author=self.profile1, capacity=1, )
 
@@ -255,32 +255,43 @@ class SearchFineTest(TestCase):
 		self.city4 = G(City, name='London')
 		self.city5 = G(City, name='Fachadolid')
 
-		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male') ## 27 ays
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male', active=True) ## 27 ays
 		self.lang1_1 = G(UserLanguage, user_profile= self.profile1, language=self.lang1)
 		self.wing1 = G(Accomodation, author=self.profile1, capacity=1, date_start=None, date_end=None, city=self.city4)		
 
-		self.profile2 = G(UserProfile, birthday = '1981-09-12', gender= 'Female') ## 31 anys
+		self.profile2 = G(UserProfile, birthday = '1981-09-12', gender= 'Female', active=True) ## 31 anys
 		self.lang2_1 = G(UserLanguage, user_profile= self.profile2, language=self.lang2)
 		self.wing2 = G(Accomodation, author=self.profile2, capacity=2, date_start=None, date_end=None, city=self.city5)
 
-		self.profile3 = G(UserProfile, birthday = '1989-09-12', gender= 'Male') ## 23 anys
+		self.profile3 = G(UserProfile, birthday = '1989-09-12', gender= 'Male', active=True) ## 23 anys
 		self.lang3_1 = G(UserLanguage, user_profile= self.profile3, language=self.lang3)
 		self.wing3 = G(Accomodation, author=self.profile3, capacity=3, date_start=None, date_end=None, city=self.city3)
 
-		self.profile4 = G(UserProfile, birthday = '1965-09-12', gender= 'Female') ##47 anys
+		self.profile4 = G(UserProfile, birthday = '1965-09-12', gender= 'Female', active=True) ##47 anys
 		self.lang4_1 = G(UserLanguage, user_profile= self.profile4, language=self.lang4)
 		self.wing4 = G(Accomodation, author=self.profile4, capacity=4, date_start=None, date_end=None, city=self.city1)
 
-		self.profile5 = G(UserProfile, birthday = '1975-09-12', gender= 'Male') ## 37 anys
+		self.profile5 = G(UserProfile, birthday = '1975-09-12', gender= 'Male', active=True) ## 37 anys
 		self.lang5_1 = G(UserLanguage, user_profile= self.profile5, language=self.lang5)
-		self.wing5 = G(Accomodation, author=self.profile5, capacity=5, date_start='2013-04-01', date_end=None, city=self.city2)
+		now = datetime.now()
+		self.wing_year = int(now.year)
+		self.wing_month = int(now.month)
+		self.wing_day = int(now.day)
+		if self.wing_month > 8:
+			self.wing_year = self.wing_year + 1
+		else:
+			self.wing_month = self.wing_month + 4
+		wing_date = '%s-%s-%s' % (self.wing_year, self.wing_month, self.wing_day)
+		self.wing5 = G(Accomodation, author=self.profile5, capacity=5, date_start=wing_date, date_end=None, city=self.city2)
+
+		self.search_date = '%s-%s-%s' % (int(now.year), int(now.month), int(now.day))
 
 	def test_search_filtering(self):
 		c = Client()
 		token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 		c_count= 4
 		# Basci search, we dont check the sorting yet...
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=%s&page=1' % self.search_date, HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -318,7 +329,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select english speakers
 		c_count = 1
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=%s&page=1' % self.search_date, HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -356,7 +367,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we only select male
 		c_count = 2
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Male&startDate=%s&page=1' % self.search_date, HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -394,7 +405,7 @@ class SearchFineTest(TestCase):
 
 		# More basics. This time we select capacity >=3 and language english
 		c_count = 0
-		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=2013-03-19&page=1', HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=3&startAge=18&endAge=99&language=english&type=Host&gender=Both&startDate=%s&page=1' % self.search_date, HTTP_X_AUTH_TOKEN=token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -445,23 +456,23 @@ class PublicRequestTest(TestCase):
 		self.city4 = G(City, name='London')
 		self.city5 = G(City, name='Fachadolid')
 
-		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male') ## 27 ays
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male', active=True) ## 27 ays
 		self.lang1_1 = G(UserLanguage, user_profile= self.profile1, language=self.lang1)
 		self.wing1 = G(PublicRequestWing, author=self.profile1, capacity=1, date_start=datetime.today() - timedelta(days=5), date_end=datetime.today() - timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA")	#NO	
 
-		self.profile2 = G(UserProfile, birthday = '1981-09-12', gender= 'Female') ## 31 anys
+		self.profile2 = G(UserProfile, birthday = '1981-09-12', gender= 'Female', active=True) ## 31 anys
 		self.lang2_1 = G(UserLanguage, user_profile= self.profile2, language=self.lang2)
 		self.wing2 = G(PublicRequestWing, author=self.profile2, capacity=2, date_start=datetime.today() + timedelta(days=1), date_end=datetime.today() + timedelta(days=4), city=self.city1, type='Accomodation', introduction="HOLA") #YES
 
-		self.profile3 = G(UserProfile, birthday = '1989-09-12', gender= 'Male') ## 23 anys
+		self.profile3 = G(UserProfile, birthday = '1989-09-12', gender= 'Male', active=True) ## 23 anys
 		self.lang3_1 = G(UserLanguage, user_profile= self.profile3, language=self.lang3)
 		self.wing3 = G(PublicRequestWing, author=self.profile3, capacity=3, date_start=datetime.today(), date_end=datetime.today() + timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA") #YES
 
-		self.profile4 = G(UserProfile, birthday = '1965-09-12', gender= 'Female') ##47 anys
+		self.profile4 = G(UserProfile, birthday = '1965-09-12', gender= 'Female', active=True) ##47 anys
 		self.lang4_1 = G(UserLanguage, user_profile= self.profile4, language=self.lang4)
 		self.wing4 = G(PublicRequestWing, author=self.profile4, capacity=4, date_start=datetime.today() - timedelta(days=1), date_end=datetime.today() + timedelta(days=2), city=self.city1, type='Accomodation', introduction="HOLA") #YES
 
-		self.profile5 = G(UserProfile, birthday = '1975-09-12', gender= 'Male') ## 37 anys
+		self.profile5 = G(UserProfile, birthday = '1975-09-12', gender= 'Male', active=True) ## 37 anys
 		self.lang5_1 = G(UserLanguage, user_profile= self.profile5, language=self.lang5)
 		self.wing5 = G(PublicRequestWing, author=self.profile5, capacity=5, date_start=datetime.today() + timedelta(days=2), date_end=datetime.today() + timedelta(days=4), city=self.city2, type='Accomodation', introduction="HOLA") #NO
 
@@ -565,7 +576,7 @@ class ControlTest(TestCase):
 
 	def setUp(self):		
 
-		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male') ## 27 ays
+		self.profile1 = G(UserProfile, birthday = '1985-09-12', gender= 'Male', active=True) ## 27 ays
 		self.token1 = ApiToken.objects.create(user=self.profile1.user, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M')).token
 
 	def test_search_filtering(self):
@@ -607,7 +618,7 @@ class ProfileTest(TestCase):
 
 		self.user1 = G(User, first_name='Joan', last_name= 'Roca', email='fr33d4n@peoplewings.com', is_active=True)
 		self.city1 = G(City, name='Barcelona', lat=41.1, lon=1.2, region=G(Region, name='Catalonia', country=G(Country, name='Spain')))
-		self.profile1 = G(UserProfile, pk= self.user1.pk, user= self.user1, pw_state = 'Y', birthday = '1985-09-12', show_birthday= 'F', gender= 'Male', civil_state='SI', current_city = self.city1, hometown=self.city1, email='fuck@you.com', phone='606762696', last_login=self.city1) ## 27 ays
+		self.profile1 = G(UserProfile, pk= self.user1.pk, user= self.user1, active=True, pw_state = 'Y', birthday = '1985-09-12', show_birthday= 'F', gender= 'Male', civil_state='SI', current_city = self.city1, hometown=self.city1, email='fuck@you.com', phone='606762696', last_login=self.city1) ## 27 ays
 		self.apitoken1 = ApiToken.objects.create(user=self.user1, last = datetime.strptime('01-01-2037 00:00', '%d-%m-%Y %H:%M'))
 		self.token1 = self.apitoken1.token
 		self.apitoken1.last_js = time.time()
