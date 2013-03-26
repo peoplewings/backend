@@ -135,6 +135,22 @@ class RequestItem(object):
 		self.receiverId= None
 		self.receiverAvatar= None
 		self.created= None
+		self.wing= {}
+		self.wing['type'] = None
+		self.wing['state'] = None
+		self.wing['parameters'] = {}
+		self.wing['parameters']['wingId']= 34
+		self.wing['parameters']['wingName']= None
+		self.wing['parameters']['wingCity']= None
+		self.wing['parameters']['startDate']= None
+		self.wing['parameters']['endDate']= None
+		self.wing['parameters']['capacity']= None
+		self.wing['parameters']['arrivingVia']= None
+		self.wing['parameters']['flexibleStartDate']= None
+		self.wing['parameters']['flexibleEndDate']= None
+		self.wing['parameters']['modified']= None
+
+
 
 	def jsonable(self):
 		res = dict()
@@ -153,7 +169,7 @@ class RequestThread(object):
 		self.wing['type'] = None
 		self.wing['state'] = None
 		self.wing['parameters'] = {}
-		self.wing['parameters']['wingId']= 34
+		self.wing['parameters']['wingId']= None
 		self.wing['parameters']['wingName']= None
 		self.wing['parameters']['wingCity']= None
 		self.wing['parameters']['startDate']= None
