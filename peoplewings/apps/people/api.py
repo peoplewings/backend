@@ -498,9 +498,8 @@ class UserProfileResource(ModelResource):
 					elif conn == "AFK":
 						prof_obj.last_login_date = "AFK"
 					else:
-						prof_obj.last_login_date = "ON"
-
-					education = prof.universities.filter()
+						prof_obj.last_login_date = "ON"					
+					education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 					for i in education:
 						prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
 					
@@ -529,7 +528,7 @@ class UserProfileResource(ModelResource):
 
 					prof_obj.sports = prof.sports
 
-					langs = prof.languages.filter()
+					langs = UserLanguage.objects.filter(user_profile=prof)
 					for i in langs:
 						aux = {}
 						aux['name'] = i.lat
@@ -601,7 +600,7 @@ class UserProfileResource(ModelResource):
 						prof_obj.personal_philosophy = prof.personal_philosophy
 						prof_obj.last_login_date = "ON"
 
-						education = prof.universities.filter()
+						education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 						for i in education:
 							prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
 						
@@ -629,19 +628,18 @@ class UserProfileResource(ModelResource):
 							aux['country'] = i.region.country.name
 							prof_obj.other_locations.append(aux)
 
-						prof_obj.sports = prof.sports
-
-						langs = prof.languages.filter()
+						prof_obj.sports = prof.sports						
+						langs = UserLanguage.objects.filter(user_profile=prof)
 						for i in langs:
 							aux = {}
-							aux['name'] = i.lat
-							aux['level'] = i.lon
+							aux['name'] = i.language.name
+							aux['level'] = i.level
 							prof_obj.other_locations.append(aux)
 
 						prof_obj.birth_year = prof.birthday.year
 						prof_obj.quotes = prof.quotes
 
-						sn = prof.social_networks.filter()
+						sn = UserSocialNetwork.objects.filter(user_profile=prof)
 						for i in sn:
 							aux = {}
 							aux['snUsername'] = i.social_network_username
@@ -655,7 +653,7 @@ class UserProfileResource(ModelResource):
 						prof_obj.company = prof.company
 						prof_obj.reply_rate = prof.reply_rate
 
-						im = prof.instant_messages.filter()
+						im = UserInstantMessage.objects.filter(user_profile=prof)
 						for i in im:
 							aux = {}
 							aux['imUsername'] = i.instant_message_username
@@ -746,9 +744,6 @@ class UserProfileResource(ModelResource):
 								if 'socialNetworks' not in invalid['extras']:
 									invalid['extras'].append('socialNetworks')
 
-		else:
-			field_req['extras'].append('socialNetworks')
-
 		if POST['instantMessages']:
 			if not isinstance(POST['instantMessages'], list):
 				invalid['extras'].append('instantMessages')
@@ -769,8 +764,6 @@ class UserProfileResource(ModelResource):
 								if 'instantMessages' not in invalid['extras']:
 									invalid['extras'].append('instantMessages')
 
-		else:
-			field_req['extras'].append('socialNetworks')
 
 		if POST.has_key('interestedIn'):
 			if not isinstance(POST['interestedIn'], list):
@@ -785,8 +778,6 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('interestedIn')
 			elif POST['interestedIn'][0]['gender'] not in ['Male', 'Female', 'Both']:
 				invalid['extras'].append('interestedIn')
-		else:
-			field_req['extras'].append('interestedIn')
 
 		if POST.has_key('civilState'):
 			if POST['civilState'] == "":
@@ -816,8 +807,6 @@ class UserProfileResource(ModelResource):
 						elif i['level'] not in ["intermediate", "expert", "beginner"]:
 							if not 'languages' in invalid['extras']:
 								invalid['extras'].append('languages')
-		else:
-			field_req['extras'].append('languages')
 
 		if POST.has_key('hometown'):
 			if not isinstance(POST['hometown'], dict):
@@ -826,8 +815,6 @@ class UserProfileResource(ModelResource):
 				if len(POST['hometown'].keys()) != 0:
 					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('region') and POST['hometown'].has_key('name')):
 						invalid['extras'].append('hometown')
-		else:
-			field_req['extras'].append('hometown')
 
 		if POST.has_key('current'):
 			if not isinstance(POST['current'], dict):
@@ -836,8 +823,6 @@ class UserProfileResource(ModelResource):
 				if len(POST['current'].keys()) != 0:
 					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('region') and POST['current'].has_key('name')):
 						invalid['extras'].append('current')
-		else:
-			field_req['extras'].append('current')
 
 		if POST.has_key('otherLocations'):
 			if not isinstance(POST.has_key('otherLocations'), list):
@@ -845,8 +830,6 @@ class UserProfileResource(ModelResource):
 					if isinstance(i, dict) and len(i.keys()) != 0:
 						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('region') and i.has_key('name')):
 							invalid['extras'].append('otherLocations')
-		else:
-			field_req['extras'].append('otherLocations')
 
 		if POST.has_key('education'):
 			if not isinstance(POST['education'], list):
@@ -863,9 +846,6 @@ class UserProfileResource(ModelResource):
 						if not i.has_key('degree'):
 							if 'education' not in invalid['extras']:
 								invalid['extras'].append('education')
-
-		else:
-			field_req['extras'].append('education')
 
 		if POST.has_key('emails'):
 			if POST['emails'] == "":
@@ -980,7 +960,7 @@ class UserProfileResource(ModelResource):
 			errors.append(invalid)
 		return errors
 
-	def put_detail(self, request, **kwargs):				
+	def put_detail(self, request, **kwargs):
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
 		try:
@@ -1016,7 +996,7 @@ class UserProfileResource(ModelResource):
 		prof.interested_in.add(Interests.objects.get(gender__icontains=POST['interestedIn'][0]['gender']))
 		prof.civil_state = POST['civilState']
 
-		[i.delete() for i in prof.languages.all()]
+		[i.delete() for i in UserLanguage.objects.filter(user_profile=prof)]
 		for i in POST['languages']:
 			if len(Language.objects.filter(name=i['name'])) > 0:
 				lang = Language.objects.get(name=i['name'])
@@ -1032,11 +1012,12 @@ class UserProfileResource(ModelResource):
 
 		prof.emails = POST['emails']
 		prof.phone = POST['phone']		
-		[i.delete() for i in prof.social_networks.filter()]
+
+		[i.delete() for i in UserSocialNetwork.objects.filter(user_profile=prof)]
 		for i in POST['socialNetworks']:
 			UserSocialNetwork.objects.create(user_profile=prof, social_network=SocialNetwork.objects.get(name=i['socialNetwork']), social_network_username=i['snUsername'])
 
-		[i.delete() for i in prof.instant_messages.filter()]
+		[i.delete() for i in UserInstantMessage.objects.filter(user_profile=prof)]
 		for i in POST['instantMessages']:
 			UserInstantMessage.objects.create(user_profile=prof, instant_message=InstantMessage.objects.get(name=i['instantMessage']), instant_message_username=i['imUsername'])
 
@@ -1045,7 +1026,7 @@ class UserProfileResource(ModelResource):
 		prof.occupation = POST['occupation']
 		prof.company = POST['company']
 
-		[i.delete() for i in prof.universities.filter()]
+		[i.delete() for i in UserProfileStudiedUniversity.objects.filter(user_profile=prof)]
 		for i in POST['education']:
 			if len(University.objects.filter(name=i['institution'])) > 0:
 				univ = University.objects.get(name=i['institution'])

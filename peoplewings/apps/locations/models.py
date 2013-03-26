@@ -37,7 +37,8 @@ class CityManager(models.Manager):
     
     def get_or_create(self, **kwargs):
         try:
-            city = City.objects.get(name=kwargs['name'], region_id=kwargs['region'])
+            #import pdb; pdb.set_trace()
+            city = City.objects.get(name=kwargs['name'], region=kwargs['region'])
             city.lat = kwargs['lat']
             city.lon = kwargs['lon']            
         except Exception, e:
@@ -49,7 +50,7 @@ class CityManager(models.Manager):
 
     def saveLocation(self, **kwargs):
     # countryN, countrySN, regionN='No region', regionSN='No region', cityN, citySN, cityLat, cityLon, locationType
-        # define args
+        # define args        
         countryN = kwargs.get('country', None)
         regionN = kwargs.get('region', 'NoName')
         cityN = kwargs.get('name', None)
