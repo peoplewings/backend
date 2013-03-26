@@ -207,8 +207,8 @@ class AccomodationTest(TestCase):
 			self.assertTrue(data.has_key('dateStart'))
 			self.assertTrue(data.has_key('bus'))
 			self.assertEqual(data['bus'], True)
-			self.assertTrue(data.has_key('underground'))
-			self.assertEqual(data['underground'], False)
+			self.assertTrue(data.has_key('metro'))
+			self.assertEqual(data['metro'], False)
 			self.assertTrue(data.has_key('train'))
 			self.assertEqual(data['train'], False)
 			self.assertTrue(data.has_key('petsAllowed'))
@@ -280,8 +280,8 @@ class AccomodationTest(TestCase):
 			self.assertTrue(data.has_key('dateStart'))
 			self.assertTrue(data.has_key('bus'))
 			self.assertEqual(data['bus'], True)
-			self.assertTrue(data.has_key('underground'))
-			self.assertEqual(data['underground'], False)
+			self.assertTrue(data.has_key('metro'))
+			self.assertEqual(data['metro'], False)
 			self.assertTrue(data.has_key('train'))
 			self.assertEqual(data['train'], False)
 			self.assertTrue(data.has_key('petsAllowed'))
@@ -360,8 +360,8 @@ class AccomodationTest(TestCase):
 			self.assertTrue(data.has_key('dateStart'))
 			self.assertTrue(data.has_key('bus'))
 			self.assertEqual(data['bus'], True)
-			self.assertTrue(data.has_key('underground'))
-			self.assertEqual(data['underground'], False)
+			self.assertTrue(data.has_key('metro'))
+			self.assertEqual(data['metro'], False)
 			self.assertTrue(data.has_key('train'))
 			self.assertEqual(data['train'], False)
 			self.assertTrue(data.has_key('petsAllowed'))
@@ -411,7 +411,7 @@ class AccomodationTest(TestCase):
 			"preferredGender": "Male",
 			"whereSleepingType": "C",
 			"smoking": "N",
-			"underground": True,
+			"metro": True,
 			"about": "Its a nice place to stay",
 			"address": "Manila",
 			"number": "23",
@@ -451,8 +451,8 @@ class AccomodationTest(TestCase):
 		self.assertEqual(new.blankets, False)
 		self.assertEqual(new.live_center, False)
 		for i in new.public_transport.all():
-			self.assertTrue(i in PublicTransport.objects.filter(name__in=['bus', 'train', 'underground']))
-		for i in PublicTransport.objects.filter(name__in=['bus', 'train', 'underground']):
+			self.assertTrue(i in PublicTransport.objects.filter(name__in=['bus', 'train', 'metro']))
+		for i in PublicTransport.objects.filter(name__in=['bus', 'train', 'metro']):
 			self.assertTrue(i in new.public_transport.all())
 			
 		self.assertEqual(new.about, "Its a nice place to stay")

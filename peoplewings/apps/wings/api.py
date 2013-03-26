@@ -323,7 +323,7 @@ class AccomodationsResource(ModelResource):
 						aux_wing.train = True
 					if j.name == 'boat':
 						aux_wing.boat = True
-					if j.name == 'underground':
+					if j.name == 'metro':
 						aux_wing.undeground = True
 					if j.name == 'others':
 						aux_wing.others = True
@@ -379,7 +379,7 @@ class AccomodationsResource(ModelResource):
 						aux_wing.train = True
 					if j.name == 'boat':
 						aux_wing.boat = True
-					if j.name == 'underground':
+					if j.name == 'metro':
 						aux_wing.undeground = True
 					if j.name == 'others':
 						aux_wing.others = True
@@ -493,14 +493,6 @@ class AccomodationsResource(ModelResource):
 		else:
 			field_req['extras'].append('blankets')
 
-		if POST.has_key('underground'):
-			if POST['underground'] == "":
-				not_empty['extras'].append('underground')
-			elif POST['underground'] not in [True, False]:
-				invalid['extras'].append('underground')
-		else:
-			field_req['extras'].append('underground')
-
 		if POST.has_key('name'):
 			if POST['name'] == "":
 				not_empty['extras'].append('name')
@@ -560,8 +552,6 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('about'):
 			if len(POST['about']) > 400:
 				too_long['extras'].append('about')
-		else:
-			field_req['extras'].append('about')
 
 		if POST.has_key('address'):
 			if POST['address'] == "":
@@ -584,8 +574,6 @@ class AccomodationsResource(ModelResource):
 				not_empty['extras'].append('additionalInformation')
 			elif len(POST['additionalInformation']) > 250:
 				too_long['extras'].append('additionalInformation')
-		else:
-			field_req['extras'].append('additionalInformation')
 
 		if POST.has_key('postalCode'):
 			if POST['postalCode'] == "":
@@ -669,8 +657,8 @@ class AccomodationsResource(ModelResource):
 		if POST['others'] is True:
 			transports.append(PublicTransport.objects.get(name='others'))
 
-		if POST['underground'] is True:
-			transports.append(PublicTransport.objects.get(name='underground'))
+		if POST['metro'] is True:
+			transports.append(PublicTransport.objects.get(name='metro'))
 
 		return transports
 		
@@ -697,6 +685,8 @@ class AccomodationsResource(ModelResource):
 		transport = self.build_transports(POST)
 		pref_male = 'Male' in POST['preferredGender']
 		pref_female= 'Female' in POST['preferredGender']
+		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
+		if not POST.has_key('about'): POST['about'] = ""
 		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])
 		for i in transport:
 			acc.public_transport.add(i)
