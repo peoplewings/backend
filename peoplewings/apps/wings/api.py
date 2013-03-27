@@ -324,7 +324,7 @@ class AccomodationsResource(ModelResource):
 					if j.name == 'boat':
 						aux_wing.boat = True
 					if j.name == 'metro':
-						aux_wing.undeground = True
+						aux_wing.metro = True
 					if j.name == 'others':
 						aux_wing.others = True
 				aux_wing.about = i.about
@@ -380,7 +380,7 @@ class AccomodationsResource(ModelResource):
 					if j.name == 'boat':
 						aux_wing.boat = True
 					if j.name == 'metro':
-						aux_wing.undeground = True
+						aux_wing.metro = True
 					if j.name == 'others':
 						aux_wing.others = True
 				aux_wing.about = i.about
@@ -638,6 +638,7 @@ class AccomodationsResource(ModelResource):
 			errors.append(too_long)
 		if len(invalid['extras']) > 0:
 			errors.append(invalid)
+
 		return errors
 
 	def build_transports(self, POST):
@@ -657,12 +658,10 @@ class AccomodationsResource(ModelResource):
 		if POST['others'] is True:
 			transports.append(PublicTransport.objects.get(name='others'))
 
-		if POST['metro'] is True:
-			transports.append(PublicTransport.objects.get(name='metro'))
-
 		return transports
 		
 	def post_list(self, request, **kwargs):
+
 		POST = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
@@ -714,47 +713,75 @@ class AccomodationsResource(ModelResource):
 	def patch_detail(self, request, **kwargs):
 		return self.put_detail(request, **kwargs)    
 
-	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
-		if 'profile_id' not in kwargs:
+		PUT = json.loads(request.raw_post_data)	
+		try:
+			prof = UserProfile.objects.get(user=request.user)
+		except:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
+
+		if kwargs.has_key('profile_id'):
+			target_prof = kwargs['profile_id']
+		else:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+		if kwargs.has_key('wing_id'):
+			target_wing = kwargs['wing_id']
+		else:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["wing"]}]}, response_class=HttpResponse)
 
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
 		try:
-			a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
+			acc = Accomodation.objects.get(pk=target_wing)
 		except:
-			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
-		if 'city' in bundle.data:
-			loc = {}
-			data = bundle.data['city']
-			for key, value in data.items():            
-				loc[key] = value
-			city = City.objects.saveLocation(**loc)
-			setattr(a, 'city', city)
-			bundle.data.pop('city')
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
-		forbidden_fields_update = ['author_id', 'id']
-		for i in bundle.data:
-			if hasattr(a, i) and i not in forbidden_fields_update:
-				setattr(a, i, bundle.data.get(i))
-		trans = PublicTransport.objects.all()
-		a.public_transport = []
-		for i in trans:
-			if i.name in bundle.data.keys():
-				a.public_transport.add(i)
+		if prof.pk != int(target_prof):
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
+
+		if acc.author.pk != prof.pk:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
+
+		#Now we are sure that the user wants to do a correct action...
+		errors = self.validate_post(json.loads(request.raw_post_data))
+		if len(errors) > 0:
+			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 		
-		#updated_bundle = self.dehydrate(bundle)
-		#updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-		a.save()
-		self.save_related(bundle)
-		bundle = {"status" : True}
-		return self.create_response(request, bundle, response_class=HttpResponse)
+		city = City.objects.saveLocation(country=PUT['city']['country'], region=PUT['city']['region'], lat=PUT['city']['lat'], lon=PUT['city']['lon'], name=PUT['city']['name'])
+		transport = self.build_transports(PUT)
+		pref_male = 'Male' in PUT['preferredGender']
+		pref_female= 'Female' in PUT['preferredGender']
+		if not PUT.has_key('additionalInformation'): PUT['additionalInformation'] = ""
+		if not PUT.has_key('about'): PUT['about'] = ""
+
+		acc.name=PUT['name'] 
+		acc.status=PUT['status'] 
+		acc.date_start=getattr(PUT, 'dateStart', None) 
+		acc.date_end=getattr(PUT, 'dateEnd', None)
+		acc.best_days=PUT['bestDays']
+		acc.is_request=False
+		acc.city=city
+		acc.active=True
+		acc.sharing_once=PUT['sharingOnce']
+		acc.capacity=PUT['capacity']
+		acc.preferred_male=pref_male
+		acc.preferred_female=pref_female
+		acc.wheelchair=PUT['wheelchair']
+		acc.where_sleeping_type=PUT['whereSleepingType']
+		acc.smoking=PUT['smoking']
+		acc.i_have_pet=PUT['iHavePet']
+		acc.pets_allowed=PUT['petsAllowed']
+		acc.blankets=PUT['blankets']
+		acc.live_center=PUT['liveCenter']
+		acc.about=PUT['about']
+		acc.address=PUT['address']
+		acc.number=PUT['number']
+		acc.additional_information=PUT['additionalInformation']
+		acc.postal_code=PUT['postalCode']
+		acc.public_transport.clear()
+		for i in transport:
+			acc.public_transport.add(i)
+		acc.save()
+		return self.create_response(request, {"status":True})
 
 	@transaction.commit_on_success
 	def delete_detail(self, request, **kwargs):

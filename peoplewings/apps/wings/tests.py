@@ -125,7 +125,7 @@ class AccomodationTest(TestCase):
 		self.trans2= G(PublicTransport, name='tram')
 		self.trans3= G(PublicTransport, name='train')
 		self.trans4= G(PublicTransport, name='boat')
-		self.trans5= G(PublicTransport, name='underground')
+		self.trans5= G(PublicTransport, name='metro')
 		self.trans6= G(PublicTransport, name='others')
 
 		self.wd1_name= 'Sinsui'
@@ -461,3 +461,80 @@ class AccomodationTest(TestCase):
 		self.assertEqual(new.number, '23')
 		self.assertEqual(new.additional_information, 'Lololol')
 		self.assertEqual(new.postal_code, '08025')
+
+	def test_put_wings(self):
+		c = Client()
+		put_data = json.dumps(		{
+			"tram": True,
+			"bus": True,
+			"metro": False,
+			"train": True,
+			"others": False,
+			"liveCenter": False,
+			"petsAllowed": False,
+			"wheelchair": False,
+			"sharingOnce": False,
+			"iHavePet": False,
+			"blankets": False,
+			"name": "fr33d4n's choza",
+			"status": "M",
+			"bestDays": "F",
+			"capacity": "2",
+			"preferredGender": "Male",
+			"whereSleepingType": "P",
+			"smoking": "S",
+			"about": "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.",
+			"address": "Deu i Mata Street",
+			"number": "12",
+			"additionalInformation": "The house has a nice terrace",
+			"city": {
+			    "lat": "41.387917000",
+			    "country": "Spain",
+			    "region": "Catalonia",
+			    "lon": "2.169919000",
+			    "name": "Barcelona"
+			},
+			"postalCode": "08028"
+			})
+		response = c.put('/api/v1/profiles/%s/accomodations/%s' % (self.profile1.pk, self.a1.pk), put_data, HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		self.assertEqual(response.status_code, 200)
+		content = json.loads(response.content)
+		self.assertTrue(content.has_key('status'))
+		self.assertEqual(content['status'], True)
+
+		new_list = Accomodation.objects.filter(author=self.profile1).order_by('pk')
+		self.assertTrue(len(new_list) == 1)
+		new = new_list[0]
+		self.assertEqual(new.name, "fr33d4n's choza")
+		self.assertEqual(new.status, 'M')
+		self.assertEqual(new.date_start, None)
+		self.assertEqual(new.date_end, None)
+		self.assertEqual(new.best_days, 'F')
+		self.assertEqual(new.is_request, False)
+
+		self.assertEqual(new.city, City.objects.get(name='Barcelona'))
+		self.assertEqual(new.active, True)
+		self.assertEqual(new.sharing_once, False)
+		self.assertEqual(new.capacity, '2')
+		self.assertEqual(new.preferred_male, True)
+
+		self.assertEqual(new.preferred_female, False)
+		self.assertEqual(new.wheelchair, False)
+		self.assertEqual(new.where_sleeping_type,'P')
+		self.assertEqual(new.smoking, 'S')
+		self.assertEqual(new.i_have_pet, False)
+
+		self.assertEqual(new.pets_allowed, False)
+		self.assertEqual(new.blankets, False)
+		self.assertEqual(new.live_center, False)
+		for i in new.public_transport.all():
+			self.assertTrue(i in PublicTransport.objects.filter(name__in=['bus', 'tram', 'train']))
+		for i in PublicTransport.objects.filter(name__in=['bus', 'train', 'train']):
+			self.assertTrue(i in new.public_transport.all())
+			
+		self.assertEqual(new.about, "It's a nice place in upper east side of Barcelona. Not really far from the center. Good shopping centers very near.")
+
+		self.assertEqual(new.address, 'Deu i Mata Street')
+		self.assertEqual(new.number, '12')
+		self.assertEqual(new.additional_information, "The house has a nice terrace")
+		self.assertEqual(new.postal_code, '08028')

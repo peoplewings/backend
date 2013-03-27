@@ -46,7 +46,7 @@ class AccomodationWingEditable(object):
 		self.bus = False
 		self.train = False
 		self.tram = False
-		self.underground = False
+		self.metro = False
 		self.boat = False
 		self.others = False
 
@@ -85,7 +85,7 @@ class AccomodationWingNotEditable(object):
 		self.bus = False
 		self.train = False
 		self.tram = False
-		self.underground = False
+		self.metro = False
 		self.boat = False
 		self.others = False
 
