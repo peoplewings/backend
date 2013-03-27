@@ -590,7 +590,7 @@ class AccomodationsResource(ModelResource):
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
-						date_start = datetime.strptime(POST['dateStart'], '%Y-%m-%d')
+						date_start = datetime.datetime.strptime(POST['dateStart'], '%Y-%m-%d')
 						if date_start < date.today():
 							invalid['extras'].append('dateStart')
 					except:
@@ -606,7 +606,7 @@ class AccomodationsResource(ModelResource):
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
-						date_end = datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
+						date_end = datetime.datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
 						if date_end < date.today():
 							invalid['extras'].append('dateEnd')
 					except:

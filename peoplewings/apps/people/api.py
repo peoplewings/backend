@@ -460,7 +460,7 @@ class UserProfileResource(ModelResource):
 		return wing_resource.dispatch_list(request, **kwargs)  
 
 	def get_detail(self, request, **kwargs):
-		#Check if the user is valid
+		#Check if the user is valid		
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
@@ -531,8 +531,8 @@ class UserProfileResource(ModelResource):
 					langs = UserLanguage.objects.filter(user_profile=prof)
 					for i in langs:
 						aux = {}
-						aux['name'] = i.lat
-						aux['level'] = i.lon
+						aux['name'] = i.language.name
+						aux['level'] = i.level
 						prof_obj.other_locations.append(aux)
 
 					prof_obj.quotes = prof.quotes
