@@ -3,6 +3,7 @@ import json
 import re
 import copy
 from datetime import date, datetime
+from dateutil import parser
 from pprint import pprint
 from tastypie import fields
 from tastypie.authentication import *
@@ -29,6 +30,7 @@ from django.core.paginator import Paginator, InvalidPage
 from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
 from people.domain import *
+from peoplewings.global_vars import *
 from peoplewings.apps.people.exceptions import *
 from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
@@ -374,23 +376,11 @@ class InterestsResource(ModelResource):
 		fields = ['gender']
 
 class UserProfileResource(ModelResource):    
-	user = fields.ToOneField(AccountResource, 'user')
-
-	languages = fields.ToManyField(LanguageResource, 'languages', full=True)
-
-	education = fields.ToManyField(UniversityResource, 'universities' , full=True)
-	social_networks = fields.ToManyField(SocialNetworkResource, 'social_networks', full=True)
-	instant_messages = fields.ToManyField(InstantMessageResource, 'instant_messages', full=True)
-	current = fields.ToOneField(CityResource, 'current_city', full=True, null=True)
-	hometown = fields.ToOneField(CityResource, 'hometown', full=True, null=True)
-	other_locations = fields.ToManyField(CityResource, 'other_locations', full=True, null=True)
-	last_login = fields.ToOneField(CityResource, 'last_login', full=True, null=True)
-	interested_in = fields.ToManyField(InterestsResource, 'interested_in', full = True, null = True)
 
 	class Meta:
 		object_class = UserProfile
 		queryset = UserProfile.objects.all()
-		allowed_methods = ['get', 'post', 'put']
+		allowed_methods = ['get', 'put']
 		include_resource_uri = True
 		resource_name = 'profiles'
 		serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -398,84 +388,13 @@ class UserProfileResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 		validation = FormValidation(form_class=UserProfileForm)
-		filtering = {
-			"age": ['range'],
-			'gender':['exact'],
-			'languages':ALL_WITH_RELATIONS,
-			#'userlanguages': ALL_WITH_RELATIONS,
-		}
-		excludes = ['pw_state', 'places_lived_in', 'places_visited', 'places_gonna_go', 'places_wanna_go', 'user']
 
-	def normalize_query(self, query_string,
-					findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
-					normspace=re.compile(r'\s{2,}').sub):
-		return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)] 
-
-	def get_query(self, query_string, search_fields):
-		query = None # Query to search for every search term        
-		terms = self.normalize_query(query_string)
-		for term in terms:
-			or_query = None # Query to search for a given term in each field
-			for field_name in search_fields:
-				q = Q(**{"%s__icontains" % field_name: term})
-				if or_query is None:
-					or_query = q
-				else:
-					or_query = or_query | q
-			if query is None:
-				query = or_query
-			else:
-				query = query & or_query
-		return query
-
-	def apply_filters(self, request, applicable_filters):
-
-		base_object_list = super(UserProfileResource, self).apply_filters(request, applicable_filters)     
-		city = request.GET.get('wings', None)
-		start_date = request.GET.get('startDate', None)
-		end_date = request.GET.get('endDate', None)
-		capacity = request.GET.get('capacity', None)
-		start_age = int(request.GET.get('startAge', None))
-		end_age = int(request.GET.get('endAge', None))
-		language = request.GET.get('language', None)
-		gender = request.GET.get('gender', None)
-		tipo = request.GET.get('type', None)
-		
-		if language and language != 'all':
-			entry_query = self.get_query(language, ['userlanguage__language__name'])
-			base_object_list = base_object_list.filter(entry_query).distinct()
-
-		if start_age and end_age:
-			#birthday + timedelta(days=365.25*start_age) <= timedelta.now() <= birthday + timedelta(days=365.25*end_age)
-			aux = []
-			for i in base_object_list:
-				if i.get_age() >= start_age and i.get_age() <= end_age: aux.append(i.id)
-			base_object_list = base_object_list.filter(pk__in=aux)
-
-		if gender:
-			entry_query = self.get_query(gender, ['gender'])
-			base_object_list = base_object_list.filter(entry_query).distinct()
-
-		# filter by wings' parameters: city, start date, end date, capacity, type
-		if capacity or start_date or end_date or city or tipo:
-			#Q(date_end__lte=de) | Q(date_end__isnull=True)
-			accomodation_list = Accomodation.objects.filter(status__in=('Y', 'M'))
-			if capacity:
-				accomodation_list = accomodation_list.filter(capacity__gte=capacity)
-			if start_date:
-				start_date = datetime.strptime(start_date, '%Y-%m-%d')
-				accomodation_list = accomodation_list.exclude(date_end__isnull=False, date_end__lt=start_date)
-			if end_date:
-				end_date = datetime.strptime(end_date, '%Y-%m-%d')
-				accomodation_list = accomodation_list.exclude(date_start__isnull=False, date_start__gt=end_date)
-			if city:
-				accomodation_list = accomodation_list.filter(city__name__iexact=city)
-			if tipo:
-				is_request = tipo == 'Applicant'
-				accomodation_list = accomodation_list.filter(is_request=is_request)
-			base_object_list = base_object_list.filter(wing__in=accomodation_list).distinct()
-
-		return base_object_list
+	def connected(self, user):
+		state = 'OFF'
+		token = ApiToken.objects.filter(user=user).order_by('-last_js')
+		if len(token) > 0:
+			state = token[0].is_user_connected()
+		return state
 
 	# funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
 	def prepend_urls(self):
@@ -539,212 +458,599 @@ class UserProfileResource(ModelResource):
 	def wing_collection(self, request, **kwargs):
 		wing_resource = WingResource()
 		return wing_resource.dispatch_list(request, **kwargs)  
-	
-	#funcion llamada en el GET y que ha de devolver un objeto JSON con los idiomas hablados por el usuario
-	def dehydrate_languages(self, bundle):
-		for i in bundle.data['languages']: 
-			# i.data = {id: id_language, name:'Spanish'}
-			lang = i.obj
-			ul = UserLanguage.objects.get(language=lang, user_profile=bundle.obj)
-			i.data['level'] = str(ul.level).lower()
-			i.data['name'] = str(i.data['name']).lower()
-			#i.data.pop('id')
-		return bundle.data['languages']
-
-	def dehydrate_education(self, bundle):
-		upu = UserProfileStudiedUniversity.objects.filter(user_profile=bundle.obj)
-		res = []
-		for u in upu:
-			d = {}
-			d['institution'] = u.university.name
-			d['degree'] = u.degree
-			res.append(d)
-		return res
-
-	def dehydrate_social_networks(self, bundle):
-		usn = UserSocialNetwork.objects.filter(user_profile=bundle.obj)
-		res = []
-		for u in usn:
-			d = {}
-			d['social_network'] = u.social_network.name
-			d['sn_username'] = u.social_network_username
-			res.append(d)
-		return res
-
-	def dehydrate_instant_messages(self, bundle):
-		uim = UserInstantMessage.objects.filter(user_profile=bundle.obj)
-		res = []
-		for u in uim:
-			d = {}
-			d['instant_message'] = u.instant_message.name
-			d['im_username'] = u.instant_message_username
-			res.append(d)
-		return res
-	
-	def dehydrate_current(self, bundle):
-		if bundle.data['current'] is None: return {} 
-		city = bundle.data['current'].obj
-		region = city.region
-		country = region.country
-		bundle.data['current'].data['region'] = region.name
-		bundle.data['current'].data['country'] = country.name
-		return bundle.data['current'].data
-
-	def dehydrate_hometown(self, bundle):
-		if bundle.data['hometown'] is None: return {} 
-		city = bundle.data['hometown'].obj
-		region = city.region
-		country = region.country
-		bundle.data['hometown'].data['region'] = region.name
-		bundle.data['hometown'].data['country'] = country.name
-		return bundle.data['hometown'].data
-
-	def dehydrate_other_locations(self, bundle):
-		for i in bundle.data['other_locations']: 
-			# tenemos: i.data = {id, lat, lon, name}
-			# queremos: i.data = {name, lat, lon, country, region}
-			city = i.obj            
-			region = city.region
-			country = region.country
-			i.data['region'] = region.name
-			i.data['country'] = country.name
-		return bundle.data['other_locations']
-
-	def dehydrate_last_login(self, bundle):
-		if bundle.data['last_login'] is None: return {}
-		city = bundle.data['last_login'].obj
-		region = city.region
-		country = region.country
-		bundle.data['last_login'].data['region'] = region.name
-		bundle.data['last_login'].data['country'] = country.name
-		return bundle.data['last_login'].data
-
-	def apply_authorization_limits(self, request, object_list=None):
-		if request.user.is_anonymous() and request.method not in ('GET'):
-			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
-		elif not request.user.is_anonymous() and request.method not in ('GET'):
-			return object_list.filter(user=request.user)
-		return object_list
 
 	def get_detail(self, request, **kwargs):
-		if request.user.is_anonymous(): return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
-		pf = UserProfile.objects.get(user=request.user)
+		#Check if the user is valid		
 		is_preview = request.path.split('/')[-1] == 'preview'
-		if not is_preview and int(kwargs['pk']) != pf.id: return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
-		pf2 = UserProfile.objects.filter(pk=kwargs['pk'])
-		if len(pf2)==1 and pf2[0].active == False:			
-			return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
-		a = super(UserProfileResource, self).get_detail(request, **kwargs)
-		data = json.loads(a.content)
-		#print data
-		if 'user' in data: del data['user']
-		if not is_preview: data['pw_state'] = pf.pw_state
-		content = {}  
-		content['status'] = True
-		content['data'] = data
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	@transaction.commit_on_success
-	def put_detail(self, request, **kwargs):			
-		if request.user.is_anonymous(): 
+		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
+		else:
+			if is_preview:			
+				prof = UserProfile.objects.filter(pk= kwargs['pk'])
+				if len(prof) > 0:
+					prof = prof[0]
+					if prof.active is False:
+						return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
+					prof_obj = PreviewProfileObject()
 
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
+					interests = prof.interested_in.filter()
+					for i in interests:
+						prof_obj.interested_in.append({"gender":i.gender})	
 
-		up = UserProfile.objects.get(user=request.user)
-		if 'interested_in' in bundle.data:
-			up.interested_in = []
-			for i in bundle.data['interested_in']:
-				interest = Interests.objects.get(gender=i['gender'])
-				up.interested_in.add(interest)
-			bundle.data.pop('interested_in')
+					hometown = prof.hometown
+					if hometown is not None:
+						#import pdb; pdb.set_trace()
+						prof_obj.hometown['lat'] = hometown.lat
+						prof_obj.hometown['lon'] = hometown.lon
+						prof_obj.hometown['name'] = hometown.name
+						prof_obj.hometown['region'] = hometown.region.name
+						prof_obj.hometown['country'] = hometown.region.country.name
 
-		if 'languages' in bundle.data:
-			UserLanguage.objects.filter(user_profile_id=up.id).delete()
-			for lang in bundle.data['languages']:
-				try:
-					UserLanguage.objects.create(user_profile_id=up.id, language_id=Language.objects.get(name__iexact=lang['name']).id, level=lang['level'])
-				except:
-					return self.create_response(request, {"status":False, "errors":[{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-			bundle.data.pop('languages')
-		
-		if 'education' in bundle.data:
-			UserProfileStudiedUniversity.objects.filter(user_profile_id=up.id).delete()
-			for e in bundle.data['education']:
-				uni, b = University.objects.get_or_create(name=e['institution'])
-				UserProfileStudiedUniversity.objects.create(user_profile_id=up.id, university_id=uni.id, degree=e['degree'])
-			bundle.data.pop('education')
+					prof_obj.reply_time = prof.reply_time
+					prof_obj.main_mission = prof.main_mission
+					prof_obj.civil_state = prof.civil_state
+					prof_obj.personal_philosophy = prof.personal_philosophy
 
-		if 'instant_messages' in bundle.data:
-			UserInstantMessage.objects.filter(user_profile_id=up.id).delete()
-			for im in bundle.data['instant_messages']:
-				UserInstantMessage.objects.create(user_profile_id=up.id, instant_message_id=InstantMessage.objects.get(name=im['instant_message']).id, instant_message_username=im['im_username'])
-			bundle.data.pop('instant_messages')
+					conn = self.connected(prof.user)
+					if conn == "OFF":
+						last = prof.user							
+						prof_obj.last_login_date = str(last.last_login)
+					elif conn == "AFK":
+						prof_obj.last_login_date = "AFK"
+					else:
+						prof_obj.last_login_date = "ON"					
+					education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
+					for i in education:
+						prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
+					
+					prof_obj.id = prof.pk
+					prof_obj.occupation = prof.occupation
 
-		if 'social_networks' in bundle.data:
-			UserSocialNetwork.objects.filter(user_profile_id=up.id).delete()
-			for sn in bundle.data['social_networks']:
-				UserSocialNetwork.objects.create(user_profile_id=up.id, social_network_id=SocialNetwork.objects.get(name=sn['social_network']).id, social_network_username=sn['sn_username'])
-			bundle.data.pop('social_networks')
+					current = prof.current_city
+					if current is not None:
+						prof_obj.current['lat'] = current.lat
+						prof_obj.current['lon'] = current.lon
+						prof_obj.current['name'] = current.name
+						prof_obj.current['region'] = current.region.name
+						prof_obj.current['country'] = current.region.country.name
 
-		if 'current' in bundle.data:
-			ccity = City.objects.saveLocation(**bundle.data['current'])
-			up.current_city = ccity
-			bundle.data.pop('current')
+					prof_obj.incredible = prof.incredible
 
-		if 'hometown' in bundle.data:
-			hcity = City.objects.saveLocation(**bundle.data['hometown'])
-			up.hometown = hcity
-			bundle.data.pop('hometown')
+					other_locations = prof.other_locations.filter()
+					for i in other_locations:
+						aux = {}
+						aux['lat'] = i.lat
+						aux['lon'] = i.lon
+						aux['name'] = i.name
+						aux['region'] = i.region.name
+						aux['country'] = i.region.country.name
+						prof_obj.other_locations.append(aux)
 
-		if 'last_login' in bundle.data:
-			llcity = City.objects.saveLocation(**bundle.data['last_login'])
-			up.last_login = llcity
-			bundle.data.pop('last_login')
+					prof_obj.sports = prof.sports
 
-		if 'other_locations' in bundle.data:
-			up.other_locations = []
-			for ol in bundle.data['other_locations']:
-				ocity = City.objects.saveLocation(**ol)
-				if ocity is not None: up.other_locations.add(ocity)
-			bundle.data.pop('other_locations')
+					langs = UserLanguage.objects.filter(user_profile=prof)
+					for i in langs:
+						aux = {}
+						aux['name'] = i.language.name
+						aux['level'] = i.level
+						prof_obj.other_locations.append(aux)
 
-		forbidden_fields_update = ['avatar', 'id', 'user', 'reply_rate', 'reply_time', 'avatar', 'medium_avatar', 'thumb_avatar', 'blur_avatar', 'active']
-		#not_empty_fields = ['pw_state', 'gender']
+					prof_obj.quotes = prof.quotes
 
-		if 'birth_day' in bundle.data: up.birthday = up.birthday.replace(day=int(bundle.data['birth_day']))
-		if 'birth_month' in bundle.data: up.birthday = up.birthday.replace(month=int(bundle.data['birth_month']))
-		if 'birth_year' in bundle.data: up.birthday = up.birthday.replace(year=int(bundle.data['birth_year']))
-		if 'birthday' in bundle.data: del bundle.data['birthday']
+					prof_obj.online = self.connected(prof.user)
+					prof_obj.sharing = prof.sharing
+					prof_obj.pw_opinion = prof.pw_opinion
+					prof_obj.political_opinion = prof.political_opinion
+					prof_obj.company = prof.company
+					prof_obj.reply_rate = prof.reply_rate
 
-		for i in bundle.data:
-			if hasattr(up, i) and i not in forbidden_fields_update: setattr(up, i, bundle.data.get(i))
-		#if up.age < 18: return self.create_response(request, {"msg":"Error: age under 18.", "code":410, "status":False}, response_class=HttpForbidden)
-		userp = up
-		#import pdb; pdb.set_trace()		
-		up.save()
+					prof_obj.inspired_by = prof.inspired_by
+					prof_obj.other_pages = prof.other_pages
+					prof_obj.first_name = prof.user.first_name
+					prof_obj.enjoy_people = prof.enjoy_people
+					prof_obj.gender = prof.gender
+					prof_obj.age = prof.get_age()
+					prof_obj.all_about_you = prof.all_about_you
+					prof_obj.movies = prof.movies
+					prof_obj.avatar = prof.avatar
 
-		updated_bundle = self.dehydrate(bundle)
-		updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-		return self.create_response(request, {"status":True}, response_class=HttpResponse) 
-	
-	def post_list(self, request, **kwargs):
-		return self.create_response(request, {"status":False, "errors":[{"type":"METHOD_NOT_ALLOWED"}]}, response_class=HttpResponse)
+					prof_obj.last_name = prof.user.last_name
+					prof_obj.religion = prof.religion
+
+					if prof.show_birthday == 'F':
+						prof_obj.birthday = str(prof.birthday)
+					elif prof.show_birthday == 'P':
+						prof_obj.birthday = '%s-%s' % (prof.birthday.month, prof.birthday.day)
+					else:
+						prof_obj.birthday = ""
+
+					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
+					
+					#Return
+				else:
+					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
+			else:
+				if request.user.pk != int(kwargs['pk']):
+					return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+				else:
+					prof = UserProfile.objects.filter(user=request.user)
+					if len(prof) > 0:
+						prof = prof[0]
+						if prof.active is False:
+							return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
+						prof_obj = EditProfileObject()
+
+						interests = prof.interested_in.filter()
+						for i in interests:
+							prof_obj.interested_in.append({"gender":i.gender})	
+
+						hometown = prof.hometown
+						if hometown is not None:
+							#import pdb; pdb.set_trace()
+							prof_obj.hometown['lat'] = hometown.lat
+							prof_obj.hometown['lon'] = hometown.lon
+							prof_obj.hometown['name'] = hometown.name
+							prof_obj.hometown['region'] = hometown.region.name
+							prof_obj.hometown['country'] = hometown.region.country.name
+
+						prof_obj.reply_time = prof.reply_time
+						prof_obj.main_mission = prof.main_mission
+						prof_obj.birth_month = prof.birthday.month
+						prof_obj.civil_state = prof.civil_state
+						prof_obj.personal_philosophy = prof.personal_philosophy
+						prof_obj.last_login_date = "ON"
+
+						education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
+						for i in education:
+							prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
+						
+						prof_obj.id = prof.pk
+						prof_obj.occupation = prof.occupation
+
+						current = prof.current_city
+						if current is not None:
+							prof_obj.current['lat'] = current.lat
+							prof_obj.current['lon'] = current.lon
+							prof_obj.current['name'] = current.name
+							prof_obj.current['region'] = current.region.name
+							prof_obj.current['country'] = current.region.country.name
+
+						prof_obj.pw_state = prof.pw_state
+						prof_obj.incredible = prof.incredible
+
+						other_locations = prof.other_locations.filter()
+						for i in other_locations:
+							aux = {}
+							aux['lat'] = i.lat
+							aux['lon'] = i.lon
+							aux['name'] = i.name
+							aux['region'] = i.region.name
+							aux['country'] = i.region.country.name
+							prof_obj.other_locations.append(aux)
+
+						prof_obj.sports = prof.sports						
+						langs = UserLanguage.objects.filter(user_profile=prof)
+						for i in langs:
+							aux = {}
+							aux['name'] = i.language.name
+							aux['level'] = i.level
+							prof_obj.other_locations.append(aux)
+
+						prof_obj.birth_year = prof.birthday.year
+						prof_obj.quotes = prof.quotes
+
+						sn = UserSocialNetwork.objects.filter(user_profile=prof)
+						for i in sn:
+							aux = {}
+							aux['snUsername'] = i.social_network_username
+							aux['socialNetwork'] = i.social_network.name
+							prof_obj.social_networks.append(aux)
+
+						prof_obj.online = "ON"
+						prof_obj.sharing = prof.sharing
+						prof_obj.pw_opinion = prof.pw_opinion
+						prof_obj.political_opinion = prof.political_opinion
+						prof_obj.company = prof.company
+						prof_obj.reply_rate = prof.reply_rate
+
+						im = UserInstantMessage.objects.filter(user_profile=prof)
+						for i in im:
+							aux = {}
+							aux['imUsername'] = i.instant_message_username
+							aux['instantMessage'] = i.instant_message.name
+							prof_obj.instant_messages.append(aux)
+
+						prof_obj.phone = prof.phone
+						prof_obj.emails = prof.emails
+						prof_obj.inspired_by = prof.inspired_by
+						prof_obj.other_pages = prof.other_pages
+						prof_obj.first_name = prof.user.first_name
+						prof_obj.enjoy_people = prof.enjoy_people
+						prof_obj.gender = prof.gender
+						prof_obj.age = prof.get_age()
+						prof_obj.all_about_you = prof.all_about_you
+						prof_obj.movies = prof.movies
+						prof_obj.birth_day = prof.birthday.day
+						prof_obj.avatar = prof.avatar
+
+						last_login = prof.last_login
+						if last_login is not None:
+							prof_obj.last_login['lat'] = last_login.lat
+							prof_obj.last_login['lon'] = last_login.lon
+							prof_obj.last_login['name'] = last_login.name
+							prof_obj.last_login['region'] = last_login.region.name
+							prof_obj.last_login['country'] = last_login.region.country.name
+
+						prof_obj.last_name = prof.user.last_name
+						prof_obj.religion = prof.religion
+						prof_obj.show_birthday = prof.show_birthday
+						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
+						
+						#Return
+					else:
+						return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
+
+	def is_valid_put(self, request):
+		POST = json.loads(request.raw_post_data)
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
+
+		"""
+		if POST.has_key('XXX'):
+			if POST['XXX'] == "":
+				not_empty['extras'].append('XXX')
+			elif POST['XXX'] not in []:
+				invalid['extras'].append('XXX')
+		else:
+			field_req['extras'].append('XXX')
+		"""
+
+		if POST.has_key('showBirthday'):
+			if POST['showBirthday'] == "":
+				not_empty['extras'].append('showBirthday')
+			elif POST['showBirthday'] not in ['F', 'P', 'N']:
+				invalid['extras'].append('showBirthday')
+		else:
+			field_req['extras'].append('showBirthday')
+
+		if POST.has_key('gender'):
+			if POST['gender'] == "":
+				not_empty['extras'].append('gender')
+			elif POST['gender'] not in ['Male', 'Female']:
+				invalid['extras'].append('gender')
+		else:
+			field_req['extras'].append('gender')
+
+		if POST['socialNetworks']:
+			if not isinstance(POST['socialNetworks'], list):
+				invalid['extras'].append('socialNetworks')
+			else:
+				for i in POST['socialNetworks']:
+					if not isinstance(i, dict):
+						if 'socialNetworks' not in invalid['extras']:
+							invalid['extras'].append('socialNetworks')
+					else:
+						if not i.has_key('snUsername'):
+							if 'socialNetworks' not in invalid['extras']:
+								invalid['extras'].append('socialNetworks')
+						if not i.has_key('socialNetwork'):
+							if 'socialNetworks' not in invalid['extras']:
+								invalid['extras'].append('socialNetworks')
+						else:
+							if len(SocialNetwork.objects.filter(name=i['socialNetwork'])) == 0:
+								if 'socialNetworks' not in invalid['extras']:
+									invalid['extras'].append('socialNetworks')
+
+		if POST['instantMessages']:
+			if not isinstance(POST['instantMessages'], list):
+				invalid['extras'].append('instantMessages')
+			else:
+				for i in POST['instantMessages']:
+					if not isinstance(i, dict):
+						if 'instantMessages' not in invalid['extras']:
+							invalid['extras'].append('instantMessages')
+					else:
+						if not i.has_key('imUsername'):
+							if 'instantMessages' not in invalid['extras']:
+								invalid['extras'].append('instantMessages')
+						if not i.has_key('instantMessage'):
+							if 'instantMessages' not in invalid['extras']:
+								invalid['extras'].append('instantMessages')
+						else:
+							if len(InstantMessage.objects.filter(name=i['instantMessage'])) == 0:
+								if 'instantMessages' not in invalid['extras']:
+									invalid['extras'].append('instantMessages')
+
+
+		if POST.has_key('interestedIn'):
+			if not isinstance(POST['interestedIn'], list):
+				invalid['extras'].append('interestedIn')
+			elif len(POST['interestedIn']) == 0:
+				not_empty['extras'].append('interestedIn')
+			elif len(POST['interestedIn']) != 1:
+				invalid['extras'].append('interestedIn')
+			elif not isinstance(POST['interestedIn'][0], dict):
+				invalid['extras'].append('interestedIn')
+			elif not POST['interestedIn'][0].has_key('gender'):
+				invalid['extras'].append('interestedIn')
+			elif POST['interestedIn'][0]['gender'] not in ['Male', 'Female', 'Both']:
+				invalid['extras'].append('interestedIn')
+
+		if POST.has_key('civilState'):
+			if POST['civilState'] == "":
+				not_empty['extras'].append('civilState')
+			elif POST['civilState'] not in ['', 'SI', 'EN', 'MA', 'WI', 'IR', 'IO', 'IC', 'DI', 'SE']:
+				invalid['extras'].append('civilState')
+		else:
+			field_req['extras'].append('civilState')
+		if POST.has_key('languages'):
+			if not isinstance(POST['languages'], list):
+				invalid['extras'].append('languages')
+			else:
+				for i in POST['languages']:
+					if not isinstance(i, dict):
+						if not 'languages' in invalid['extras']:
+							invalid['extras'].append('languages')
+					else:
+						if not i.has_key("name"):
+							if not 'languages' in invalid['extras']:
+								invalid['extras'].append('languages')
+							elif i["name"] not in [lang.name for lang in Language.objects.all()]:
+								if not 'languages' in invalid['extras']:
+									invalid['extras'].append('languages')
+						if not i.has_key("level"):
+							if not 'languages' in invalid['extras']:
+								invalid['extras'].append('languages')
+						elif i['level'] not in ["intermediate", "expert", "beginner"]:
+							if not 'languages' in invalid['extras']:
+								invalid['extras'].append('languages')
+
+		if POST.has_key('hometown'):
+			if not isinstance(POST['hometown'], dict):
+				invalid['extras'].append('hometown')
+			else:
+				if len(POST['hometown'].keys()) != 0:
+					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('region') and POST['hometown'].has_key('name')):
+						invalid['extras'].append('hometown')
+
+		if POST.has_key('current'):
+			if not isinstance(POST['current'], dict):
+				invalid['extras'].append('current')
+			else:
+				if len(POST['current'].keys()) != 0:
+					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('region') and POST['current'].has_key('name')):
+						invalid['extras'].append('current')
+
+		if POST.has_key('otherLocations'):
+			if not isinstance(POST.has_key('otherLocations'), list):
+				for i in POST['otherLocations']:
+					if isinstance(i, dict) and len(i.keys()) != 0:
+						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('region') and i.has_key('name')):
+							invalid['extras'].append('otherLocations')
+
+		if POST.has_key('education'):
+			if not isinstance(POST['education'], list):
+				invalid['extras'].append('education')
+			else:
+				for i in POST['education']:
+					if not isinstance(i, dict):
+						if 'education' not in invalid['extras']:
+							invalid['extras'].append('education')
+					else:
+						if not i.has_key('institution'):
+							if 'education' not in invalid['extras']:
+								invalid['extras'].append('education')
+						if not i.has_key('degree'):
+							if 'education' not in invalid['extras']:
+								invalid['extras'].append('education')
+
+		if POST.has_key('emails'):
+			if POST['emails'] == "":
+				not_empty['extras'].append('emails')
+		else:
+			field_req['extras'].append('emails')
+
+		if POST.has_key('phone'):
+			if POST['phone'] == "":
+				not_empty['extras'].append('phone')
+		else:
+			field_req['extras'].append('phone')
+
+		if POST.has_key('inspiredBy'):
+			if POST['inspiredBy'] == "":
+				not_empty['extras'].append('inspiredBy')
+		else:
+			field_req['extras'].append('inspiredBy')
+
+		if POST.has_key('otherPages'):
+			if POST['otherPages'] == "":
+				not_empty['extras'].append('otherPages')
+		else:
+			field_req['extras'].append('otherPages')
+
+		if POST.has_key('enjoyPeople'):
+			if POST['enjoyPeople'] == "":
+				not_empty['extras'].append('enjoyPeople')
+		else:
+			field_req['extras'].append('enjoyPeople')
+
+		if POST.has_key('gender'):
+			if POST['gender'] == "":
+				not_empty['extras'].append('gender')
+			elif POST['gender'] not in ['Male', 'Female']:
+				invalid['extras'].append('gender')
+		else:
+			field_req['extras'].append('gender')
+
+		if POST.has_key('allAboutYou'):
+			if POST['allAboutYou'] == "":
+				not_empty['extras'].append('allAboutYou')
+		else:
+			field_req['extras'].append('allAboutYou')
+
+		if POST.has_key('movies'):
+			if POST['movies'] == "":
+				not_empty['extras'].append('movies')
+		else:
+			field_req['extras'].append('movies')
+
+		if POST.has_key('birthDay'):
+			if POST['birthDay'] == "":
+				not_empty['extras'].append('birthDay')
+			try:
+				if int(POST['birthDay']) < 1 or int(POST['birthDay']) > 31:
+					invalid['extras'].append('birthDay')
+			except:
+				invalid['extras'].append('birthDay')
+		else:
+			field_req['extras'].append('birthDay')
+
+		if POST.has_key('birthMonth'):
+			if POST['birthMonth'] == "":
+				not_empty['extras'].append('birthMonth')
+			try:
+				if int(POST['birthMonth']) < 1 or int(POST['birthMonth']) > 12:
+					invalid['extras'].append('birthMonth')
+			except:
+				invalid['extras'].append('birthMonth')
+		else:
+			field_req['extras'].append('birthMonth')
+
+		if POST.has_key('birthYear'):
+			if POST['birthYear'] == "":
+				not_empty['extras'].append('birthYear')
+			try:
+				if int(POST['birthYear']) < 1900 or int(POST['birthYear']) > datetime.now().year - 18:
+					invalid['extras'].append('birthYear')
+			except:
+				invalid['extras'].append('birthYear')
+		else:
+			field_req['extras'].append('birthYear')
+
+
+		try:
+			parser.parse('%s-%s-%s' % (POST['birthYear'], POST['birthMonth'], POST['birthDay']))
+		except:
+			invalid['extras'].append('birthday')
+
+		if POST.has_key('lastName'):
+			if POST['lastName'] == "":
+				not_empty['extras'].append('lastName')
+		else:
+			field_req['extras'].append('lastName')
+
+		if POST.has_key('religion'):
+			if POST['religion'] == "":
+				not_empty['extras'].append('religion')
+		else:
+			field_req['extras'].append('religion')
+
+
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+		return errors
+
+	def put_detail(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		#We need to check if the user thar requested the put is the same user that owns the profile
+		try:
+			if not int(kwargs['pk']) == UserProfile.objects.get(user = request.user).pk:
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type":"INTERNAL_ERROR"}]}, response_class=HttpResponse)
+
+		#We need to check that received data is valid
+		try:
+			errors = self.is_valid_put(request)
+			if len(errors) > 0:
+				return self.create_response(request, {"status":False, "errors":errors}, response_class=HttpResponse)
+		except: 
+			return self.create_response(request, {"status":False, "errors":[{"type":"INTERNAL_ERROR"}]}, response_class=HttpResponse)
+
+		#We need to update the needed fields
+		prof = UserProfile.objects.get(pk=kwargs['pk'])
+		if prof.active is False:
+			return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
+
+		"""
+		TODO
+		avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
+		medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
+		thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
+		"""
+
+		prof.birthday =parser.parse('%s-%s-%s' % (POST['birthYear'], POST['birthMonth'], POST['birthDay']))
+		prof.show_birthday = POST['showBirthday']
+		prof.gender = POST['gender']
+		prof.interested_in.clear()
+		prof.interested_in.add(Interests.objects.get(gender__icontains=POST['interestedIn'][0]['gender']))
+		prof.civil_state = POST['civilState']
+
+		[i.delete() for i in UserLanguage.objects.filter(user_profile=prof)]
+		for i in POST['languages']:
+			if len(Language.objects.filter(name=i['name'])) > 0:
+				lang = Language.objects.get(name=i['name'])
+			else:
+				lang = Language.objects.create(name=i['name'])
+			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])		
+		# Locations		
+		prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
+		prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
+		prof.other_locations.clear()
+		for i in POST['otherLocations']:
+			prof.other_locations.add(City.objects.saveLocation(country=POST['current']['country'], region=POST['region'], name=POST['name'], lat=POST['lat'], lon=POST['lon']))
+
+		prof.emails = POST['emails']
+		prof.phone = POST['phone']		
+
+		[i.delete() for i in UserSocialNetwork.objects.filter(user_profile=prof)]
+		for i in POST['socialNetworks']:
+			UserSocialNetwork.objects.create(user_profile=prof, social_network=SocialNetwork.objects.get(name=i['socialNetwork']), social_network_username=i['snUsername'])
+
+		[i.delete() for i in UserInstantMessage.objects.filter(user_profile=prof)]
+		for i in POST['instantMessages']:
+			UserInstantMessage.objects.create(user_profile=prof, instant_message=InstantMessage.objects.get(name=i['instantMessage']), instant_message_username=i['imUsername'])
+
+		prof.all_about_you = POST['allAboutYou']
+		prof.main_mission = POST['mainMission']
+		prof.occupation = POST['occupation']
+		prof.company = POST['company']
+
+		[i.delete() for i in UserProfileStudiedUniversity.objects.filter(user_profile=prof)]
+		for i in POST['education']:
+			if len(University.objects.filter(name=i['institution'])) > 0:
+				univ = University.objects.get(name=i['institution'])
+			else:
+				univ = University.objects.create(name=i['institution'])
+			UserProfileStudiedUniversity.objects.create(user_profile=prof, university=univ, degree=i['degree'])
+
+		prof.personal_philosophy = POST['personalPhilosophy']
+		prof.political_opinion = POST['politicalOpinion']
+		prof.religion = POST['religion']
+		prof.enjoy_people = POST['enjoyPeople']
+		prof.movies = POST['movies']
+		prof.sports = POST['sports']
+		prof.other_pages = POST['otherPages']
+		prof.sharing = POST['sharing']
+		prof.incredible = POST['incredible']
+		prof.inspired_by = POST['inspiredBy']
+		prof.quotes = POST['quotes']
+		prof.pw_opinion = POST['pwOpinion']
+		prof.save()
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
 
 	def put_list(self, request, **kwargs):
 		return self.create_response(request, {"status":False, "errors":[{"type":"METHOD_NOT_ALLOWED"}]}, response_class=HttpResponse)
-
-	def connected(self, user):
-		state = 'OFF'
-		token = ApiToken.objects.filter(user=user).order_by('-last_js')
-		if len(token) > 0:
-			state = token[0].is_user_connected()
-		return state
 
 	def parse_date(self, initial_date):
 		try:			
@@ -850,6 +1156,7 @@ class UserProfileResource(ModelResource):
 		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
 			invalid_field['extras'].append('gender')
 
+
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
 		if len(not_empty['extras']) > 0:
@@ -954,7 +1261,7 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):		
+	def get_list(self, request, **kwargs):				
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
@@ -1006,7 +1313,7 @@ class UserProfileResource(ModelResource):
 		if isinstance(data, HttpResponse): return data
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
 
-	def full_dehydrate(self, bundle):		
+	def full_dehydrate(self, bundle):				
 		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
 		bundle.data['first_name'] = bundle.obj.user.first_name
 		bundle.data['last_name'] = bundle.obj.user.last_name
@@ -1071,6 +1378,7 @@ class UserProfileResource(ModelResource):
 				del bundle.data['instant_messages']
 				del bundle.data['phone']
 				bundle.data['resource_uri'] += '/preview'
+
 				if bundle.data['show_birthday'] == 'N':
 					bundle.data['birthday'] = ""
 				elif bundle.data['show_birthday'] == 'P':

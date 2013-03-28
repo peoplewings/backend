@@ -272,7 +272,7 @@ class AccomodationsResource(ModelResource):
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
 
 		try:
-			accomodations = Accomodation.objects.filter(Q(author_id=kwargs['profile_id'])&Q(active=True))
+			accomodations = Accomodation.objects.filter(Q(author_id=kwargs['profile_id'])&Q(active=True)).order_by('pk')
 		except:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID_FIELD", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
@@ -280,15 +280,28 @@ class AccomodationsResource(ModelResource):
 		for i in accomodations:
 			if not is_preview:
 				aux_wing = AccomodationWingEditable()
-				aux_wing.id_wing = i.pk		
+				aux_wing.id = i.pk		
 				aux_wing.name = i.name
 				aux_wing.status = i.status
-				aux_wing.date_start = i.date_start
-				aux_wing.date_end = i.date_end
+
+				if i.date_start is None:
+					aux_wing.date_start = "null"
+				else:
+					aux_wing.date_start = i.date_end
+
+				if i.date_end is None:
+					aux_wing.date_end = "null"
+				else:
+					aux_wing.date_end = i.date_end
+
 				aux_wing.best_days = i.best_days
-				aux_wing.is_request = i.is_request
-				aux_wing.city = i.city.stringify()
-				aux_wing.active = i.active
+				city = {}
+				city['lat'] = i.city.lat
+				city['lon'] = i.city.lon
+				city['name'] = i.city.name
+				city['region'] = i.city.region.name
+				city['country'] = i.city.region.country.name
+				aux_wing.city = city
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
 				aux_wing.preferred_male = i.preferred_male
@@ -300,40 +313,384 @@ class AccomodationsResource(ModelResource):
 				aux_wing.pets_allowed = i.pets_allowed
 				aux_wing.blankets = i.blankets
 				aux_wing.live_center = i.live_center
+
 				for j in i.public_transport.filter():
-					aux_wing.public_transport.append(j.name)
+					if j.name == 'bus':
+						aux_wing.bus = True
+					if j.name == 'tram':
+						aux_wing.tram = True
+					if j.name == 'train':
+						aux_wing.train = True
+					if j.name == 'boat':
+						aux_wing.boat = True
+					if j.name == 'metro':
+						aux_wing.metro = True
+					if j.name == 'others':
+						aux_wing.others = True
 				aux_wing.about = i.about
 				aux_wing.address = i.address
 				aux_wing.number = i.number
 				aux_wing.additional_information = i.additional_information
-				aux_wing.postal_code = i.postal_code
+				aux_wing.postal_code = i.postal_code	
 				objects.append(aux_wing.jsonable())
 			else:
-				bundle = self.build_bundle(obj=i, request=request)
-				bundle = self.full_dehydrate(bundle)
-				objects.append(bundle.data)
+
+				aux_wing = AccomodationWingNotEditable()
+				aux_wing.id = i.pk		
+				aux_wing.name = i.name
+				aux_wing.status = i.status
+
+				if i.date_start is None:
+					aux_wing.date_start = "null"
+				else:
+					aux_wing.date_start = i.date_end
+
+				if i.date_end is None:
+					aux_wing.date_end = "null"
+				else:
+					aux_wing.date_end = i.date_end
+
+				aux_wing.best_days = i.best_days
+				city = {}
+				city['lat'] = i.city.lat
+				city['lon'] = i.city.lon
+				city['name'] = i.city.name
+				city['region'] = i.city.region.name
+				city['country'] = i.city.region.country.name
+				aux_wing.city = city
+				aux_wing.sharing_once = i.sharing_once
+				aux_wing.capacity = i.capacity
+				aux_wing.preferred_male = i.preferred_male
+				aux_wing.preferred_female = i.preferred_female
+				aux_wing.wheelchair = i.wheelchair
+				aux_wing.where_sleeping_type = i.where_sleeping_type
+				aux_wing.smoking = i.smoking
+				aux_wing.i_have_pet = i.i_have_pet
+				aux_wing.pets_allowed = i.pets_allowed
+				aux_wing.blankets = i.blankets
+				aux_wing.live_center = i.live_center
+
+				for j in i.public_transport.filter():
+					if j.name == 'bus':
+						aux_wing.bus = True
+					if j.name == 'tram':
+						aux_wing.tram = True
+					if j.name == 'train':
+						aux_wing.train = True
+					if j.name == 'boat':
+						aux_wing.boat = True
+					if j.name == 'metro':
+						aux_wing.metro = True
+					if j.name == 'others':
+						aux_wing.others = True
+				aux_wing.about = i.about
+				objects.append(aux_wing.jsonable())
 		return self.create_response(request, {"status":True, "data":objects})
 	
-	def post_list(self, request, **kwargs):
-		up = UserProfile.objects.get(user=request.user)
+	def validate_post(self, POST):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
 
-		deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		updated_bundle = self.obj_create(bundle, request, **self.remove_api_resource_names(kwargs))
-		location = self.get_resource_uri(updated_bundle)
-
-		if not self._meta.always_return_data:
-			a = http.HttpCreated(location=location)
+		date_start = None
+		date_end = None
+		"""
+		if POST.has_key('XXX'):
+			if POST['XXX'] == "":
+				not_empty['extras'].append('XXX')
+			elif POST['XXX'] not in []:
+				invalid['extras'].append('XXX')
 		else:
-			updated_bundle = self.full_dehydrate(updated_bundle)
-			updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-			a = self.create_response(request, updated_bundle, response_class=http.HttpCreated, location=location)
+			field_req['extras'].append('XXX')
+		"""
+		if POST.has_key('tram'):
+			if POST['tram'] == "":
+				not_empty['extras'].append('tram')
+			elif POST['tram'] not in [True, False]:
+				invalid['extras'].append('tram')
+		else:
+			field_req['extras'].append('tram')
 
-		data = {}
-		data['id'] = json.loads(a.content)['id']
-		dic = {"data":data, "status":True}
-		return self.create_response(request, dic)
+		if POST.has_key('bus'):
+			if POST['bus'] == "":
+				not_empty['extras'].append('bus')
+			elif POST['bus'] not in [True, False]:
+				invalid['extras'].append('bus')
+		else:
+			field_req['extras'].append('bus')
+
+		if POST.has_key('metro'):
+			if POST['metro'] == "":
+				not_empty['extras'].append('metro')
+			elif POST['metro'] not in [True, False]:
+				invalid['extras'].append('metro')
+		else:
+			field_req['extras'].append('metro')
+
+		if POST.has_key('train'):
+			if POST['train'] == "":
+				not_empty['extras'].append('train')
+			elif POST['train'] not in [True, False]:
+				invalid['extras'].append('train')
+		else:
+			field_req['extras'].append('train')
+
+		if POST.has_key('others'):
+			if POST['others'] == "":
+				not_empty['extras'].append('others')
+			elif POST['others'] not in [True, False]:
+				invalid['extras'].append('others')
+		else:
+			field_req['extras'].append('others')
+
+		if POST.has_key('liveCenter'):
+			if POST['liveCenter'] == "":
+				not_empty['extras'].append('liveCenter')
+			elif POST['liveCenter'] not in [True, False]:
+				invalid['extras'].append('liveCenter')
+		else:
+			field_req['extras'].append('liveCenter')
+
+		if POST.has_key('petsAllowed'):
+			if POST['petsAllowed'] == "":
+				not_empty['extras'].append('petsAllowed')
+			elif POST['petsAllowed'] not in [True, False]:
+				invalid['extras'].append('petsAllowed')
+		else:
+			field_req['extras'].append('petsAllowed')
+
+		if POST.has_key('wheelchair'):
+			if POST['wheelchair'] == "":
+				not_empty['extras'].append('wheelchair')
+			elif POST['wheelchair'] not in [True, False]:
+				invalid['extras'].append('wheelchair')
+		else:
+			field_req['extras'].append('wheelchair')
+
+		if POST.has_key('sharingOnce'):
+			if POST['sharingOnce'] == "":
+				not_empty['extras'].append('sharingOnce')
+			elif POST['sharingOnce'] not in [True, False]:
+				invalid['extras'].append('sharingOnce')
+		else:
+			field_req['extras'].append('sharingOnce')
+
+		if POST.has_key('iHavePet'):
+			if POST['iHavePet'] == "":
+				not_empty['extras'].append('iHavePet')
+			elif POST['iHavePet'] not in [True, False]:
+				invalid['extras'].append('iHavePet')
+		else:
+			field_req['extras'].append('iHavePet')
+
+		if POST.has_key('blankets'):
+			if POST['blankets'] == "":
+				not_empty['extras'].append('blankets')
+			elif POST['blankets'] not in [True, False]:
+				invalid['extras'].append('blankets')
+		else:
+			field_req['extras'].append('blankets')
+
+		if POST.has_key('name'):
+			if POST['name'] == "":
+				not_empty['extras'].append('name')
+			elif len(POST['name']) > 100:
+				too_long['extras'].append('name')
+		else:
+			field_req['extras'].append('name')
+
+		if POST.has_key('status'):
+			if POST['status'] == "":
+				not_empty['extras'].append('status')
+			elif POST['status'] not in ['Y', 'M', 'T', 'N', 'C', 'W']:
+				invalid['extras'].append('status')
+		else:
+			field_req['extras'].append('status')
+
+		if POST.has_key('bestDays'):
+			if POST['bestDays'] == "":
+				not_empty['extras'].append('bestDays')
+			elif POST['bestDays'] not in ['A', 'F', 'T', 'W']:
+				invalid['extras'].append('bestDays')
+		else:
+			field_req['extras'].append('bestDays')
+		
+		if POST.has_key('capacity'):
+			if POST['capacity'] == "":
+				not_empty['extras'].append('capacity')
+			elif int(POST['capacity']) not in range(10):
+				invalid['extras'].append('capacity')
+		else:
+			field_req['extras'].append('capacity')
+
+		if POST.has_key('preferredGender'):
+			if POST['preferredGender'] == "":
+				not_empty['extras'].append('preferredGender')
+			elif POST['preferredGender'] not in ['Male', 'Female', 'Both', 'None']:
+				invalid['extras'].append('preferredGender')
+		else:
+			field_req['extras'].append('preferredGender')
+
+		if POST.has_key('whereSleepingType'):
+			if POST['whereSleepingType'] == "":
+				not_empty['extras'].append('whereSleepingType')
+			elif POST['whereSleepingType'] not in ['C', 'P', 'S']:
+				invalid['extras'].append('whereSleepingType')
+		else:
+			field_req['extras'].append('whereSleepingType')
+
+		if POST.has_key('smoking'):
+			if POST['smoking'] == "":
+				not_empty['extras'].append('smoking')
+			elif POST['smoking'] not in ['S', 'D', 'N']:
+				invalid['extras'].append('smoking')
+		else:
+			field_req['extras'].append('smoking')
+
+		if POST.has_key('about'):
+			if len(POST['about']) > 400:
+				too_long['extras'].append('about')
+
+		if POST.has_key('address'):
+			if POST['address'] == "":
+				not_empty['extras'].append('address')
+			elif len(POST['address']) > 300:
+				too_long['extras'].append('address')
+		else:
+			field_req['extras'].append('address')
+
+		if POST.has_key('number'):
+			if POST['number'] == "":
+				not_empty['extras'].append('number')
+			elif len(POST['number']) > 10:
+				too_long['extras'].append('number')
+		else:
+			field_req['extras'].append('number')
+
+		if POST.has_key('additionalInformation'):
+			if POST['additionalInformation'] == "":
+				not_empty['extras'].append('additionalInformation')
+			elif len(POST['additionalInformation']) > 250:
+				too_long['extras'].append('additionalInformation')
+
+		if POST.has_key('postalCode'):
+			if POST['postalCode'] == "":
+				not_empty['extras'].append('postalCode')
+			elif len(POST['postalCode']) > 20:
+				too_long['extras'].append('postalCode')
+		else:
+			field_req['extras'].append('postalCode')
+
+		if POST.has_key('dateStart'):
+			if POST.has_key('sharingOnce') and POST['sharingOnce'] is True:
+				if POST['dateStart'] == "":
+					not_empty['extras'].append('dateStart')
+				else:
+					#we need to check if date start its a valid date and >= today
+					try:
+						date_start = datetime.datetime.strptime(POST['dateStart'], '%Y-%m-%d')
+						if date_start < date.today():
+							invalid['extras'].append('dateStart')
+					except:
+						invalid['extras'].append('dateStart')					
+
+			else:
+				invalid['extras'].append('dateStart')
+
+		if POST.has_key('dateEnd'):
+			if POST.has_key('sharingOnce') and POST['sharingOnce'] is True:
+				if POST['dateEnd'] == "":
+					not_empty['extras'].append('dateEnd')
+				else:
+					#we need to check if date start its a valid date and >= today
+					try:
+						date_end = datetime.datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
+						if date_end < date.today():
+							invalid['extras'].append('dateEnd')
+					except:
+						invalid['extras'].append('dateEnd')					
+
+			else:
+				invalid['extras'].append('dateEnd')
+
+		if date_start is not None and date_end is not None and date_start > date_end:
+			invalid['extras'].append('dates')
+
+		if POST.has_key('city'):
+			if not isinstance(POST['city'], dict):
+				invalid['extras'].append('city')
+			else:
+				if POST['city'] == {}:
+					not_empty['extras'].append('city')
+				elif not POST['city'].has_key('lat') and POST['city'].has_key('lon') and POST['city'].has_key('region') and POST['city'].has_key('country') and POST['city'].has_key('name'):
+					invalid['extras'].append('city')
+		else:
+			field_req['extras'].append('city')
+
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		return errors
+
+	def build_transports(self, POST):
+		transports = []
+		if POST['bus'] is True:
+			transports.append(PublicTransport.objects.get(name='bus'))
+
+		if POST['tram'] is True:
+			transports.append(PublicTransport.objects.get(name='tram'))
+		
+		if POST['metro'] is True:
+			transports.append(PublicTransport.objects.get(name='metro'))
+		
+		if POST['train'] is True:
+			transports.append(PublicTransport.objects.get(name='train'))
+		
+		if POST['others'] is True:
+			transports.append(PublicTransport.objects.get(name='others'))
+
+		return transports
+		
+	def post_list(self, request, **kwargs):
+
+		POST = json.loads(request.raw_post_data)	
+		try:
+			prof = UserProfile.objects.get(user=request.user)
+		except:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
+
+		if kwargs.has_key('profile_id'):
+			target_prof = kwargs['profile_id']
+		else:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
+
+		if prof.pk != int(target_prof):
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
+		#Now we are sure that the user wants to do a correct action...
+		errors = self.validate_post(json.loads(request.raw_post_data))
+		if len(errors) > 0:
+			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
+		#import pdb; pdb.set_trace()
+		city = City.objects.saveLocation(country=POST['city']['country'], region=POST['city']['region'], lat=POST['city']['lat'], lon=POST['city']['lon'], name=POST['city']['name'])
+		transport = self.build_transports(POST)
+		pref_male = 'Male' in POST['preferredGender']
+		pref_female= 'Female' in POST['preferredGender']
+		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
+		if not POST.has_key('about'): POST['about'] = ""
+		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])
+		for i in transport:
+			acc.public_transport.add(i)
+		acc.save()
+		return self.create_response(request, {"status":True})
 
 	def get_detail(self, request, **kwargs):
 		if 'profile_id' not in kwargs:
@@ -356,47 +713,75 @@ class AccomodationsResource(ModelResource):
 	def patch_detail(self, request, **kwargs):
 		return self.put_detail(request, **kwargs)    
 
-	@transaction.commit_on_success
 	def put_detail(self, request, **kwargs):
-		if 'profile_id' not in kwargs:
+		PUT = json.loads(request.raw_post_data)	
+		try:
+			prof = UserProfile.objects.get(user=request.user)
+		except:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
+
+		if kwargs.has_key('profile_id'):
+			target_prof = kwargs['profile_id']
+		else:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
+		if kwargs.has_key('wing_id'):
+			target_wing = kwargs['wing_id']
+		else:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["wing"]}]}, response_class=HttpResponse)
 
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
 		try:
-			a = Accomodation.objects.get(pk=int(kwargs['wing_id']), author=UserProfile.objects.get(user=request.user))
+			acc = Accomodation.objects.get(pk=target_wing)
 		except:
-			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
-		if 'city' in bundle.data:
-			loc = {}
-			data = bundle.data['city']
-			for key, value in data.items():            
-				loc[key] = value
-			city = City.objects.saveLocation(**loc)
-			setattr(a, 'city', city)
-			bundle.data.pop('city')
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
-		forbidden_fields_update = ['author_id', 'id']
-		for i in bundle.data:
-			if hasattr(a, i) and i not in forbidden_fields_update:
-				setattr(a, i, bundle.data.get(i))
-		trans = PublicTransport.objects.all()
-		a.public_transport = []
-		for i in trans:
-			if i.name in bundle.data.keys():
-				a.public_transport.add(i)
+		if prof.pk != int(target_prof):
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
+
+		if acc.author.pk != prof.pk:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
+
+		#Now we are sure that the user wants to do a correct action...
+		errors = self.validate_post(json.loads(request.raw_post_data))
+		if len(errors) > 0:
+			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 		
-		#updated_bundle = self.dehydrate(bundle)
-		#updated_bundle = self.alter_detail_data_to_serialize(request, updated_bundle)
-		a.save()
-		self.save_related(bundle)
-		bundle = {"status" : True}
-		return self.create_response(request, bundle, response_class=HttpResponse)
+		city = City.objects.saveLocation(country=PUT['city']['country'], region=PUT['city']['region'], lat=PUT['city']['lat'], lon=PUT['city']['lon'], name=PUT['city']['name'])
+		transport = self.build_transports(PUT)
+		pref_male = 'Male' in PUT['preferredGender']
+		pref_female= 'Female' in PUT['preferredGender']
+		if not PUT.has_key('additionalInformation'): PUT['additionalInformation'] = ""
+		if not PUT.has_key('about'): PUT['about'] = ""
+
+		acc.name=PUT['name'] 
+		acc.status=PUT['status'] 
+		acc.date_start=getattr(PUT, 'dateStart', None) 
+		acc.date_end=getattr(PUT, 'dateEnd', None)
+		acc.best_days=PUT['bestDays']
+		acc.is_request=False
+		acc.city=city
+		acc.active=True
+		acc.sharing_once=PUT['sharingOnce']
+		acc.capacity=PUT['capacity']
+		acc.preferred_male=pref_male
+		acc.preferred_female=pref_female
+		acc.wheelchair=PUT['wheelchair']
+		acc.where_sleeping_type=PUT['whereSleepingType']
+		acc.smoking=PUT['smoking']
+		acc.i_have_pet=PUT['iHavePet']
+		acc.pets_allowed=PUT['petsAllowed']
+		acc.blankets=PUT['blankets']
+		acc.live_center=PUT['liveCenter']
+		acc.about=PUT['about']
+		acc.address=PUT['address']
+		acc.number=PUT['number']
+		acc.additional_information=PUT['additionalInformation']
+		acc.postal_code=PUT['postalCode']
+		acc.public_transport.clear()
+		for i in transport:
+			acc.public_transport.add(i)
+		acc.save()
+		return self.create_response(request, {"status":True})
 
 	@transaction.commit_on_success
 	def delete_detail(self, request, **kwargs):

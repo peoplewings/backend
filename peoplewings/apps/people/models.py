@@ -30,7 +30,7 @@ class UserInstantMessage(models.Model):
 
 # LANGUAGE
 class Language(models.Model):
-	name = models.CharField(max_length=max_medium_len, unique=True)  
+	name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserLanguage(models.Model):
 	user_profile = models.ForeignKey('UserProfile')
@@ -61,8 +61,8 @@ class UserProfile(models.Model):
 	medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
 	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
 	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True)
-	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
-	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
+	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')##not used
+	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")##not used
 	
 	# In Basic Information
 	birthday = models.DateField(verbose_name='birthday', null=True, blank=True)

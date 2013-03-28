@@ -19,7 +19,7 @@ from django.conf.urls import url
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 
-from peoplewings.apps.cropper.models import Cropped, Original
+from peoplewings.apps.cropper.models import Cropped, Original, ProcessCrop
 from peoplewings.apps.cropper.forms import CroppedForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
@@ -27,6 +27,11 @@ from peoplewings.libs.S3Custom import S3Custom
 from peoplewings.apps.ajax.utils import json_response
 from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from tastypie.utils import dict_strip_unicode_keys
+
+import urllib, urllib2
+from django.conf import settings
+import random
+import json
 
 class CroppedResource(ModelResource):
 	
@@ -95,6 +100,162 @@ class CroppedResource(ModelResource):
 		else:
 			return self.create_response(request, {"status":False, "error":[{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 
+	def validate_post(self, POST):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
+
+		if POST.has_key('img'):
+			if POST['img'] == "":
+				not_empty['extras'].append('img')
+		else:
+			field_req['extras'].append('img')
+
+		if POST.has_key('x'):
+			if POST['x'] == "":
+				not_empty['extras'].append('x')
+		else:
+			field_req['extras'].append('x')
+
+		if POST.has_key('y'):
+			if POST['y'] == "":
+				not_empty['extras'].append('y')
+		else:
+			field_req['extras'].append('y')
+
+		if POST.has_key('w'):
+			if POST['w'] == "":
+				not_empty['extras'].append('w')
+		else:
+			field_req['extras'].append('w')
+
+		if POST.has_key('h'):
+			if POST['h'] == "":
+				not_empty['extras'].append('h')
+		else:
+			field_req['extras'].append('h')
+
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		return errors
+
+	def post_list(self, request, **kwargs):		
+		POST = json.loads(request.raw_post_data)
+		errors = self.validate_post(POST)
+		if len(errors) > 0:
+			return self.create_response(request, {"status":False, "error":errors}, response_class = HttpResponse)
+		#Now we have to call blitline for crop processing...
+
+		url = POST['img']
+		url_blitline =  "http://api.blitline.com/job"
+		postback = '%s%s' % (settings.BACKEND_SITE, 'cropcompleted')
+		image_id = "%s-%s" % (request.user.pk,random.randint(1, 9999999))
+		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
+
+		values= dict(application_id=settings.BLITLINE_ID, src= url, postback_url= postback, functions=[{"name":"crop", "params": {"x":POST['x'], "y":POST['y'], "width":POST['w'], "height":POST['h']}, "save":{"image_identifier": image_id}}])
+		headers = {"Accept": "application/json"}
+
+		data = urllib.urlencode(values)
+		req = urllib2.Request(url_blitline, data, headers)
+ 		#res= urllib2.urlopen(req)
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)              
+
+				return response
+		   	except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
+			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+			except Exception, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
+
+		return wrapper
+
+class CropcompletedResource(ModelResource):
+	
+	
+	class Meta:
+		object_class = Cropped
+		queryset = Cropped.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def post_list(self, request, **kwargs):
+		POST= json.load(request.raw_post_data)
+		url = POST['images'][0]['s3_url']
+		ProcessCrop.objects.create(url= url, kind="CROPPED")
+		#Now we have to resize the image 2 times...
+
+		#And copy them to our s3...
+
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
