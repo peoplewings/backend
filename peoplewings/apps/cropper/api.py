@@ -164,7 +164,6 @@ class CroppedResource(ModelResource):
 
 		values = {"json": [{"src": url, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
-		import pdb; pdb.set_trace()
 		#data = urllib.urlencode(values)
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
  		res= urllib2.urlopen(req).read()
