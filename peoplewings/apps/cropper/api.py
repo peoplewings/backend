@@ -247,8 +247,8 @@ class CropcompletedResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		POST= json.loads(request.raw_post_data)
-		url = POST['results'][0]["images"][0]['s3_url']
-		ProcessCrop.objects.create(url= url, kind="CROPPED")
+		#url = POST['results'][0]["images"][0]['s3_url']
+		ProcessCrop.objects.create(url= request.raw_post_data, kind="CROPPED")
 		#Now we have to resize the image 2 times...
 
 		#And copy them to our s3...
