@@ -247,7 +247,8 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		POST= json.load(request.raw_post_data)
+		import pdb; pdb.set_trace()
+		POST= json.loads(request.raw_post_data)
 		url = POST['images'][0]['s3_url']
 		ProcessCrop.objects.create(url= url, kind="CROPPED")
 		#Now we have to resize the image 2 times...
