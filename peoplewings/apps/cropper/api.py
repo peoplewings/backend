@@ -246,6 +246,7 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
+		print request
 		POST= json.loads(request.raw_post_data)
 		#url = POST['results'][0]["images"][0]['s3_url']
 		print request.raw_post_data

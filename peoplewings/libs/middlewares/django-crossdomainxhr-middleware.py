@@ -39,7 +39,6 @@ class XsSharing(object):
             response['Access-Control-Allow-Headers'] = ",".join( XS_SHARING_ALLOWED_HEADERS )
             response['Access-Control-Allow-Credentials'] = XS_SHARING_ALLOWED_CREDENTIALS
             return response
-        print request
         return None
 
     def process_response(self, request, response):
