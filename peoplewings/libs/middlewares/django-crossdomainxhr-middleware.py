@@ -38,9 +38,8 @@ class XsSharing(object):
             response['Access-Control-Allow-Methods'] = ",".join( XS_SHARING_ALLOWED_METHODS ) 
             response['Access-Control-Allow-Headers'] = ",".join( XS_SHARING_ALLOWED_HEADERS )
             response['Access-Control-Allow-Credentials'] = XS_SHARING_ALLOWED_CREDENTIALS
-            print '%s  %s' % ('SERGIIII', request)
             return response
-            print request
+        print request
         return None
 
     def process_response(self, request, response):
