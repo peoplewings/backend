@@ -8,7 +8,6 @@ from django.contrib.auth.models import AnonymousUser
 class Notification(object):
 
 	def process_request(self, request):
-		print request
 		return None
 
 	def process_response(self, request, response):		
