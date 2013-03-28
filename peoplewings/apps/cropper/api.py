@@ -167,7 +167,7 @@ class CroppedResource(ModelResource):
 
 		data = urllib.urlencode(values)
 		req = urllib2.Request(url_blitline, data, headers)
- 		#res= urllib2.urlopen(req)
+ 		res= urllib2.urlopen(req)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
