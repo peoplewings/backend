@@ -8,9 +8,10 @@ from django.contrib.auth.models import AnonymousUser
 class Notification(object):
 
 	def process_request(self, request):
+		print request
 		return None
 
-	def process_response(self, request, response):
+	def process_response(self, request, response):		
 		if request.user and not isinstance(request.user, AnonymousUser):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
