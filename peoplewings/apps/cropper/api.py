@@ -162,12 +162,12 @@ class CroppedResource(ModelResource):
 		image_id = "%s-%s" % (request.user.pk,random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 
-		values= dict(application_id=settings.BLITLINE_ID, src= url, postback_url= postback, functions=[{"name":"crop", "params": {"x":POST['x'], "y":POST['y'], "width":POST['w'], "height":POST['h']}, "save":{"image_identifier": image_id}}])
-		headers = {"Accept": "application/json"}
-
-		data = urllib.urlencode(values)
-		req = urllib2.Request(url_blitline, data, headers)
- 		res= urllib2.urlopen(req)
+		values = {"json": [{"src": url, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		headers = {"Accept": "application/json", "Content-Type": "application/json"}
+		import pdb; pdb.set_trace()
+		#data = urllib.urlencode(values)
+		req = urllib2.Request(url_blitline, json.dumps(values), headers)
+ 		res= urllib2.urlopen(req).read()
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
