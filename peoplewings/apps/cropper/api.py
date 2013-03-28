@@ -19,7 +19,7 @@ from django.conf.urls import url
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 
-from peoplewings.apps.cropper.models import Cropped, Original
+from peoplewings.apps.cropper.models import Cropped, Original, ProcessCrop
 from peoplewings.apps.cropper.forms import CroppedForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
@@ -249,7 +249,7 @@ class CropcompletedResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		POST= json.load(request.raw_post_data)
 		url = POST['images'][0]['s3_url']
-		print url
+		ProcessCrop.objects.create(url= url, kind="CROPPED")
 		#Now we have to resize the image 2 times...
 
 		#And copy them to our s3...
