@@ -247,7 +247,6 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		import pdb; pdb.set_trace()
 		POST= json.loads(request.raw_post_data)
 		url = POST['images'][0]['s3_url']
 		ProcessCrop.objects.create(url= url, kind="CROPPED")
