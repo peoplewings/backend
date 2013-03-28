@@ -32,8 +32,6 @@ import urllib, urllib2
 from django.conf import settings
 import random
 import json
-import logging
-import datetime
 
 class CroppedResource(ModelResource):
 	
@@ -250,8 +248,7 @@ class CropcompletedResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		POST= json.loads(request.raw_post_data)
 		#url = POST['results'][0]["images"][0]['s3_url']
-		logging.basicConfig(filename='cropper.log', format='%(asctime)s  %(levelname)s  %(message)s', level=logging.INFO)
-		logging.info('%s' % request.raw_post_data)
+		print request.raw_post_data
 
 		ProcessCrop.objects.create(url= request.raw_post_data, kind="CROPPED")
 		#Now we have to resize the image 2 times...
