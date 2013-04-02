@@ -162,7 +162,7 @@ class CroppedResource(ModelResource):
 		image_id = "%s-%s" % (request.user.pk,random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 
-		values = {"json": [{"src": url, "content_type_json": True, functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		#data = urllib.urlencode(values)
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
