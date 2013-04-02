@@ -162,7 +162,7 @@ class CroppedResource(ModelResource):
 		image_id = "%s-%s" % (request.user.pk,random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 
-		values = {"json": [{"src": url, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		#data = urllib.urlencode(values)
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
@@ -248,12 +248,14 @@ class CropcompletedResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		print request.raw_post_data
 		encoded = request.raw_post_data
-		encoded = urllib.unquote(encoded).decode('utf-8')
 		POST= json.loads(encoded)
+		try:
+			url = POST["results"]["images"][0]['s3_url']
+		except:
+			print POST["results"]["images"][0]['error']
+			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		#url = POST["images"][0]['s3_url']
-
-		ProcessCrop.objects.create(url=POST, kind="CROPPED")
+		ProcessCrop.objects.create(url=url, kind="CROPPED")
 		#Now we have to resize the image 2 times...
 
 		#And copy them to our s3...
