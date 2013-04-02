@@ -246,6 +246,7 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
+		print request.raw_post_data
 		encoded = request.raw_post_data
 		encoded = urllib.unquote(encoded).decode('utf-8')
 		POST= json.loads(encoded)
