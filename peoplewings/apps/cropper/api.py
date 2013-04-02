@@ -250,9 +250,9 @@ class CropcompletedResource(ModelResource):
 		encoded = urllib.unquote(encoded).decode('utf-8')
 		POST= json.loads(encoded)
 
-		url = POST["images"][0]['s3_url']
+		#url = POST["images"][0]['s3_url']
 
-		ProcessCrop.objects.create(url=url, kind="CROPPED")
+		ProcessCrop.objects.create(url=POST, kind="CROPPED")
 		#Now we have to resize the image 2 times...
 
 		#And copy them to our s3...
