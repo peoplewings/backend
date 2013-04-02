@@ -249,10 +249,11 @@ class CropcompletedResource(ModelResource):
 		print request.raw_post_data
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
+		url = ""
 		try:
 			url = POST["results"]["images"][0]['s3_url']
 		except:
-			print POST["results"]["images"][0]['error']
+			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
 		ProcessCrop.objects.create(url=url, kind="CROPPED")
