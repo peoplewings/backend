@@ -262,8 +262,9 @@ class CropcompletedResource(ModelResource):
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropbig')
 		image_id_big = "%s-%s" % (img_id, random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
+		s3_key_big= "to-resize/%s" % image_id_big
 
-		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 175,"height": 175},"name": "resize","save": {"image_identifier": image_id_big}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 175,"height": 175},"name": "resize","save": {"image_identifier": image_id_big, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key_big}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
  		res= urllib2.urlopen(req).read()
@@ -272,8 +273,9 @@ class CropcompletedResource(ModelResource):
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropsmall')
 		image_id_med = "%s-%s" % (img_id, random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
+		s3_key_med= "to-resize/%s" % image_id_med
 
-		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 65,"height": 65},"name": "resize","save": {"image_identifier": image_id_med}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 65,"height": 65},"name": "resize","save": {"image_identifier": image_id_med, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key_med}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
  		res= urllib2.urlopen(req).read()
@@ -365,7 +367,6 @@ class CropbigResource(ModelResource):
 			url = POST["results"]["images"][0]['s3_url']
 			img_id = POST["results"]["images"][0]['image_identifier']
 
-			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.avatar = url
 			prof.save()

@@ -11,6 +11,7 @@ class S3Custom(object):
     conn = S3Connection(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
     b = Bucket(conn, settings.AWS_STORAGE_BUCKET_NAME)
     k = Key(b)
+
     def upload_file(self, ruta, prefix):
         try:           
             self.k.key = '%s/%s' % (prefix, os.path.split(ruta)[-1])
@@ -38,3 +39,13 @@ class S3Custom(object):
         return u'{name}'.format(                 
             name = uuid.uuid4().hex
         )
+
+    def copy(self, srcBucketName, dstBucketName, key):
+        print srcBucketName
+        print dstBucketName
+        print key
+        import pdb; pdb.set_trace()
+        srcBucket = self.conn.get_bucket(srcBucketName);
+        dstBucket = self.conn.get_bucket(dstBucketName);
+        self.k.key = key
+        dstBucket.copy_key(k.key, srcBucketName, k.key)
