@@ -343,7 +343,7 @@ class CropcompletedResource(ModelResource):
 
 		return wrapper
 
-class CropBigResource(ModelResource):
+class CropbigResource(ModelResource):
 	
 	
 	class Meta:
@@ -436,7 +436,7 @@ class CropBigResource(ModelResource):
 
 		return wrapper
 
-class CropSmallResource(ModelResource):
+class CropsmallResource(ModelResource):
 	
 	
 	class Meta:

@@ -12,7 +12,7 @@ from peoplewings.apps.people.api import UserProfileResource, UserLanguageResourc
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.apps.feedback.api import FeedbackResource
-from peoplewings.apps.cropper.api import CroppedResource, CropcompletedResource
+from peoplewings.apps.cropper.api import CroppedResource, CropcompletedResource, CropbigResource, CropsmallResource
 from peoplewings.apps.notifications.api import NotificationsListResource, NotificationsThreadResource
 
 #Here we registre the resources...
@@ -48,6 +48,8 @@ v1_api.register(WingResource())
 v1_api.register(ContactResource())
 v1_api.register(ControlResource())
 v1_api.register(CropcompletedResource())
+v1_api.register(CropbigResource())
+v1_api.register(CropsmallResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
