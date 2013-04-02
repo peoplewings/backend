@@ -246,22 +246,225 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		print 'lol'
 		print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
 		try:
 			url = POST["results"]["images"][0]['s3_url']
+			img_id = POST["results"]["images"][0]['image_identifier']
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		ProcessCrop.objects.create(url=url, kind="CROPPED")
-		#Now we have to resize the image 2 times...
+		#Now we have to resize the image 2 times... to 175x175 (search) and 65x65
+		url_blitline =  "http://api.blitline.com/job"
+		postback = '%s%s' % (settings.BACKEND_SITE, 'cropbig')
+		image_id_big = "%s-%s" % (img_id, random.randint(1, 9999999))
+		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 175,"height": 175},"name": "resize","save": {"image_identifier": image_id_big}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		headers = {"Accept": "application/json", "Content-Type": "application/json"}
+		req = urllib2.Request(url_blitline, json.dumps(values), headers)
+ 		res= urllib2.urlopen(req).read()
+
+ 		url_blitline =  "http://api.blitline.com/job"
+		postback = '%s%s' % (settings.BACKEND_SITE, 'cropsmall')
+		image_id_med = "%s-%s" % (img_id, random.randint(1, 9999999))
+		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
+
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 65,"height": 65},"name": "resize","save": {"image_identifier": image_id_med}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		headers = {"Accept": "application/json", "Content-Type": "application/json"}
+		req = urllib2.Request(url_blitline, json.dumps(values), headers)
+ 		res= urllib2.urlopen(req).read()
 		#And copy them to our s3...
 
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)              
+
+				return response
+		   	except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
+			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+			except Exception, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
+
+		return wrapper
+
+class CropBigResource(ModelResource):
+	
+	
+	class Meta:
+		object_class = Cropped
+		queryset = Cropped.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def post_list(self, request, **kwargs):
+		print '%s  %s' % ("BIG", request.raw_post_data)
+		encoded = request.raw_post_data
+		POST= json.loads(encoded)
+		url = ""
+		try:
+			url = POST["results"]["images"][0]['s3_url']
+			img_id = POST["results"]["images"][0]['image_identifier']
+
+			user_id = img_id.split("-")[0]
+			prof = UserProfile.objects.get(user__pk = int(user_id))
+			prof.avatar = url
+			prof.save()
+		except:
+			#print POST["results"]["images"][0]['error']
+			return self.create_response(request, {"status":False}, response_class = HttpResponse)
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)              
+
+				return response
+		   	except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
+			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse) 
+				elif (isinstance(e.response, HttpUnauthorized)):
+					content = {}
+					errors = [{"type": "AUTH_REQUIRED"}]
+					content['errors'] = errors                             
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				elif (isinstance(e.response, HttpApplicationError)):
+					content = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+				else:               
+					ccontent = {}
+					errors = [{"type": "INTERNAL_ERROR"}]
+					content['errors'] = errors               
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+			except Exception, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse)
+
+		return wrapper
+
+class CropSmallResource(ModelResource):
+	
+	
+	class Meta:
+		object_class = Cropped
+		queryset = Cropped.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def post_list(self, request, **kwargs):
+		print '%s  %s' % ("MED", request.raw_post_data)
+		encoded = request.raw_post_data
+		POST= json.loads(encoded)
+		url = ""
+		try:
+			url = POST["results"]["images"][0]['s3_url']
+			img_id = POST["results"]["images"][0]['image_identifier']
+
+			user_id = img_id.split("-")[0]
+			prof = UserProfile.objects.get(user__pk = int(user_id))
+			prof.medium_avatar = url
+			prof.save()
+		except:
+			#print POST["results"]["images"][0]['error']
+			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 	def wrap_view(self, view):
