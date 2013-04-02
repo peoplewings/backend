@@ -161,9 +161,9 @@ class CroppedResource(ModelResource):
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropcompleted')
 		image_id = "%s-%s" % (request.user.pk,random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
-		s3_key = image_id
-		
-		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id_big, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		s3_key = 'to-resize/%s' % image_id
+
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"y": int(POST['y']),"x": int(POST['x']),"height": int(POST['h']),"width": int(POST['w'])},"name": "crop","save": {"image_identifier": image_id, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		#data = urllib.urlencode(values)
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
@@ -263,7 +263,7 @@ class CropcompletedResource(ModelResource):
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropbig')
 		image_id_big = "%s-%s" % (img_id, random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
-		s3_key_big= "to-resize/%s" % image_id_big
+		s3_key_big= "avatar-big/%s" % image_id_big
 
 		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 175,"height": 175},"name": "resize","save": {"image_identifier": image_id_big, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key_big}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -274,7 +274,7 @@ class CropcompletedResource(ModelResource):
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropsmall')
 		image_id_med = "%s-%s" % (img_id, random.randint(1, 9999999))
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
-		s3_key_med= "to-resize/%s" % image_id_med
+		s3_key_med= "avatar-med/%s" % image_id_med
 
 		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 65,"height": 65},"name": "resize","save": {"image_identifier": image_id_med, "s3_destination" : {"bucket" : settings.AWS_STORAGE_BUCKET_NAME, "key" : s3_key_med}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
