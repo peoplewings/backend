@@ -371,6 +371,7 @@ class CropbigResource(ModelResource):
 			url = POST["results"]["images"][0]['s3_url']
 			img_id = POST["results"]["images"][0]['image_identifier']
 
+			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.avatar = url
 			prof.save()
@@ -467,11 +468,12 @@ class CropsmallResource(ModelResource):
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.medium_avatar = url
 			prof.save()
+
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "updates":{"avatar":True}}, response_class = HttpResponse)
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):

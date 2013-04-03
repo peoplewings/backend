@@ -16,7 +16,8 @@ class Notification(object):
 				resp = json.loads(response.content)
 				try:
 					prof = UserProfile.objects.get(user=request.user)
-					resp['updates'] = {}
+					if not resp.has_key('updates'):
+						resp['updates'] = {}
 					resp['updates']['notifs'] = NotificationsAlarm.objects.filter(receiver=prof).count()
 				except:
 					resp['updates'] = {}
