@@ -473,7 +473,7 @@ class CropsmallResource(ModelResource):
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		return self.create_response(request, {"status":True, "updates":{"avatar":True}}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
