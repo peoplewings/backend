@@ -82,6 +82,7 @@ SERVER_EMAIL = 'emailconfirm@peoplewings.com'
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+AWS_BUCKET_LOCATION = "eu-west-1"
 
 S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
