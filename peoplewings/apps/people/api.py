@@ -1179,7 +1179,7 @@ class UserProfileResource(ModelResource):
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
 		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
 		if GET['type'] == 'Host':		
-			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])&Q(active=True)
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])&Q(active=True)&Q(wing__status__in=['Y', 'M'])
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
@@ -1193,7 +1193,7 @@ class UserProfileResource(ModelResource):
 				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & (Q(wing__date_end__gte=date_end)|Q(wing__date_end__isnull=True))
 		else:
-			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])&Q(active=True)
+			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(publicrequestwing__capacity__gte= GET['capacity'])&Q(active=True)&Q(wing__status__in=['Y', 'M'])
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
