@@ -1248,6 +1248,17 @@ class UserProfileResource(ModelResource):
 		count = len(data)
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
+		if startResult < page_size * (num_page -1) + 1:
+			#import pdb; pdb.set_trace()
+			num_page = round(count/page_size)
+			if count%page_size != 0:
+				num_page = num_page + 1
+			endResult = count
+			startResult = ((num_page -1) * page_size) + 1
+		elif num_page < 0:
+			num_page=1
+			startResult = 1
+			endResult = min(num_page * page_size, count)
 		paginator = Paginator(data, page_size)
 		try:
 			page = paginator.page(num_page)
