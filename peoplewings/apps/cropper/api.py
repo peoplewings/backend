@@ -162,7 +162,7 @@ class CroppedResource(ModelResource):
 		print image_name
 		url_blitline =  "http://api.blitline.com/job"
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropcompleted')
-		image_id = "%s-%s" % (request.user.pk,image_name)
+		image_id = "%s-%s" % (request.user.pk, image_name)
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 		s3_key = '/to-resize/%s' % image_id
 
