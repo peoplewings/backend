@@ -38,23 +38,26 @@ class ApiToken(models.Model):
 	def save(self, *args, **kwargs):
 		if not self.token:
 			self.token = self.generate_token()
+			self.last = datetime.datetime.now()
+			self.last_js = time.time()
+		else:
+			self.last_js = time.time()
 		return super(ApiToken, self).save(*args, **kwargs)
 
 	#def get_or_create(self, *args, **kwargs):
 		
 	def is_valid(self, now=datetime.datetime.now()):
 		" Check if token is still valid."
+		" now is the current time with the current locale"
 		# Get valid period.
 		valid_time = getattr(settings, 'TOKEN_VALID_TIME', 3600)
 		if (now - self.last) < datetime.timedelta(seconds=valid_time):			
-			self.last = now
-			self.last_js = time.time()
 			self.save()
 			return True
 		return False
 
 	def is_user_connected(self):
-		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 80)
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
 		if time.time() - self.last_js > valid_time:
 			return 'OFF'
 		else:			

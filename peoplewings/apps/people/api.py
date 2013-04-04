@@ -490,7 +490,7 @@ class UserProfileResource(ModelResource):
 					prof_obj.main_mission = prof.main_mission
 					prof_obj.civil_state = prof.civil_state
 					prof_obj.personal_philosophy = prof.personal_philosophy
-
+					
 					conn = self.connected(prof.user)
 					if conn == "OFF":
 						last = prof.user							
