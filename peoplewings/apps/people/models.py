@@ -143,6 +143,7 @@ class Relationship(models.Model):
 	sender = models.ForeignKey('UserProfile', related_name='sender')
 	receiver = models.ForeignKey('UserProfile', related_name='receiver')
 	relationship_type = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES)
+	fuck_you = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES, null=True)
 
 	class Meta:
 		unique_together = ("sender", "receiver")

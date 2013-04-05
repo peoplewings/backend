@@ -37,7 +37,6 @@ class CityManager(models.Manager):
     
     def get_or_create(self, **kwargs):
         try:
-            #import pdb; pdb.set_trace()
             city = City.objects.get(name=kwargs['name'], region=kwargs['region'])
             city.lat = kwargs['lat']
             city.lon = kwargs['lon']            
@@ -59,7 +58,7 @@ class CityManager(models.Manager):
         #locationType = kwargs.get('location_type', None)
         # put nulls in the args
         # control over the params
-        #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
+        #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')        
         try:
             #Save the country  
             country, b = Country.objects.get_or_create(name=countryN)            

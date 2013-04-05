@@ -48,7 +48,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Installed external apps
     'gunicorn',
-    'south',
     'tastypie',
     # Project custom apps
     'peoplewings.apps.registration',

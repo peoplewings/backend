@@ -1006,9 +1006,9 @@ class UserProfileResource(ModelResource):
 		# Locations		
 		prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
 		prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
-		prof.other_locations.clear()
+		prof.other_locations.clear()		
 		for i in POST['otherLocations']:
-			prof.other_locations.add(City.objects.saveLocation(country=POST['current']['country'], region=POST['region'], name=POST['name'], lat=POST['lat'], lon=POST['lon']))
+			prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
 
 		prof.emails = POST['emails']
 		prof.phone = POST['phone']		

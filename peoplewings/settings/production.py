@@ -35,7 +35,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Installed external apps
     'gunicorn',
-    'south',
     'tastypie',
     'storages',
     'compressor',       
