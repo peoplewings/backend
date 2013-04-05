@@ -736,6 +736,9 @@ class UserProfileResource(ModelResource):
 						if not i.has_key('snUsername'):
 							if 'socialNetworks' not in invalid['extras']:
 								invalid['extras'].append('socialNetworks')
+						else:
+							if len(i['snUsername']) > 40:
+								too_long['extras'].append('socialNetworks')
 						if not i.has_key('socialNetwork'):
 							if 'socialNetworks' not in invalid['extras']:
 								invalid['extras'].append('socialNetworks')
@@ -756,6 +759,9 @@ class UserProfileResource(ModelResource):
 						if not i.has_key('imUsername'):
 							if 'instantMessages' not in invalid['extras']:
 								invalid['extras'].append('instantMessages')
+						else:
+							if len(i['imUsername']) > 40:
+								too_long['extras'].append('instantMessages')
 						if not i.has_key('instantMessage'):
 							if 'instantMessages' not in invalid['extras']:
 								invalid['extras'].append('instantMessages')
@@ -786,6 +792,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('civilState')
 		else:
 			field_req['extras'].append('civilState')
+
 		if POST.has_key('languages'):
 			if not isinstance(POST['languages'], list):
 				invalid['extras'].append('languages')
@@ -843,37 +850,53 @@ class UserProfileResource(ModelResource):
 						if not i.has_key('institution'):
 							if 'education' not in invalid['extras']:
 								invalid['extras'].append('education')
+						else:
+							if len(i['institution']) > 100:
+								too_long['extras'].append('education')
 						if not i.has_key('degree'):
 							if 'education' not in invalid['extras']:
 								invalid['extras'].append('education')
+						else:
+							if len(i['degree']) > 100:
+								too_long['extras'].append('education')
 
 		if POST.has_key('emails'):
 			if POST['emails'] == "":
 				not_empty['extras'].append('emails')
+			elif len(POST['emails']) > 100:
+				too_long['extras'].append('emails')
 		else:
 			field_req['extras'].append('emails')
 
 		if POST.has_key('phone'):
 			if POST['phone'] == "":
 				not_empty['extras'].append('phone')
+			elif len(POST['phone']) > 100:
+				too_long['extras'].append('phone')				
 		else:
 			field_req['extras'].append('phone')
 
 		if POST.has_key('inspiredBy'):
 			if POST['inspiredBy'] == "":
 				not_empty['extras'].append('inspiredBy')
+			elif len(POST['inspiredBy']) > 100:
+				too_long['extras'].append('inspiredBy')					
 		else:
 			field_req['extras'].append('inspiredBy')
 
 		if POST.has_key('otherPages'):
 			if POST['otherPages'] == "":
 				not_empty['extras'].append('otherPages')
+			elif len(POST['otherPages']) > 100:
+				too_long['extras'].append('otherPages')					
 		else:
 			field_req['extras'].append('otherPages')
 
 		if POST.has_key('enjoyPeople'):
 			if POST['enjoyPeople'] == "":
 				not_empty['extras'].append('enjoyPeople')
+			elif len(POST['enjoyPeople']) > 100:
+				too_long['extras'].append('enjoyPeople')					
 		else:
 			field_req['extras'].append('enjoyPeople')
 
@@ -888,12 +911,16 @@ class UserProfileResource(ModelResource):
 		if POST.has_key('allAboutYou'):
 			if POST['allAboutYou'] == "":
 				not_empty['extras'].append('allAboutYou')
+			elif len(POST['allAboutYou']) > 100:
+				too_long['extras'].append('allAboutYou')				
 		else:
 			field_req['extras'].append('allAboutYou')
 
 		if POST.has_key('movies'):
 			if POST['movies'] == "":
 				not_empty['extras'].append('movies')
+			elif len(POST['movies']) > 100:
+				too_long['extras'].append('movies')				
 		else:
 			field_req['extras'].append('movies')
 
@@ -936,15 +963,11 @@ class UserProfileResource(ModelResource):
 		except:
 			invalid['extras'].append('birthday')
 
-		if POST.has_key('lastName'):
-			if POST['lastName'] == "":
-				not_empty['extras'].append('lastName')
-		else:
-			field_req['extras'].append('lastName')
-
 		if POST.has_key('religion'):
 			if POST['religion'] == "":
 				not_empty['extras'].append('religion')
+			elif len(POST['religion']) > 100:
+				too_long['extras'].append('religion')				
 		else:
 			field_req['extras'].append('religion')
 
