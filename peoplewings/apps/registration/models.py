@@ -11,6 +11,7 @@ from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
+from django.core.mail import send_mail
 from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, ExistingUser
 from peoplewings.apps.registration.signals import user_deleted, user_registered
 
@@ -241,7 +242,7 @@ class RegistrationProfile(models.Model):
 		return self.activation_key == self.ACTIVATED or (self.user.date_joined + expiration_date <= datetime.datetime.utcnow().replace(tzinfo=utc))
 	activation_key_expired.boolean = True
 
-	def send_activation_email(self, site):
+	def send_activation_email(self, site, kind='None'):
 		"""
 		Send an activation email to the user associated with this
 		``RegistrationProfile``.
@@ -279,33 +280,27 @@ class RegistrationProfile(models.Model):
 			framework for details regarding these objects' interfaces.
 
 		"""
-		ctx_dict = {'activation_key': self.activation_key,
-					'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-					'site': site}
-		subject = render_to_string('registration/activation_email_subject.txt',
-								   ctx_dict)
+		ctx_dict = {'activation_key': self.activation_key, 'site': site}
+		subject = render_to_string('registration/activation_email_subject.txt', ctx_dict)
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
 		
-		message = render_to_string('registration/activation_email.txt',
-								   ctx_dict)
-		
-		self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+		message = render_to_string('registration/activation_email.txt', ctx_dict)
+		send_mail(subject, message, settings.REGISTER_SERVER_EMAIL, [self.user.email], fail_silently=False, auth_user=settings.REGISTER_EMAIL_HOST_USER)
+		return True
 
 	def send_forgot_email(self, site, user):
 		
 		ctx_dict = {'reset_token': self.activation_key,
-					'username': user.email,
+					'email_user': user.email,
 					'site': site}
-		subject = render_to_string('registration/forgot_password_email_subject.txt',
-								   ctx_dict)
+		subject = render_to_string('registration/forgot_password_email_subject.txt', ctx_dict)
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
 		
-		message = render_to_string('registration/forgot_email.txt',
-								   ctx_dict)
+		message = render_to_string('registration/forgot_email.txt', ctx_dict)
 		
-		self.user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+		send_mail(subject, message, settings.FORGOT_SERVER_EMAIL, [self.user.email], fail_silently=False, auth_user=settings.FORGOT_EMAIL_HOST_USER)
 		return True
 
 	@staticmethod

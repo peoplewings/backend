@@ -63,14 +63,20 @@ STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 #SITE
 SITE = 'https://peoplewings-frontend.s3-website-eu-west-1.amazonaws.com/'
 BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
+
 # SMTP settings
-EMAIL_HOST = 'smtp.1and1.es' #probar con .com
-EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
-EMAIL_HOST_PASSWORD = 'wings208b'
+EMAIL_HOST ='smtp.gmail.com'
+EMAIL_HOST_PASSWORD = 'PauVictor2&'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
-SERVER_EMAIL = 'emailconfirm@peoplewings.com'
+
+REGISTER_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+REGISTER_DEFAULT_FROM_EMAIL = 'register-noreply@peoplewings.com'
+REGISTER_SERVER_EMAIL = 'PEOPLEWINGS Account New'
+
+FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
+FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"

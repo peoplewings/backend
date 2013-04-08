@@ -4,7 +4,8 @@ import re
 import random, string
 
 from django.conf import settings
-
+from dateutil import parser
+from datetime import datetime
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -94,6 +95,7 @@ class UserSignUpResource(ModelResource):
 		field_req = {"type":"FIELD_REQUIRED", "extras": []}
 		too_long = {"type":"TOO_LONG", "extras": []}
 		invalid = {"type":"INVALID_FIELD", "extras": []}
+		young = {"type":"UNDERAGE"}
 
 		if POST.has_key("hasAcceptedTerms") and isinstance(POST['hasAcceptedTerms'], bool):
 			if POST['hasAcceptedTerms'] == True:
@@ -120,6 +122,13 @@ class UserSignUpResource(ModelResource):
 				invalid['extras'].append('birthdayYear')
 		else: 
 			field_req['extras'].append('birthdayYear')
+
+		try:
+			birthday = parser.parse('%s-%s-%s' % (POST['birthdayYear'], POST['birthdayMonth'], POST['birthdayDay']))
+			if ((datetime.now() - birthday).days / 365) < 18:
+				errors.append(young)
+		except:
+			invalid['extras'].append('birthday')
 
 		if POST.has_key("email"):
 			if not self.email_validation(POST['email']):
@@ -170,7 +179,7 @@ class UserSignUpResource(ModelResource):
 			return None
 		return errors
 
-	def post_list(self, request, **kwargs):
+	def post_list(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
 		errors = None
