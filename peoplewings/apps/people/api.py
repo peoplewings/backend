@@ -529,11 +529,12 @@ class UserProfileResource(ModelResource):
 					prof_obj.sports = prof.sports
 
 					langs = UserLanguage.objects.filter(user_profile=prof)
+
 					for i in langs:
 						aux = {}
 						aux['name'] = i.language.name
 						aux['level'] = i.level
-						prof_obj.other_locations.append(aux)
+						prof_obj.languages.append(aux)
 
 					prof_obj.quotes = prof.quotes
 
@@ -634,7 +635,7 @@ class UserProfileResource(ModelResource):
 							aux = {}
 							aux['name'] = i.language.name
 							aux['level'] = i.level
-							prof_obj.other_locations.append(aux)
+							prof_obj.languages.append(aux)
 
 						prof_obj.birth_year = prof.birthday.year
 						prof_obj.quotes = prof.quotes

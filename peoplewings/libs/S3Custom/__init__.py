@@ -41,10 +41,6 @@ class S3Custom(object):
         )
 
     def copy(self, srcBucketName, dstBucketName, key):
-        print srcBucketName
-        print dstBucketName
-        print key
-        import pdb; pdb.set_trace()
         srcBucket = self.conn.get_bucket(srcBucketName);
         dstBucket = self.conn.get_bucket(dstBucketName);
         self.k.key = key

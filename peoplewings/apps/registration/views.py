@@ -94,7 +94,8 @@ def api_token_is_authenticated(bundle, **kwargs):
 			apitoken = ApiToken.objects.get(token = token)
 		else:
 			apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))
-		apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)   
+		if apitoken.last < datetime.datetime.utcnow().replace(tzinfo=utc): 
+			apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)   
 		apitoken.save()
 		user = User.objects.get(pk=apitoken.user_id)
 		return user        

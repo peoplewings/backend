@@ -38,7 +38,6 @@ class ApiToken(models.Model):
 	def save(self, *args, **kwargs):
 		if not self.token:
 			self.token = self.generate_token()
-			self.last = datetime.datetime.now()
 			self.last_js = time.time()
 		else:
 			self.last_js = time.time()
