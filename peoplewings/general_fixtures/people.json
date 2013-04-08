@@ -29,13 +29,6 @@
 },
   {
     "model": "people.SocialNetwork",
-    "pk": 5,
-    "fields": {
-        "name" : "--------------"
-    }
-},
-  {
-    "model": "people.SocialNetwork",
     "pk": 6,
     "fields": {
         "name" : "43 Things"
@@ -557,13 +550,6 @@
     "pk": 102,
     "fields": {
         "name" : "Goodwizz"
-        }
-    },
-  {
-    "model": "people.SocialNetwork",
-    "pk": 103,
-    "fields": {
-        "name" : "Google+"
         }
     },
   {
@@ -1403,35 +1389,133 @@
     "model": "people.InstantMessage",
     "pk": 1,
     "fields": {
-        "name" : "Whatsap"
+        "name" : "Skype"
     }
   },
 {
     "model": "people.InstantMessage",
     "pk": 2,
     "fields": {
-        "name" : "Skype"
+        "name" : "WhatsApp"
     }
   },
 {
     "model": "people.InstantMessage",
     "pk": 3,
     "fields": {
-        "name" : "Facetime"
+        "name" : "Line"
     }
   },
 {
     "model": "people.InstantMessage",
     "pk": 4,
     "fields": {
-        "name" : "BB Messenger"
+        "name" : "AIM"
     }
   },
 {
     "model": "people.InstantMessage",
     "pk": 5,
     "fields": {
-        "name" : "Messenger"
+        "name" : "Blauk"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 6,
+    "fields": {
+        "name" : "eBuddy"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 7,
+    "fields": {
+        "name" : "Gadu-Gadu"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 8,
+    "fields": {
+        "name" : "IBM Lotus Sametime"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 9,
+    "fields": {
+        "name" : "ICQ"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 10,
+    "fields": {
+        "name" : "iMessage"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 11,
+    "fields": {
+        "name" : "IMVU"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 12,
+    "fields": {
+        "name" : "Lync"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 13,
+    "fields": {
+        "name" : "MXit"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 14,
+    "fields": {
+        "name" : "Paltalk"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 15,
+    "fields": {
+        "name" : "Tencent QQ"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 16,
+    "fields": {
+        "name" : "Windows Live Messenger"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 17,
+    "fields": {
+        "name" : "Wireclub"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 18,
+    "fields": {
+        "name" : "Xfire"
+    }
+  },
+{
+    "model": "people.InstantMessage",
+    "pk": 19,
+    "fields": {
+        "name" : "Yahoo! Messenger"
     }
   },
 {
@@ -4369,7 +4453,7 @@
     "pk": 9,
     "fields": {
         "user_profile" : 4,
-        "social_network" : 5,
+        "social_network" : 6,
         "social_network_username" : "Victribell"
     }
   },
@@ -4414,7 +4498,7 @@
     "pk": 14,
     "fields": {
         "user_profile" : 5,
-        "social_network" : 5,
+        "social_network" : 8,
         "social_network_username" : "JS_mastah"
     }
   },
