@@ -558,13 +558,15 @@ class UserProfileResource(ModelResource):
 					prof_obj.last_name = prof.user.last_name
 					prof_obj.religion = prof.religion
 
+					prof_obj.birthday = str(prof.birthday)
+					"""
 					if prof.show_birthday == 'F':
 						prof_obj.birthday = str(prof.birthday)
 					elif prof.show_birthday == 'P':
 						prof_obj.birthday = '%s-%s' % (prof.birthday.month, prof.birthday.day)
 					else:
 						prof_obj.birthday = ""
-
+					"""
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 					
 					#Return
@@ -684,7 +686,7 @@ class UserProfileResource(ModelResource):
 
 						prof_obj.last_name = prof.user.last_name
 						prof_obj.religion = prof.religion
-						prof_obj.show_birthday = prof.show_birthday
+						prof_obj.show_birthday = 'F'
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 						
 						#Return
@@ -708,7 +710,7 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('XXX')
 		"""
-
+		"""
 		if POST.has_key('showBirthday'):
 			if POST['showBirthday'] == "":
 				not_empty['extras'].append('showBirthday')
@@ -716,7 +718,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('showBirthday')
 		else:
 			field_req['extras'].append('showBirthday')
-
+		"""
 		if POST.has_key('gender'):
 			if POST['gender'] == "":
 				not_empty['extras'].append('gender')
@@ -1014,7 +1016,7 @@ class UserProfileResource(ModelResource):
 		"""
 
 		prof.birthday =parser.parse('%s-%s-%s' % (POST['birthYear'], POST['birthMonth'], POST['birthDay']))
-		prof.show_birthday = POST['showBirthday']
+		#prof.show_birthday = POST['showBirthday']
 		prof.gender = POST['gender']
 		prof.interested_in.clear()
 		prof.interested_in.add(Interests.objects.get(gender__icontains=POST['interestedIn'][0]['gender']))
