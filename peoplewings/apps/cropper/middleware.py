@@ -10,7 +10,8 @@ class Crop(object):
 	def process_request(self, request):
 		return None
 
-	def process_response(self, request, response):		
+	def process_response(self, request, response):	
+		#import pdb; pdb.set_trace()	
 		if request.user and not isinstance(request.user, AnonymousUser):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
