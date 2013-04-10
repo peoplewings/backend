@@ -734,7 +734,7 @@ class UserProfileResource(ModelResource):
 						if 'socialNetworks' not in invalid['extras']:
 							invalid['extras'].append('socialNetworks')
 					else:
-						if not i.has_key('snUsername'):
+						if not i.has_key('snUsername') and isinstance(i['snUsername'], str):
 							if 'socialNetworks' not in invalid['extras']:
 								invalid['extras'].append('socialNetworks')
 						else:
@@ -757,7 +757,7 @@ class UserProfileResource(ModelResource):
 						if 'instantMessages' not in invalid['extras']:
 							invalid['extras'].append('instantMessages')
 					else:
-						if not i.has_key('imUsername'):
+						if not i.has_key('imUsername') and isinstance(i['imUsername'], str):
 							if 'instantMessages' not in invalid['extras']:
 								invalid['extras'].append('instantMessages')
 						else:
