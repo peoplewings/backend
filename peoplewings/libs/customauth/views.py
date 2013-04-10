@@ -11,64 +11,63 @@ from tastypie.http import HttpUnauthorized
 from tastypie.authentication import Authentication
 
 try:
-    from hashlib import sha1
+	from hashlib import sha1
 except ImportError:
-    import sha
-    sha1 = sha.sha
+	import sha
+	sha1 = sha.sha
 
 try:
-    import python_digest
+	import python_digest
 except ImportError:
-    python_digest = None
+	python_digest = None
 
 try:
-    import oauth2
+	import oauth2
 except ImportError:
-    oauth2 = None
+	oauth2 = None
 
 try:
-    import oauth_provider
+	import oauth_provider
 except ImportError:
-    oauth_provider = None
+	oauth_provider = None
 
 class ApiTokenAuthentication(Authentication):
-    """
-    Handles API Token auth, in which an user provide just a temporary
-    token using the 'HTTP-X' headers.
-    """
+	"""
+	Handles API Token auth, in which an user provide just a temporary
+	token using the 'HTTP-X' headers.
+	"""
 
-    def _unauthorized(self):
-        response = HttpUnauthorized()
-        response['WWW-Authenticate'] = 'Token'
-        return response
+	def _unauthorized(self):
+		response = HttpUnauthorized()
+		response['WWW-Authenticate'] = 'Token'
+		return response
 
-    def is_authenticated(self, request, **kwargs):
-        """
-        Finds the user with the API Token.
-        """
-        if not request.META.get('HTTP_AUTHORIZATION'):
-            return self._unauthorized()
+	def is_authenticated(self, request, **kwargs):
+		"""
+		Finds the user with the API Token.
+		"""
+		if not request.META.get('HTTP_AUTHORIZATION'):
+			return self._unauthorized()
 
-        try:
-            http_authorization = request.META['HTTP_AUTHORIZATION']
-            (auth_type, data) = http_authorization.split(' ', 1)
+		try:
+			http_authorization = request.META['HTTP_AUTHORIZATION']
+			(auth_type, data) = http_authorization.split(' ', 1)
 
-            if auth_type != 'Token':
-                return self._unauthorized()
-        except:
-            return self._unauthorized()
+			if auth_type != 'Token':
+				return self._unauthorized()
+		except:
+			return self._unauthorized()
 
-        # Get api_token.
-        from peoplewings.libs.customauth.models import ApiToken
+		# Get api_token.
+		from peoplewings.libs.customauth.models import ApiToken		
+		try:
+			api_token = ApiToken.objects.get(token=data)
+		except ApiToken.DoesNotExist:
+			return self._unauthorized()
 
-        try:
-            api_token = ApiToken.objects.get(token=data)
-        except ApiToken.DoesNotExist:
-            return self._unauthorized()
+		# Check if still valid.
+		if not api_token.is_valid():
+			return self._unauthorized()
 
-        # Check if still valid.
-        if not api_token.is_valid():
-            return self._unauthorized()
-
-        request.user = api_token.user
-        return True
+		request.user = api_token.user
+		return True

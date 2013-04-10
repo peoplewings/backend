@@ -253,5 +253,112 @@ class SearchObjectManager(object):
 
 			i.profile_id = None
 
+class EditProfileObject(object):
+
+	def __init__(self):
+		self.interested_in = []
+		self.hometown = {}
+		self.reply_time = None
+		self.main_mission = None
+		self.birth_month = None
+		self.civil_state = None
+		self.personal_philosophy = None
+		self.last_login_date = None
+		self.education = []
+		self.id = None
+		self.occupation = None
+		self.current = {}
+		self.pw_state = None
+		self.incredible = None
+		self.other_locations = []
+		self.sports = None
+		self.languages = []
+		self.birth_year = None
+		self.quotes = None
+		self.social_networks = []
+		self.online = None
+		self.sharing = None
+		self.resource_uri = None
+		self.pw_opinion = None
+		self.political_opinion = None
+		self.company = None
+		self.reply_rate = None
+		self.instant_messages = []
+		self.phone = None
+		self.active = None
+		self.emails = None
+		self.inspired_by = None
+		self.other_pages = None
+		self.first_name = None
+		self.enjoy_people = None
+		self.gender = None
+		self.age = None
+		self.all_about_you = None
+		self.movies = None
+		self.birth_day = None
+		self.avatar = None
+		self.last_login = {}
+		self.last_name = None
+		self.religion = None
+		self.show_birthday = None
+
+	def jsonable(self):
+		res = dict()			
+		for key, value in self.__dict__.items():   
+			if value is not None and not key.startswith('ctrl_'):       
+				res[key] = value
+		return res
+
+class PreviewProfileObject(object):
+
+	def __init__(self):
+		self.interested_in = []
+		self.hometown = {}
+		self.reply_time = None
+		self.main_mission = None
+		self.birth_month = None
+		self.civil_state = None
+		self.personal_philosophy = None
+		self.last_login_date = None
+		self.education = []
+		self.id = None
+		self.occupation = None
+		self.current = {}
+		self.pw_state = None
+		self.incredible = None
+		self.other_locations = []
+		self.sports = None
+		self.languages = []
+		self.birth_year = None
+		self.quotes = None
+		self.online = None
+		self.sharing = None
+		self.resource_uri = None
+		self.pw_opinion = None
+		self.political_opinion = None
+		self.company = None
+		self.reply_rate = None
+		self.active = None
+		self.inspired_by = None
+		self.other_pages = None
+		self.first_name = None
+		self.enjoy_people = None
+		self.gender = None
+		self.age = None
+		self.all_about_you = None
+		self.movies = None
+		self.birth_day = None
+		self.avatar = None
+		self.last_login = {}
+		self.last_name = None
+		self.religion = None
+		self.show_birthday = None
+
+	def jsonable(self):
+		res = dict()			
+		for key, value in self.__dict__.items():   
+			if value is not None and not key.startswith('ctrl_'):       
+				res[key] = value
+		return res
 
 

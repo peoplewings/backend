@@ -714,6 +714,22 @@ class NotificationsThreadResource(ModelResource):
 					mod = mod + self.make_difs_individual(i, thread[idx+1])
 		return mod
 
+	def make_difs_single(self, me, req, kind):		
+		if kind == 'request':
+			thread = Requests.objects.filter(reference = req.reference).order_by('created')
+		elif kind == 'invite':
+			thread = Invites.objects.filter(reference = req.reference).order_by('created')
+
+		mod = []
+		for idx, i in enumerate(thread):
+			if i == req:
+				if i.sender == me:
+					break
+				elif idx > 0:
+					old = thread[idx-1]
+					return self.make_difs_individual(old, i)
+		return []
+
 
 	def delete_alarms(self, ref, me):
 		to_delete= NotificationsAlarm.objects.filter(reference = ref, receiver=me)
@@ -781,7 +797,7 @@ class NotificationsThreadResource(ModelResource):
 				aux.content['message'] = msg.private_message
 				#generic info				
 				aux.created = i.created
-			elif i.kind == 'request' or i.kind == 'invite':
+			elif i.kind == 'request' or i.kind == 'invite':				
 				if i.kind == 'request':
 					kind = 'request'
 					req = Requests.objects.get(pk=i.pk)					
@@ -828,6 +844,21 @@ class NotificationsThreadResource(ModelResource):
 					aux.content['message'] = req.private_message 		
 				#Generic info				
 				aux.created= i.created
+
+				#Individual wing info...
+				aux.wing['type'] = req.wing.get_class_name()
+				aux.wing['state'] = req.state
+				aux.wing['parameters'] = {}
+				aux.wing['parameters']['wingId']= req.wing.pk
+				aux.wing['parameters']['wingName']= req.wing.name
+				aux.wing['parameters']['wingCity']= req.wing.city.name
+				aux.wing['parameters']['startDate']= req.accomodationinformation_notification.get().start_date
+				aux.wing['parameters']['endDate']= req.accomodationinformation_notification.get().end_date
+				aux.wing['parameters']['capacity']= req.accomodationinformation_notification.get().num_people
+				aux.wing['parameters']['arrivingVia']=  req.accomodationinformation_notification.get().transport
+				aux.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
+				aux.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
+				aux.wing['parameters']['modified']= self.make_difs_single(me, req, i.kind)
 			else:
 				return self.create_response(request, {"status":False, "errors":[{"type":"INVALID", "extras":['reference']}]}, response_class = HttpResponse)
 			#Once we filled the aux object, we have to add it to the list

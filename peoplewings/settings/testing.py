@@ -36,7 +36,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Installed external apps
     'gunicorn',
-    'south',
     'tastypie',
     'storages',
     'compressor',
@@ -59,19 +58,26 @@ INSTALLED_APPS = (
 #SITE
 SITE = 'http://peoplewings-frontend.herokuapp.com/'
 BACKEND_SITE = 'https://peoplewings-backend.herokuapp.com/api/v1/'
+
 # SMTP settings
-EMAIL_HOST = 'smtp.1and1.es' #probar con .com
-EMAIL_HOST_USER = 'emailconfirm@peoplewings.com'
-EMAIL_HOST_PASSWORD = 'wings208b'
+EMAIL_HOST ='smtp.gmail.com'
+EMAIL_HOST_PASSWORD = 'PauVictor2&'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'emailconfirm@peoplewings.com'
-SERVER_EMAIL = 'emailconfirm@peoplewings.com'
+
+REGISTER_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+REGISTER_DEFAULT_FROM_EMAIL = 'register-noreply@peoplewings.com'
+REGISTER_SERVER_EMAIL = 'PEOPLEWINGS Account New'
+
+FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
+FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"
 AWS_STORAGE_BUCKET_NAME = "peoplewings-test-media"
+AWS_BUCKET_LOCATION = "eu-west-1"
 
 S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
@@ -121,3 +127,7 @@ POPULARITY_1W_25 = -250
 POPULARITY_1W_30 = -500
 POPULARITY_1W_50 = -750
 POPULARITY_1W_70 = -1000
+
+BLITLINE_ID = "7XqmahVqL8tvhEIjzBm6-jg"
+SRC_BUCKET = "blitline"
+DST_BUCKET = AWS_STORAGE_BUCKET_NAME

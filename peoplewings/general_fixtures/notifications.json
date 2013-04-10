@@ -281,8 +281,8 @@
     "model": "notifications.Requests",
     "pk": 5,
     "fields": {
-        "state" : "A",
-        "public_message" : "",
+        "state" : "P",
+        "public_message" : "Trololo",
         "private_message" : "Can you give me accomodation in Berlin?",
         "make_public" : false,
         "wing" : 1
@@ -292,7 +292,7 @@
     "model": "notifications.Requests",
     "pk": 6,
     "fields": {
-        "state" : "A",
+        "state" : "M",
         "public_message" : "",
         "private_message" : "Need to check it first. Tell u ASAP",
         "make_public" : false,

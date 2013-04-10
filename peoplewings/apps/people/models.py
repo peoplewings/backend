@@ -30,7 +30,7 @@ class UserInstantMessage(models.Model):
 
 # LANGUAGE
 class Language(models.Model):
-	name = models.CharField(max_length=max_medium_len, unique=True)  
+	name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserLanguage(models.Model):
 	user_profile = models.ForeignKey('UserProfile')
@@ -57,12 +57,13 @@ class UserProfile(models.Model):
 	user = models.ForeignKey(User, unique=True)
 	pw_state = models.CharField(max_length=100, choices=PW_STATE_CHOICES)
 
-	avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
-	medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
-	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
-	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True)
-	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')
-	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")
+	avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG) #175x175
+	medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True) # 175x175
+	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True) # 65x65
+	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True) # Not used
+	#avatar_updated = models.BooleanField(default=False)
+	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')##not used
+	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")##not used
 	
 	# In Basic Information
 	birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
@@ -143,6 +144,7 @@ class Relationship(models.Model):
 	sender = models.ForeignKey('UserProfile', related_name='sender')
 	receiver = models.ForeignKey('UserProfile', related_name='receiver')
 	relationship_type = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES)
+	fuck_you = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES, null=True)
 
 	class Meta:
 		unique_together = ("sender", "receiver")

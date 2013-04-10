@@ -93,7 +93,7 @@ class DeleteAccountTest(TestCase):
 		c = Client()
 		#check that the search gives us 4 results..
 		c_count = 4
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&page=1', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -113,7 +113,7 @@ class DeleteAccountTest(TestCase):
 		self.assertEqual(content['status'], True)
 		#Now the results should have gone down by 1...
 		c_count = 3
-		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&startDate=2013-03-06&page=1', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
+		r1 = c.get('/api/v1/profiles?capacity=1&startAge=18&endAge=99&language=all&type=Host&gender=Both&page=1', HTTP_X_AUTH_TOKEN=self.token1, content_type='application/json')
 		self.assertEqual(r1.status_code, 200)
 		content = json.loads(r1.content)
 		self.assertTrue(content.has_key('status'))
@@ -161,7 +161,7 @@ class DeleteAccountTest(TestCase):
 				self.assertTrue(first.has_key('age'))
 				self.assertEqual(first['age'], "")
 				self.assertTrue(first.has_key('avatar'))
-				self.assertEqual(first['avatar'], "http://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg")
+				self.assertEqual(first['avatar'], "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg")
 				self.assertTrue(first.has_key('online'))
 				self.assertEqual(first['online'], "F")
 				self.assertTrue(first.has_key('created'))

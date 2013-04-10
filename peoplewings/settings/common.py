@@ -17,7 +17,7 @@ sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'apps')))
 
 
 # IMPORT CORRECT SETTINGS BASED IN GIT BRANCHES
-LOCAL_HOSTNAMES= ('fr33d4n-LapTop')
+LOCAL_HOSTNAMES= ('fr33d4n-LapTop', 'peoplwings-terra')
 HOSTNAME = socket.gethostname()
 
 def get_environment_file_path(env):
@@ -105,7 +105,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'peoplewings.apps.notifications.middleware.Notification',
+    #'peoplewings.apps.cropper.middleware.Crop',
+    'peoplewings.apps.notifications.middleware.Notification',    
     #'peoplewings.libs.middlewares.debug-middleware.DebugMiddleware',
     'peoplewings.libs.middlewares.django-crossdomainxhr-middleware.XsSharing',    
 )

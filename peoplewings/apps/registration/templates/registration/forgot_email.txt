@@ -1,15 +1,12 @@
-You're receiving this e-mail because you requested a password reset for your user account at {{ site }}
-
-Please go to the following page and choose a new password:
+To initiate the password reset process for your {{ email_user }} PEOPLEWINGS Account, click the link below:
 
 {{ site }}#/forgot/{{ reset_token }}
 
-Your username, in case you've forgotten: {{ username }}
+If clicking the link above doesn't work, please copy and paste the URL in a new browser window instead.
 
-Please note that this link is valid only for 7 days.
+If you've received this mail in error, it's likely that another user entered your email address by mistake while trying to reset a password. If you didn't initiate the request, you don't need to take any further action and can safely disregard this email.
 
-If you didn't request a new password, just ignore this email and have a great day!
 
-Thanks for using our site!
+Sincerely,
+The PEOPLEWINGS Accounts Team
 
-The {{ site }} team

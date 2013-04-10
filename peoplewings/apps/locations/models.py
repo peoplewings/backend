@@ -37,7 +37,7 @@ class CityManager(models.Manager):
     
     def get_or_create(self, **kwargs):
         try:
-            city = City.objects.get(name=kwargs['name'], region_id=kwargs['region'])
+            city = City.objects.get(name=kwargs['name'], region=kwargs['region'])
             city.lat = kwargs['lat']
             city.lon = kwargs['lon']            
         except Exception, e:
@@ -49,7 +49,7 @@ class CityManager(models.Manager):
 
     def saveLocation(self, **kwargs):
     # countryN, countrySN, regionN='No region', regionSN='No region', cityN, citySN, cityLat, cityLon, locationType
-        # define args
+        # define args        
         countryN = kwargs.get('country', None)
         regionN = kwargs.get('region', 'NoName')
         cityN = kwargs.get('name', None)
@@ -58,7 +58,7 @@ class CityManager(models.Manager):
         #locationType = kwargs.get('location_type', None)
         # put nulls in the args
         # control over the params
-        #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')
+        #if regionSN is None or countrySN is None or citySN is None: raise Exception('Invalid parameters')        
         try:
             #Save the country  
             country, b = Country.objects.get_or_create(name=countryN)            
