@@ -250,7 +250,7 @@ class CropcompletedResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		print '%s  %s' % ("POST", request.raw_post_data)
+		#print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
@@ -264,7 +264,7 @@ class CropcompletedResource(ModelResource):
 		#Now we have to resize the image 2 times... to 175x175 (search) and 65x65
 		url_blitline =  "http://api.blitline.com/job"
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropbig')
-		image_id_big = "%s-%s" % (img_id, random.randint(1, 9999999))
+		image_id_big = "%s" % img_id
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 		s3_key_big= "avatar-big/%s" % image_id_big
 
@@ -275,7 +275,7 @@ class CropcompletedResource(ModelResource):
 
  		url_blitline =  "http://api.blitline.com/job"
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropsmall')
-		image_id_med = "%s-%s" % (img_id, random.randint(1, 9999999))
+		image_id_med = "%s" % img_id
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 		s3_key_med= "avatar-med/%s" % image_id_med
 
@@ -363,7 +363,7 @@ class CropbigResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		print '%s  %s' % ("BIG", request.raw_post_data)
+		#print '%s  %s' % ("BIG", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
@@ -375,6 +375,7 @@ class CropbigResource(ModelResource):
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.avatar = url
 			prof.medium_avatar = url
+			prof.avatar_updated=True
 			prof.save()
 		except:
 			#print POST["results"]["images"][0]['error']
@@ -457,7 +458,7 @@ class CropsmallResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		print '%s  %s' % ("MED", request.raw_post_data)
+		#print '%s  %s' % ("MED", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
@@ -468,8 +469,8 @@ class CropsmallResource(ModelResource):
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.thumb_avatar = url
+			prof.avatar_updated=True
 			prof.save()
-
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)

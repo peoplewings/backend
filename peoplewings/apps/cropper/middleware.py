@@ -18,9 +18,13 @@ class Crop(object):
 					prof = UserProfile.objects.get(user=request.user)
 					if not resp.has_key('updates'):
 						resp['updates'] = {}
-					resp['updates']['avatar'] = prof.avatar_
-				except:
-					resp['updates'] = {}
-					resp['updates']['notifs'] = -1
+					big_avatar = prof.avatar.split('/')[len(prof.avatar.split('/'))]
+					small_avatar = prof.thumb_avatar.split('/')[len(prof.thumb_avatar.split('/'))]
+					if big_avatar == small_avatar and prof.avatar_updated==True:
+						resp['updates']['avatar'] = True
+						prof.avatar_updated = False
+						prof.save()
+					else:
+						resp['updates']['avatar'] = False
 				response.content = json.dumps(resp)					
 		return response
