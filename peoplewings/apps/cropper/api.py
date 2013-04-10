@@ -159,7 +159,7 @@ class CroppedResource(ModelResource):
 		url = POST['img']
 		image_name = POST['img'].split('/')
 		image_name = image_name[len(image_name) - 1]
-		print image_name
+		#print image_name
 		url_blitline =  "http://api.blitline.com/job"
 		postback = '%s%s' % (settings.BACKEND_SITE, 'cropcompleted')
 		image_id = "%s-%s" % (request.user.pk, image_name)
@@ -374,6 +374,7 @@ class CropbigResource(ModelResource):
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.avatar = url
+			prof.medium_avatar = url
 			prof.save()
 		except:
 			#print POST["results"]["images"][0]['error']
@@ -466,7 +467,7 @@ class CropsmallResource(ModelResource):
 
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
-			prof.medium_avatar = url
+			prof.thumb_avatar = url
 			prof.save()
 
 		except:
