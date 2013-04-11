@@ -119,9 +119,9 @@ class UserProfile(models.Model):
 	places_wanna_go = models.TextField(max_length=max_long_len, blank=True)
 
 	#Reply rate (between 0 and 1)
-	reply_rate = models.IntegerField(default=0)
+	reply_rate = models.IntegerField(default=-1)
 	#Reply time
-	reply_time = models.BigIntegerField(default=0)
+	reply_time = models.BigIntegerField(default=-1)
 
 	active = models.BooleanField(default=True)
 

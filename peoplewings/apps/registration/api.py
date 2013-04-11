@@ -96,14 +96,6 @@ class UserSignUpResource(ModelResource):
 		too_long = {"type":"TOO_LONG", "extras": []}
 		invalid = {"type":"INVALID_FIELD", "extras": []}
 		young = {"type":"UNDERAGE"}
-
-		if POST.has_key("hasAcceptedTerms") and isinstance(POST['hasAcceptedTerms'], bool):
-			if POST['hasAcceptedTerms'] == True:
-				pass
-			else:
-				invalid['extras'].append('hasAcceptedTerms')
-		else:
-			field_req['extras'].append('hasAcceptedTerms')
 			
 		if POST.has_key("birthdayDay"):
 			if int(POST['birthdayDay']) < 1 or int(POST['birthdayDay']) > 31:
