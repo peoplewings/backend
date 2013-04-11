@@ -3,6 +3,7 @@ import hmac
 import time
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 try:
 	from hashlib import sha1
@@ -65,5 +66,16 @@ class ApiToken(models.Model):
 			#	return 'AFK'
 			pass
 		return 'ON'
+
+	@staticmethod
+	def cron_delete_inactive_tokens():
+		valid_time = getattr(settings, 'TOKEN_VALID_TIME', 3600)
+		valid_js_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
+		min_last = datetime.datetime.now() - datetime.timedelta(seconds=valid_time)
+		min_last_js = time.time()-valid_js_time
+		#import pdb; pdb.set_trace()
+		tokens = ApiToken.objects.filter(Q(last__lt=min_last)&Q(last_js__lt=min_last_js))
+		[i.delete() for i in tokens]
+
 
 
