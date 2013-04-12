@@ -14,13 +14,12 @@ class Notification(object):
 		if request.user and not isinstance(request.user, AnonymousUser):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
+				if not resp.has_key('updates'):
+					resp['updates'] = {}
 				try:
 					prof = UserProfile.objects.get(user=request.user)
-					if not resp.has_key('updates'):
-						resp['updates'] = {}
 					resp['updates']['notifs'] = NotificationsAlarm.objects.filter(receiver=prof).count()
 				except:
-					resp['updates'] = {}
 					resp['updates']['notifs'] = -1
 				response.content = json.dumps(resp)					
 		return response

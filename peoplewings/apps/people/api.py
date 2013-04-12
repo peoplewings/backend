@@ -777,7 +777,7 @@ class UserProfileResource(ModelResource):
 		if POST.has_key('interestedIn'):
 			if not isinstance(POST['interestedIn'], list):
 				invalid['extras'].append('interestedIn')
-			elif len(POST['interestedIn']) == 0:
+			elif len(POST['interestedIn']) != 0:
 				if len(POST['interestedIn']) != 1:
 					invalid['extras'].append('interestedIn')
 				elif not isinstance(POST['interestedIn'][0], dict):
