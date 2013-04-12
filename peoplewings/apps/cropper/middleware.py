@@ -12,6 +12,7 @@ class Crop(object):
 
 	def process_response(self, request, response):	
 		#import pdb; pdb.set_trace()	
+		#import pdb; pdb.set_trace()
 		if request.user and not isinstance(request.user, AnonymousUser):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
@@ -27,5 +28,6 @@ class Crop(object):
 						prof.save()
 					else:
 						resp['updates']['avatar'] = False
-				response.content = json.dumps(resp)					
+				except:
+					response.content = json.dumps(resp)					
 		return response
