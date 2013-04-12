@@ -1269,15 +1269,22 @@ class UserProfileResource(ModelResource):
 			startResult = 1
 			endResult = min(num_page * page_size, count)
 		paginator = Paginator(data, page_size)
-		try:
-			page = paginator.page(num_page)
-		except InvalidPage:
-			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
-		data = {}
-		data["profiles"] = [i for i in page.object_list]
-		data["count"] = count
-		data["startResult"] = startResult
-		data["endResult"] = endResult
+		if count == 0:
+			data = {}
+			data["profiles"] = []
+			data["count"] = count
+			data["startResult"] = 0
+			data["endResult"] = 0
+		else:
+			try:
+				page = paginator.page(num_page)
+			except InvalidPage:
+				return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
+			data = {}
+			data["profiles"] = [i for i in page.object_list]
+			data["count"] = count
+			data["startResult"] = startResult
+			data["endResult"] = endResult
 
 		return data
 
