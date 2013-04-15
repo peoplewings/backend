@@ -777,21 +777,18 @@ class UserProfileResource(ModelResource):
 		if POST.has_key('interestedIn'):
 			if not isinstance(POST['interestedIn'], list):
 				invalid['extras'].append('interestedIn')
-			elif len(POST['interestedIn']) == 0:
-				not_empty['extras'].append('interestedIn')
-			elif len(POST['interestedIn']) != 1:
-				invalid['extras'].append('interestedIn')
-			elif not isinstance(POST['interestedIn'][0], dict):
-				invalid['extras'].append('interestedIn')
-			elif not POST['interestedIn'][0].has_key('gender'):
-				invalid['extras'].append('interestedIn')
-			elif POST['interestedIn'][0]['gender'] not in ['Male', 'Female', 'Both']:
-				invalid['extras'].append('interestedIn')
+			elif len(POST['interestedIn']) != 0:
+				if len(POST['interestedIn']) != 1:
+					invalid['extras'].append('interestedIn')
+				elif not isinstance(POST['interestedIn'][0], dict):
+					invalid['extras'].append('interestedIn')
+				elif not POST['interestedIn'][0].has_key('gender'):
+					invalid['extras'].append('interestedIn')
+				elif POST['interestedIn'][0]['gender'] not in ['Male', 'Female', 'Both']:
+					invalid['extras'].append('interestedIn')
 
 		if POST.has_key('civilState'):
-			if POST['civilState'] == "":
-				not_empty['extras'].append('civilState')
-			elif POST['civilState'] not in ['', 'SI', 'EN', 'MA', 'WI', 'IR', 'IO', 'IC', 'DI', 'SE']:
+			if POST['civilState'] not in ['', 'SI', 'EN', 'MA', 'WI', 'IR', 'IO', 'IC', 'DI', 'SE']:
 				invalid['extras'].append('civilState')
 		else:
 			field_req['extras'].append('civilState')
@@ -864,65 +861,49 @@ class UserProfileResource(ModelResource):
 								too_long['extras'].append('education')
 
 		if POST.has_key('emails'):
-			if POST['emails'] == "":
-				not_empty['extras'].append('emails')
-			elif len(POST['emails']) > 100:
+			if len(POST['emails']) > 100:
 				too_long['extras'].append('emails')
 		else:
 			field_req['extras'].append('emails')
 
 		if POST.has_key('phone'):
-			if POST['phone'] == "":
-				not_empty['extras'].append('phone')
-			elif len(POST['phone']) > 100:
+			if len(POST['phone']) > 100:
 				too_long['extras'].append('phone')				
 		else:
 			field_req['extras'].append('phone')
 
 		if POST.has_key('inspiredBy'):
-			if POST['inspiredBy'] == "":
-				not_empty['extras'].append('inspiredBy')
-			elif len(POST['inspiredBy']) > 100:
+			if len(POST['inspiredBy']) > 100:
 				too_long['extras'].append('inspiredBy')					
 		else:
 			field_req['extras'].append('inspiredBy')
 
 		if POST.has_key('otherPages'):
-			if POST['otherPages'] == "":
-				not_empty['extras'].append('otherPages')
-			elif len(POST['otherPages']) > 100:
+			if len(POST['otherPages']) > 100:
 				too_long['extras'].append('otherPages')					
 		else:
 			field_req['extras'].append('otherPages')
 
 		if POST.has_key('enjoyPeople'):
-			if POST['enjoyPeople'] == "":
-				not_empty['extras'].append('enjoyPeople')
-			elif len(POST['enjoyPeople']) > 100:
+			if len(POST['enjoyPeople']) > 100:
 				too_long['extras'].append('enjoyPeople')					
 		else:
 			field_req['extras'].append('enjoyPeople')
 
 		if POST.has_key('gender'):
-			if POST['gender'] == "":
-				not_empty['extras'].append('gender')
-			elif POST['gender'] not in ['Male', 'Female']:
+			if POST['gender'] not in ['Male', 'Female']:
 				invalid['extras'].append('gender')
 		else:
 			field_req['extras'].append('gender')
 
 		if POST.has_key('allAboutYou'):
-			if POST['allAboutYou'] == "":
-				not_empty['extras'].append('allAboutYou')
-			elif len(POST['allAboutYou']) > 100:
+			if len(POST['allAboutYou']) > 100:
 				too_long['extras'].append('allAboutYou')				
 		else:
 			field_req['extras'].append('allAboutYou')
 
 		if POST.has_key('movies'):
-			if POST['movies'] == "":
-				not_empty['extras'].append('movies')
-			elif len(POST['movies']) > 100:
+			if len(POST['movies']) > 100:
 				too_long['extras'].append('movies')				
 		else:
 			field_req['extras'].append('movies')
@@ -967,9 +948,7 @@ class UserProfileResource(ModelResource):
 			invalid['extras'].append('birthday')
 
 		if POST.has_key('religion'):
-			if POST['religion'] == "":
-				not_empty['extras'].append('religion')
-			elif len(POST['religion']) > 100:
+			if len(POST['religion']) > 100:
 				too_long['extras'].append('religion')				
 		else:
 			field_req['extras'].append('religion')
@@ -987,6 +966,7 @@ class UserProfileResource(ModelResource):
 		return errors
 
 	def put_detail(self, request, **kwargs):
+		#import pdb; pdb.set_trace()
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
 		try:
@@ -1019,7 +999,7 @@ class UserProfileResource(ModelResource):
 		#prof.show_birthday = POST['showBirthday']
 		prof.gender = POST['gender']
 		prof.interested_in.clear()
-		prof.interested_in.add(Interests.objects.get(gender__icontains=POST['interestedIn'][0]['gender']))
+		prof.interested_in.add(Interests.objects.get(gender__contains=POST['interestedIn'][0]['gender']))
 		prof.civil_state = POST['civilState']
 
 		[i.delete() for i in UserLanguage.objects.filter(user_profile=prof)]
@@ -1029,12 +1009,15 @@ class UserProfileResource(ModelResource):
 			else:
 				lang = Language.objects.create(name=i['name'])
 			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])		
-		# Locations		
-		prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
-		prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
+		# Locations
+		if  POST['current']:
+			prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
+		if POST['hometown']:
+			prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
 		prof.other_locations.clear()		
-		for i in POST['otherLocations']:
-			prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
+		if POST['otherLocations']:
+			for i in POST['otherLocations']:
+				prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
 
 		prof.emails = POST['emails']
 		prof.phone = POST['phone']		
@@ -1286,15 +1269,22 @@ class UserProfileResource(ModelResource):
 			startResult = 1
 			endResult = min(num_page * page_size, count)
 		paginator = Paginator(data, page_size)
-		try:
-			page = paginator.page(num_page)
-		except InvalidPage:
-			return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
-		data = {}
-		data["profiles"] = [i for i in page.object_list]
-		data["count"] = count
-		data["startResult"] = startResult
-		data["endResult"] = endResult
+		if count == 0:
+			data = {}
+			data["profiles"] = []
+			data["count"] = count
+			data["startResult"] = 0
+			data["endResult"] = 0
+		else:
+			try:
+				page = paginator.page(num_page)
+			except InvalidPage:
+				return self.create_response(request, {"status":False, "errors": [{"type":"PAGE_NO_RESULTS"}]}, response_class = HttpResponse)
+			data = {}
+			data["profiles"] = [i for i in page.object_list]
+			data["count"] = count
+			data["startResult"] = startResult
+			data["endResult"] = endResult
 
 		return data
 

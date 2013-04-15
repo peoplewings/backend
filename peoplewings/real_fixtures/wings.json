@@ -1,0 +1,44 @@
+[
+  {
+    "model": "wings.PublicTransport",
+    "pk": 1,
+    "fields": {
+        "name" : "bus"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 2,
+    "fields": {
+        "name" : "tram"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 3,
+    "fields": {
+        "name" : "train"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 4,
+    "fields": {
+        "name" : "metro"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 5,
+    "fields": {
+        "name" : "boat"
+    }
+  },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 6,
+    "fields": {
+        "name" : "others"
+    }
+  }
+]
