@@ -820,7 +820,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('hometown')
 			else:
 				if len(POST['hometown'].keys()) != 0:
-					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('region') and POST['hometown'].has_key('name')):
+					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('name')):
 						invalid['extras'].append('hometown')
 
 		if POST.has_key('current'):
@@ -828,14 +828,14 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('current')
 			else:
 				if len(POST['current'].keys()) != 0:
-					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('region') and POST['current'].has_key('name')):
+					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('name')):
 						invalid['extras'].append('current')
 
 		if POST.has_key('otherLocations'):
 			if not isinstance(POST.has_key('otherLocations'), list):
 				for i in POST['otherLocations']:
 					if isinstance(i, dict) and len(i.keys()) != 0:
-						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('region') and i.has_key('name')):
+						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('name')):
 							invalid['extras'].append('otherLocations')
 
 		if POST.has_key('education'):
@@ -920,7 +920,7 @@ class UserProfileResource(ModelResource):
 				too_long['extras'].append('otherPages')
 		else:
 			field_req['extras'].append('otherPages')	
-																										
+
 		if POST.has_key('emails'):
 			if len(POST['emails']) > 100:
 				too_long['extras'].append('emails')
@@ -1026,8 +1026,7 @@ class UserProfileResource(ModelResource):
 			errors.append(invalid)
 		return errors
 
-	def put_detail(self, request, **kwargs):
-		#import pdb; pdb.set_trace()
+	def put_detail(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
 		try:
@@ -1060,7 +1059,10 @@ class UserProfileResource(ModelResource):
 		#prof.show_birthday = POST['showBirthday']
 		prof.gender = POST['gender']
 		prof.interested_in.clear()
-		prof.interested_in.add(Interests.objects.get(gender__contains=POST['interestedIn'][0]['gender']))
+
+		if (len(POST['interestedIn']) != 0):
+			prof.interested_in.add(Interests.objects.get(gender__contains=POST['interestedIn'][0]['gender']))
+
 		prof.civil_state = POST['civilState']
 
 		[i.delete() for i in UserLanguage.objects.filter(user_profile=prof)]
@@ -1072,12 +1074,24 @@ class UserProfileResource(ModelResource):
 			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])		
 		# Locations
 		if  POST['current']:
+			if not POST['current'].has_key('region'):
+				POST['current']['region'] = 'No region'
 			prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
+		else:
+			prof.current_city = None
+
 		if POST['hometown']:
+			if not POST['hometown'].has_key('region'):
+				POST['hometown']['region'] = 'No region'
 			prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
+		else:
+			prof.hometown = None
+
 		prof.other_locations.clear()		
 		if POST['otherLocations']:
 			for i in POST['otherLocations']:
+				if not i.has_key('region'):
+					i['region'] = 'No region'
 				prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
 
 		prof.emails = POST['emails']
