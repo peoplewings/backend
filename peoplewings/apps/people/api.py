@@ -860,6 +860,67 @@ class UserProfileResource(ModelResource):
 							if len(i['degree']) > 100:
 								too_long['extras'].append('education')
 
+
+		if POST.has_key('politicalOpinion'):
+			if len(POST['politicalOpinion']) > 100:
+				too_long['extras'].append('politicalOpinion')
+		else:
+			field_req['extras'].append('politicalOpinion')
+
+		if POST.has_key('mainMission'):
+			if len(POST['mainMission']) > 100:
+				too_long['extras'].append('mainMission')
+		else:
+			field_req['extras'].append('mainMission')
+
+		if POST.has_key('company'):
+			if len(POST['company']) > 100:
+				too_long['extras'].append('company')
+		else:
+			field_req['extras'].append('company')
+
+		if POST.has_key('personalPhilosophy'):
+			if len(POST['personalPhilosophy']) > 100:
+				too_long['extras'].append('personalPhilosophy')
+		else:
+			field_req['extras'].append('personalPhilosophy')
+
+		if POST.has_key('sports'):
+			if len(POST['sports']) > 100:
+				too_long['extras'].append('sports')
+		else:
+			field_req['extras'].append('sports')
+
+		if POST.has_key('sharing'):
+			if len(POST['sharing']) > 100:
+				too_long['extras'].append('sharing')
+		else:
+			field_req['extras'].append('sharing')
+
+		if POST.has_key('incredible'):
+			if len(POST['incredible']) > 100:
+				too_long['extras'].append('incredible')
+		else:
+			field_req['extras'].append('incredible')
+
+		if POST.has_key('quotes'):
+			if len(POST['quotes']) > 100:
+				too_long['extras'].append('quotes')
+		else:
+			field_req['extras'].append('quotes')
+
+		if POST.has_key('pwOpinion'):
+			if len(POST['pwOpinion']) > 100:
+				too_long['extras'].append('pwOpinion')
+		else:
+			field_req['extras'].append('pwOpinion')
+
+		if POST.has_key('otherPages'):
+			if len(POST['otherPages']) > 100:
+				too_long['extras'].append('otherPages')
+		else:
+			field_req['extras'].append('otherPages')	
+																										
 		if POST.has_key('emails'):
 			if len(POST['emails']) > 100:
 				too_long['extras'].append('emails')
