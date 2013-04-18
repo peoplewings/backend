@@ -471,8 +471,7 @@ class UserProfileResource(ModelResource):
 					prof = prof[0]
 					if prof.active is False:
 						return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
-					prof_obj = PreviewProfileObject()
-
+					prof_obj = PreviewProfileObject()					
 					interests = prof.interested_in.filter()
 					for i in interests:
 						prof_obj.interested_in.append({"gender":i.gender})	
@@ -1379,7 +1378,11 @@ class UserProfileResource(ModelResource):
 				search_obj.ctrl_user = i.user
 				search_obj.first_name = i.user.first_name
 				search_obj.last_name = i.user.last_name
-				search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				if i.current_city:
+					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				else: 
+					search_obj.current= {}
+
 				search_obj.avatar = i.medium_avatar
 				search_obj.age = i.get_age()
 				search_obj.online = self.connected(i.user)

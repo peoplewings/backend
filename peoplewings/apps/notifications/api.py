@@ -161,7 +161,7 @@ class NotificationsListResource(ModelResource):
 		for key, value in request.GET.items():
 			if key == 'kind':
 				if value == 'reqinv':
-					filters = filters & Q(kind='request')|Q(kind='invite')
+					filters = filters & (Q(kind='request')|Q(kind='invite'))
 				elif value == 'msg':
 					  filters = filters & Q(kind='message')
 				elif value == 'friendship':
@@ -241,7 +241,6 @@ class NotificationsListResource(ModelResource):
 
 	def get_list(self, request, **kwargs):		
 		## We are doin it the hard way
-		#import pdb; pdb.set_trace()
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
@@ -320,10 +319,10 @@ class NotificationsListResource(ModelResource):
 				aux._sender = i.sender
 				if prof_aux.active is False:
 					aux.interlocutor_id = ""          
-					aux.avatar =  getattr(settings, "ANONYMOUS_THUMB")
-					aux.age = ""
+					aux.avatar =  getattr(settings, "ANONYMOUS_AVATAR")
+					aux.age = " - "
 					aux.verified = ""
-					aux.location = ""
+					aux.location = "Unknown Location"
 					aux.name = "Unknown User"
 					aux.online = "F"
 				else:
@@ -743,7 +742,7 @@ class NotificationsThreadResource(ModelResource):
 			state = token[0].is_user_connected()
 		return state
 
-	def get_detail(self, request, **kwargs):		
+	def get_detail(self, request, **kwargs):	
 		ref = kwargs['pk']
 		filters = Q(reference= ref)
 		aux_list = []
@@ -768,7 +767,10 @@ class NotificationsThreadResource(ModelResource):
 					aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 					aux.sender_age = i.sender.get_age()
 					aux.sender_verified = True
-					aux.sender_location = i.sender.current_city.stringify()
+					if i.sender.current_city is not None:
+						aux.sender_location = i.sender.current_city.stringify()
+					else:
+						aux.sender_location = 'Not specified'
 					aux.sender_friends = i.sender.relationships.count()
 					aux.sender_references = i.sender.references.count()
 					aux.sender_med_avatar = i.sender.medium_avatar
@@ -777,13 +779,13 @@ class NotificationsThreadResource(ModelResource):
 				else:
 					aux.sender_id = ""
 					aux.sender_name = "Unknown User"
-					aux.sender_age = ""
+					aux.sender_age = " - "
 					aux.sender_verified = ""
 					aux.sender_location = ""
 					aux.sender_friends = "-"
 					aux.sender_references = "-"
 					aux.sender_med_avatar = getattr(settings, "ANONYMOUS_AVATAR")
-					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_THUMB")
+					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_AVATAR")
 					aux.sender_online = "F"
 				#receiver info
 				if i.receiver.active is True:
@@ -791,7 +793,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.receiver_avatar = i.receiver.thumb_avatar
 				else:
 					aux.receiver_id = ""
-					aux.receiver_avatar =getattr(settings, "ANONYMOUS_THUMB")
+					aux.receiver_avatar =getattr(settings, "ANONYMOUS_AVATAR")
 				#message info
 				msg = Messages.objects.get(pk = i.pk)
 				aux.content['message'] = msg.private_message
@@ -812,7 +814,10 @@ class NotificationsThreadResource(ModelResource):
 					aux.sender_name = '%s %s' % (i.sender.user.first_name, i.sender.user.last_name)
 					aux.sender_age = i.sender.get_age()
 					aux.sender_verified = True
-					aux.sender_location = i.sender.current_city.stringify()
+					if i.sender.current_city is not None:
+						aux.sender_location = i.sender.current_city.stringify()
+					else:
+						aux.sender_location = 'Not specified'
 					aux.sender_friends = i.sender.relationships.count()
 					aux.sender_references = i.sender.references.count()
 					aux.sender_med_avatar = i.sender.medium_avatar
@@ -821,13 +826,13 @@ class NotificationsThreadResource(ModelResource):
 				else:
 					aux.sender_id = ""
 					aux.sender_name = "Unknown User"
-					aux.sender_age = ""
+					aux.sender_age = " - "
 					aux.sender_verified = ""
 					aux.sender_location = ""
 					aux.sender_friends = "-"
 					aux.sender_references = "-"
 					aux.sender_med_avatar = getattr(settings, "ANONYMOUS_AVATAR")
-					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_THUMB")
+					aux.sender_small_avatar = getattr(settings, "ANONYMOUS_AVATAR")
 					aux.sender_online = "F"
 				#receiver info
 				if i.receiver.active is True:
@@ -835,7 +840,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.receiver_avatar = i.receiver.thumb_avatar
 				else:
 					aux.receiver_id = ""
-					aux.receiver_avatar =getattr(settings, "ANONYMOUS_THUMB")
+					aux.receiver_avatar =getattr(settings, "ANONYMOUS_AVATAR")
 				#Contents info
 				aux.content= {}
 				if i.kind == 'request':
