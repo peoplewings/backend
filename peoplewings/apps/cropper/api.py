@@ -268,7 +268,7 @@ class CropcompletedResource(ModelResource):
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 		s3_key_big= "avatar-big/%s" % image_id_big
 
-		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 175,"height": 175},"name": "resize","save": {"image_identifier": image_id_big, "s3_destination" : {"bucket" : { "name" : settings.AWS_STORAGE_BUCKET_NAME, "location": settings.AWS_BUCKET_LOCATION}, "key" : s3_key_big}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 174,"height": 174},"name": "resize","save": {"image_identifier": image_id_big, "s3_destination" : {"bucket" : { "name" : settings.AWS_STORAGE_BUCKET_NAME, "location": settings.AWS_BUCKET_LOCATION}, "key" : s3_key_big}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
  		res= urllib2.urlopen(req).read()
@@ -279,7 +279,7 @@ class CropcompletedResource(ModelResource):
 		cookies = {'phpbb2mysql_data':'foo', 'autologinid':'blahblah'}
 		s3_key_med= "avatar-med/%s" % image_id_med
 
-		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 65,"height": 65},"name": "resize","save": {"image_identifier": image_id_med, "s3_destination" : {"bucket" : { "name" : settings.AWS_STORAGE_BUCKET_NAME, "location": settings.AWS_BUCKET_LOCATION}, "key" : s3_key_med}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
+		values = {"json": [{"src": url, "content_type_json": True, "functions": [{"params": {"width": 66,"height": 66},"name": "resize","save": {"image_identifier": image_id_med, "s3_destination" : {"bucket" : { "name" : settings.AWS_STORAGE_BUCKET_NAME, "location": settings.AWS_BUCKET_LOCATION}, "key" : s3_key_med}}}],"application_id": settings.BLITLINE_ID,"postback_url": postback}]}
 		headers = {"Accept": "application/json", "Content-Type": "application/json"}
 		req = urllib2.Request(url_blitline, json.dumps(values), headers)
  		res= urllib2.urlopen(req).read()
