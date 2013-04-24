@@ -789,8 +789,6 @@ class UserProfileResource(ModelResource):
 		if POST.has_key('civilState'):
 			if POST['civilState'] not in ['', 'SI', 'EN', 'MA', 'WI', 'IR', 'IO', 'IC', 'DI', 'SE']:
 				invalid['extras'].append('civilState')
-		else:
-			field_req['extras'].append('civilState')
 
 		if POST.has_key('languages'):
 			if not isinstance(POST['languages'], list):
@@ -937,12 +935,6 @@ class UserProfileResource(ModelResource):
 				too_long['extras'].append('inspiredBy')					
 		else:
 			field_req['extras'].append('inspiredBy')
-
-		if POST.has_key('otherPages'):
-			if len(POST['otherPages']) > 100:
-				too_long['extras'].append('otherPages')					
-		else:
-			field_req['extras'].append('otherPages')
 
 		if POST.has_key('enjoyPeople'):
 			if len(POST['enjoyPeople']) > 100:

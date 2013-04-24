@@ -135,13 +135,13 @@ class UserSignUpResource(ModelResource):
 			field_req['extras'].append('repeatEmail')
 
 		if POST.has_key("firstName"):
-			if len(POST['firstName']) < 1 or len(POST['firstName']) > 50:
+			if len(POST['firstName']) < 1 or len(POST['firstName']) > 30:
 				too_long['extras'].append('firstName')
 		else: 
 			field_req['extras'].append('firstName')
 
 		if POST.has_key("lastName"):
-			if len(POST['lastName']) < 1 or len(POST['lastName']) > 50:
+			if len(POST['lastName']) < 1 or len(POST['lastName']) > 30:
 				too_long['extras'].append('lastName')
 		else: 
 			field_req['extras'].append('lastName')
@@ -1034,3 +1034,6 @@ class ControlResource(ModelResource):
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
+
+
+

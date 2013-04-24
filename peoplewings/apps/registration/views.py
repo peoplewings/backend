@@ -37,7 +37,7 @@ def register(request, POST, backend, success_url=None, form_class=None,
 			 template_name='registration/registration_form.html',
 			 extra_context=None):
 
-	POST['username'] = POST['firstName'] + "." + str(random.getrandbits(24))
+	POST['username'] = POST['email']
 	POST['password2'] = POST['password']
 	if POST['email'] != POST['repeatEmail']: 
 		bundle = {"email": ["Emails don't match"]}    
