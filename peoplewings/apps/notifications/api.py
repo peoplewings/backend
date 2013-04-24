@@ -305,6 +305,16 @@ class NotificationsListResource(ModelResource):
 				elif aux.kind == 'message':					
 					msg = Messages.objects.get(pk = i.pk)
 					aux.content = msg.private_message
+					#import pdb; pdb.set_trace()
+					cur_thread = Messages.objects.filter(reference= i.reference).order_by('-created')
+					if cur_thread[0].pk == i.pk:
+						#This message is the last one of it's thread
+						if i.sender == prof:
+							#I'm the sender of the last message. The flag direction should be <--- (True)
+							aux.flag_direction = True
+						else:
+							#I'm the receiver of the last message. The flag direction should be --> (False)
+							aux.flag_direction = False
 				## Friendship specific                         
 				elif aux.kind == 'friendship':
 					friend = Friendship.objects.get(pk = i.pk)
