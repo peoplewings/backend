@@ -52,7 +52,6 @@ class NotificationsList(object):
 		return res
 
 	def search(self, key):
-
 		if (self.name is not None and key.lower() in self.name.lower()):
 			return True
 		if (self.age is not None and key == self.age):
@@ -61,9 +60,9 @@ class NotificationsList(object):
 			return True
 		if (self.content is not None and key.lower() in self.content.lower()):
 			return True
-		if (self.wing_parameters['start_date'] is not None and key in self.wing_parameters['start_date']):
+		if (self.wing_parameters['start_date'] is not None and key in str(self.wing_parameters['start_date'])):
 			return True
-		if (self.wing_parameters['end_date'] is not None and key in self.wing_parameters['end_date']):
+		if (self.wing_parameters['end_date'] is not None and key in str(self.wing_parameters['end_date'])):
 			return True
 		if (self.wing_parameters['wing_type'] is not None and key.lower() in self.wing_parameters['wing_type'].lower()):
 			return True

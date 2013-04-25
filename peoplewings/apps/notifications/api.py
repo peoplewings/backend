@@ -176,14 +176,13 @@ class NotificationsListResource(ModelResource):
 				filters = filters & (Q(requests__state = value) | Q(invites__state = value)) 
 		return filters
 
-	def search(self, request, initial_dict):
+	def search(self, request, initial_dict):		
 		result_dict = []
 		result_dict.extend(initial_dict)
 		for key, value in request.GET.items():
 			if key == 'search':
 				list_value = value.split(' ')
 				search_list = []
-
 				for k in list_value:
 					#We search within each notification (domain) if the element has the value
 					aux_dict_small = [o.reference for o in result_dict if o.search(k)]
