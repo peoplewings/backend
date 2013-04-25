@@ -304,7 +304,10 @@ class NotificationsListResource(ModelResource):
 				## Message specific                         
 				elif aux.kind == 'message':					
 					msg = Messages.objects.get(pk = i.pk)
-					aux.content = msg.private_message
+					if len(msg.private_message) > 180:
+						aux.content = msg.private_message[:177] + '...'
+					else:
+						aux.content = msg.private_message	
 					#import pdb; pdb.set_trace()
 					cur_thread = Messages.objects.filter(reference= i.reference).order_by('-created')
 					if cur_thread[0].pk == i.pk:

@@ -726,7 +726,7 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('gender')
 
-		if POST['socialNetworks']:
+		if POST['socialNetworks']:			
 			if not isinstance(POST['socialNetworks'], list):
 				invalid['extras'].append('socialNetworks')
 			else:
@@ -735,7 +735,7 @@ class UserProfileResource(ModelResource):
 						if 'socialNetworks' not in invalid['extras']:
 							invalid['extras'].append('socialNetworks')
 					else:
-						if not i.has_key('snUsername') and isinstance(i['snUsername'], str):
+						if not i.has_key('snUsername') or not isinstance(i['snUsername'], unicode):
 							if 'socialNetworks' not in invalid['extras']:
 								invalid['extras'].append('socialNetworks')
 						else:
@@ -758,7 +758,7 @@ class UserProfileResource(ModelResource):
 						if 'instantMessages' not in invalid['extras']:
 							invalid['extras'].append('instantMessages')
 					else:
-						if not i.has_key('imUsername') and isinstance(i['imUsername'], str):
+						if not i.has_key('imUsername') or not isinstance(i['imUsername'], unicode):
 							if 'instantMessages' not in invalid['extras']:
 								invalid['extras'].append('instantMessages')
 						else:
@@ -1028,7 +1028,7 @@ class UserProfileResource(ModelResource):
 
 		#We need to check that received data is valid
 		try:
-			errors = self.is_valid_put(request)
+			errors = self.is_valid_put(request)			
 			if len(errors) > 0:
 				return self.create_response(request, {"status":False, "errors":errors}, response_class=HttpResponse)
 		except: 

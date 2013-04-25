@@ -552,6 +552,8 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('about'):
 			if len(POST['about']) > 400:
 				too_long['extras'].append('about')
+		else:
+			field_req['extras'].append('about')
 
 		if POST.has_key('address'):
 			if POST['address'] == "":
@@ -624,7 +626,7 @@ class AccomodationsResource(ModelResource):
 			else:
 				if POST['city'] == {}:
 					not_empty['extras'].append('city')
-				elif not POST['city'].has_key('lat') and POST['city'].has_key('lon') and POST['city'].has_key('region') and POST['city'].has_key('country') and POST['city'].has_key('name'):
+				elif not POST['city'].has_key('lat') and POST['city'].has_key('lon') and POST['city'].has_key('country') and POST['city'].has_key('name'):
 					invalid['extras'].append('city')
 		else:
 			field_req['extras'].append('city')
@@ -643,6 +645,13 @@ class AccomodationsResource(ModelResource):
 
 	def build_transports(self, POST):
 		transports = []
+
+		if POST['plane'] is True:
+			transports.append(PublicTransport.objects.get(name='plane'))
+
+		if POST['boat'] is True:
+			transports.append(PublicTransport.objects.get(name='boat'))
+
 		if POST['bus'] is True:
 			transports.append(PublicTransport.objects.get(name='bus'))
 
@@ -746,6 +755,8 @@ class AccomodationsResource(ModelResource):
 		if len(errors) > 0:
 			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 		
+		if not PUT['city'].has_key('region'):
+			PUT['city']['region'] = 'No region'
 		city = City.objects.saveLocation(country=PUT['city']['country'], region=PUT['city']['region'], lat=PUT['city']['lat'], lon=PUT['city']['lon'], name=PUT['city']['name'])
 		transport = self.build_transports(PUT)
 		pref_male = 'Male' in PUT['preferredGender']
