@@ -158,23 +158,31 @@ class NotificationsListResource(ModelResource):
 		return errors
 
 	def filter_get(self, request, filters, prof):
-		for key, value in request.GET.items():
-			if key == 'kind':
-				if value == 'reqinv':
-					filters = filters & (Q(kind='request')|Q(kind='invite'))
-				elif value == 'msg':
-					  filters = filters & Q(kind='message')
-				elif value == 'friendship':
-					  filters = filters & Q(kind='friends')
-			elif key == 'target':
-				if value == 'received':
-					filters = filters & ~Q(first_sender = prof)
-				elif value == 'sent':
-					filters = filters & Q(first_sender = prof)
-			elif key == 'state' and 'kind' in request.GET.keys() and 'reqinv' == request.GET['kind']:
-				#Filtro por estado de la request
-				filters = filters & (Q(requests__state = value) | Q(invites__state = value)) 
-		return filters
+		target = None
+		if 'kind' in request.GET.keys():
+			if request.GET['kind'] == 'msg':
+				filters = filters & Q(kind='message')
+				if 'target' in request.GET.keys():
+					target = request.GET['target']
+			elif request.GET['kind'] == 'reqinv':
+				filters = filters & (Q(kind='request')|Q(kind='invite'))
+				if 'target' in request.GET.keys():
+					if request.GET['target'] == 'received':
+						filters = filters & ~Q(first_sender = prof)
+					elif request.GET['target'] == 'sent':
+						filters = filters & Q(first_sender = prof)
+				if 'state' in request.GET.keys():
+					filters = filters & (Q(requests__state = request.GET['state']) | Q(invites__state =  request.GET['state']))
+		else:
+			if 'target' in request.GET.keys():
+				if request.GET['target'] == 'received':
+					filters = filters & (((Q(kind='request')|Q(kind='invite')) & ~Q(first_sender = prof)) | Q(kind='message'))
+					target = 'received'
+				elif request.GET['target'] == 'sent':
+					filters = filters & (((Q(kind='request')|Q(kind='invite')) & Q(first_sender = prof)) | Q(kind='message'))
+					target = 'sent'
+
+		return (filters, target)
 
 	def search(self, request, initial_dict):		
 		result_dict = []
@@ -247,7 +255,8 @@ class NotificationsListResource(ModelResource):
 		result_dict = []     
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
-		filters = self.filter_get(request, filters, prof)
+		target = None
+		filters, target = self.filter_get(request, filters, prof)
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:				
@@ -362,12 +371,24 @@ class NotificationsListResource(ModelResource):
 				result_idx.append(o.reference)
 			else:
 				result[o.reference].append(o)
+
 		for o in result.keys():
 			o = self.make_difs(result[o], prof)
 
 		final_result = []
+		#import pdb; pdb.set_trace()
 		for i in result_idx:
-			final_result.append(result[i][0])
+			if result[i][0].kind== 'message':			
+				if target and target == 'received':
+					if result[i][0]._sender != prof:
+						final_result.append(result[i][0])
+				elif target and target == 'sent':
+					if result[i][0]._sender == prof:
+						final_result.append(result[i][0])
+				else:
+					final_result.append(result[i][0])
+			else:
+				final_result.append(result[i][0])
 		page_size=50
 		num_page = int(request.GET.get('page', 1))
 		count = len(result)
