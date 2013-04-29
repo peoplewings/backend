@@ -304,8 +304,16 @@ class AccomodationsResource(ModelResource):
 				aux_wing.city = city
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
-				aux_wing.preferred_male = i.preferred_male
-				aux_wing.preferred_female = i.preferred_female
+
+				if not i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'None'
+				elif i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'Male'
+				elif not i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Female'
+				elif i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Both'
+
 				aux_wing.wheelchair = i.wheelchair
 				aux_wing.where_sleeping_type = i.where_sleeping_type
 				aux_wing.smoking = i.smoking
@@ -360,8 +368,16 @@ class AccomodationsResource(ModelResource):
 				aux_wing.city = city
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
-				aux_wing.preferred_male = i.preferred_male
-				aux_wing.preferred_female = i.preferred_female
+
+				if not i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'None'
+				elif i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'Male'
+				elif not i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Female'
+				elif i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Both'
+
 				aux_wing.wheelchair = i.wheelchair
 				aux_wing.where_sleeping_type = i.where_sleeping_type
 				aux_wing.smoking = i.smoking
@@ -550,7 +566,7 @@ class AccomodationsResource(ModelResource):
 			field_req['extras'].append('smoking')
 
 		if POST.has_key('about'):
-			if len(POST['about']) > 400:
+			if len(POST['about']) > 1000:
 				too_long['extras'].append('about')
 		else:
 			field_req['extras'].append('about')
@@ -558,7 +574,7 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('address'):
 			if POST['address'] == "":
 				not_empty['extras'].append('address')
-			elif len(POST['address']) > 300:
+			elif len(POST['address']) > 500:
 				too_long['extras'].append('address')
 		else:
 			field_req['extras'].append('address')
@@ -566,7 +582,7 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('number'):
 			if POST['number'] == "":
 				not_empty['extras'].append('number')
-			elif len(POST['number']) > 10:
+			elif len(POST['number']) > 50:
 				too_long['extras'].append('number')
 		else:
 			field_req['extras'].append('number')
@@ -574,13 +590,13 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('additionalInformation'):
 			if POST['additionalInformation'] == "":
 				not_empty['extras'].append('additionalInformation')
-			elif len(POST['additionalInformation']) > 250:
+			elif len(POST['additionalInformation']) > 500:
 				too_long['extras'].append('additionalInformation')
 
 		if POST.has_key('postalCode'):
 			if POST['postalCode'] == "":
 				not_empty['extras'].append('postalCode')
-			elif len(POST['postalCode']) > 20:
+			elif len(POST['postalCode']) > 50:
 				too_long['extras'].append('postalCode')
 		else:
 			field_req['extras'].append('postalCode')
@@ -691,8 +707,20 @@ class AccomodationsResource(ModelResource):
 		#import pdb; pdb.set_trace()
 		city = City.objects.saveLocation(country=POST['city']['country'], region=POST['city']['region'], lat=POST['city']['lat'], lon=POST['city']['lon'], name=POST['city']['name'])
 		transport = self.build_transports(POST)
-		pref_male = 'Male' in POST['preferredGender']
-		pref_female= 'Female' in POST['preferredGender']
+
+		if 'Both' in POST['preferredGender']:
+			pref_male = True
+			pref_female = True
+		elif 'Male' in POST['preferredGender']:
+			pref_male = True
+			pref_female = False
+		elif 'Female' in POST['preferredGender']:
+			pref_male = False
+			pref_female = True
+		elif 'None' in POST['preferredGender']:
+			pref_male = False
+			pref_female = False
+
 		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
 		if not POST.has_key('about'): POST['about'] = ""
 		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])

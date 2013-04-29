@@ -28,8 +28,7 @@ class AccomodationWingEditable(object):
 		self.city = {}
 		self.sharing_once = None
 		self.capacity = None
-		self.preferred_male = None
-		self.preferred_female = None
+		self.preferred_gender = None
 		self.wheelchair = None
 		self.where_sleeping_type = None
 		self.smoking = None
@@ -71,8 +70,7 @@ class AccomodationWingNotEditable(object):
 		self.city = {}
 		self.sharing_once = None
 		self.capacity = None
-		self.preferred_male = None
-		self.preferred_female = None
+		self.preferred_gender = None
 		self.wheelchair = None
 		self.where_sleeping_type = None
 		self.smoking = None

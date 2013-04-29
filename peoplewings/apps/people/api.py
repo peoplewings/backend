@@ -859,7 +859,7 @@ class UserProfileResource(ModelResource):
 
 
 		if POST.has_key('politicalOpinion'):
-			if len(POST['politicalOpinion']) > 100:
+			if len(POST['politicalOpinion']) > 500:
 				too_long['extras'].append('politicalOpinion')
 		else:
 			field_req['extras'].append('politicalOpinion')
@@ -877,43 +877,43 @@ class UserProfileResource(ModelResource):
 			field_req['extras'].append('company')
 
 		if POST.has_key('personalPhilosophy'):
-			if len(POST['personalPhilosophy']) > 100:
+			if len(POST['personalPhilosophy']) > 1000:
 				too_long['extras'].append('personalPhilosophy')
 		else:
 			field_req['extras'].append('personalPhilosophy')
 
 		if POST.has_key('sports'):
-			if len(POST['sports']) > 100:
+			if len(POST['sports']) > 500:
 				too_long['extras'].append('sports')
 		else:
 			field_req['extras'].append('sports')
 
 		if POST.has_key('sharing'):
-			if len(POST['sharing']) > 100:
+			if len(POST['sharing']) > 1000:
 				too_long['extras'].append('sharing')
 		else:
 			field_req['extras'].append('sharing')
 
 		if POST.has_key('incredible'):
-			if len(POST['incredible']) > 100:
+			if len(POST['incredible']) > 1000:
 				too_long['extras'].append('incredible')
 		else:
 			field_req['extras'].append('incredible')
 
 		if POST.has_key('quotes'):
-			if len(POST['quotes']) > 100:
+			if len(POST['quotes']) > 500:
 				too_long['extras'].append('quotes')
 		else:
 			field_req['extras'].append('quotes')
 
 		if POST.has_key('pwOpinion'):
-			if len(POST['pwOpinion']) > 100:
+			if len(POST['pwOpinion']) > 500:
 				too_long['extras'].append('pwOpinion')
 		else:
 			field_req['extras'].append('pwOpinion')
 
 		if POST.has_key('otherPages'):
-			if len(POST['otherPages']) > 100:
+			if len(POST['otherPages']) > 500:
 				too_long['extras'].append('otherPages')
 		else:
 			field_req['extras'].append('otherPages')	
@@ -931,13 +931,13 @@ class UserProfileResource(ModelResource):
 			field_req['extras'].append('phone')
 
 		if POST.has_key('inspiredBy'):
-			if len(POST['inspiredBy']) > 100:
+			if len(POST['inspiredBy']) > 500:
 				too_long['extras'].append('inspiredBy')					
 		else:
 			field_req['extras'].append('inspiredBy')
 
 		if POST.has_key('enjoyPeople'):
-			if len(POST['enjoyPeople']) > 100:
+			if len(POST['enjoyPeople']) > 500:
 				too_long['extras'].append('enjoyPeople')					
 		else:
 			field_req['extras'].append('enjoyPeople')
@@ -949,13 +949,13 @@ class UserProfileResource(ModelResource):
 			field_req['extras'].append('gender')
 
 		if POST.has_key('allAboutYou'):
-			if len(POST['allAboutYou']) > 100:
+			if len(POST['allAboutYou']) > 500:
 				too_long['extras'].append('allAboutYou')				
 		else:
 			field_req['extras'].append('allAboutYou')
 
 		if POST.has_key('movies'):
-			if len(POST['movies']) > 100:
+			if len(POST['movies']) > 500:
 				too_long['extras'].append('movies')				
 		else:
 			field_req['extras'].append('movies')
@@ -1000,7 +1000,7 @@ class UserProfileResource(ModelResource):
 			invalid['extras'].append('birthday')
 
 		if POST.has_key('religion'):
-			if len(POST['religion']) > 100:
+			if len(POST['religion']) > 500:
 				too_long['extras'].append('religion')				
 		else:
 			field_req['extras'].append('religion')
