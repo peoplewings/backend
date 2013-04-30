@@ -57,7 +57,7 @@ INSTALLED_APPS = (
 )
 #SITE
 SITE = 'http://peoplewings-frontend.herokuapp.com/'
-BACKEND_SITE = 'https://peoplewings-backend.herokuapp.com/api/v1/'
+BACKEND_SITE ='http://peoplewings-be-development.herokuapp.com/api/v1/'
 
 # SMTP settings
 EMAIL_HOST ='smtp.gmail.com'

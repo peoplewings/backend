@@ -62,7 +62,7 @@ STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #SITE
 SITE = 'http://peoplewings-frontend.s3-website-eu-west-1.amazonaws.com/'
-BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
+BACKEND_SITE = 'http://peoplewings-be-stable.herokuapp.com/api/v1/'
 
 # SMTP settings
 EMAIL_HOST ='smtp.gmail.com'
