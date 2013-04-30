@@ -936,8 +936,8 @@ class ForgotResource(ModelResource):
 		if POST.has_key('email'):
 			if len(POST['email']) < 7 or len(POST['email']) > 50 or len(User.objects.filter(email=POST['email'])) != 1: 
 				invalid['extras'].append("email")
-		else:
-			field_req['extras'].append("email")
+		elif not POST.has_key('newPassword'):
+			field_req['extras'].append('email')
 
 		if POST.has_key('newPassword'):
 			if len(POST['newPassword']) < 8 or len(POST['newPassword']) > 20 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$", POST['newPassword']) == None:
@@ -958,7 +958,7 @@ class ForgotResource(ModelResource):
 		errors = self.is_valid_post(POST)
 		if len(errors) > 0:
 			pass
-		else:
+		else:			
 			if POST.has_key("email"):
 				user = User.objects.get(email=json.loads(request.raw_post_data)['email'])
 				res = forgot_password(user, 'peoplewings.apps.registration.backends.custom.CustomBackend')
