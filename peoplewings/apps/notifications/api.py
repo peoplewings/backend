@@ -158,7 +158,8 @@ class NotificationsListResource(ModelResource):
 		return errors
 
 	def filter_get(self, request, filters, prof):
-		target = None
+		target = None	
+		state = None	
 		if 'kind' in request.GET.keys():
 			if request.GET['kind'] == 'msg':
 				filters = filters & Q(kind='message')
@@ -172,7 +173,8 @@ class NotificationsListResource(ModelResource):
 					elif request.GET['target'] == 'sent':
 						filters = filters & Q(first_sender = prof)
 				if 'state' in request.GET.keys():
-					filters = filters & (Q(requests__state = request.GET['state']) | Q(invites__state =  request.GET['state']))
+					#filters = filters & (Q(requests__state = request.GET['state']) | Q(invites__state =  request.GET['state']))
+					state = request.GET['state']
 		else:
 			if 'target' in request.GET.keys():
 				if request.GET['target'] == 'received':
@@ -182,7 +184,7 @@ class NotificationsListResource(ModelResource):
 					filters = filters & (((Q(kind='request')|Q(kind='invite')) & Q(first_sender = prof)) | Q(kind='message'))
 					target = 'sent'
 
-		return (filters, target)
+		return (filters, target, state)
 
 	def search(self, request, initial_dict):		
 		result_dict = []
@@ -256,7 +258,8 @@ class NotificationsListResource(ModelResource):
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
 		target = None
-		filters, target = self.filter_get(request, filters, prof)
+		state = None
+		filters, target, state = self.filter_get(request, filters, prof)
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
 			for i in my_notifications:				
@@ -386,6 +389,10 @@ class NotificationsListResource(ModelResource):
 					if result[i][0]._sender == prof:
 						final_result.append(result[i][0])
 				else:
+					final_result.append(result[i][0])
+
+			elif  (result[i][0].kind == 'request' or result[i][0].kind == 'invite') and state is not None:
+				if result[i][0].state == state:
 					final_result.append(result[i][0])
 			else:
 				final_result.append(result[i][0])
