@@ -80,37 +80,37 @@ class UserProfile(models.Model):
 	last_login = models.ForeignKey(City, related_name='ll+', null=True)
 
 	# Contact info
-	emails = models.EmailField(blank=True)
-	phone = models.CharField(max_length=max_medium_len, blank=True)
+	emails = models.EmailField(blank=True, max_length=100)
+	phone = models.CharField(max_length=100, blank=True)
 	social_networks = models.ManyToManyField(SocialNetwork, through='UserSocialNetwork')
 	instant_messages = models.ManyToManyField(InstantMessage, through='UserInstantMessage')
 
 	# About me
-	all_about_you = models.TextField(max_length=max_long_len, blank=True)
-	main_mission = models.TextField(max_length=max_long_len, blank=True, verbose_name='Current mission')
-	occupation = models.CharField(max_length=max_medium_len, blank=True)
-	company = models.CharField(max_length=max_medium_len, blank=True, verbose_name='Companies')
+	all_about_you = models.TextField(max_length=500, blank=True)
+	main_mission = models.TextField(max_length=100, blank=True, verbose_name='Current mission')
+	occupation = models.CharField(max_length=500, blank=True)
+	company = models.CharField(max_length=100, blank=True, verbose_name='Companies')
 	universities = models.ManyToManyField(University, through='UserProfileStudiedUniversity')
-	personal_philosophy = models.TextField(max_length=max_long_len, blank=True)
-	political_opinion = models.CharField(max_length=max_medium_len, blank=True, verbose_name='Political views')
-	religion = models.CharField(max_length=max_medium_len, blank=True)
+	personal_philosophy = models.TextField(max_length=1000, blank=True)
+	political_opinion = models.CharField(max_length=500, blank=True, verbose_name='Political views')
+	religion = models.CharField(max_length=500, blank=True)
 
 	# Likes
-	enjoy_people = models.TextField(verbose_name="People I enjoy", max_length=max_long_len, blank=True)
+	enjoy_people = models.TextField(verbose_name="People I enjoy", max_length=500, blank=True)
 	# peliculas, libros, series, videojuegos, musica
-	movies = models.TextField(verbose_name="Likes", max_length=max_long_len, blank=True)
+	movies = models.TextField(verbose_name="Likes", max_length=500, blank=True)
 	# deportes y actividades favoritas
-	sports = models.TextField(max_length=max_long_len, blank=True)
-	other_pages = models.TextField(verbose_name="Likes", max_length=max_long_len, blank=True)    
+	sports = models.TextField(max_length=500, blank=True)
+	other_pages = models.TextField(verbose_name="Likes", max_length=500, blank=True)    
 	# que te gusta compartir o ensenyar
-	sharing = models.TextField(verbose_name="Show, learn, share...", max_length=max_long_len, blank=True)
+	sharing = models.TextField(verbose_name="Show, learn, share...", max_length=1000, blank=True)
 	# cosas increibles que hayas hecho o visto
-	incredible = models.TextField(verbose_name="Amazing things done/seen", max_length=max_long_len, blank=True)
-	inspired_by = models.TextField(verbose_name="People who inspires you", max_length=max_long_len, blank=True)
+	incredible = models.TextField(verbose_name="Amazing things done/seen", max_length=1000, blank=True)
+	inspired_by = models.TextField(verbose_name="People who inspires you", max_length=500, blank=True)
 	# citas
-	quotes = models.TextField(verbose_name="Favorite quotations", max_length=max_long_len, blank=True)
+	quotes = models.TextField(verbose_name="Favorite quotations", max_length=500, blank=True)
 	# opinion sobre peoplewings
-	pw_opinion = models.TextField(verbose_name="Your opinion please", max_length=max_long_len, blank=True) 
+	pw_opinion = models.TextField(verbose_name="Your opinion please", max_length=500, blank=True) 
 
 	# Trips
 	places_lived_in = models.TextField(max_length=max_long_len, blank=True)

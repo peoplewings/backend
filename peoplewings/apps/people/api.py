@@ -1005,6 +1005,12 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('religion')
 
+		if POST.has_key('occupation'):
+			if len(POST['occupation']) > 100:
+				too_long['extras'].append('occupation')				
+		else:
+			field_req['extras'].append('occupation')
+
 
 
 		if len(field_req['extras']) > 0:
@@ -1018,6 +1024,7 @@ class UserProfileResource(ModelResource):
 		return errors
 
 	def put_detail(self, request, **kwargs):		
+		import pdb; pdb.set_trace()l
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
 		try:
