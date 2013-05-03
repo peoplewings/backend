@@ -218,7 +218,7 @@ class AccomodationsResource(ModelResource):
 			return object_list.filter(author=up)
 		return object_list
 
-	def obj_create(self, bundle, request=None, **kwargs):
+	def obj_create(self, bundle, request=None, **kwargs):		
 		if 'profile_id' not in kwargs:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
@@ -660,29 +660,38 @@ class AccomodationsResource(ModelResource):
 		return errors
 
 	def build_transports(self, POST):
+		#Metro, Bus, Taxi, Train, Car, Motorbike, Bicycle, Boat, Plane, Other
 		transports = []
-
-		if POST['plane'] is True:
-			transports.append(PublicTransport.objects.get(name='plane'))
-
-		if POST['boat'] is True:
-			transports.append(PublicTransport.objects.get(name='boat'))
+		if POST['metro'] is True:
+			transports.append(PublicTransport.objects.get(name='metro'))
 
 		if POST['bus'] is True:
 			transports.append(PublicTransport.objects.get(name='bus'))
 
-		if POST['tram'] is True:
-			transports.append(PublicTransport.objects.get(name='tram'))
-		
-		if POST['metro'] is True:
-			transports.append(PublicTransport.objects.get(name='metro'))
-		
+		if POST['taxi'] is True:
+			transports.append(PublicTransport.objects.get(name='taxi'))
+
 		if POST['train'] is True:
 			transports.append(PublicTransport.objects.get(name='train'))
 		
-		if POST['others'] is True:
-			transports.append(PublicTransport.objects.get(name='others'))
+		if POST['car'] is True:
+			transports.append(PublicTransport.objects.get(name='car'))
+		
+		if POST['motorbike'] is True:
+			transports.append(PublicTransport.objects.get(name='motorbike'))
 
+		if POST['bicycle'] is True:
+			transports.append(PublicTransport.objects.get(name='bicycle'))
+
+		if POST['boat'] is True:
+			transports.append(PublicTransport.objects.get(name='boat'))
+
+		if POST['plane'] is True:
+			transports.append(PublicTransport.objects.get(name='plane'))
+
+		if POST['other'] is True:
+			transports.append(PublicTransport.objects.get(name='other'))
+												
 		return transports
 		
 	def post_list(self, request, **kwargs):
@@ -750,7 +759,7 @@ class AccomodationsResource(ModelResource):
 	def patch_detail(self, request, **kwargs):
 		return self.put_detail(request, **kwargs)    
 
-	def put_detail(self, request, **kwargs):
+	def put_detail(self, request, **kwargs):		
 		PUT = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)

@@ -709,15 +709,6 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('XXX')
 		"""
-		"""
-		if POST.has_key('showBirthday'):
-			if POST['showBirthday'] == "":
-				not_empty['extras'].append('showBirthday')
-			elif POST['showBirthday'] not in ['F', 'P', 'N']:
-				invalid['extras'].append('showBirthday')
-		else:
-			field_req['extras'].append('showBirthday')
-		"""
 		if POST.has_key('gender'):
 			if POST['gender'] == "":
 				not_empty['extras'].append('gender')
@@ -1024,7 +1015,7 @@ class UserProfileResource(ModelResource):
 		return errors
 
 	def put_detail(self, request, **kwargs):		
-		import pdb; pdb.set_trace()l
+		#import pdb; pdb.set_trace()
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
 		try:

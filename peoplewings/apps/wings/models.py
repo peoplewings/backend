@@ -51,5 +51,5 @@ class PublicRequestWing(models.Model):
 	city = models.ForeignKey(City, on_delete=models.PROTECT, null = True)
 	wing_type = models.CharField(max_length=50, unique=False, default="Accomodation", blank=True)
 	capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=1)
-	introduction= models.TextField(max_length=max_text_msg_len, blank=True)
+	introduction= models.TextField(blank=True)
 
