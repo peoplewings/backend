@@ -421,13 +421,13 @@ class AccomodationsResource(ModelResource):
 		else:
 			field_req['extras'].append('XXX')
 		"""
-		if POST.has_key('tram'):
-			if POST['tram'] == "":
-				not_empty['extras'].append('tram')
-			elif POST['tram'] not in [True, False]:
-				invalid['extras'].append('tram')
+		if POST.has_key('taxi'):
+			if POST['taxi'] == "":
+				not_empty['extras'].append('taxi')
+			elif POST['taxi'] not in [True, False]:
+				invalid['extras'].append('taxi')
 		else:
-			field_req['extras'].append('tram')
+			field_req['extras'].append('taxi')
 
 		if POST.has_key('bus'):
 			if POST['bus'] == "":
@@ -453,13 +453,53 @@ class AccomodationsResource(ModelResource):
 		else:
 			field_req['extras'].append('train')
 
-		if POST.has_key('others'):
-			if POST['others'] == "":
-				not_empty['extras'].append('others')
-			elif POST['others'] not in [True, False]:
-				invalid['extras'].append('others')
+		if POST.has_key('other'):
+			if POST['other'] == "":
+				not_empty['extras'].append('other')
+			elif POST['other'] not in [True, False]:
+				invalid['extras'].append('other')
 		else:
-			field_req['extras'].append('others')
+			field_req['extras'].append('other')
+
+		if POST.has_key('boat'):
+			if POST['boat'] == "":
+				not_empty['extras'].append('boat')
+			elif POST['boat'] not in [True, False]:
+				invalid['extras'].append('boat')
+		else:
+			field_req['extras'].append('boat')
+
+		if POST.has_key('plane'):
+			if POST['plane'] == "":
+				not_empty['extras'].append('plane')
+			elif POST['plane'] not in [True, False]:
+				invalid['extras'].append('plane')
+		else:
+			field_req['extras'].append('plane')			
+
+		if POST.has_key('car'):
+			if POST['car'] == "":
+				not_empty['extras'].append('car')
+			elif POST['car'] not in [True, False]:
+				invalid['extras'].append('car')
+		else:
+			field_req['extras'].append('car')
+
+		if POST.has_key('motorbike'):
+			if POST['motorbike'] == "":
+				not_empty['extras'].append('motorbike')
+			elif POST['motorbike'] not in [True, False]:
+				invalid['extras'].append('motorbike')
+		else:
+			field_req['extras'].append('motorbike')
+
+		if POST.has_key('bicycle'):
+			if POST['bicycle'] == "":
+				not_empty['extras'].append('bicycle')
+			elif POST['bicycle'] not in [True, False]:
+				invalid['extras'].append('bicycle')
+		else:
+			field_req['extras'].append('bicycle')
 
 		if POST.has_key('liveCenter'):
 			if POST['liveCenter'] == "":
