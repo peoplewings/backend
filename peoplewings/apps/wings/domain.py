@@ -44,11 +44,15 @@ class AccomodationWingEditable(object):
 
 		self.bus = False
 		self.train = False
-		self.tram = False
+		self.taxi = False
 		self.metro = False
 		self.boat = False
-		self.others = False
+		self.other = False
 
+		self.plane = False
+		self.bicycle = False
+		self.motorbike = False
+		self.car = False
 
 	def jsonable(self):
 		res = dict()

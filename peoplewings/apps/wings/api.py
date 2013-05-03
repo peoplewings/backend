@@ -325,8 +325,8 @@ class AccomodationsResource(ModelResource):
 				for j in i.public_transport.filter():
 					if j.name == 'bus':
 						aux_wing.bus = True
-					if j.name == 'tram':
-						aux_wing.tram = True
+					if j.name == 'taxi':
+						aux_wing.taxi = True
 					if j.name == 'train':
 						aux_wing.train = True
 					if j.name == 'boat':
@@ -335,6 +335,14 @@ class AccomodationsResource(ModelResource):
 						aux_wing.metro = True
 					if j.name == 'others':
 						aux_wing.others = True
+					if j.name == 'car':
+						aux_wing.car = True
+					if j.name == 'plane':
+						aux_wing.plane = True
+					if j.name == 'motorbike':
+						aux_wing.motorbike = True
+					if j.name == 'bicycle':
+						aux_wing.bicycle = True
 				aux_wing.about = i.about
 				aux_wing.address = i.address
 				aux_wing.number = i.number
@@ -800,6 +808,7 @@ class AccomodationsResource(ModelResource):
 		return self.put_detail(request, **kwargs)    
 
 	def put_detail(self, request, **kwargs):		
+		#import pdb; pdb.set_trace()
 		PUT = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
