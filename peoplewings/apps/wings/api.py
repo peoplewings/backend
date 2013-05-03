@@ -636,9 +636,7 @@ class AccomodationsResource(ModelResource):
 			field_req['extras'].append('number')
 
 		if POST.has_key('additionalInformation'):
-			if POST['additionalInformation'] == "":
-				not_empty['extras'].append('additionalInformation')
-			elif len(POST['additionalInformation']) > 500:
+			if len(POST['additionalInformation']) > 500:
 				too_long['extras'].append('additionalInformation')
 
 		if POST.has_key('postalCode'):
