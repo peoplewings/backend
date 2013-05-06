@@ -85,7 +85,7 @@ class UserSignUpResource(ModelResource):
 		return bundle
 
 	def email_validation(self, email):
-		if len(email) > 7:
+		if len(email) > 7 and len(email) <= 50:
 			if re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email) != None:
 				return 1
 		return 0
@@ -135,13 +135,13 @@ class UserSignUpResource(ModelResource):
 			field_req['extras'].append('repeatEmail')
 
 		if POST.has_key("firstName"):
-			if len(POST['firstName']) < 1 or len(POST['firstName']) > 50:
+			if len(POST['firstName']) < 1 or len(POST['firstName']) > 14:
 				too_long['extras'].append('firstName')
 		else: 
 			field_req['extras'].append('firstName')
 
 		if POST.has_key("lastName"):
-			if len(POST['lastName']) < 1 or len(POST['lastName']) > 50:
+			if len(POST['lastName']) < 1 or len(POST['lastName']) > 30:
 				too_long['extras'].append('lastName')
 		else: 
 			field_req['extras'].append('lastName')
@@ -153,7 +153,7 @@ class UserSignUpResource(ModelResource):
 			field_req['extras'].append('gender')
 
 		if POST.has_key("password"):
-			if len(POST['password']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$"	, POST['password']) == None:
+			if len(POST['password']) < 8 or len(POST['password']) > 20 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$"	, POST['password']) == None:
 				invalid['extras'].append('password')
 		else: 
 			field_req['extras'].append('password')
@@ -603,10 +603,41 @@ class AccountResource(ModelResource):
 		##DO NOTHING
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 	
-	def post_list(self, request, **kwargs):
-		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
-			pass
+	def is_valid_post(self, POST):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras": []}
+		too_long = {"type":"TOO_LONG", "extras": []}
+		invalid = {"type":"INVALID_FIELD", "extras": []}
+
+		if 'currentPassword' in POST.keys():
+			if len(POST['currentPassword']) < 8 or len(POST['currentPassword']) > 20:
+				invalid['extras'].append('currentPassword')
 		else:
+			field_req['extras'].append('currentPassword')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+
+		if len(errors) == 0:
+			return None
+
+		return errors
+
+	def post_list(self, request, **kwargs):
+
+		POST = json.loads(request.raw_post_data)
+		errors = self.is_valid_post(POST)
+		if errors is not None:
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
+
+		if not self.is_valid_password(POST['currentPassword'], request):
+
 			errors = [{"type": "INCORRECT_PASSWORD"}]
 			content = {} 
 			content['status'] = False
@@ -696,13 +727,62 @@ class AccountResource(ModelResource):
 					bundle.data[key] = value       
 		return bundle  
 
-	def put_detail(self, request, **kwargs):
-		if request and 'currentPassword' in request.raw_post_data and self.is_valid_password(json.loads(request.raw_post_data)['currentPassword'], request):
-			if 'resource' in request.raw_post_data:                
-				json.loads(json.dumps(json.loads(request.raw_post_data)['resource']))
-			else:
-				raise ValueError()            
+	def is_valid_put(self, PUT):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras": []}
+		too_long = {"type":"TOO_LONG", "extras": []}
+		invalid = {"type":"INVALID_FIELD", "extras": []}
+
+		if 'resource' in PUT.keys():
+			if 'firstName' in PUT.keys():
+				if len(PUT['resource']['firstName']) > 14 or len(PUT['resource']['firstName']) < 1:
+					invalid['extras'].append('firstName')
+
+			if 'lastName' in PUT.keys():
+				if len(PUT['resource']['lastName']) > 30 or len(PUT['resource']['lastName']) < 1:
+					invalid['extras'].append('lastName')
+
+			if 'password' in PUT.keys():
+				if len(PUT['resource']['password']) > 20 or len(PUT['resource']['password']) < 8:
+					invalid['extras'].append('password')
+
+			if 'email' in PUT.keys():
+				if len(PUT['resource']['email']) > 50 or len(PUT['resource']['email']) < 7:
+					invalid['extras'].append('email')
+
 		else:
+			field_req['extras'].append('resouce')
+
+		if 'currentPassword' in PUT.keys():
+			if len(PUT['currentPassword']) < 8 or len(PUT['currentPassword']) > 20:
+				invalid['extras'].append('currentPassword')
+		else:
+			field_req['extras'].append('currentPassword')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+
+		if len(errors) == 0:
+			return None
+
+		return errors
+
+
+	def put_detail(self, request, **kwargs):
+		#{u'resource': {u'lastName': u'Pichoni', u'password': u'asdf1234', u'firstName': u'Choni'}, u'currentPassword': u'asdf'}
+		#import pdb; pdb.set_trace()
+		PUT = json.loads(request.raw_post_data)
+		errors = self.is_valid_put(PUT)
+		if errors is not None:
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
+
+		if not self.is_valid_password(PUT['currentPassword'], request):
 			errors = [{"type": "INCORRECT_PASSWORD"}]
 			content = {} 
 			content['status'] = False
@@ -800,7 +880,7 @@ class AccountResource(ModelResource):
 					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
+			except Exception, e:				
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
 					content['errors'] = errors               
@@ -852,11 +932,15 @@ class ForgotResource(ModelResource):
 		errors = []
 		invalid = {"type": "INVALID_FIELD", "extras": []}
 		field_req = {"type": "FIELD_REQUIRED", "extras": []}
+
 		if POST.has_key('email'):
-			if len(User.objects.filter(email=POST['email'])) != 1: 
+			if len(POST['email']) < 7 or len(POST['email']) > 50 or len(User.objects.filter(email=POST['email'])) != 1: 
 				invalid['extras'].append("email")
-		elif POST.has_key('newPassword'):
-			if len(POST['newPassword']) < 8 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$", POST['newPassword']) == None:
+		elif not POST.has_key('newPassword'):
+			field_req['extras'].append('email')
+
+		if POST.has_key('newPassword'):
+			if len(POST['newPassword']) < 8 or len(POST['newPassword']) > 20 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$", POST['newPassword']) == None:
 				invalid['extras'].append("newPassword")
 			if POST.has_key("forgotToken"):
 				if len(RegistrationProfile.objects.filter(activation_key = POST['forgotToken'])) != 1:
@@ -874,7 +958,7 @@ class ForgotResource(ModelResource):
 		errors = self.is_valid_post(POST)
 		if len(errors) > 0:
 			pass
-		else:
+		else:			
 			if POST.has_key("email"):
 				user = User.objects.get(email=json.loads(request.raw_post_data)['email'])
 				res = forgot_password(user, 'peoplewings.apps.registration.backends.custom.CustomBackend')
@@ -1034,3 +1118,6 @@ class ControlResource(ModelResource):
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
+
+
+

@@ -471,8 +471,7 @@ class UserProfileResource(ModelResource):
 					prof = prof[0]
 					if prof.active is False:
 						return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
-					prof_obj = PreviewProfileObject()
-
+					prof_obj = PreviewProfileObject()					
 					interests = prof.interested_in.filter()
 					for i in interests:
 						prof_obj.interested_in.append({"gender":i.gender})	
@@ -710,15 +709,6 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('XXX')
 		"""
-		"""
-		if POST.has_key('showBirthday'):
-			if POST['showBirthday'] == "":
-				not_empty['extras'].append('showBirthday')
-			elif POST['showBirthday'] not in ['F', 'P', 'N']:
-				invalid['extras'].append('showBirthday')
-		else:
-			field_req['extras'].append('showBirthday')
-		"""
 		if POST.has_key('gender'):
 			if POST['gender'] == "":
 				not_empty['extras'].append('gender')
@@ -727,7 +717,7 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('gender')
 
-		if POST['socialNetworks']:
+		if POST['socialNetworks']:			
 			if not isinstance(POST['socialNetworks'], list):
 				invalid['extras'].append('socialNetworks')
 			else:
@@ -736,7 +726,7 @@ class UserProfileResource(ModelResource):
 						if 'socialNetworks' not in invalid['extras']:
 							invalid['extras'].append('socialNetworks')
 					else:
-						if not i.has_key('snUsername') and isinstance(i['snUsername'], str):
+						if not i.has_key('snUsername') or not isinstance(i['snUsername'], unicode):
 							if 'socialNetworks' not in invalid['extras']:
 								invalid['extras'].append('socialNetworks')
 						else:
@@ -759,7 +749,7 @@ class UserProfileResource(ModelResource):
 						if 'instantMessages' not in invalid['extras']:
 							invalid['extras'].append('instantMessages')
 					else:
-						if not i.has_key('imUsername') and isinstance(i['imUsername'], str):
+						if not i.has_key('imUsername') or not isinstance(i['imUsername'], unicode):
 							if 'instantMessages' not in invalid['extras']:
 								invalid['extras'].append('instantMessages')
 						else:
@@ -790,8 +780,6 @@ class UserProfileResource(ModelResource):
 		if POST.has_key('civilState'):
 			if POST['civilState'] not in ['', 'SI', 'EN', 'MA', 'WI', 'IR', 'IO', 'IC', 'DI', 'SE']:
 				invalid['extras'].append('civilState')
-		else:
-			field_req['extras'].append('civilState')
 
 		if POST.has_key('languages'):
 			if not isinstance(POST['languages'], list):
@@ -820,7 +808,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('hometown')
 			else:
 				if len(POST['hometown'].keys()) != 0:
-					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('region') and POST['hometown'].has_key('name')):
+					if not (POST['hometown'].has_key('lat') and POST['hometown'].has_key('lon') and POST['hometown'].has_key('country') and POST['hometown'].has_key('name')):
 						invalid['extras'].append('hometown')
 
 		if POST.has_key('current'):
@@ -828,14 +816,14 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('current')
 			else:
 				if len(POST['current'].keys()) != 0:
-					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('region') and POST['current'].has_key('name')):
+					if not (POST['current'].has_key('lat') and POST['current'].has_key('lon') and POST['current'].has_key('country') and POST['current'].has_key('name')):
 						invalid['extras'].append('current')
 
 		if POST.has_key('otherLocations'):
 			if not isinstance(POST.has_key('otherLocations'), list):
 				for i in POST['otherLocations']:
 					if isinstance(i, dict) and len(i.keys()) != 0:
-						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('region') and i.has_key('name')):
+						if not (i.has_key('lat') and i.has_key('lon') and i.has_key('country') and i.has_key('name')):
 							invalid['extras'].append('otherLocations')
 
 		if POST.has_key('education'):
@@ -860,6 +848,67 @@ class UserProfileResource(ModelResource):
 							if len(i['degree']) > 100:
 								too_long['extras'].append('education')
 
+
+		if POST.has_key('politicalOpinion'):
+			if len(POST['politicalOpinion']) > 500:
+				too_long['extras'].append('politicalOpinion')
+		else:
+			field_req['extras'].append('politicalOpinion')
+
+		if POST.has_key('mainMission'):
+			if len(POST['mainMission']) > 100:
+				too_long['extras'].append('mainMission')
+		else:
+			field_req['extras'].append('mainMission')
+
+		if POST.has_key('company'):
+			if len(POST['company']) > 100:
+				too_long['extras'].append('company')
+		else:
+			field_req['extras'].append('company')
+
+		if POST.has_key('personalPhilosophy'):
+			if len(POST['personalPhilosophy']) > 1000:
+				too_long['extras'].append('personalPhilosophy')
+		else:
+			field_req['extras'].append('personalPhilosophy')
+
+		if POST.has_key('sports'):
+			if len(POST['sports']) > 500:
+				too_long['extras'].append('sports')
+		else:
+			field_req['extras'].append('sports')
+
+		if POST.has_key('sharing'):
+			if len(POST['sharing']) > 1000:
+				too_long['extras'].append('sharing')
+		else:
+			field_req['extras'].append('sharing')
+
+		if POST.has_key('incredible'):
+			if len(POST['incredible']) > 1000:
+				too_long['extras'].append('incredible')
+		else:
+			field_req['extras'].append('incredible')
+
+		if POST.has_key('quotes'):
+			if len(POST['quotes']) > 500:
+				too_long['extras'].append('quotes')
+		else:
+			field_req['extras'].append('quotes')
+
+		if POST.has_key('pwOpinion'):
+			if len(POST['pwOpinion']) > 500:
+				too_long['extras'].append('pwOpinion')
+		else:
+			field_req['extras'].append('pwOpinion')
+
+		if POST.has_key('otherPages'):
+			if len(POST['otherPages']) > 500:
+				too_long['extras'].append('otherPages')
+		else:
+			field_req['extras'].append('otherPages')	
+
 		if POST.has_key('emails'):
 			if len(POST['emails']) > 100:
 				too_long['extras'].append('emails')
@@ -873,19 +922,13 @@ class UserProfileResource(ModelResource):
 			field_req['extras'].append('phone')
 
 		if POST.has_key('inspiredBy'):
-			if len(POST['inspiredBy']) > 100:
+			if len(POST['inspiredBy']) > 500:
 				too_long['extras'].append('inspiredBy')					
 		else:
 			field_req['extras'].append('inspiredBy')
 
-		if POST.has_key('otherPages'):
-			if len(POST['otherPages']) > 100:
-				too_long['extras'].append('otherPages')					
-		else:
-			field_req['extras'].append('otherPages')
-
 		if POST.has_key('enjoyPeople'):
-			if len(POST['enjoyPeople']) > 100:
+			if len(POST['enjoyPeople']) > 500:
 				too_long['extras'].append('enjoyPeople')					
 		else:
 			field_req['extras'].append('enjoyPeople')
@@ -897,13 +940,13 @@ class UserProfileResource(ModelResource):
 			field_req['extras'].append('gender')
 
 		if POST.has_key('allAboutYou'):
-			if len(POST['allAboutYou']) > 100:
+			if len(POST['allAboutYou']) > 500:
 				too_long['extras'].append('allAboutYou')				
 		else:
 			field_req['extras'].append('allAboutYou')
 
 		if POST.has_key('movies'):
-			if len(POST['movies']) > 100:
+			if len(POST['movies']) > 500:
 				too_long['extras'].append('movies')				
 		else:
 			field_req['extras'].append('movies')
@@ -948,10 +991,16 @@ class UserProfileResource(ModelResource):
 			invalid['extras'].append('birthday')
 
 		if POST.has_key('religion'):
-			if len(POST['religion']) > 100:
+			if len(POST['religion']) > 500:
 				too_long['extras'].append('religion')				
 		else:
 			field_req['extras'].append('religion')
+
+		if POST.has_key('occupation'):
+			if len(POST['occupation']) > 100:
+				too_long['extras'].append('occupation')				
+		else:
+			field_req['extras'].append('occupation')
 
 
 
@@ -965,7 +1014,7 @@ class UserProfileResource(ModelResource):
 			errors.append(invalid)
 		return errors
 
-	def put_detail(self, request, **kwargs):
+	def put_detail(self, request, **kwargs):		
 		#import pdb; pdb.set_trace()
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
@@ -977,7 +1026,7 @@ class UserProfileResource(ModelResource):
 
 		#We need to check that received data is valid
 		try:
-			errors = self.is_valid_put(request)
+			errors = self.is_valid_put(request)			
 			if len(errors) > 0:
 				return self.create_response(request, {"status":False, "errors":errors}, response_class=HttpResponse)
 		except: 
@@ -999,7 +1048,10 @@ class UserProfileResource(ModelResource):
 		#prof.show_birthday = POST['showBirthday']
 		prof.gender = POST['gender']
 		prof.interested_in.clear()
-		prof.interested_in.add(Interests.objects.get(gender__contains=POST['interestedIn'][0]['gender']))
+
+		if (len(POST['interestedIn']) != 0):
+			prof.interested_in.add(Interests.objects.get(gender__contains=POST['interestedIn'][0]['gender']))
+
 		prof.civil_state = POST['civilState']
 
 		[i.delete() for i in UserLanguage.objects.filter(user_profile=prof)]
@@ -1011,12 +1063,24 @@ class UserProfileResource(ModelResource):
 			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])		
 		# Locations
 		if  POST['current']:
+			if not POST['current'].has_key('region'):
+				POST['current']['region'] = 'No region'
 			prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
+		else:
+			prof.current_city = None
+
 		if POST['hometown']:
+			if not POST['hometown'].has_key('region'):
+				POST['hometown']['region'] = 'No region'
 			prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
+		else:
+			prof.hometown = None
+
 		prof.other_locations.clear()		
 		if POST['otherLocations']:
 			for i in POST['otherLocations']:
+				if not i.has_key('region'):
+					i['region'] = 'No region'
 				prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
 
 		prof.emails = POST['emails']
@@ -1304,7 +1368,11 @@ class UserProfileResource(ModelResource):
 				search_obj.ctrl_user = i.user
 				search_obj.first_name = i.user.first_name
 				search_obj.last_name = i.user.last_name
-				search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				if i.current_city:
+					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				else: 
+					search_obj.current= {}
+
 				search_obj.avatar = i.medium_avatar
 				search_obj.age = i.get_age()
 				search_obj.online = self.connected(i.user)

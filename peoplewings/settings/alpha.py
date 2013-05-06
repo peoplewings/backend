@@ -1,7 +1,6 @@
 # Django settings for Peoplewings project.
-# Those settings are for test enviroment only.
-
-DEBUG = True
+# Those settings are for production enviroment only.
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -13,17 +12,17 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'd6dvu92h1qihiq',        # Or path to database file if using sqlite3.
-        'USER': 'tmfhgcdtkewoem',        # Not used with sqlite3.
-        'PASSWORD': 'F60gU7pnTuI5GkqdQO-e53Gq_-',           # Not used with sqlite3.
-        'HOST': 'ec2-54-247-64-184.eu-west-1.compute.amazonaws.com', # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': 'dcul7b2rne5dum',                      # Or path to database file if using sqlite3.
+        'USER': 'tgexryhzfktttj',                      # Not used with sqlite3.
+        'PASSWORD': 'x-mxgD0uhS0g7YWaeHLGzAHc3T',                  # Not used with sqlite3.
+        'HOST': 'ec2-54-247-98-97.eu-west-1.compute.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I18N = False
 
 INSTALLED_APPS = (
     # Standard django apps
@@ -38,7 +37,7 @@ INSTALLED_APPS = (
     'gunicorn',
     'tastypie',
     'storages',
-    'compressor',
+    'compressor',       
     # Project custom apps
     'peoplewings.apps.landing',
     'peoplewings.apps.registration',
@@ -52,12 +51,18 @@ INSTALLED_APPS = (
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
     'peoplewings.apps.notifications',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+# Storages IMG
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+
 #SITE
-SITE = 'http://peoplewings-frontend.herokuapp.com/'
-BACKEND_SITE ='http://peoplewings-be-development.herokuapp.com/api/v1/'
+SITE = 'http://alpha.peoplewings.com/'
+BACKEND_SITE = 'https://peoplewings-be-alpha.herokuapp.com/api/v1/'
 
 # SMTP settings
 EMAIL_HOST ='smtp.gmail.com'
@@ -81,7 +86,7 @@ AWS_BUCKET_LOCATION = "eu-west-1"
 
 S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'https://peoplewings-backend.herokuapp.com/media/'
+MEDIA_URL = 'https://peoplewings-backend-alpha.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"

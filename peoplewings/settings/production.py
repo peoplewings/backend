@@ -12,10 +12,10 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'derpr1u0brbo6h',                      # Or path to database file if using sqlite3.
-        'USER': 'paucbpbuauurig',                      # Not used with sqlite3.
-        'PASSWORD': '5UACWRXRwmjhlWsvBEpgn2C61y',                  # Not used with sqlite3.
-        'HOST': 'ec2-23-21-209-85.compute-1.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': 'd5fhhp6r6du5vt',                      # Or path to database file if using sqlite3.
+        'USER': 'xaapbgsoalfbbe',                      # Not used with sqlite3.
+        'PASSWORD': 'ACybBUzI77Rxvxybsp8DNeMRPZ',                  # Not used with sqlite3.
+        'HOST': 'ec2-54-228-219-94.eu-west-1.compute.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '5432',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -61,8 +61,8 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #SITE
-SITE = 'https://peoplewings-frontend.s3-website-eu-west-1.amazonaws.com/'
-BACKEND_SITE = 'https://peoplewings-backend-stable.herokuapp.com/api/v1/'
+SITE = 'http://test.peoplewings.com/'
+BACKEND_SITE = 'http://peoplewings-be-test.herokuapp.com/api/v1/'
 
 # SMTP settings
 EMAIL_HOST ='smtp.gmail.com'
@@ -86,7 +86,7 @@ AWS_BUCKET_LOCATION = "eu-west-1"
 
 S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'https://peoplewings-backend-stable.herokuapp.com/media/'
+MEDIA_URL = 'https://peoplewings-backend-test.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"

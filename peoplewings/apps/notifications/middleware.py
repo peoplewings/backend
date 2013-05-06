@@ -23,4 +23,3 @@ class Notification(object):
 					resp['updates']['notifs'] = -1
 				response.content = json.dumps(resp)					
 		return response
-

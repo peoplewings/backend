@@ -1,6 +1,6 @@
 max_ultra_short_len = 10
 max_short_len = 20
-max_medium_len = 50
+max_medium_len = 100
 max_short_text_len = 200
 max_long_len = 250
 max_500_char = 500

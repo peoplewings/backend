@@ -218,7 +218,7 @@ class AccomodationsResource(ModelResource):
 			return object_list.filter(author=up)
 		return object_list
 
-	def obj_create(self, bundle, request=None, **kwargs):
+	def obj_create(self, bundle, request=None, **kwargs):		
 		if 'profile_id' not in kwargs:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["profile"]}]}, response_class=HttpResponse)
 		
@@ -304,8 +304,16 @@ class AccomodationsResource(ModelResource):
 				aux_wing.city = city
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
-				aux_wing.preferred_male = i.preferred_male
-				aux_wing.preferred_female = i.preferred_female
+
+				if not i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'None'
+				elif i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'Male'
+				elif not i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Female'
+				elif i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Both'
+
 				aux_wing.wheelchair = i.wheelchair
 				aux_wing.where_sleeping_type = i.where_sleeping_type
 				aux_wing.smoking = i.smoking
@@ -317,8 +325,8 @@ class AccomodationsResource(ModelResource):
 				for j in i.public_transport.filter():
 					if j.name == 'bus':
 						aux_wing.bus = True
-					if j.name == 'tram':
-						aux_wing.tram = True
+					if j.name == 'taxi':
+						aux_wing.taxi = True
 					if j.name == 'train':
 						aux_wing.train = True
 					if j.name == 'boat':
@@ -327,6 +335,14 @@ class AccomodationsResource(ModelResource):
 						aux_wing.metro = True
 					if j.name == 'others':
 						aux_wing.others = True
+					if j.name == 'car':
+						aux_wing.car = True
+					if j.name == 'plane':
+						aux_wing.plane = True
+					if j.name == 'motorbike':
+						aux_wing.motorbike = True
+					if j.name == 'bicycle':
+						aux_wing.bicycle = True
 				aux_wing.about = i.about
 				aux_wing.address = i.address
 				aux_wing.number = i.number
@@ -360,8 +376,16 @@ class AccomodationsResource(ModelResource):
 				aux_wing.city = city
 				aux_wing.sharing_once = i.sharing_once
 				aux_wing.capacity = i.capacity
-				aux_wing.preferred_male = i.preferred_male
-				aux_wing.preferred_female = i.preferred_female
+
+				if not i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'None'
+				elif i.preferred_male and not i.preferred_female:
+					aux_wing.preferred_gender = 'Male'
+				elif not i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Female'
+				elif i.preferred_male and i.preferred_female:
+					aux_wing.preferred_gender = 'Both'
+
 				aux_wing.wheelchair = i.wheelchair
 				aux_wing.where_sleeping_type = i.where_sleeping_type
 				aux_wing.smoking = i.smoking
@@ -405,13 +429,13 @@ class AccomodationsResource(ModelResource):
 		else:
 			field_req['extras'].append('XXX')
 		"""
-		if POST.has_key('tram'):
-			if POST['tram'] == "":
-				not_empty['extras'].append('tram')
-			elif POST['tram'] not in [True, False]:
-				invalid['extras'].append('tram')
+		if POST.has_key('taxi'):
+			if POST['taxi'] == "":
+				not_empty['extras'].append('taxi')
+			elif POST['taxi'] not in [True, False]:
+				invalid['extras'].append('taxi')
 		else:
-			field_req['extras'].append('tram')
+			field_req['extras'].append('taxi')
 
 		if POST.has_key('bus'):
 			if POST['bus'] == "":
@@ -437,13 +461,53 @@ class AccomodationsResource(ModelResource):
 		else:
 			field_req['extras'].append('train')
 
-		if POST.has_key('others'):
-			if POST['others'] == "":
-				not_empty['extras'].append('others')
-			elif POST['others'] not in [True, False]:
-				invalid['extras'].append('others')
+		if POST.has_key('other'):
+			if POST['other'] == "":
+				not_empty['extras'].append('other')
+			elif POST['other'] not in [True, False]:
+				invalid['extras'].append('other')
 		else:
-			field_req['extras'].append('others')
+			field_req['extras'].append('other')
+
+		if POST.has_key('boat'):
+			if POST['boat'] == "":
+				not_empty['extras'].append('boat')
+			elif POST['boat'] not in [True, False]:
+				invalid['extras'].append('boat')
+		else:
+			field_req['extras'].append('boat')
+
+		if POST.has_key('plane'):
+			if POST['plane'] == "":
+				not_empty['extras'].append('plane')
+			elif POST['plane'] not in [True, False]:
+				invalid['extras'].append('plane')
+		else:
+			field_req['extras'].append('plane')			
+
+		if POST.has_key('car'):
+			if POST['car'] == "":
+				not_empty['extras'].append('car')
+			elif POST['car'] not in [True, False]:
+				invalid['extras'].append('car')
+		else:
+			field_req['extras'].append('car')
+
+		if POST.has_key('motorbike'):
+			if POST['motorbike'] == "":
+				not_empty['extras'].append('motorbike')
+			elif POST['motorbike'] not in [True, False]:
+				invalid['extras'].append('motorbike')
+		else:
+			field_req['extras'].append('motorbike')
+
+		if POST.has_key('bicycle'):
+			if POST['bicycle'] == "":
+				not_empty['extras'].append('bicycle')
+			elif POST['bicycle'] not in [True, False]:
+				invalid['extras'].append('bicycle')
+		else:
+			field_req['extras'].append('bicycle')
 
 		if POST.has_key('liveCenter'):
 			if POST['liveCenter'] == "":
@@ -550,13 +614,15 @@ class AccomodationsResource(ModelResource):
 			field_req['extras'].append('smoking')
 
 		if POST.has_key('about'):
-			if len(POST['about']) > 400:
+			if len(POST['about']) > 1000:
 				too_long['extras'].append('about')
+		else:
+			field_req['extras'].append('about')
 
 		if POST.has_key('address'):
 			if POST['address'] == "":
 				not_empty['extras'].append('address')
-			elif len(POST['address']) > 300:
+			elif len(POST['address']) > 500:
 				too_long['extras'].append('address')
 		else:
 			field_req['extras'].append('address')
@@ -564,21 +630,19 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('number'):
 			if POST['number'] == "":
 				not_empty['extras'].append('number')
-			elif len(POST['number']) > 10:
+			elif len(POST['number']) > 50:
 				too_long['extras'].append('number')
 		else:
 			field_req['extras'].append('number')
 
 		if POST.has_key('additionalInformation'):
-			if POST['additionalInformation'] == "":
-				not_empty['extras'].append('additionalInformation')
-			elif len(POST['additionalInformation']) > 250:
+			if len(POST['additionalInformation']) > 500:
 				too_long['extras'].append('additionalInformation')
 
 		if POST.has_key('postalCode'):
 			if POST['postalCode'] == "":
 				not_empty['extras'].append('postalCode')
-			elif len(POST['postalCode']) > 20:
+			elif len(POST['postalCode']) > 50:
 				too_long['extras'].append('postalCode')
 		else:
 			field_req['extras'].append('postalCode')
@@ -624,7 +688,7 @@ class AccomodationsResource(ModelResource):
 			else:
 				if POST['city'] == {}:
 					not_empty['extras'].append('city')
-				elif not POST['city'].has_key('lat') and POST['city'].has_key('lon') and POST['city'].has_key('region') and POST['city'].has_key('country') and POST['city'].has_key('name'):
+				elif not POST['city'].has_key('lat') and POST['city'].has_key('lon') and POST['city'].has_key('country') and POST['city'].has_key('name'):
 					invalid['extras'].append('city')
 		else:
 			field_req['extras'].append('city')
@@ -642,22 +706,38 @@ class AccomodationsResource(ModelResource):
 		return errors
 
 	def build_transports(self, POST):
+		#Metro, Bus, Taxi, Train, Car, Motorbike, Bicycle, Boat, Plane, Other
 		transports = []
+		if POST['metro'] is True:
+			transports.append(PublicTransport.objects.get(name='metro'))
+
 		if POST['bus'] is True:
 			transports.append(PublicTransport.objects.get(name='bus'))
 
-		if POST['tram'] is True:
-			transports.append(PublicTransport.objects.get(name='tram'))
-		
-		if POST['metro'] is True:
-			transports.append(PublicTransport.objects.get(name='metro'))
-		
+		if POST['taxi'] is True:
+			transports.append(PublicTransport.objects.get(name='taxi'))
+
 		if POST['train'] is True:
 			transports.append(PublicTransport.objects.get(name='train'))
 		
-		if POST['others'] is True:
-			transports.append(PublicTransport.objects.get(name='others'))
+		if POST['car'] is True:
+			transports.append(PublicTransport.objects.get(name='car'))
+		
+		if POST['motorbike'] is True:
+			transports.append(PublicTransport.objects.get(name='motorbike'))
 
+		if POST['bicycle'] is True:
+			transports.append(PublicTransport.objects.get(name='bicycle'))
+
+		if POST['boat'] is True:
+			transports.append(PublicTransport.objects.get(name='boat'))
+
+		if POST['plane'] is True:
+			transports.append(PublicTransport.objects.get(name='plane'))
+
+		if POST['other'] is True:
+			transports.append(PublicTransport.objects.get(name='other'))
+												
 		return transports
 		
 	def post_list(self, request, **kwargs):
@@ -682,8 +762,20 @@ class AccomodationsResource(ModelResource):
 		#import pdb; pdb.set_trace()
 		city = City.objects.saveLocation(country=POST['city']['country'], region=POST['city']['region'], lat=POST['city']['lat'], lon=POST['city']['lon'], name=POST['city']['name'])
 		transport = self.build_transports(POST)
-		pref_male = 'Male' in POST['preferredGender']
-		pref_female= 'Female' in POST['preferredGender']
+
+		if 'Both' in POST['preferredGender']:
+			pref_male = True
+			pref_female = True
+		elif 'Male' in POST['preferredGender']:
+			pref_male = True
+			pref_female = False
+		elif 'Female' in POST['preferredGender']:
+			pref_male = False
+			pref_female = True
+		elif 'None' in POST['preferredGender']:
+			pref_male = False
+			pref_female = False
+
 		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
 		if not POST.has_key('about'): POST['about'] = ""
 		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])
@@ -713,7 +805,8 @@ class AccomodationsResource(ModelResource):
 	def patch_detail(self, request, **kwargs):
 		return self.put_detail(request, **kwargs)    
 
-	def put_detail(self, request, **kwargs):
+	def put_detail(self, request, **kwargs):		
+		#import pdb; pdb.set_trace()
 		PUT = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
@@ -746,6 +839,8 @@ class AccomodationsResource(ModelResource):
 		if len(errors) > 0:
 			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 		
+		if not PUT['city'].has_key('region'):
+			PUT['city']['region'] = 'No region'
 		city = City.objects.saveLocation(country=PUT['city']['country'], region=PUT['city']['region'], lat=PUT['city']['lat'], lon=PUT['city']['lon'], name=PUT['city']['name'])
 		transport = self.build_transports(PUT)
 		pref_male = 'Male' in PUT['preferredGender']

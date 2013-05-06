@@ -55,6 +55,13 @@
         "name" : "others"
     }
   },
+    {
+    "model": "wings.PublicTransport",
+    "pk": 7,
+    "fields": {
+        "name" : "plane"
+    }
+  },
   {
     "model": "wings.Accomodation",
     "pk": 1,

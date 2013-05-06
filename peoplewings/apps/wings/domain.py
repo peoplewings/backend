@@ -28,8 +28,7 @@ class AccomodationWingEditable(object):
 		self.city = {}
 		self.sharing_once = None
 		self.capacity = None
-		self.preferred_male = None
-		self.preferred_female = None
+		self.preferred_gender = None
 		self.wheelchair = None
 		self.where_sleeping_type = None
 		self.smoking = None
@@ -45,11 +44,15 @@ class AccomodationWingEditable(object):
 
 		self.bus = False
 		self.train = False
-		self.tram = False
+		self.taxi = False
 		self.metro = False
 		self.boat = False
-		self.others = False
+		self.other = False
 
+		self.plane = False
+		self.bicycle = False
+		self.motorbike = False
+		self.car = False
 
 	def jsonable(self):
 		res = dict()
@@ -71,8 +74,7 @@ class AccomodationWingNotEditable(object):
 		self.city = {}
 		self.sharing_once = None
 		self.capacity = None
-		self.preferred_male = None
-		self.preferred_female = None
+		self.preferred_gender = None
 		self.wheelchair = None
 		self.where_sleeping_type = None
 		self.smoking = None

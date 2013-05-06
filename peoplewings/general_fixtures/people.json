@@ -4142,9 +4142,6 @@
     "fields": {
         "user" : 1,
         "pw_state" : "Y",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
         "birthday" : "1987-02-01",
         "show_birthday" : "F",
         "gender" : "Male",
@@ -4182,9 +4179,6 @@
     "fields": {
         "user" : 2,
         "pw_state" : "C",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
         "birthday" : "1985-12-20",
         "show_birthday" : "P",
         "gender" : "Male",
@@ -4222,9 +4216,6 @@
     "fields": {
         "user" : 3,
         "pw_state" : "M",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
         "birthday" : "1985-09-11",
         "show_birthday" : "N",
         "gender" : "Male",
@@ -4262,9 +4253,6 @@
     "fields": {
         "user" : 4,
         "pw_state" : "T",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
         "birthday" : "1979-11-30",
         "show_birthday" : "N",
         "gender" : "Male",
@@ -4301,10 +4289,7 @@
     "pk": 5,
     "fields": {
         "user" : 5,
-        "pw_state" : "W",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
+        "pw_state" : "W", 
         "birthday" : "1978-02-12",
         "show_birthday" : "F",
         "gender" : "Male",
@@ -4342,9 +4327,6 @@
     "fields": {
         "user" : 6,
         "pw_state" : "Y",
-        "avatar" : "https://peoplewings-test-media.s3.amazonaws.com/blank_avatar.jpg",
-        "medium_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/med-blank_avatar.jpg",
-        "thumb_avatar" : "https://peoplewings-test-media.s3.amazonaws.com/thumb-blank_avatar.jpg",    
         "birthday" : "1987-02-01",
         "show_birthday" : "F",
         "gender" : "Male",

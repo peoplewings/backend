@@ -1,5 +1,4 @@
 Django==1.4
-PIL==1.1.7
 South==0.7.5
 distribute==0.6.27
 dj-database-url==0.2.1

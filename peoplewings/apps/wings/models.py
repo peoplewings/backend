@@ -9,7 +9,7 @@ from pprint import pprint
 # Wing class
 class Wing(models.Model):
 	author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-	name = models.CharField(max_length=max_short_text_len, unique=False, default="Wing")
+	name = models.CharField(max_length=100, unique=False, default="Wing")
 	status = models.CharField(max_length=1, choices=WINGS_STATUS, default='Y', verbose_name='Wing status')
 	date_start = models.DateField(null=True)
 	date_end = models.DateField(null=True)
@@ -38,11 +38,11 @@ class Accomodation(Wing):
 	blankets = models.BooleanField(default=False, verbose_name='I have blankets')
 	live_center = models.BooleanField(default=False, verbose_name='I live in the center')
 	public_transport = models.ManyToManyField(PublicTransport)
-	about = models.TextField(max_length=max_text_msg_len, blank=True, verbose_name='About your Accomodation')
-	address = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='Street address')
-	number = models.CharField(max_length=max_ultra_short_len, blank=True)
-	additional_information = models.TextField(max_length=max_text_msg_len, blank=True)   
-	postal_code = models.CharField(max_length=max_short_text_len, blank=True, verbose_name='ZIP / Postal code') 
+	about = models.TextField(max_length=1000, blank=True, verbose_name='About your Accomodation')
+	address = models.CharField(max_length=500, blank=True, verbose_name='Street address')
+	number = models.CharField(max_length=50, blank=True)
+	additional_information = models.TextField(max_length=500, blank=True)   
+	postal_code = models.CharField(max_length=50, blank=True, verbose_name='ZIP / Postal code') 
 
 class PublicRequestWing(models.Model):
 	author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
@@ -51,5 +51,5 @@ class PublicRequestWing(models.Model):
 	city = models.ForeignKey(City, on_delete=models.PROTECT, null = True)
 	wing_type = models.CharField(max_length=50, unique=False, default="Accomodation", blank=True)
 	capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=1)
-	introduction= models.TextField(max_length=max_text_msg_len, blank=True)
+	introduction= models.TextField(blank=True)
 
