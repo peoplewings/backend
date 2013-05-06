@@ -61,8 +61,8 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #SITE
-SITE = 'http://peoplewings-frontend.s3-website-eu-west-1.amazonaws.com/'
-BACKEND_SITE = 'http://peoplewings-be-stable.herokuapp.com/api/v1/'
+SITE = 'http://test.peoplewings.com/'
+BACKEND_SITE = 'http://peoplewings-be-test.herokuapp.com/api/v1/'
 
 # SMTP settings
 EMAIL_HOST ='smtp.gmail.com'
@@ -86,7 +86,7 @@ AWS_BUCKET_LOCATION = "eu-west-1"
 
 S3_URL = 'https://%s.s3.amazonaws.com/' % AWS_STORAGE_BUCKET_NAME
 STATIC_URL = S3_URL
-MEDIA_URL = 'https://peoplewings-backend-stable.herokuapp.com/media/'
+MEDIA_URL = 'https://peoplewings-backend-test.herokuapp.com/media/'
 
 ANONYMOUS_AVATAR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
