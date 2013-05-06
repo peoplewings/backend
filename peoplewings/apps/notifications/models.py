@@ -241,11 +241,9 @@ def put_alarm(sender, instance, signal, *args, **kwargs):
 		notif.created = time.time()
 		notif.save()
 def del_alarm(sender, instance, signal, *args, **kwargs):
-	try:
-		notifa = NotificationsAlarm.objects.get(reference = instance.reference)
-		notifa.delete()
-	except MultipleObjectsReturned:
-		pass
+	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
+	NotificationsAlarm.objects.filter(filters).delete()
+
 
 post_save.connect(put_alarm, sender=Messages)
 post_save.connect(put_alarm, sender=Requests)
