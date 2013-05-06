@@ -10,7 +10,7 @@
     "model": "wings.PublicTransport",
     "pk": 2,
     "fields": {
-        "name" : "tram"
+        "name" : "taxi"
     }
   },
     {
@@ -48,4 +48,27 @@
         "name" : "plane"
     }
   },
+      {
+    "model": "wings.PublicTransport",
+    "pk": 8,
+    "fields": {
+        "name" : "car"
+    }
+  },
+      {
+    "model": "wings.PublicTransport",
+    "pk": 9,
+    "fields": {
+        "name" : "motorbike"
+    }
+  },
+      {
+    "model": "wings.PublicTransport",
+    "pk": 10,
+    "fields": {
+        "name" : "bicycle"
+    }
+  },
 ]
+
+
