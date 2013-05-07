@@ -1316,7 +1316,7 @@ class UserProfileResource(ModelResource):
 		return res
 
 	def paginate(self, data, GET):
-		page_size=50
+		page_size=20
 		num_page = int(GET.get('page', 1))
 		count = len(data)
 		endResult = min(num_page * page_size, count)
