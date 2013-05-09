@@ -40,7 +40,7 @@
     "fields": {
         "name" : "others"
     }
-  }
+  },
     {
     "model": "wings.PublicTransport",
     "pk": 7,
@@ -68,7 +68,7 @@
     "fields": {
         "name" : "bicycle"
     }
-  },
+  }
 ]
 
 

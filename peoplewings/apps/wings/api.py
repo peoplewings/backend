@@ -741,7 +741,6 @@ class AccomodationsResource(ModelResource):
 		return transports
 		
 	def post_list(self, request, **kwargs):
-
 		POST = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
