@@ -301,6 +301,7 @@ class EditProfileObject(object):
 		self.last_name = None
 		self.religion = None
 		self.show_birthday = None
+		self.albums = []
 
 	def jsonable(self):
 		res = dict()			
@@ -353,6 +354,7 @@ class PreviewProfileObject(object):
 		self.last_name = None
 		self.religion = None
 		self.show_birthday = None
+		self.albums = []
 
 	def jsonable(self):
 		res = dict()			
