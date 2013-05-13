@@ -8,7 +8,7 @@ from tastypie.api import Api
 
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource, ControlResource
-from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource, RelationshipResource, ReferenceResource, ContactResource, PhotoCompletedResource
+from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource, RelationshipResource, ReferenceResource, ContactResource, PhotoAlbumsResource, PhotosResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.apps.feedback.api import FeedbackResource
@@ -50,7 +50,8 @@ v1_api.register(ControlResource())
 v1_api.register(CropcompletedResource())
 v1_api.register(CropbigResource())
 v1_api.register(CropsmallResource())
-v1_api.register(PhotoCompletedResource())
+v1_api.register(PhotoAlbumsResource())
+v1_api.register(PhotosResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),

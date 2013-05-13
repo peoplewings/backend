@@ -578,7 +578,6 @@ class UserProfileResource(ModelResource):
 							photo_obj.id = photo.pk
 							photo_obj.big_url = photo.big_url
 							photo_obj.thumb_url = photo.thumb_url
-							photo_obj.ordering = photo.ordering
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)				
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
@@ -713,7 +712,6 @@ class UserProfileResource(ModelResource):
 								photo_obj.id = photo.pk
 								photo_obj.big_url = photo.big_url
 								photo_obj.thumb_url = photo.thumb_url
-								photo_obj.ordering = photo.ordering
 								album_obj['photos'].append(photo_obj)
 							prof_obj.albums.append(album_obj)
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
@@ -1031,7 +1029,7 @@ class UserProfileResource(ModelResource):
 				too_long['extras'].append('occupation')				
 		else:
 			field_req['extras'].append('occupation')
-
+		"""
 		if POST.has_key('albums'):
 			if isinstance(POST['albums'], list):
 				for item in POST['albums']:
@@ -1063,7 +1061,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('albums')
 		else:
 			field_req['extras'].append('albums')
-
+		"""
 
 
 		if len(field_req['extras']) > 0:
@@ -1182,7 +1180,7 @@ class UserProfileResource(ModelResource):
 		prof.quotes = POST['quotes']
 		prof.pw_opinion = POST['pwOpinion']
 		#Photo albums
-		import pdb; pdb.set_trace()
+		"""
 		prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
 		album_ordering = 1
 		for album in POST['albums']:
@@ -1192,6 +1190,7 @@ class UserProfileResource(ModelResource):
 				Photos.objects.create(thumb_url=photo['thumb_url'],big_url=photo['big_url'], photo_id=photo['id'],author=prof, album=album_obj, ordering=photo_ordering)
 				photo_ordering = photo_ordering + 1
 			album_ordering = album_ordering + 1
+		"""
 
 		prof.save()
 		return self.create_response(request, {"status":True}, response_class=HttpResponse)
@@ -1718,35 +1717,121 @@ class ContactResource(ModelResource):
 
 		return wrapper
 
-class PhotoCompletedResource(ModelResource):
+class PhotosResource(ModelResource):
 	
 	class Meta:
 		object_class = Photos
 		queryset = Photos.objects.all()
-		allowed_methods = ['post']
+		detail_allowed_methods = ['delete']
+		list_allowed_methods = ['put', 'post']
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = Authentication()
+		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
 		always_return_data = True
 
+	def validate_delete_detail(self, prof, **kwargs):
+		errors = []
+		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
+		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
+		invalid_field = {"type": 'INVALID_FIELD', "extras":[]}
+
+		#Check the album
+		if 'album_id' in kwargs:
+			if len(PhotoAlbums.objects.filter(pk=kwargs['album_id'], author=prof)) != 1:
+				invalid_field['extras'].append('album')
+		else:
+			field_req['extras'].append('album')
+		#Check the photo
+		if 'photo_id' in kwargs:
+			if len(PhotoAlbums.objects.filter(pk=kwargs['photo_id'], author=prof)) != 1:
+				invalid_field['extras'].append('photo')
+		else:
+			field_req['extras'].append('photo')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid_field['extras']) > 0:
+			errors.append(invalid_field)
+		return errors
+
+	def delete_detail(self, request, **kwargs):
+		
+		prof = UserProfile.objects.get(user=request.user)
+		errors = self.validate_delete_detail(prof, **kwargs)		
+		if len(errors) > 0:
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpResponse)	
+		photo_id = kwargs['photo_id']
+		Photos.objects.get(pk=kwargs['photo_id'], author=prof).delete()
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
+
+	def validate_put_list(self, PUT, prof, kwargs):
+		#import pdb; pdb.set_trace()
+		errors = []
+		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
+		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
+		invalid_field = {"type": 'INVALID_FIELD', "extras":[]}
+
+		if 'album_id' in kwargs:
+			if len(PhotoAlbums.objects.filter(pk=kwargs['album_id'], author=prof)) != 1:
+				invalid_field['extras'].append('album')
+		else:
+			field_req['extras'].append('album')	
+			
+		if 'photos' in PUT:
+			photo_list = PUT['photos']
+			if (isinstance(photo_list, list)):
+				user_photos = Photos.objects.filter(author=prof)
+				for i in photo_list:
+					if i not in user_photos and 'photo' not in invalid_field['extras']:
+						invalid_field['extras'].append('photo')
+			else:
+				invalid_field['extras'].append('photos')
+		else:
+			field_req['extras'].append('photos')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid_field['extras']) > 0:
+			errors.append(invalid_field)
+		return errors
+
+	def put_list(self, request, **kwargs):
+
+		PUT =  json.loads(request.raw_post_data)
+		prof = UserProfile.objects.get(user=request.user)
+		errors = self.validate_put_list(PUT, prof, kwargs)		
+		if len(errors) > 0:
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpResponse)
+		#At this point we know that all photos are valid, and are owned by the user, we have to reorder them
+		photo_list = PUT['photos']
+		counter = 1
+		for i in photo_list:
+			photo_obj = Photos.objects.get(pk=i)
+			photo_obj.ordering = counter
+			photo_obj.save()
+			counter = counter + 1
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
+
 	def post_list(self, request, **kwargs):
 		#print '%s  %s' % ("POST", request.raw_post_data)
-		encoded = request.raw_post_data
-		POST= json.loads(encoded)
-		print POST
-		url = ""
-
-		"""
+		POST= json.loads(request.raw_post_data)
 		try:
-			url = POST["results"]["images"][0]['s3_url']
-			img_id = POST["results"]["images"][0]['image_identifier']
+			photos = POST["results"]["images"]
+			for i in photos:
+				url = i['s3_url']
+				img_id = i['image_identifier']
+				user_id = img_id.split("-")[0]
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
-		"""
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
@@ -1808,3 +1893,44 @@ class PhotoCompletedResource(ModelResource):
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
+
+class PhotoAlbumsResource(ModelResource):
+	
+	class Meta:
+		object_class = PhotoAlbums
+		queryset = PhotoAlbums.objects.all()
+		detail_allowed_methods = ['delete']
+		list_allowed_methods = ['put']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def prepend_urls(self):
+		return [
+			url(r"^(?P<resource_name>%s)/(?P<album_id>\w[\w/-]*)/photos/(?P<photo_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('photos_detail'), name="api_detail_photos"),
+			##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
+			url(r"^(?P<resource_name>%s)/(?P<album_id>\w[\w/-]*)/photos%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('photos_list'), name="api_list_photos"),
+		]
+
+	def photos_detail(self, request, **kwargs):
+		p_resource = PhotosResource()
+		return p_resource.dispatch_detail(request, **kwargs)
+
+	def photos_list(self, request, **kwargs):
+		p_resource = PhotosResource()
+		return p_resource.dispatch_list(request, **kwargs)
+
+	def put_list(self, request, **kwargs):
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
+	def delete_detail(self, request, **kwargs):
+		return self.create_response(request, {"status":True}, response_class=HttpResponse)
+
+
+
+
+
+
