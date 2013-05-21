@@ -235,7 +235,7 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-			
+		print request.COOKIES
 		facebook = get_user_from_cookie(request.COOKIES, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 		if facebook is None:
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
@@ -248,7 +248,7 @@ class FacebookLoginResource(ModelResource):
 			user = graph.get_object("me")			
 			if user is None:
 				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
-			res = self.register_with_fb(user)
+			res = self.register_with_fb(user, graph)
 			if res is False:
 				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
 			fb_obj = []
@@ -258,7 +258,7 @@ class FacebookLoginResource(ModelResource):
 		ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 		return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		
-	def register_with_fb(self, user):		
+	def register_with_fb(self, user, graph):		
 		try:
 			cur_user = User.objects.filter(email=user['email'])
 			if len(cur_user) == 0:
@@ -275,6 +275,7 @@ class FacebookLoginResource(ModelResource):
 				if user.has_key('birthday'):
 					kwarg['birthday'] = date(int(str.split(str(user['birthday']), '/')[2]), int(str.split(str(user['birthday']), '/')[0]), int(str.split(str(user['birthday']), '/')[1]))
 
+				pic_path = graph.get_profile_picture()
 				new_profile = UserProfile.objects.create(**kwarg)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:
