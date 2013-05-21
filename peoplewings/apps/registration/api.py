@@ -235,7 +235,7 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):	
-		import pdb; pdb.set_trace()	
+		#import pdb; pdb.set_trace()	
 		POST = json.loads(request.raw_post_data)
 		POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
 		facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
