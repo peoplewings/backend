@@ -234,8 +234,7 @@ class FacebookLoginResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 
-	def post_list(self, request, **kwargs):
-		import pdb; pdb.set_trace()
+	def post_list(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)
 		POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
 		facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
@@ -277,7 +276,7 @@ class FacebookLoginResource(ModelResource):
 				if user.has_key('birthday'):
 					kwarg['birthday'] = date(int(str.split(str(user['birthday']), '/')[2]), int(str.split(str(user['birthday']), '/')[0]), int(str.split(str(user['birthday']), '/')[1]))
 
-				pic_path = graph.get_profile_picture()
+				#pic_path = graph.get_profile_picture()				
 				new_profile = UserProfile.objects.create(**kwarg)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:

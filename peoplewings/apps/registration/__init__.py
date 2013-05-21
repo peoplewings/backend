@@ -404,9 +404,10 @@ class GraphAPI(object):
 		def get_profile_picture(self):
 			pic_path = None
 			user = self.get_object('me')
-			if user.has_key('fbid'):
+			import pdb; pdb.set_trace()	
+			if user.has_key('id'):
 				try:
-					raw_json = urllib2.urlopen('https://graph.facebook.com/%s/picture?width=140&height=140&redirect=false&return_ssl_resources=1~access_token=%s' % (user['fbid'], self.access_token))
+					raw_json = urllib2.urlopen('https://graph.facebook.com/%s/picture?width=140&height=140&redirect=false&return_ssl_resources=1~access_token=%s' % (user['id'], self.access_token))
 					dec_json =  json.loads(raw_json)
 					if dec_json.has_key('data') and dec_json['data'].has_key('url'):
 						pic_path = dec_json['data']['url']
