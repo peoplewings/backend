@@ -235,7 +235,7 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		import pdb; pdb.set_trace()		
+			
 		facebook = get_user_from_cookie(request.COOKIES, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 		if facebook is None:
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
@@ -265,7 +265,7 @@ class FacebookLoginResource(ModelResource):
 				new_user = User.objects.create(username=user['email'], first_name= user['first_name'], last_name=user['last_name'], email=user['email'], password=sha_constructor(str(random.random())).hexdigest()[:128], is_staff=False, is_active=True, is_superuser=False, last_login=datetime.now(), date_joined=datetime.now())
 				
 				kwarg = {}
-				kwarg['user_id'] = new_user
+				kwarg['user_id'] = new_user.pk
 				if user.has_key('gender'):
 					if str(user['gender']) == 'male':
 						kwarg['gender'] = 'Male'
