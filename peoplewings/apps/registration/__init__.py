@@ -410,6 +410,8 @@ class GraphAPI(object):
 					dec_json =  json.loads(raw_json)
 					if dec_json.has_key('data') and dec_json['data'].has_key('url'):
 						pic_path = dec_json['data']['url']
+				except:
+					pass
 			return pic_path
 
 
