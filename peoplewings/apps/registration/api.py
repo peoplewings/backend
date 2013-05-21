@@ -235,8 +235,8 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):
-		print request.COOKIES
-		facebook = get_user_from_cookie(request.COOKIES, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+		POST = json.loads(request.war_post_data)
+		facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
 		if facebook is None:
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 		
