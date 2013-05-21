@@ -234,7 +234,8 @@ class FacebookLoginResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 
-	def post_list(self, request, **kwargs):		
+	def post_list(self, request, **kwargs):	
+		import pdb; pdb.set_trace()	
 		POST = json.loads(request.raw_post_data)
 		POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
 		facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
@@ -248,12 +249,14 @@ class FacebookLoginResource(ModelResource):
 			graph = GraphAPI(access_token= facebook['access_token'])
 			user = graph.get_object("me")			
 			if user is None:
+				print 'None user'
 				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
 			res = self.register_with_fb(user, graph)
 			if res is False:
+				print 'Register failed'
 				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
 			fb_obj = []
-			fb_obj.append(FacebookUser.objects.get(user=user['id']))
+			fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
 
 		api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = time.time())
 		ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
