@@ -414,9 +414,6 @@ class GraphAPI(object):
 					pass
 			return pic_path
 
-
-
-
 class GraphAPIError(Exception):
 		def __init__(self, result):
 				#Exception.__init__(self, message)
