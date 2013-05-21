@@ -235,32 +235,35 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):	
-		#import pdb; pdb.set_trace()	
-		POST = json.loads(request.raw_post_data)
-		POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
-		facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
-		if facebook is None:
-			return self.create_response(request, {"status":False}, response_class = HttpResponse)
-		
-		#See if the user is already registered in PPW...
-		fbid = facebook['uid']
-		fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
-		if len(fb_obj) == 0:
-			graph = GraphAPI(access_token= facebook['access_token'])
-			user = graph.get_object("me")			
-			if user is None:
-				print 'None user'
-				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
-			res = self.register_with_fb(user, graph)
-			if res is False:
-				print 'Register failed'
-				return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
-			fb_obj = []
-			fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
+		#import pdb; pdb.set_trace()
+		try:
+			POST = json.loads(request.raw_post_data)
+			POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
+			facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			if facebook is None:
+				return self.create_response(request, {"status":False}, response_class = HttpResponse)
+			
+			#See if the user is already registered in PPW...
+			fbid = facebook['uid']
+			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
+			if len(fb_obj) == 0:
+				graph = GraphAPI(access_token= facebook['access_token'])
+				user = graph.get_object("me")			
+				if user is None:
+					print 'None user'
+					return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
+				res = self.register_with_fb(user, graph)
+				if res is False:
+					print 'Register failed'
+					return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
+				fb_obj = []
+				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
 
-		api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = time.time())
-		ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
-		return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
+			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = time.time())
+			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
+			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR", "msg": "fuck"}, response_class = HttpResponse)
 		
 	def register_with_fb(self, user, graph):		
 		try:
