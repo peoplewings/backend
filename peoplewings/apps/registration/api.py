@@ -251,11 +251,11 @@ class FacebookLoginResource(ModelResource):
 				user = graph.get_object("me")			
 				if user is None:
 					print 'None user'
-					return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors": {"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
 				res = self.register_with_fb(user, graph)
 				if res is False:
 					print 'Register failed'
-					return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR"}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
 				fb_obj = []
 				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
 
@@ -263,7 +263,7 @@ class FacebookLoginResource(ModelResource):
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
-			return self.create_response(request, {"status":False, "type": "INTERNAL_ERROR", "msg": "fuck"}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": "fuck"}}, response_class = HttpResponse)
 		
 	def register_with_fb(self, user, graph):		
 		try:
