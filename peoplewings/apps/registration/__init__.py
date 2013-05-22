@@ -406,7 +406,6 @@ class GraphAPI(object):
 			user = self.get_object('me')
 			if user.has_key('id'):
 				try:
-					import pdb; pdb.set_trace()
 					raw_json = urllib2.urlopen('https://graph.facebook.com/%s/picture?width=175&height=175&redirect=false&return_ssl_resources=1&access_token=%s' % (user['id'], self.access_token))
 					dec_json =  json.loads(raw_json.read())
 					if dec_json.has_key('data') and dec_json['data'].has_key('url'):
