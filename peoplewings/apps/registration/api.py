@@ -45,6 +45,7 @@ from peoplewings.apps.registration.signals import user_deleted
 from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
+from django.conf import settings as django_settings
 
 class UserSignUpResource(ModelResource):
 	
@@ -236,7 +237,7 @@ class FacebookLoginResource(ModelResource):
 
 	def post_list(self, request, **kwargs):	
 		#import pdb; pdb.set_trace()
-		try:
+		try:			
 			POST = json.loads(request.raw_post_data)
 			POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
 			facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
@@ -245,10 +246,10 @@ class FacebookLoginResource(ModelResource):
 			
 			#See if the user is already registered in PPW...
 			fbid = facebook['uid']
+			graph = GraphAPI(access_token= facebook['access_token'])
+			user = graph.get_object("me")	
 			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
-			if len(fb_obj) == 0:
-				graph = GraphAPI(access_token= facebook['access_token'])
-				user = graph.get_object("me")			
+			if len(fb_obj) == 0:						
 				if user is None:
 					print 'None user'
 					return self.create_response(request, {"status":False, "errors": {"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
@@ -259,12 +260,33 @@ class FacebookLoginResource(ModelResource):
 				fb_obj = []
 				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
 
+			pic_path_big = graph.get_profile_picture_big()
+			pic_path_small = graph.get_profile_picture_small()
+			if pic_path_big is not None:
+				try:
+					prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
+					if 'https://peoplewings-test-media.s3.amazonaws.com/' not in prof.avatar:
+						if prof.avatar not in pic_path_big:
+							self.set_facebook_photo(pic_path_big, pic_path_small, prof)
+							
+					elif django_settings.ANONYMOUS_BIG in prof.avatar:
+						self.set_facebook_photo(pic_path_big, pic_path_small, prof)
+				except:
+					pass
+
 			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = time.time())
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": "fuck"}}, response_class = HttpResponse)
-		
+	
+	def set_facebook_photo(self, path_big, path_small, prof):
+		prof.avatar = path_big
+		prof.medium_avatar = path_big
+		prof.thumb_avatar = path_small
+		prof.avatar_updated = True
+		prof.save()
+
 	def register_with_fb(self, user, graph):		
 		try:
 			cur_user = User.objects.filter(email=user['email'])
