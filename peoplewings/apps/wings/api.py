@@ -49,132 +49,117 @@ class PublicTransportResource(ModelResource):
 		validation = FormValidation(form_class=PublicTransportForm)
 
 class WingResource(ModelResource):
-	wing_type = fields.CharField()
 	class Meta:
 		object_class = Wing
 		queryset = Wing.objects.all()
-		detail_allowed_methods = []
-		list_allowed_methods = ['get']
+		detail_allowed_methods = ['get', 'post', 'put']
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
 		always_return_data = True
 		include_resource_uri = False
-		fields = ['name', 'id']
 		resource_name='wings'
 
-	def get_list_validate(self, request):
-		errors = {}
-		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
-		invalid = {"type":"INVALID_FIELD", "extras":[]}
-		if(request.GET.has_key('profile')):
-			prof = request.GET['profile']
-			try:
-				up = UserProfile.objects.get(pk= prof)
-			except:
-				invalid['extras'].append('profile')
-		else:
-			field_req['extras'].append('profile')
-
-		if len(field_req['extras']) > 0:
-			errors.append(field_req)
-
-		if len(invalid['extras']) > 0:
-			errors.append(invalid)
-
-		return errors
-
 	def get_list(self, request, **kwargs):
-		errors = None
-		try:
-			errors = self.get_list_validate(request)		
-			if len(errors) > 0:
-					return self.create_response(request, {"status" : False, "errors": errors}, response_class = HttpResponse)
+		#Check authentication	
+		data = None	
+		if request.has_key('user') and request.user.pk == kwargs['id_user']:
+			#We have to list our own wings
+			data = []
+			wings = Wing.objects.filter(author__pk=kwargs['id_user'])
+			for w in wings:
+				wing_obj = WingObj()
+				wing_obj.idWing = w.pk
+				wing_obj.author = w.author.pk
+				wing_obj.name = w.name
+				wing_obj.status = w.status
+				wing_obj.type = w.type
+				wing_obj.dateStart = w.date_start
+				wing_obj.dateEnd = w.date_end
+				wing_obj.bestDays = w.best_days
+				wing_obj.city = w.city.jsonify()
+				if w.type == 'Accomodation':
+					wing_obj.extraFields= self.get_own_accomodation_fields(w.pk)
+				data.append(w)
 
-			prof = UserProfile.objects.get(pk=request.GET['profile'])			
-			w = Wing.objects.filter(Q(author=prof)&Q(active=True))		
-			objects = []
-			for i in w:
-				aux = ShortWings()
-				aux.idWing = i.pk
-				aux.wingName = i.name
-				aux.wingType = i.get_class_name()
-				objects.append(aux.jsonable())
-			data = {}
-			data['items'] = objects
-			return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
-		except Exception, e:
-			print e
-			return self.create_response(request, {"status":False, "errors": [{"type":"INTERAL_ERROR"}]}, response_class = HttpResponse)
+		elif request.has_key('user'):
+			#We have to list another user wings
+			data = []
+			wings = Wing.objects.filter(author__pk=kwargs['id_user'])
+			for w in wings:
+				wing_obj = WingObj()
+				wing_obj.idWing = w.pk
+				wing_obj.author = w.author.pk
+				wing_obj.name = w.name
+				wing_obj.status = w.status
+				wing_obj.type = w.type
+				wing_obj.dateStart = w.date_start
+				wing_obj.dateEnd = w.date_end
+				wing_obj.bestDays = w.best_days
+				wing_obj.city = w.city.jsonify()
+				if w.type == 'Accomodation':
+					wing_obj.extraFields= self.get_other_accomodation_fields(w.pk)
+				data.append(w)
+		else:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "FIELD_REQUIRED", "extras": ["user"]}]}, response_class=HttpResponse)
 
-	def dehydrate_wing_type(self, bundle):
-		return bundle.obj.get_type()
+		if data is not None:
+			return self.create_response(request, {"status" : True, "data": [i.jsonable() for i in data]}, response_class=HttpResponse)
+		else:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"]}, response_class=HttpResponse)
 
-	def alter_list_data_to_serialize(self, request, data):
-		return data["objects"]
+	def get_own_accomodation_fields(id_wing):
+		fields = []
+		acc = Accomodation.objects.get(pk=id_wing)
+		fields.append({'sharingOnce': acc.sharing_once})
+		fields.append({'capacity': acc.capacity})
+		fields.append({'wheelchair': acc.wheelchair})
+		fields.append({'whereSleepingType': acc.where_sleeping_type})
+		fields.append({'smoking': acc.smoking})
+		fields.append({'iHavePet':acc.i_have_pet})
+		fields.append({'petsAllowed': acc.pets_allowed})
+		fields.append({'blankets': acc.blankets})
+		fields.append({'liveCenter': acc.live_center})		
+		fields.append({'about': acc.about})
 
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)
-				return response
-			except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
-				elif (isinstance(e.response, HttpUnauthorized)):
-					content = {}
-					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				elif (isinstance(e.response, HttpApplicationError)):
-					content = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
-					ccontent = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)
+		fields.append({'address':acc.address})
+		fields.append({'number', acc.number})
+		fields.append({'additionalInformation', acc.additional_information})
+		fields.append({'postalCode': acc.postal_code})
 
-		return wrapper
-	
+		fields.append({'PublicTransport': [i.name for i in acc.public_transport.all()]})
+		if acc.preferred_female is True and acc.preferred_male is True:
+			fields.append({'preferredGender': 'Both'})
+		elif acc.preferred_male is True:
+			fields.append({'preferredGender': 'Male'})
+		else:
+			fields.append({'preferredGender': 'Female'})
 
+	def get_other_accomodation_fields(id_wing):
+		fields = []
+		acc = Accomodation.objects.get(pk=id_wing)
+		fields.append({'sharingOnce': acc.sharing_once})
+		fields.append({'capacity': acc.capacity})
+		fields.append({'wheelchair': acc.wheelchair})
+		fields.append({'whereSleepingType': acc.where_sleeping_type})
+		fields.append({'smoking': acc.smoking})
+		fields.append({'iHavePet':acc.i_have_pet})
+		fields.append({'petsAllowed': acc.pets_allowed})
+		fields.append({'blankets': acc.blankets})
+		fields.append({'liveCenter': acc.live_center})		
+		fields.append({'about': acc.about})
+
+		fields.append({'PublicTransport': [i.name for i in acc.public_transport.all()]})
+		if acc.preferred_female is True and acc.preferred_male is True:
+			fields.append({'preferredGender': 'Both'})
+		elif acc.preferred_male is True:
+			fields.append({'preferredGender': 'Male'})
+		else:
+			fields.append({'preferredGender': 'Female'})
+
+	def post_list(self, request, **kwargs):
+		pass
+		
 
 
 class AccomodationsResource(ModelResource):
