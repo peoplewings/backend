@@ -178,8 +178,45 @@ class AccomodationsResource(ModelResource):
 		#include_resource_uri = True
 		validation = FormValidation(form_class=AccomodationForm)		
 
-	def get_list(self, request, **kwargs):		
-		return self.create_response(request, {"status":True, "data":{}})
+	def get_list(self, request, **kwargs):	
+		obj = {
+			"about": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibu",
+			"additionalInformation": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibu",
+			"metro": True,
+			"bus": True,
+			"taxi": True,
+			"train": True,
+			"car": True,
+			"motorbike": True,
+			"bicycle": True,
+			"boat": True,
+			"plane": True,
+			"other": True,
+			"liveCenter": True,
+			"petsAllowed": True,
+			"wheelchair": True,
+			"sharingOnce": True,
+			"iHavePet": True,
+			"blankets": True,
+			"name": "My Palace",
+			"status": "Y",
+			"bestDays": "A",
+			"capacity": "1",
+			"preferredGender": "Male",
+			"whereSleepingType": "C",
+			"smoking": "N",
+			"address": "Carrer Valnecia",
+			"number": "430",
+			"city": {
+			"country": "Germany",
+			"name": "Berlin",
+			"lon": "13.406091200",
+			"lat": "52.519171000",
+			"region": "Berlin"
+			},
+			"postalCode": "1212"
+			}	
+		return self.create_response(request, {"status":True, "data":obj})
 	
 	def validate_post(self, POST):
 		errors = []
@@ -509,19 +546,6 @@ class AccomodationsResource(ModelResource):
 			transports.append(PublicTransport.objects.get(name='other'))
 												
 		return transports
-		
-	def post_list(self, request, **kwargs):		
-		return self.create_response(request, {"status":True})
-
-	def get_detail(self, request, **kwargs):
-		return self.create_response(request, {"status":True, "data":{}})
-
-	def patch_detail(self, request, **kwargs):
-		return self.put_detail(request, **kwargs)    
-
-	def put_detail(self, request, **kwargs):		
-		#import pdb; pdb.set_trace()		
-		return self.create_response(request, {"status":True})
 
 	@transaction.commit_on_success
 	def delete_detail(self, request, **kwargs):

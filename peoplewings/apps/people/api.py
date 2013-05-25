@@ -417,19 +417,6 @@ class UserProfileResource(ModelResource):
 			# GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('wing_collection'), name="api_list_wings"),
-
-			# /profiles/<profile_id>|me/relationships/
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_collection'), name="api_list_relationships"),
-			# /profiles/me/relationships/<profile_id>
-			url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_detail'), name="api_detail_relationships"),
-			# /profiles/<profile_id>|me/references
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('reference_collection'), name="api_list_references"),
-			# PREVIEW PROFILE: GET /profiles/2/preview
-			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('preview_profile'), name="api_detail_preview"),
 		]
 
 	def accomodation_collection(self, request, **kwargs):
