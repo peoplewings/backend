@@ -1834,14 +1834,14 @@ class PhotosResource(ModelResource):
 					url_thumb = url
 
 			prof = UserProfile.objects.filter(pk=user_id)
-				if len(prof) == 1:
-					album = PhotoAlbums.objects.get(pk=album_id)
-					Photos.objects.create(author=prof, album=album, big_url= url_big, thumb_url = url_thumb, ordering = 1)
+			if len(prof) == 1:
+				album = PhotoAlbums.objects.get(pk=album_id)
+				Photos.objects.create(author=prof, album=album, big_url= url_big, thumb_url = url_thumb, ordering = 1)
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "updates":{"photos":True}}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt

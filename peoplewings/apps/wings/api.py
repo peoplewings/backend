@@ -29,7 +29,6 @@ from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.locations.api import CityResource
-from wings.domain import AccomodationWingEditable
 
 from wings.domain import *
 
@@ -106,7 +105,7 @@ class WingResource(ModelResource):
 		if data is not None:
 			return self.create_response(request, {"status" : True, "data": [i.jsonable() for i in data]}, response_class=HttpResponse)
 		else:
-			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"]}, response_class=HttpResponse)
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
 	def get_own_accomodation_fields(id_wing):
 		fields = []

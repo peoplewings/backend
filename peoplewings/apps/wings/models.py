@@ -17,7 +17,7 @@ class Wing(models.Model):
 	is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
 	city = models.ForeignKey(City, on_delete=models.PROTECT)
 	active = models.BooleanField(default = True)
-	wing_type = models.ChardField(default='', blank=True, null=False)
+	wing_type = models.CharField(default='', blank=True, null=False, max_length=100)
 	def get_class_name(self):
 		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
 	
