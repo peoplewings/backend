@@ -460,7 +460,8 @@ class UserProfileResource(ModelResource):
 		return wing_resource.dispatch_list(request, **kwargs)  
 
 	def get_detail(self, request, **kwargs):
-		#Check if the user is valid		
+		#Check if the user is valid	
+		#import pdb; pdb.set_trace()	
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
