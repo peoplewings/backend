@@ -216,7 +216,7 @@ class AccomodationsResource(ModelResource):
 			},
 			"postalCode": "1212"
 			}	
-		return self.create_response(request, {"status":True, "data":obj})
+		return self.create_response(request, {"status":True, "data":[]})
 	
 	def validate_post(self, POST):
 		errors = []
