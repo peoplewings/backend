@@ -3,9 +3,6 @@ from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.locations.models import City
 
 from peoplewings.global_vars import *
-
-from pprint import pprint
-
 # Wing class
 class Wing(models.Model):
 	author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)

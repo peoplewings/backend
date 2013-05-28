@@ -8,9 +8,9 @@ from tastypie.api import Api
 
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource, ControlResource, FacebookLoginResource
-from peoplewings.apps.people.api import UserProfileResource, UserLanguageResource, LanguageResource, UserUniversityResource, UniversityResource, SocialNetworkResource, UserSocialNetworkResource, InstantMessageResource, UserInstantMessageResource, RelationshipResource, ReferenceResource, ContactResource, PhotoAlbumsResource, PhotosResource
+from peoplewings.apps.people.api import UserProfileResource, UniversityResource, ContactResource, PhotoAlbumsResource, PhotosResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
-from peoplewings.apps.wings.api import AccomodationsResource, WingResource
+from peoplewings.apps.wings.api import WingResource
 from peoplewings.apps.feedback.api import FeedbackResource
 from peoplewings.apps.cropper.api import CroppedResource, CropcompletedResource, CropbigResource, CropsmallResource
 from peoplewings.apps.notifications.api import NotificationsListResource, NotificationsThreadResource
@@ -19,40 +19,37 @@ from peoplewings.apps.notifications.api import NotificationsListResource, Notifi
 admin.autodiscover()
 
 v1_api=Api(api_name='v1')
+#Registration
 v1_api.register(UserSignUpResource())
 v1_api.register(ActivationResource())
-v1_api.register(UserProfileResource())
 v1_api.register(LoginResource())
 v1_api.register(LogoutResource())
 v1_api.register(AccountResource())
 v1_api.register(ForgotResource())
-v1_api.register(UserLanguageResource())
-v1_api.register(LanguageResource())
-v1_api.register(UserUniversityResource())
+v1_api.register(FacebookLoginResource())
+v1_api.register(ControlResource())
+#People
+v1_api.register(UserProfileResource())
 v1_api.register(UniversityResource())
-v1_api.register(UserSocialNetworkResource())
-v1_api.register(SocialNetworkResource())
-v1_api.register(UserInstantMessageResource())
-v1_api.register(InstantMessageResource())
+v1_api.register(ContactResource())
+v1_api.register(PhotoAlbumsResource())
+v1_api.register(PhotosResource())
+#Locations
 v1_api.register(CityResource())
 v1_api.register(RegionResource())
 v1_api.register(CountryResource())
-v1_api.register(AccomodationsResource())
+#Feedback
 v1_api.register(FeedbackResource())
-v1_api.register(RelationshipResource())
+#Crop
 v1_api.register(CroppedResource())
-v1_api.register(ReferenceResource())
-v1_api.register(NotificationsListResource())
-v1_api.register(NotificationsThreadResource())
-v1_api.register(WingResource())
-v1_api.register(ContactResource())
-v1_api.register(ControlResource())
 v1_api.register(CropcompletedResource())
 v1_api.register(CropbigResource())
 v1_api.register(CropsmallResource())
-v1_api.register(PhotoAlbumsResource())
-v1_api.register(PhotosResource())
-v1_api.register(FacebookLoginResource())
+#Notifications
+v1_api.register(NotificationsListResource())
+v1_api.register(NotificationsThreadResource())
+#Wings
+v1_api.register(WingResource())
 
 urlpatterns = patterns('',
     url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
