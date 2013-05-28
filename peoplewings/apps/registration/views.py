@@ -57,7 +57,10 @@ def register(request, POST, backend, success_url=None, form_class=None,
 	return form
 
 def do_login(request, username, password):
-	user = authenticate(username=username, password=password)
+	try:
+		user = authenticate(username=username, password=password)
+	except:
+		user = None
 	if user:
 		if user.is_active:
 			# Update last login

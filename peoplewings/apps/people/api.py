@@ -28,7 +28,6 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
 from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference, Photos, PhotoAlbums
-from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
 from people.domain import *
 from peoplewings.global_vars import *
 from peoplewings.apps.people.exceptions import *
@@ -37,232 +36,10 @@ from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
-from peoplewings.apps.wings.api import AccomodationsResource, WingResource
+from peoplewings.apps.wings.api import WingResource
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
-
-class RelationshipResource(ModelResource):
-	class Meta:
-		object_class = UserProfile
-		list_allowed_methods = ['get', 'post']
-		detail_allowed_methods = ['put', 'delete']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		include_resource_uri = True
-		fields = ['avatar']
-
-	def post_list(self, request, **kwargs):
-		if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
-			return self.create_response(request, {"status" : False, "errors": [{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
-		try:
-			super(RelationshipResource, self).post_list(request, **kwargs)
-		except IntegrityError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		except FriendYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)
-
-	@transaction.commit_on_success
-	def obj_create(self, bundle, request=None, **kwargs):
-		sender = UserProfile.objects.get(user=request.user)
-		receiver = UserProfile.objects.get(pk=int(bundle.data['receiver'].split('/')[-1]))
-		if sender.id == receiver.id: raise FriendYourselfError()
-		if Relationship.objects.filter((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver))).exists():
-			raise IntegrityError()
-		rel = Relationship.objects.create(sender=sender, receiver=receiver, relationship_type="Pending")     
-		return bundle
-
-	def put_detail(self, request, **kwargs):
-		try:
-			super(RelationshipResource, self).put_detail(request, **kwargs)
-		except CannotAcceptOrRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		except InvalidAcceptRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["type"]}]}, response_class=HttpResponse)
-		
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		dic = {"status":True}
-		return self.create_response(request, dic)        
-
-	@transaction.commit_on_success
-	def obj_update(self, bundle, request=None, **kwargs):
-		receiver = UserProfile.objects.get(user=request.user)
-		sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		if not Relationship.objects.filter(sender=sender, receiver=receiver, relationship_type="Pending").exists(): 
-			raise CannotAcceptOrRejectError()
-		tipo = bundle.data['type']
-		if tipo == "Accepted":
-			rel = Relationship.objects.get(sender=sender, receiver=receiver)
-			rel.relationship_type = tipo
-			rel.save()
-		elif tipo == "Rejected":
-			Relationship.objects.get(sender=sender, receiver=receiver).delete()
-		else:
-			raise InvalidAcceptRejectError()
-		return bundle
-
-	def delete_detail(self, request, **kwargs):
-		try:
-			super(RelationshipResource, self).delete_detail(request, **kwargs)
-		except ObjectDoesNotExist, e:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)  
-
-	def obj_delete(self, request=None, **kwargs):
-		receiver = UserProfile.objects.get(user=request.user)
-		sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		Relationship.objects.get((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver)), relationship_type="Accepted").delete()
-
-	def get_list(self, request, **kwargs):
-		up = UserProfile.objects.get(user=request.user)
-		# miramos si el cliente quiere listar las invitaciones pendientes o los amigos
-		status = request.GET['status']
-		if status == 'friends':
-			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Accepted")
-		elif status == 'pendings':
-			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
-		else:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["status"]}]}, response_class=HttpResponse)
-		res = []
-		for r in rels:
-			if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
-			else: bundle = self.build_bundle(obj=r.sender, request=request)
-			bundle = self.full_dehydrate(bundle)
-			res.append(bundle)
-
-		content = {}  
-		content['status'] = True
-		content['data'] = res
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def dehydrate(self, bundle):
-		bundle.data['first_name'] = bundle.obj.user.first_name
-		bundle.data['last_name'] = bundle.obj.user.last_name
-		bundle.data['resource_uri'] = bundle.data['resource_uri'].replace('relationship', 'profiles')
-		return bundle
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data['objects']
-
-class ReferenceResource(ModelResource):
-	author = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'author', full=True, null=True)
-
-	class Meta:
-		object_class = Reference
-		list_allowed_methods = ['get', 'post']
-		#detail_allowed_methods = ['get']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		include_resource_uri = True
-		excludes = ['id']
-		validation = FormValidation(form_class=ReferenceForm)
-		
-	def dehydrate_author(self, bundle):
-		return_fields = ['avatar', 'first_name', 'last_name']
-		res = {}
-		for i in return_fields:
-			res[i] = bundle.data['author'][i]
-		return res
-
-	def post_list(self, request, **kwargs):
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
-
-		try:
-			super(ReferenceResource, self).post_list(request, **kwargs)
-		except CommentYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)
-
-	@transaction.commit_on_success
-	def obj_create(self, bundle, request=None, **kwargs):
-		author = UserProfile.objects.get(user=request.user)
-		commented = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		if author.id == commented.id: raise CommentYourselfError()
-		ref = Reference.objects.create(author=author, commented=commented, title=bundle.data['title'], text=bundle.data['text'], punctuation=bundle.data['punctuation'])     
-		return bundle
-
-	def get_list(self, request, **kwargs):
-		up = UserProfile.objects.get(user=request.user)
-		refs = Reference.objects.filter(commented=up)
-		res = []
-		for r in refs:
-			bundle = self.build_bundle(obj=r, request=request)
-			bundle = self.full_dehydrate(bundle)
-			res.append(bundle)
-
-		content = {}  
-		content['status'] = True
-		content['data'] = res
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data['objects']
-
-class InstantMessageResource(ModelResource):
-	class Meta:
-		object_class = InstantMessage
-		queryset = InstantMessage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class UserInstantMessageResource(ModelResource):
-	instant_message = fields.ToOneField(InstantMessageResource, 'instant_message', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserInstantMessage
-		queryset = UserInstantMessage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class SocialNetworkResource(ModelResource):
-	class Meta:
-		object_class = SocialNetwork
-		queryset = SocialNetwork.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class UserSocialNetworkResource(ModelResource):
-	social_network = fields.ToOneField(SocialNetworkResource, 'social_network', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserSocialNetwork
-		queryset = UserSocialNetwork.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
 
 class UniversityResource(ModelResource):
 	class Meta:
@@ -304,77 +81,6 @@ class UniversityResource(ModelResource):
     			field_req = {"type": "INTERNAL_ERROR", "extras":[]}
 		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
 
-class UserUniversityResource(ModelResource):
-	university = fields.ToOneField(UniversityResource, 'university', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserProfileStudiedUniversity
-		queryset = UserProfileStudiedUniversity.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class LanguageResource(ModelResource):
-	class Meta:
-		object_class = Language
-		resource_name = 'languages'
-		queryset = Language.objects.all()
-		list_allowed_methods = ['get']
-		include_resource_uri = False
-		fields = ['name']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		#authentication = AnonymousApiTokenAuthentication()
-		authorization = ReadOnlyAuthorization()
-		always_return_data = True
-		filtering = {
-			"name": ['exact'],
-		}
-
-	def get_list(self, request, **kwargs):
-		response = super(LanguageResource, self).get_list(request, **kwargs)
-		data = json.loads(response.content)
-		content = {}  
-		content['status'] = True
-		content['data'] = []
-		for lang in data:
-			content['data'].append(lang['name'])
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data["objects"]
-
-
-class UserLanguageResource(ModelResource):
-	language = fields.ToOneField(LanguageResource, 'language', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserLanguage
-		queryset = UserLanguage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-		validation = FormValidation(form_class=UserLanguageForm)
-
-class InterestsResource(ModelResource):
-	class Meta:
-		object_class = Interests
-		queryset = Interests.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-		fields = ['gender']
-
 class UserProfileResource(ModelResource):    
 
 	class Meta:
@@ -387,7 +93,6 @@ class UserProfileResource(ModelResource):
 		authentication = AnonymousApiTokenAuthentication()
 		authorization = Authorization()
 		always_return_data = True
-		validation = FormValidation(form_class=UserProfileForm)
 
 	def connected(self, user):
 		state = 'OFF'
@@ -399,68 +104,23 @@ class UserProfileResource(ModelResource):
 	# funcion para trabajar con las wings de un profile. Por ejemplo, GET profiles/me/wings lista mis wings
 	def prepend_urls(self):
 		return [
-			##/profiles/<profile_id>|me/accomodations/list
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/list%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('accomodation_collection'), name="api_list_wings"),
-			##/profiles/<profile_id>|me/accomodations/<accomodation_id> 
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('accomodation_detail'), name="api_detail_wing"),
-			# PREVIEW WING 34 OF PROFILE 2: GET /profiles/2/accomodations/34/preview
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/(?P<wing_id>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('accomodation_detail'), name="api_detail_wing"),
-			# PREVIEW ALL WINGS OF PROFILE 2: GET /profiles/2/accomodations/preview
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('accomodation_collection'), name="api_list_wings"),
-			# VIEW ALL WINGS FOR EDDITING: GET /profiles/2/accomodations/preview
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/accomodations%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('accomodation_collection'), name="api_list_wings"),
-			# GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('wing_collection'), name="api_list_wings"),
-
-			# /profiles/<profile_id>|me/relationships/
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_collection'), name="api_list_relationships"),
-			# /profiles/me/relationships/<profile_id>
-			url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_detail'), name="api_detail_relationships"),
-			# /profiles/<profile_id>|me/references
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('reference_collection'), name="api_list_references"),
-			# PREVIEW PROFILE: GET /profiles/2/preview
-			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('preview_profile'), name="api_detail_preview"),
+			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('wings_collection'), name="api_list_wings"),
+			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/wings/(?P<wing_id>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('wings_detail'), name="api_detail_wings")		
 		]
 
-	def accomodation_collection(self, request, **kwargs):
-		accomodation_resource = AccomodationsResource()
+	def wings_collection(self, request, **kwargs):
+		accomodation_resource = WingResource()
 		return accomodation_resource.dispatch_list(request, **kwargs)  
 
-	def accomodation_detail(self, request, **kwargs):
-		accomodation_resource = AccomodationsResource()
-		return accomodation_resource.dispatch_detail(request, **kwargs)
-
-	def relationship_collection(self, request, **kwargs):
-		rr = RelationshipResource()
-		return rr.dispatch_list(request, **kwargs)  
-
-	def relationship_detail(self, request, **kwargs):
-		rr = RelationshipResource()
-		return rr.dispatch_detail(request, **kwargs)
-
-	def reference_collection(self, request, **kwargs):
-		rr = ReferenceResource()
-		return rr.dispatch_list(request, **kwargs)
-
-	def preview_profile(self, request, **kwargs):
-		return self.dispatch_detail(request, **kwargs)
-
-	def wing_collection(self, request, **kwargs):
-		wing_resource = WingResource()
-		return wing_resource.dispatch_list(request, **kwargs)  
+	def wings_detail(self, request, **kwargs):
+		accomodation_resource = WingResource()
+		return accomodation_resource.dispatch_detail(request, **kwargs)  
 
 	def get_detail(self, request, **kwargs):
-		#Check if the user is valid		
+		#Check if the user is valid	
+		#import pdb; pdb.set_trace()	
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
@@ -1097,13 +757,6 @@ class UserProfileResource(ModelResource):
 		if prof.active is False:
 			return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
 
-		"""
-		TODO
-		avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BIG)
-		medium_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True)
-		thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_THUMB, blank = True)
-		"""
-
 		prof.birthday =parser.parse('%s-%s-%s' % (POST['birthYear'], POST['birthMonth'], POST['birthDay']))
 		#prof.show_birthday = POST['showBirthday']
 		prof.gender = POST['gender']
@@ -1425,7 +1078,8 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):				
+	def get_list(self, request, **kwargs):	
+		import pdb;			
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
@@ -1479,151 +1133,7 @@ class UserProfileResource(ModelResource):
 		data = self.paginate(search_list.jsonable(), request.GET)
 
 		if isinstance(data, HttpResponse): return data
-		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
-
-	def full_dehydrate(self, bundle):				
-		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-		bundle.data['first_name'] = bundle.obj.user.first_name
-		bundle.data['last_name'] = bundle.obj.user.last_name
-		bundle.data['verified'] = 'XXX'
-		#bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-		bundle.data['num_friends'] = 'XXX'
-		bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-		bundle.data['reply_rate'] = int(bundle.data['reply_rate'])
-		bundle.data['reply_time'] = int(bundle.data['reply_time'])
-		bundle.data['num_photos'] = 'XXX'
-		bundle.data['age'] = bundle.obj.get_age()
-		bundle.data['online'] = self.connected(bundle.obj.user)
-		from datetime import timedelta
-		d = timedelta(hours=1)
-		online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-		if online: bundle.data['last_login_date'] = "ON"
-		else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-
-		if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
-			# venimos de get_list => solamente devolver los campos requeridos
-			bundle.data['pending'] = 'XXX'
-			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'reply_rate', 'reply_time', 'resource_uri', 'online']
-			
-			for key, value in bundle.data.items():
-				if key not in permitted_fields: del bundle.data[key]
-			
-			if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
-			if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
-
-			if bundle.request.user.is_anonymous():
-				# borroneo del nombre y el avatar
-				"""
-				from django.conf import settings as django_settings
-				bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
-				"""
-				bundle.data['avatar'] = bundle.data['blur_avatar']
-				long_first = len(bundle.obj.user.first_name)
-				long_last = len(bundle.obj.user.last_name)
-				import string, random
-				ran_name = [random.choice(string.ascii_lowercase) for n in xrange(long_first)]
-				ran_last = [random.choice(string.ascii_lowercase) for n in xrange(long_last)]
-				ran_name = "".join(ran_name)
-				ran_last = "".join(ran_last)
-				ran_name = ran_name.capitalize()
-				ran_last = ran_last.capitalize()
-				bundle.data['first_name'] = ran_name
-				bundle.data['last_name'] = ran_last
-			else:
-				bundle.data['avatar'] = bundle.data['medium_avatar']
-			del bundle.data['blur_avatar']
-			del bundle.data['medium_avatar']
-		else:
-
-			# venimos de get_detail y ademas el usuario esta logueado
-			del bundle.data['blur_avatar']
-			del bundle.data['medium_avatar']
-			del bundle.data['thumb_avatar']
-			is_preview = bundle.request.path == self.get_resource_uri(bundle)+"/preview"
-			if is_preview:
-				del bundle.data['emails']
-				del bundle.data['social_networks']
-				del bundle.data['instant_messages']
-				del bundle.data['phone']
-				bundle.data['resource_uri'] += '/preview'
-
-				if bundle.data['show_birthday'] == 'N':
-					bundle.data['birthday'] = ""
-				elif bundle.data['show_birthday'] == 'P':
-					bday = str.split(str(bundle.data['birthday']),'-')
-					bundle.data['birthday'] = bday[1] + "-" + bday[2]
-				del bundle.data['show_birthday']
-			else:
-				bundle.data['birth_day'] = str(bundle.obj.birthday.day)
-				bundle.data['birth_month'] = str(bundle.obj.birthday.month)
-				bundle.data['birth_year'] = str(bundle.obj.birthday.year)
-				del bundle.data['birthday']
-
-		return bundle.data
-	
-	def alter_list_data_to_serialize(self, request, data):
-		return data["objects"]
-
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):    
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)
-				return response
-			except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
-				elif (isinstance(e.response, HttpUnauthorized)):
-					content = {}
-					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				elif (isinstance(e.response, HttpApplicationError)):
-					content = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
-					ccontent = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:				
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)
-
-		return wrapper
+		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)		
 
 class ContactResource(ModelResource):
 	
@@ -1826,11 +1336,22 @@ class PhotosResource(ModelResource):
 				url = i['s3_url']
 				img_id = i['image_identifier']
 				user_id = img_id.split("-")[0]
+				aux = img_id[1].split("_")
+				album_id = aux[1]
+				if (aux[0] == "big"):
+					url_big = url
+				else:
+					url_thumb = url
+
+			prof = UserProfile.objects.filter(pk=user_id)
+			if len(prof) == 1:
+				album = PhotoAlbums.objects.get(pk=album_id)
+				Photos.objects.create(author=prof, album=album, big_url= url_big, thumb_url = url_thumb, ordering = 1)
 		except:
 			#print POST["results"]["images"][0]['error']
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
-		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		return self.create_response(request, {"status":True, "updates":{"photos":True}}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt

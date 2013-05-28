@@ -80,3 +80,6 @@ class City(models.Model):
 
     def stringify(self):
         return '%s, %s, %s' % (self.name, self.region.name, self.region.country.name)
+
+    def jsonify(self):
+        return {'name':self.name, 'lat': self.lat, 'lon':self.lon, 'region':self.region.name, 'country': self.region.country.name}
