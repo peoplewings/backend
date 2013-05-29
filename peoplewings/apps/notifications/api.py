@@ -248,7 +248,8 @@ class NotificationsListResource(ModelResource):
 			state = token[0].is_user_connected()	
 		return state
 
-	def get_list(self, request, **kwargs):		
+	def get_list(self, request, **kwargs):	
+		
 		## We are doin it the hard way
 		try:
 			prof = UserProfile.objects.get(user = request.user)
