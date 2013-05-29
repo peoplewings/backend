@@ -44,9 +44,7 @@ class CustomBackend(object):
 		"""
 		activated = RegistrationProfile.objects.activate_user(activation_key)
 		if activated:
-			signals.user_activated.send(sender=self.__class__,
-										user=activated,
-										request=request)
+			signals.user_activated.send(sender=self.__class__, user=activated, request=request)
 		return activated
 
 	def registration_allowed(self, request):

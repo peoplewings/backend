@@ -51,12 +51,9 @@ INSTALLED_APPS = (
     'tastypie',
     # Project custom apps
     'peoplewings.apps.registration',
-    'peoplewings.apps.landing',
     'peoplewings.apps.people',
-    'peoplewings.apps.ajax',
     'peoplewings.apps.wings',
     'peoplewings.apps.cropper',
-    'peoplewings.apps.search',
     'peoplewings.apps.locations',
     'peoplewings.apps.notifications',
     'peoplewings.apps.feedback',

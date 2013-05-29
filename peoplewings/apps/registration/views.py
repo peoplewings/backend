@@ -20,9 +20,7 @@ from peoplewings.apps.registration.models import *
 from django.conf import settings
 
 
-def activate(request, backend,
-			 template_name='registration/activate.html',
-			 success_url=None, extra_context=None, **kwargs):
+def activate(request, backend, template_name='registration/activate.html', success_url=None, extra_context=None, **kwargs):
 	backend = get_backend(backend)
 	account = backend.activate(request, **kwargs)
 	if account:

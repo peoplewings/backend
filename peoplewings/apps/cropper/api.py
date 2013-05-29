@@ -24,8 +24,7 @@ from peoplewings.apps.cropper.forms import CroppedForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.libs.S3Custom import S3Custom
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.libs.ajax import CamelCaseJSONSerializer, json_response
 from tastypie.utils import dict_strip_unicode_keys
 
 import urllib, urllib2

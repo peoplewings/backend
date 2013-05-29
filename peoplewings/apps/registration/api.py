@@ -26,8 +26,8 @@ from django.contrib.auth.models import User
 from django.conf.urls import url
 from django.contrib.auth import authenticate
 
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.libs.ajax import json_response
+from peoplewings.libs.ajax import CamelCaseJSONSerializer
 
 from peoplewings.apps.people.models import UserProfile
 from wings.models import Wing
@@ -388,22 +388,6 @@ class ActivationResource(ModelResource):
 		authentication = Authentication()
 		authorization = Authorization()
 		always_return_data = True
-		validation = FormValidation(form_class=ActivationForm)
-
-	def custom_serialize(self, errors):
-		return errors.get('activation')
-
-	def error_response(self, errors, request):
-		serialized = self.custom_serialize(errors)
-		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
-
-	def obj_create(self, bundle, request=None, **kwargs):
-		request.POST = bundle.data
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
-		return bundle
 
 	def is_valid(self, POST):
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
@@ -415,6 +399,7 @@ class ActivationResource(ModelResource):
 				invalid['extras'].append('activation_key')
 		else:
 			field_req['extras'].append('activation_key')
+			
 	def post_list(self, request, **kwargs):
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
@@ -427,92 +412,6 @@ class ActivationResource(ModelResource):
 		result['email'] = data.email
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
-	def dehydrate(self, bundle):
-		bundle.data = {}
-		bundle.data['status'] = True
-		bundle.data['code'] = 201
-		bundle.data['data'] = 'Activation complete'        
-		return bundle
-
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:				
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)
-				content = {}
-				data = {}
-				content['status'] = True
-				return self.create_response(request, content, response_class = HttpResponse)
-			except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ActivationCompleted:
-				# This exception occurs when the account has already been activated
-				content = {}
-				errors = [{"type": "USED_KEY"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except NotAKey:
-				# This exception occurs when the provided key has not a valid format
-				content = {}
-				errors = [{"type": "INVALID_FIELD", "extras": ["activationKey"]}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				else: 
-					content = {}
-					errors = [{"type": "VALIDATION_ERROR"}]
-					errors['errors'] = errors
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except IntegrityError, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)               
-			except KeyExpired:
-				# This exception occurs when the provided key has expired
-				content = {}
-				errors = [{"type": "EXPIRED_KEY"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)
-
-		return wrapper
-
 class LoginResource(ModelResource):
 	form_data = None    
 	class Meta:

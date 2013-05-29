@@ -39,13 +39,10 @@ INSTALLED_APPS = (
     'storages',
     'compressor',       
     # Project custom apps
-    'peoplewings.apps.landing',
     'peoplewings.apps.registration',
     'peoplewings.apps.people',
-    'peoplewings.apps.ajax',
     'peoplewings.apps.wings',
     'peoplewings.apps.cropper',
-    'peoplewings.apps.search',
     'peoplewings.apps.locations',
     'peoplewings.apps.feedback',
     'peoplewings.libs.customauth',

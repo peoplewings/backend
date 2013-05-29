@@ -25,7 +25,7 @@ from django.db.models import Q
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.wings.models import Accomodation, PublicTransport, Wing
 from peoplewings.apps.wings.forms import *
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.libs.ajax import CamelCaseJSONSerializer
 from peoplewings.apps.locations.models import City, Region, Country
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.locations.api import CityResource

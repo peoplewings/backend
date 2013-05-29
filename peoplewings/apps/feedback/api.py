@@ -20,8 +20,7 @@ from django.contrib.auth.models import User
 from django.conf.urls import url
 from django.contrib.auth import authenticate
 
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer 
+from peoplewings.libs.ajax import CamelCaseJSONSerializer, json_response
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from peoplewings.apps.feedback.models import Feedback
 from peoplewings.apps.feedback.validation import FeedbackValidation

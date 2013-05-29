@@ -31,7 +31,7 @@ from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, 
 from people.domain import *
 from peoplewings.global_vars import *
 from peoplewings.apps.people.exceptions import *
-from peoplewings.apps.ajax.utils import json_response, CamelCaseJSONSerializer
+from peoplewings.libs.ajax import json_response, CamelCaseJSONSerializer
 from peoplewings.apps.registration.api import AccountResource
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, AnonymousApiTokenAuthentication
 from peoplewings.apps.locations.api import CityResource

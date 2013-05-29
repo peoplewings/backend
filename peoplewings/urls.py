@@ -52,13 +52,8 @@ v1_api.register(NotificationsThreadResource())
 v1_api.register(WingResource())
 
 urlpatterns = patterns('',
-    url(r'^$', 'peoplewings.apps.landing.views.welcome', name='home'),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^accounts/', include('peoplewings.apps.registration.backends.custom.urls')),
-    url(r'^ajax/', include('peoplewings.apps.ajax.urls')),
-    url(r'^cropper/', include('peoplewings.apps.cropper.urls')),
-    # API resources here...
-    (r'^api/', include(v1_api.urls)),	
+    url(r'^api/', include(v1_api.urls)),	
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Static files patterns for development:

@@ -69,4 +69,3 @@ class CamelCaseJSONSerializer(Serializer):
 def from_unicode_to_raw(x):
     json_serializer = serializers.get_serializer("json")()
     json_serializer.serialize(x)
-

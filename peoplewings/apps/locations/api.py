@@ -1,5 +1,5 @@
 from peoplewings.apps.locations.models import Country, Region, City
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.libs.ajax import CamelCaseJSONSerializer
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 
 from tastypie.resources import ModelResource

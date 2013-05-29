@@ -35,8 +35,7 @@ from peoplewings.apps.people.models import UserProfile
 from wings.models import Wing, PublicRequestWing
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation, Friendship
 
-from peoplewings.apps.ajax.utils import json_response
-from peoplewings.apps.ajax.utils import CamelCaseJSONSerializer
+from peoplewings.libs.ajax import CamelCaseJSONSerializer, json_response
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.libs.bussines import *
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication
