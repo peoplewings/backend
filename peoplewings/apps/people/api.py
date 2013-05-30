@@ -1166,67 +1166,6 @@ class ContactResource(ModelResource):
 			result['items'].append(aux.jsonable())
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
-				return response
-			except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
-				elif (isinstance(e.response, HttpUnauthorized)):
-					content = {}
-					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				elif (isinstance(e.response, HttpApplicationError)):
-					content = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
-					ccontent = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)
-
-		return wrapper
-
 class PhotosResource(ModelResource):
 	
 	class Meta:
@@ -1352,68 +1291,6 @@ class PhotosResource(ModelResource):
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True, "updates":{"photos":True}}, response_class = HttpResponse)
-
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
-
-				return response
-		   	except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors                             
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
-				elif (isinstance(e.response, HttpUnauthorized)):
-					content = {}
-					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors                             
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				elif (isinstance(e.response, HttpApplicationError)):
-					content = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
-					ccontent = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)
-
-		return wrapper
 
 class PhotoAlbumsResource(ModelResource):
 	
