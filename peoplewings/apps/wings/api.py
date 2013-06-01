@@ -63,7 +63,10 @@ class WingResource(ModelResource):
 	def get_list(self, request, **kwargs):
 		#Check authentication	
 		#print kwargs		
-		data = None			
+		data = None
+		if request.GET.has_key('list') and request.GET['list'] is True:
+			return self.create_response(request, {"status": True, "data": self.get_list_shrink(request)}, response_class=HttpResponse)
+
 		if str(request.user.pk) == str(kwargs['profile_id']):
 			#We have to list our own wings
 			data = []
@@ -92,13 +95,21 @@ class WingResource(ModelResource):
 		else:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
+	def self.get_list_shrink(self, request):
+		result = []
+		wings = Wing.objects.filter(author__pk=str(kwargs['profile_id']))
+		for w in wings:
+			result.append({"idWing": str(w.pk), "wingName": w.name})
+
+		return result
+
 	def get_generic_fields(self, w):
 		wing_obj = WingObj()
 		wing_obj.idWing = w.pk
 		wing_obj.author = w.author.pk
 		wing_obj.name = w.name
 		wing_obj.status = w.status
-		wing_obj.wing_type = w.wing_type
+		wing_obj.type = w.wing_type
 		wing_obj.dateStart = w.date_start
 		wing_obj.dateEnd = w.date_end
 		wing_obj.bestDays = w.best_days
@@ -106,55 +117,55 @@ class WingResource(ModelResource):
 		return wing_obj
 
 	def get_own_accomodation_fields(self, id_wing):		
-		fields = []
+		fields = {}
 		#import pdb; pdb.set_trace()
 		acc = Accomodation.objects.get(pk=id_wing)
-		fields.append({'sharingOnce': acc.sharing_once})
-		fields.append({'capacity': acc.capacity})
-		fields.append({'wheelchair': acc.wheelchair})
-		fields.append({'whereSleepingType': acc.where_sleeping_type})
-		fields.append({'smoking': acc.smoking})
-		fields.append({'iHavePet':acc.i_have_pet})
-		fields.append({'petsAllowed': acc.pets_allowed})
-		fields.append({'blankets': acc.blankets})
-		fields.append({'liveCenter': acc.live_center})		
-		fields.append({'about': acc.about})
+		fields.update({'sharingOnce': acc.sharing_once})
+		fields.update({'capacity': acc.capacity})
+		fields.update({'wheelchair': acc.wheelchair})
+		fields.update({'whereSleepingType': acc.where_sleeping_type})
+		fields.update({'smoking': acc.smoking})
+		fields.update({'iHavePet':acc.i_have_pet})
+		fields.update({'petsAllowed': acc.pets_allowed})
+		fields.update({'blankets': acc.blankets})
+		fields.update({'liveCenter': acc.live_center})		
+		fields.update({'about': acc.about})
 
-		fields.append({'address':acc.address})
-		fields.append({'number': acc.number})
-		fields.append({'additionalInformation': acc.additional_information})
-		fields.append({'postalCode': acc.postal_code})
+		fields.update({'address':acc.address})
+		fields.update({'number': acc.number})
+		fields.update({'additionalInformation': acc.additional_information})
+		fields.update({'postalCode': acc.postal_code})
 
-		fields.append({'PublicTransport': [i.name for i in acc.public_transport.all()]})
+		fields.update({'PublicTransport': [i.name for i in acc.public_transport.all()]})
 		if acc.preferred_female is True and acc.preferred_male is True:
-			fields.append({'preferredGender': 'Both'})
+			fields.update({'preferredGender': 'Both'})
 		elif acc.preferred_male is True:
-			fields.append({'preferredGender': 'Male'})
+			fields.update({'preferredGender': 'Male'})
 		else:
-			fields.append({'preferredGender': 'Female'})
+			fields.update({'preferredGender': 'Female'})
 		return fields
 
 	def get_other_accomodation_fields(self, id_wing):
 		fields = []
 		acc = Accomodation.objects.get(pk=id_wing)
-		fields.append({'sharingOnce': acc.sharing_once})
-		fields.append({'capacity': acc.capacity})
-		fields.append({'wheelchair': acc.wheelchair})
-		fields.append({'whereSleepingType': acc.where_sleeping_type})
-		fields.append({'smoking': acc.smoking})
-		fields.append({'iHavePet':acc.i_have_pet})
-		fields.append({'petsAllowed': acc.pets_allowed})
-		fields.append({'blankets': acc.blankets})
-		fields.append({'liveCenter': acc.live_center})		
-		fields.append({'about': acc.about})
+		fields.update({'sharingOnce': acc.sharing_once})
+		fields.update({'capacity': acc.capacity})
+		fields.update({'wheelchair': acc.wheelchair})
+		fields.update({'whereSleepingType': acc.where_sleeping_type})
+		fields.update({'smoking': acc.smoking})
+		fields.update({'iHavePet':acc.i_have_pet})
+		fields.update({'petsAllowed': acc.pets_allowed})
+		fields.update({'blankets': acc.blankets})
+		fields.update({'liveCenter': acc.live_center})		
+		fields.update({'about': acc.about})
 
-		fields.append({'publicTransports': [i.name for i in acc.public_transport.all()]})
+		fields.update({'publicTransports': [i.name for i in acc.public_transport.all()]})
 		if acc.preferred_female is True and acc.preferred_male is True:
-			fields.append({'preferredGender': 'Both'})
+			fields.update({'preferredGender': 'Both'})
 		elif acc.preferred_male is True:
-			fields.append({'preferredGender': 'Male'})
+			fields.update({'preferredGender': 'Male'})
 		else:
-			fields.append({'preferredGender': 'Female'})
+			fields.update({'preferredGender': 'Female'})
 		return fields
 
 	def construct_generic_post_params(self, request, POST):

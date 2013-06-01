@@ -26,7 +26,7 @@ class WingObj(object):
 		self.dateEnd=None
 		self.bestDays=None
 		self.city=None
-		self.extraFields=[]
+		self.extraFields={}
 
 	def jsonable(self):
 		res = dict()
