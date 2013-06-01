@@ -46,6 +46,11 @@ class NotificationsManager(models.Manager):
 		except Exception, e:
 			raise e
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = kwargs['reference'], kind = 'message', read = False, first_sender =  fs.first_sender, private_message = kwargs['content'])
+		thread = Notifications.objects.filter(reference = kwargs['reference'])
+		for i in thread:
+			i.first_sender_visible = True
+			i.second_sender_visible = True
+			i.save()
 
 	def respond_request(self, **kwargs):		
 		reference = kwargs['reference']
@@ -63,6 +68,11 @@ class NotificationsManager(models.Manager):
 
 		created = time.time()
 		notif = Requests.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, public_message = "", state = state, wing=wing)
+		thread = Notifications.objects.filter(reference = kwargs['reference'])
+		for i in thread:
+			i.first_sender_visible = True
+			i.second_sender_visible = True
+			i.save()
 		return notif
 
 	def respond_invite(self, **kwargs):		
@@ -81,6 +91,11 @@ class NotificationsManager(models.Manager):
 
 		created = time.time()
 		notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'invite', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
+		thread = Notifications.objects.filter(reference = kwargs['reference'])
+		for i in thread:
+			i.first_sender_visible = True
+			i.second_sender_visible = True
+			i.save()
 		return notif
 
 	def create_request(self, **kwargs):
@@ -126,6 +141,12 @@ class NotificationsManager(models.Manager):
 					i.first_sender_visible = False
 				else:
 					i.second_sender_visible = False
+				try:
+					alarms = NotificationsAlarm.objects.filter(receiver = user, reference=ref)
+					for a in alarms:
+						a.delete()
+				except:
+					pass
 				i.save()
 		except:
 			pass
