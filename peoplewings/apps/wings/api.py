@@ -185,38 +185,38 @@ class WingResource(ModelResource):
 		return result
 
 	def construct_accomodation_post_params(self, params, POST):
-		if POST.has_key('sharingOnce'):
-			params['sharing_once'] = POST['sharingOnce']
-		if POST.has_key('capacity'):
-			params['capacity'] = POST['capacity']
-		if POST.has_key('preferredGender'):
-			params['preferred_male'] = POST['preferredGender'] in ['Both', 'Male']
-		if POST.has_key('preferredGender'):
-			params['preferred_female'] = POST['preferredGender'] in ['Both', 'Female']
-		if POST.has_key('wheelchair'):
-			params['wheelchair'] = POST['wheelchair']
-		if POST.has_key('whereSleepingType'):
-			params['where_sleeping_type'] = POST['whereSleepingType']
-		if POST.has_key('smoking'):
-			params['smoking'] = POST['smoking']
-		if POST.has_key('iHavePet'):
-			params['i_have_pet'] = POST['iHavePet']
-		if POST.has_key('petsAllowed'):
-			params['pets_allowed'] = POST['petsAllowed']
-		if POST.has_key('blankets'):
-			params['blankets'] = POST['blankets']
-		if POST.has_key('liveCenter'):
-			params['live_center'] = POST['liveCenter']
-		if POST.has_key('about'):
-			params['about'] = POST['about']
-		if POST.has_key('address'):
-			params['address'] = POST['address']
-		if POST.has_key('number'):
-			params['number'] = POST['number']
-		if POST.has_key('additionalInformation'):
-			params['additional_information'] = POST['additionalInformation']
-		if POST.has_key('postalCode'):
-			params['postal_code'] = POST['postalCode']
+		if POST['extraFields'].has_key('sharingOnce'):
+			params['sharing_once'] = POST['extraFields']['sharingOnce']
+		if POST['extraFields'].has_key('capacity'):
+			params['capacity'] = POST['extraFields']['capacity']
+		if POST['extraFields'].has_key('preferredGender'):
+			params['preferred_male'] = POST['extraFields']['preferredGender'] in ['Both', 'Male']
+		if POST['extraFields'].has_key('preferredGender'):
+			params['preferred_female'] = POST['extraFields']['preferredGender'] in ['Both', 'Female']
+		if POST['extraFields'].has_key('wheelchair'):
+			params['wheelchair'] = POST['extraFields']['wheelchair']
+		if POST['extraFields'].has_key('whereSleepingType'):
+			params['where_sleeping_type'] = POST['extraFields']['whereSleepingType']
+		if POST['extraFields'].has_key('smoking'):
+			params['smoking'] = POST['extraFields']['smoking']
+		if POST['extraFields'].has_key('iHavePet'):
+			params['i_have_pet'] = POST['extraFields']['iHavePet']
+		if POST['extraFields'].has_key('petsAllowed'):
+			params['pets_allowed'] = POST['extraFields']['petsAllowed']
+		if POST['extraFields'].has_key('blankets'):
+			params['blankets'] = POST['extraFields']['blankets']
+		if POST['extraFields'].has_key('liveCenter'):
+			params['live_center'] = POST['extraFields']['liveCenter']
+		if POST['extraFields'].has_key('about'):
+			params['about'] = POST['extraFields']['about']
+		if POST['extraFields'].has_key('address'):
+			params['address'] = POST['extraFields']['address']
+		if POST['extraFields'].has_key('number'):
+			params['number'] = POST['extraFields']['number']
+		if POST['extraFields'].has_key('additionalInformation'):
+			params['additional_information'] = POST['extraFields']['additionalInformation']
+		if POST['extraFields'].has_key('postalCode'):
+			params['postal_code'] = POST['extraFields']['postalCode']
 		return params
 
 	def validate_POST(self, POST):
@@ -305,88 +305,88 @@ class WingResource(ModelResource):
 			else:
 				if POST['type'] == 'Accomodation':
 					#Validate Accomodation specific fields					
-					if POST.has_key('liveCenter'):
-						if POST['liveCenter'] == "":
+					if POST['extraFields'].has_key('liveCenter'):
+						if POST['extraFields']['liveCenter'] == "":
 							not_empty['extras'].append('liveCenter')
-						elif POST['liveCenter'] not in [True, False]:
+						elif POST['extraFields']['liveCenter'] not in [True, False]:
 							invalid['extras'].append('liveCenter')
 
-					if POST.has_key('petsAllowed'):
-						if POST['petsAllowed'] == "":
+					if POST['extraFields'].has_key('petsAllowed'):
+						if POST['extraFields']['petsAllowed'] == "":
 							not_empty['extras'].append('petsAllowed')
-						elif POST['petsAllowed'] not in [True, False]:
+						elif POST['extraFields']['petsAllowed'] not in [True, False]:
 							invalid['extras'].append('petsAllowed')
 
-					if POST.has_key('wheelchair'):
-						if POST['wheelchair'] == "":
+					if POST['extraFields'].has_key('wheelchair'):
+						if POST['extraFields']['wheelchair'] == "":
 							not_empty['extras'].append('wheelchair')
-						elif POST['wheelchair'] not in [True, False]:
+						elif POST['extraFields']['wheelchair'] not in [True, False]:
 							invalid['extras'].append('wheelchair')
 
-					if POST.has_key('sharingOnce'):
-						if POST['sharingOnce'] == "":
+					if POST['extraFields'].has_key('sharingOnce'):
+						if POST['extraFields']['sharingOnce'] == "":
 							not_empty['extras'].append('sharingOnce')
-						elif POST['sharingOnce'] not in [True, False]:
+						elif POST['extraFields']['sharingOnce'] not in [True, False]:
 							invalid['extras'].append('sharingOnce')
 
-					if POST.has_key('iHavePet'):
-						if POST['iHavePet'] == "":
+					if POST['extraFields'].has_key('iHavePet'):
+						if POST['extraFields']['iHavePet'] == "":
 							not_empty['extras'].append('iHavePet')
-						elif POST['iHavePet'] not in [True, False]:
+						elif POST['extraFields']['iHavePet'] not in [True, False]:
 							invalid['extras'].append('iHavePet')
 
-					if POST.has_key('blankets'):
-						if POST['blankets'] == "":
+					if POST['extraFields'].has_key('blankets'):
+						if POST['extraFields']['blankets'] == "":
 							not_empty['extras'].append('blankets')
-						elif POST['blankets'] not in [True, False]:
+						elif POST['extraFields']['blankets'] not in [True, False]:
 							invalid['extras'].append('blankets')
 					
-					if POST.has_key('capacity'):
-						if POST['capacity'] == "":
+					if POST['extraFields'].has_key('capacity'):
+						if POST['extraFields']['capacity'] == "":
 							not_empty['extras'].append('capacity')
-						elif int(POST['capacity']) not in range(10):
+						elif int(POST['extraFields']['capacity']) not in range(10):
 							invalid['extras'].append('capacity')
 
-					if POST.has_key('preferredGender'):
-						if POST['preferredGender'] == "":
+					if POST['extraFields'].has_key('preferredGender'):
+						if POST['extraFields']['preferredGender'] == "":
 							not_empty['extras'].append('preferredGender')
-						elif POST['preferredGender'] not in ['Male', 'Female', 'Both', 'None']:
+						elif POST['extraFields']['preferredGender'] not in ['Male', 'Female', 'Both', 'None']:
 							invalid['extras'].append('preferredGender')
 
-					if POST.has_key('whereSleepingType'):
-						if POST['whereSleepingType'] == "":
+					if POST['extraFields'].has_key('whereSleepingType'):
+						if POST['extraFields']['whereSleepingType'] == "":
 							not_empty['extras'].append('whereSleepingType')
-						elif POST['whereSleepingType'] not in ['C', 'P', 'S']:
+						elif POST['extraFields']['whereSleepingType'] not in ['C', 'P', 'S']:
 							invalid['extras'].append('whereSleepingType')
 
-					if POST.has_key('smoking'):
-						if POST['smoking'] == "":
+					if POST['extraFields'].has_key('smoking'):
+						if POST['extraFields']['smoking'] == "":
 							not_empty['extras'].append('smoking')
-						elif POST['smoking'] not in ['S', 'D', 'N']:
+						elif POST['extraFields']['smoking'] not in ['S', 'D', 'N']:
 							invalid['extras'].append('smoking')
 
-					if POST.has_key('about'):
-						if len(POST['about']) > 1000:
+					if POST['extraFields'].has_key('about'):
+						if len(POST['extraFields']['about']) > 1000:
 							too_long['extras'].append('about')
 
-					if POST.has_key('address'):
-						if POST['address'] == "":
+					if POST['extraFields'].has_key('address'):
+						if POST['extraFields']['address'] == "":
 							not_empty['extras'].append('address')
-						elif len(POST['address']) > 500:
+						elif len(POST['extraFields']['address']) > 500:
 							too_long['extras'].append('address')
 
-					if POST.has_key('number'):
-						if POST['number'] == "":
+					if POST['extraFields'].has_key('number'):
+						if POST['extraFields']['number'] == "":
 							not_empty['extras'].append('number')
-						elif len(POST['number']) > 50:
+						elif len(POST['extraFields']['number']) > 50:
 							too_long['extras'].append('number')
 
-					if POST.has_key('additionalInformation'):
-						if len(POST['additionalInformation']) > 500:
+					if POST['extraFields'].has_key('additionalInformation'):
+						if len(POST['extraFields']['additionalInformation']) > 500:
 							too_long['extras'].append('additionalInformation')
 
-					if POST.has_key('postalCode'):
-						if POST['postalCode'] == "":
+					if POST['extraFields'].has_key('postalCode'):
+						if POST['extraFields']['postalCode'] == "":
 							not_empty['extras'].append('postalCode')
 						elif len(POST['postalCode']) > 50:
 							too_long['extras'].append('postalCode')
@@ -420,7 +420,7 @@ class WingResource(ModelResource):
 		if (POST['type'] == 'Accomodation'):
 			params = self.construct_accomodation_post_params(params, POST)
 			acc = Accomodation.objects.create(**params)
-			import pdb; pdb.set_trace()
+			#import pdb; pdb.set_trace()
 			if POST.has_key('publicTransports'):
 				for i in POST['publicTransports']:
 					if len(PublicTransport.objects.filter(name=i)) == 1:
