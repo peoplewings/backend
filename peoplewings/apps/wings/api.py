@@ -95,7 +95,7 @@ class WingResource(ModelResource):
 		else:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
-	def self.get_list_shrink(self, request):
+	def get_list_shrink(self, request):
 		result = []
 		wings = Wing.objects.filter(author__pk=str(kwargs['profile_id']))
 		for w in wings:
