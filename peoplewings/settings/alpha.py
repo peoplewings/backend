@@ -75,6 +75,10 @@ FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
 FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
 FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
 
+NOTIF_EMAIL_HOST_USER = 'noreply@peoplewings.com'
+NOTIF_DEFAULT_FROM_EMAIL = 'noreply@peoplewings.com'
+NOTIF_SERVER_EMAIL = 'PEOPLEWINGS'
+
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"
 AWS_SECRET_ACCESS_KEY = "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"

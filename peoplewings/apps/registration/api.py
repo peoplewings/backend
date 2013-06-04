@@ -434,6 +434,7 @@ class LoginResource(ModelResource):
 		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
 
 	def obj_create(self, bundle, request=None, **kwargs):
+		import pdb; pdb.set_trace()
 		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)        

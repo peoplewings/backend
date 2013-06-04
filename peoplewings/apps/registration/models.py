@@ -129,7 +129,6 @@ class RegistrationProfile(models.Model):
 		activation_key_expired.boolean = True
 
 	def send_activation_email(self, site, kind='None'):
-
 		ctx_dict = {'activation_key': self.activation_key, 'site': site}
 		subject = render_to_string('registration/activation_email_subject.txt', ctx_dict)
 		# Email subject *must not* contain newlines
@@ -144,11 +143,11 @@ class RegistrationProfile(models.Model):
 		ctx_dict = {'reset_token': self.activation_key,
 					'email_user': user.email,
 					'site': site}
-		subject = render_to_string('registration/forgot_password_email_subject.txt', ctx_dict)
+		subject = render_to_string('notifications/sent_notification_subject', ctx_dict)
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
 		
-		message = render_to_string('registration/forgot_email.txt', ctx_dict)
+		message = render_to_string('registration/sent_notification_email.txt', ctx_dict)
 		
 		send_mail(subject, message, settings.FORGOT_SERVER_EMAIL, [self.user.email], fail_silently=False, auth_user=settings.FORGOT_EMAIL_HOST_USER)
 		return True
