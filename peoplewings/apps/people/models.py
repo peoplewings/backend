@@ -136,7 +136,6 @@ class UserProfile(models.Model):
 		cur = connection.cursor()
 		cur.callproc('batch_reply_rate', ())		
 		cur.close()
-		transaction.commit()
 
 
 class Relationship(models.Model):    

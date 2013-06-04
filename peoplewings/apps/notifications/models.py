@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import User
 from peoplewings.apps.people.models import UserProfile
 from peoplewings.apps.wings.models import Wing
 from django.db.models.signals import post_save, post_delete
@@ -7,6 +9,11 @@ from django.db.models import Q
 import uuid
 import time
 import copy
+
+from django.template.loader import render_to_string
+from django.utils.hashcompat import sha_constructor
+from django.utils.translation import ugettext_lazy as _
+from django.core.mail import send_mail
 
 TYPE_CHOICES = (
 		('A', 'Accepted'),
@@ -150,6 +157,38 @@ class NotificationsManager(models.Manager):
 				i.save()
 		except:
 			pass
+
+	def send_notification_email(self, site, user):
+		ctx_dict = {'username': user.first_name, 'site': site}
+		subject = render_to_string('notifications/sent_notifications_subject.txt', ctx_dict)
+
+		subject = ''.join(subject.splitlines())
+		message = render_to_string('notifications/sent_notifications_email.txt', ctx_dict)
+		send_mail(subject, message, settings.NOTIF_SERVER_EMAIL, [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
+		return True
+
+	@staticmethod
+	def cron_send_notif_emails():
+		users = User.objects.filter(is_superuser=False)
+		import pdb; pdb.set_trace()			
+		for user in users:		
+			alarms = NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user)).count()
+			if alarms > 0:
+				email_notifs = EmailNotifications.objects.filter(user=user)
+				if len(email_notifs) == 0:
+					self.send_notification_email(settings.SITE, user)
+					EmailNotifications.objects.create(user=user, last_notificated = time.time())
+				elif email_notifs.last_notificated < time.time() - 93600:
+					self.send_notification_email(settings.SITE, user)
+					email_notifs.last_notificated = time.time()
+					email_notifs.save()
+
+			
+
+
+class EmailNotifications(models.Model):
+	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	last_notificated = models.BigIntegerField(default=0)
 
 # Notifications class
 class Notifications(models.Model):
