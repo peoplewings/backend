@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'tastypie',
     'storages',
     'compressor',
+    'south',
     # Project custom apps
     'peoplewings.apps.registration',
     'peoplewings.apps.people',
@@ -69,6 +70,10 @@ REGISTER_SERVER_EMAIL = 'PEOPLEWINGS Account New'
 FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
 FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
 FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
+
+NOTIF_EMAIL_HOST_USER = 'noreply@peoplewings.com'
+NOTIF_DEFAULT_FROM_EMAIL = 'noreply@peoplewings.com'
+NOTIF_SERVER_EMAIL = 'PEOPLEWINGS'
 
 #IMG
 AWS_ACCESS_KEY_ID = "AKIAI5TSJI7DYXGRQDYA"

@@ -158,7 +158,26 @@ class NotificationsManager(models.Manager):
 		except:
 			pass
 
-	def send_notification_email(self, site, user):
+	@staticmethod
+	def cron_send_notif_emails():
+		users = User.objects.filter(is_superuser=False)
+		#import pdb; pdb.set_trace()			
+		for user in users:	
+			up = UserProfile.objects.get(user=user)	
+			alarms = NotificationsAlarm.objects.filter(receiver=up).count()
+			if alarms > 0:
+				email_notifs = EmailNotifications.objects.filter(user=up)
+				if len(email_notifs) == 0:
+					send_notification_email(settings.SITE, user)
+					#EmailNotifications.objects.create(user=up, last_notificated = time.time())
+				elif email_notifs.last_notificated < time.time() - 93600:
+					send_notification_email(settings.SITE, user)
+					email_notifs.last_notificated = time.time()
+					email_notifs.save()
+
+			
+
+def send_notification_email(site, user):
 		ctx_dict = {'username': user.first_name, 'site': site}
 		subject = render_to_string('notifications/sent_notifications_subject.txt', ctx_dict)
 
@@ -166,25 +185,6 @@ class NotificationsManager(models.Manager):
 		message = render_to_string('notifications/sent_notifications_email.txt', ctx_dict)
 		send_mail(subject, message, settings.NOTIF_SERVER_EMAIL, [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
 		return True
-
-	@staticmethod
-	def cron_send_notif_emails():
-		users = User.objects.filter(is_superuser=False)
-		import pdb; pdb.set_trace()			
-		for user in users:		
-			alarms = NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user)).count()
-			if alarms > 0:
-				email_notifs = EmailNotifications.objects.filter(user=user)
-				if len(email_notifs) == 0:
-					self.send_notification_email(settings.SITE, user)
-					EmailNotifications.objects.create(user=user, last_notificated = time.time())
-				elif email_notifs.last_notificated < time.time() - 93600:
-					self.send_notification_email(settings.SITE, user)
-					email_notifs.last_notificated = time.time()
-					email_notifs.save()
-
-			
-
 
 class EmailNotifications(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
