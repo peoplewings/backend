@@ -289,8 +289,10 @@ class FacebookLoginResource(ModelResource):
 
 	def register_with_fb(self, user, graph):		
 		try:
+			print user['email']
 			cur_user = User.objects.filter(email=user['email'])
 			if len(cur_user) == 0:
+				print '1'
 				new_user = User.objects.create(username=user['email'], first_name= user['first_name'], last_name=user['last_name'], email=user['email'], password=sha_constructor(str(random.random())).hexdigest()[:128], is_staff=False, is_active=True, is_superuser=False, last_login=datetime.now(), date_joined=datetime.now())
 				
 				kwarg = {}
@@ -308,6 +310,7 @@ class FacebookLoginResource(ModelResource):
 				new_profile = UserProfile.objects.create(**kwarg)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:
+				print '2'
 				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
 		except:
 			return False
