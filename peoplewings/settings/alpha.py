@@ -68,11 +68,11 @@ EMAIL_HOST_PASSWORD = 'PauVictor2&'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-REGISTER_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+REGISTER_EMAIL_HOST_USER = 'noreply@peoplewings.com'
 REGISTER_DEFAULT_FROM_EMAIL = 'register-noreply@peoplewings.com'
 REGISTER_SERVER_EMAIL = 'PEOPLEWINGS Account New'
 
-FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
+FORGOT_EMAIL_HOST_USER = 'noreply@peoplewings.com'
 FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
 FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
 

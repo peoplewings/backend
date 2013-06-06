@@ -4170,7 +4170,8 @@
         "places_visited" : "Jerez de la Frontera" ,   
         "places_gonna_go" : "Yerevan",
         "places_wanna_go" : "New Zealand",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
 {
@@ -4207,7 +4208,8 @@
         "places_visited" : "Boston, New York"  ,  
         "places_gonna_go" : "London",
         "places_wanna_go" : "New Zealand",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
 {
@@ -4244,7 +4246,8 @@
         "places_visited" : "Morocco"    ,
         "places_gonna_go" : "Estraperlo",
         "places_wanna_go" : "Seattle (USA)",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
 {
@@ -4281,7 +4284,8 @@
         "places_visited" : "London"    ,
         "places_gonna_go" : "Home",
         "places_wanna_go" : "Tailand",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
 {
@@ -4318,7 +4322,8 @@
         "places_visited" : "Afganistan",
         "places_gonna_go" : "San Francisco",
         "places_wanna_go" : "Eastern countrys, Tailand",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
   {
@@ -4355,7 +4360,8 @@
         "places_visited" : "Jerez de la Frontera" ,   
         "places_gonna_go" : "Yerevan",
         "places_wanna_go" : "New Zealand",
-        "last_login" : 1
+        "last_login" : 1,
+        "avatar_updated" : false
     }
   },
 {
