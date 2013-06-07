@@ -2,6 +2,10 @@
 import json
 import re
 import random, string
+from datetime import date
+
+from django.utils.hashcompat import sha_constructor
+from django.db import transaction
 
 from django.conf import settings
 from dateutil import parser
@@ -32,7 +36,7 @@ from peoplewings.apps.people.models import UserProfile
 from wings.models import Wing
 
 from peoplewings.apps.registration.exceptions import ActivationCompleted, NotAKey, KeyExpired, AuthFail, NotActive, DeletedAccount, BadParameters, ExistingUser, DupplicateEmailException
-from peoplewings.apps.registration.models import RegistrationProfile
+from peoplewings.apps.registration.models import RegistrationProfile, FacebookUser
 from peoplewings.apps.registration.views import register, activate, login, logout, delete_account, forgot_password, check_forgot_token, change_password
 from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, LoginForm, ForgotForm
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
@@ -40,10 +44,10 @@ from peoplewings.apps.registration.validation import ForgotValidation, AccountVa
 from peoplewings.apps.registration.signals import user_deleted
 from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
+from registration import *
 
 class UserSignUpResource(ModelResource):
-	
-	form_data = None
+
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -55,34 +59,6 @@ class UserSignUpResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 		validation = FormValidation(form_class=UserSignUpForm)
-
-	def custom_serialize(self, errors):
-		return errors.get('newuser')
-
-	def error_response(self, errors, request):
-		serialized = self.custom_serialize(errors)
-		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
-		
-	def obj_create(self, bundle, request=None, **kwargs):
-		request.POST = bundle.data
-		self.is_valid(bundle)
-		
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
-		bundle.obj = register(request, 'peoplewings.apps.registration.backends.custom.CustomBackend')      
-		return bundle
-
-	def dehydrate(self, bundle):
-		bundle.data = {}
-		if self.form_data and self.form_data._errors:
-			bundle.data['status'] = False
-			bundle.data['code'] = 401
-			bundle.data['errors'] = self.form_data._errors
-		else:
-			bundle.data['status'] = True
-			bundle.data['code'] = 201
-			bundle.data['data'] = bundle.obj.email        
-		return bundle
 
 	def email_validation(self, email):
 		if len(email) > 7 and len(email) <= 50:
@@ -183,68 +159,101 @@ class UserSignUpResource(ModelResource):
 		result['email'] = data
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
 		
-	def wrap_view(self, view):
-		@csrf_exempt
-		def wrapper(request, *args, **kwargs):
-			try:
-				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)
-				return response
-			except BadRequest, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
-				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
-			except ValidationError, e:
-				# Or do some JSON wrapping around the standard 500
-				content = {}
-				errors = [{"type": "VALIDATION_ERROR"}]
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)                               
-			except ImmediateHttpResponse, e:
-				if (isinstance(e.response, HttpMethodNotAllowed)):
-					content = {}
-					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse)
-				else: 
-					content = {}
-					errors = [{"type": "VALIDATION_ERROR"}]
-					errors['errors'] = errors
-					content['status'] = False
-					return self.create_response(request, content, response_class = HttpResponse)
-			except BadParameters, e:
-				# This exception occurs when the provided key has expired
-				content = {}
-				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ValueError, e:
-				# This exception occurs when the JSON is not a JSON...
-				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)
-			except ExistingUser, e:
-				# This exception occurs when the provided key has expired
-				content = {}
-				errors = [{"type": "EMAIL_IN_USE"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)       
-			except Exception, e:
-				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]          
-				content['status'] = False
-				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)  
+class FacebookLoginResource(ModelResource):
 
-		return wrapper
+	class Meta:
+		object_class = User
+		queryset = User.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		resource_name = 'authfb'
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def post_list(self, request, **kwargs):	
+		#import pdb; pdb.set_trace()
+		try:			
+			POST = json.loads(request.raw_post_data)
+			POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
+			facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			if facebook is None:
+				return self.create_response(request, {"status":False}, response_class = HttpResponse)
+
+			#See if the user is already registered in PPW...
+			fbid = facebook['uid']
+			graph = GraphAPI(access_token= facebook['access_token'])
+			user = graph.get_object("me")	
+			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
+			if len(fb_obj) == 0:						
+				if user is None:
+					print 'None user'
+					return self.create_response(request, {"status":False, "errors": {"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
+				res = self.register_with_fb(user, graph)
+				if res is False:
+					print 'Register failed'
+					return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
+				fb_obj = []
+				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
+
+			pic_path_big = graph.get_profile_picture_big()
+			pic_path_small = graph.get_profile_picture_small()
+			if pic_path_big is not None:
+				try:
+					prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
+					if 'https://peoplewings-test-media.s3.amazonaws.com/' not in prof.avatar:
+						if prof.avatar not in pic_path_big:
+							self.set_facebook_photo(pic_path_big, pic_path_small, prof)
+
+					elif django_settings.ANONYMOUS_BIG in prof.avatar:
+						self.set_facebook_photo(pic_path_big, pic_path_small, prof)
+				except:
+					pass
+
+			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = time.time())
+			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
+			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": "fuck"}}, response_class = HttpResponse)
+
+	def set_facebook_photo(self, path_big, path_small, prof):
+		prof.avatar = path_big
+		prof.medium_avatar = path_big
+		prof.thumb_avatar = path_small
+		prof.avatar_updated = True
+		prof.save()
+
+	def register_with_fb(self, user, graph):		
+		try:
+			print user['email']
+			cur_user = User.objects.filter(email=user['email'])
+			if len(cur_user) == 0:
+				print '1'
+				new_user = User.objects.create(username=user['email'], first_name= user['first_name'], last_name=user['last_name'], email=user['email'], password=sha_constructor(str(random.random())).hexdigest()[:128], is_staff=False, is_active=True, is_superuser=False, last_login=datetime.now(), date_joined=datetime.now())
+
+				kwarg = {}
+				kwarg['user_id'] = new_user.pk
+				if user.has_key('gender'):
+					if str(user['gender']) == 'male':
+						kwarg['gender'] = 'Male'
+					else:
+						kwarg['gender'] = 'Female'
+
+				if user.has_key('birthday'):
+					kwarg['birthday'] = date(int(str.split(str(user['birthday']), '/')[2]), int(str.split(str(user['birthday']), '/')[0]), int(str.split(str(user['birthday']), '/')[1]))
+
+				#pic_path = graph.get_profile_picture()				
+				new_profile = UserProfile.objects.create(**kwarg)
+				FacebookUser.objects.create(user=new_user, fbid=user['id'])
+			else:
+				print '2'
+				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
+		except:
+			return False
+		return True
+
+	
 
 class ActivationResource(ModelResource):
 	form_data = None    
