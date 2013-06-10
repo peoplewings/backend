@@ -27,7 +27,7 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference, , Photos, PhotoAlbums
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
 from people.domain import *
 from peoplewings.global_vars import *
@@ -566,9 +566,23 @@ class UserProfileResource(ModelResource):
 					else:
 						prof_obj.birthday = ""
 					"""
+					albums = PhotoAlbums.objects.filter(author=prof).order_by('ordering')
+					for album in albums:
+						album_obj = {}
+						album_obj['id'] = album.pk
+						album_obj['name'] = album.name
+						album_obj['photos'] = []
+						photos = Photos.objects.filter(album=album).order_by('ordering')
+						for photo in photos:
+							photo_obj = {}
+							photo_obj.id = photo.pk
+							photo_obj.big_url = photo.big_url
+							photo_obj.thumb_url = photo.thumb_url
+							photo_obj.ordering = photo.ordering
+							album_obj['photos'].append(photo_obj)
+						prof_obj.albums.append(album_obj)
+           
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
-					
-					#Return
 				else:
 					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
 			else:
@@ -686,9 +700,24 @@ class UserProfileResource(ModelResource):
 						prof_obj.last_name = prof.user.last_name
 						prof_obj.religion = prof.religion
 						prof_obj.show_birthday = 'F'
+
+						albums = PhotoAlbums.objects.filter(author=prof).order_by('ordering')
+						for album in albums:
+							album_obj = {}
+							album_obj['id'] = album.pk
+							album_obj['name'] = album.name
+							album_obj['photos'] = []
+							photos = Photos.objects.filter(album=album).order_by('ordering')
+							for photo in photos:
+								photo_obj = {}
+								photo_obj.id = photo.pk
+								photo_obj.big_url = photo.big_url
+								photo_obj.thumb_url = photo.thumb_url
+								photo_obj.ordering = photo.ordering
+								album_obj['photos'].append(photo_obj)
+							prof_obj.albums.append(album_obj)
+
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
-						
-						#Return
 					else:
 						return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
 
@@ -1002,8 +1031,38 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('occupation')
 
-
-
+	    if POST.has_key('albums'):
+	      if isinstance(POST['albums'], list):
+	        for item in POST['albums']:
+	          if (isinstance(item, dict)):
+	            if not item.has_key('name'):
+	              invalid['extras'].append('albums')
+	              break
+	            if not item.has_key('photos'):
+	              invalid['extras'].append('albums')
+	              break
+	            elif isinstance(item['photos'], list):
+	              for item2 in item['photos']:
+	                if isinstance(item2, dict):
+	                  if item2.has_key('id') and item2.has_key('thumb_url') and item2.has_key('bug_url'):
+	                    pass
+	                  else:
+	                    invalid['extras'].append('photos')
+	                    break
+	                else:
+	                  invalid['extras'].append('photos')
+	                  break
+	            else:
+	              invalid['extras'].append('photos')
+	              break
+	          else:
+	            invalid['extras'].append('albums')
+	            break
+	      else:
+	        invalid['extras'].append('albums')
+	    else:
+	      field_req['extras'].append('albums')
+	
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
 		if len(not_empty['extras']) > 0:
@@ -1119,6 +1178,18 @@ class UserProfileResource(ModelResource):
 		prof.inspired_by = POST['inspiredBy']
 		prof.quotes = POST['quotes']
 		prof.pw_opinion = POST['pwOpinion']
+
+		#Photo albums
+	    prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
+	    album_ordering = 1
+	    for album in POST['albums']:
+			album_obj = PhotoAlbums.objects.create(album_id=album['id'], name=album['name'], ordering=album_ordering, author=prof)
+			photo_ordering = 1
+			for photo in album['photos']:
+				Photos.objects.create(thumb_url=photo['thumb_url'],big_url=photo['big_url'], photo_id=photo['id'],author=prof, album=album_obj, ordering=photo_ordering)
+				photo_ordering = photo_ordering + 1
+				album_ordering = album_ordering + 1
+
 		prof.save()
 		return self.create_response(request, {"status":True}, response_class=HttpResponse)
 
@@ -1643,3 +1714,33 @@ class ContactResource(ModelResource):
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
+
+
+class PhotoCompletedResource(ModelResource):
+
+	class Meta:
+	object_class = Photos
+	queryset = Photos.objects.all()
+	allowed_methods = ['post']
+	include_resource_uri = False
+	serializer = CamelCaseJSONSerializer(formats=['json'])
+	authentication = Authentication()
+	authorization = Authorization()
+	always_return_data = True
+
+	def post_list(self, request, **kwargs):
+		#print '%s  %s' % ("POST", request.raw_post_data)
+		encoded = request.raw_post_data
+		POST= json.loads(encoded)
+		print POST
+		url = ""
+		"""
+		try:
+		  url = POST["results"]["images"][0]['s3_url']
+		  img_id = POST["results"]["images"][0]['image_identifier']
+		except:
+		  #print POST["results"]["images"][0]['error']
+		  return self.create_response(request, {"status":False}, response_class = HttpResponse)
+		"""
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)

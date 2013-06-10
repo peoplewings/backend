@@ -9,6 +9,7 @@ from peoplewings.apps.cropper.models import Cropped
 from peoplewings.apps.locations.models import City
 from peoplewings.global_vars import *
 from django.conf import settings as django_settings
+from django_extensions.db.fields import UUIDField
 
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
@@ -125,6 +126,7 @@ class UserProfile(models.Model):
 
 	active = models.BooleanField(default=True)
 
+
 	def get_age(self):			
 		today = date.today()
 		age = today.year - self.birthday.year
@@ -170,12 +172,26 @@ def createUserProfile(sender, user, request, **kwargs):
 		age = today.year - data.birthday.year
 		if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1
 		data.age = age
+		PhotoAlbums.objects.create(name='default', author=data)
 		data.save()
 
 def deleteUserProfile(sender, request, **kwargs):
 	prof = request.user.get_profile()
 	prof.delete()
-  
+
+class PhotoAlbums(models.Model):    
+	album_id = UUIDField(auto=True, unique=True, primary_key=True, null = False)
+	author = models.ForeignKey('UserProfile', related_name='photoalbums_author')
+	name = models.CharField(max_length=300, default='default')
+	ordering = models.IntegerField(default=1000)
+
+class Photos(models.Model):
+	photo_id = UUIDField(auto=True, unique=True, primary_key=True, null = False)
+	author = models.ForeignKey('UserProfile', related_name='photos_author')
+	album = models.ForeignKey('PhotoAlbums', related_name='album')
+	big_url = models.CharField(max_length=500, default='')
+	thumb_url = models.CharField(max_length=500, default='')
+	ordering = models.IntegerField(default=1000)
 
 user_registered.connect(createUserProfile)
 user_deleted.connect(deleteUserProfile)
