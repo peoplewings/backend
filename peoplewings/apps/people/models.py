@@ -132,10 +132,12 @@ class UserProfile(models.Model):
 		return age
 	
 	@staticmethod
+	@transaction.commit_manually
 	def cron_reply_rate():
 		cur = connection.cursor()
 		cur.callproc('batch_reply_rate', ())		
 		cur.close()
+		transaction.commit()
 
 
 class Relationship(models.Model):    
