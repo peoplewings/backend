@@ -27,7 +27,7 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference, , Photos, PhotoAlbums
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference, Photos, PhotoAlbums
 from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
 from people.domain import *
 from peoplewings.global_vars import *
@@ -295,13 +295,13 @@ class UniversityResource(ModelResource):
 		data = []
 		qset = Q(name__icontains=GET['name'])
 		try:
-    			result = University.objects.filter(qset)[:5]
+			result = University.objects.filter(qset)[:5]
 
-    			for uni in result:
-    				data.append({"name": uni.name})
-    			if len(GET['name']) == 0: data = []
-    		except Exception, e:
-    			field_req = {"type": "INTERNAL_ERROR", "extras":[]}
+			for uni in result:
+				data.append({"name": uni.name})
+			if len(GET['name']) == 0: data = []
+		except Exception, e:
+				field_req = {"type": "INTERNAL_ERROR", "extras":[]}
 		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
 
 class UserUniversityResource(ModelResource):
@@ -581,7 +581,7 @@ class UserProfileResource(ModelResource):
 							photo_obj.ordering = photo.ordering
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)
-           
+		   
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 				else:
 					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
@@ -1031,37 +1031,37 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('occupation')
 
-	    if POST.has_key('albums'):
-	      if isinstance(POST['albums'], list):
-	        for item in POST['albums']:
-	          if (isinstance(item, dict)):
-	            if not item.has_key('name'):
-	              invalid['extras'].append('albums')
-	              break
-	            if not item.has_key('photos'):
-	              invalid['extras'].append('albums')
-	              break
-	            elif isinstance(item['photos'], list):
-	              for item2 in item['photos']:
-	                if isinstance(item2, dict):
-	                  if item2.has_key('id') and item2.has_key('thumb_url') and item2.has_key('bug_url'):
-	                    pass
-	                  else:
-	                    invalid['extras'].append('photos')
-	                    break
-	                else:
-	                  invalid['extras'].append('photos')
-	                  break
-	            else:
-	              invalid['extras'].append('photos')
-	              break
-	          else:
-	            invalid['extras'].append('albums')
-	            break
-	      else:
-	        invalid['extras'].append('albums')
-	    else:
-	      field_req['extras'].append('albums')
+		if POST.has_key('albums'):
+			if isinstance(POST['albums'], list):
+				for item in POST['albums']:
+					if (isinstance(item, dict)):
+						if not item.has_key('name'):
+							invalid['extras'].append('albums')
+							break
+						if not item.has_key('photos'):
+							invalid['extras'].append('albums')
+							break
+						elif isinstance(item['photos'], list):
+							for item2 in item['photos']:
+								if isinstance(item2, dict):
+										if item2.has_key('id') and item2.has_key('thumb_url') and item2.has_key('bug_url'):
+											pass
+										else:
+											invalid['extras'].append('photos')
+											break
+								else:
+									invalid['extras'].append('photos')
+									break
+						else:
+							invalid['extras'].append('photos')
+							break
+					else:
+						invalid['extras'].append('albums')
+						break
+			else:
+				invalid['extras'].append('albums')
+		else:
+		  field_req['extras'].append('albums')
 	
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
@@ -1180,9 +1180,9 @@ class UserProfileResource(ModelResource):
 		prof.pw_opinion = POST['pwOpinion']
 
 		#Photo albums
-	    prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
-	    album_ordering = 1
-	    for album in POST['albums']:
+		prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
+		album_ordering = 1
+		for album in POST['albums']:
 			album_obj = PhotoAlbums.objects.create(album_id=album['id'], name=album['name'], ordering=album_ordering, author=prof)
 			photo_ordering = 1
 			for photo in album['photos']:
@@ -1719,14 +1719,14 @@ class ContactResource(ModelResource):
 class PhotoCompletedResource(ModelResource):
 
 	class Meta:
-	object_class = Photos
-	queryset = Photos.objects.all()
-	allowed_methods = ['post']
-	include_resource_uri = False
-	serializer = CamelCaseJSONSerializer(formats=['json'])
-	authentication = Authentication()
-	authorization = Authorization()
-	always_return_data = True
+		object_class = Photos
+		queryset = Photos.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
 
 	def post_list(self, request, **kwargs):
 		#print '%s  %s' % ("POST", request.raw_post_data)
