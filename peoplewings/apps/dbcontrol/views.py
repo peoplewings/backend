@@ -23,15 +23,17 @@ def get_script_list():
 	return script_list
 
 def apply_individual_script(scr, name):
-	script = imp.load_source('*', scr)
-	script.main()
 	try:
 		current = DbControl.objects.get(script_path= name)
 		if current.applied is False:
+			script = imp.load_source('*', scr)
+			script.main()
 			current.applied = True
 			current.save()
 	except:
-		DbControl.objects.create(script_path = name)
+		script = imp.load_source('*', scr)
+		script.main()
+		DbControl.objects.create(script_path = name, applied=True)
 
 
 

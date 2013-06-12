@@ -7,6 +7,7 @@ def main():
 		cursor = connection.cursor()
 		cursor.execute("ALTER TABLE customauth_apitoken ADD COLUMN remember boolean NOT NULL DEFAULT false")
 		cursor.close()
+		print 'Apitoken-Remember applyed succesfully'
 	except Exception, e:
 		transaction.rollback()
 		print 'Remember-Apitoken did not get executed properly'
