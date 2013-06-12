@@ -21,6 +21,7 @@ class ApiToken(models.Model):
 	token = models.CharField(max_length=256, blank=True, default='')
 	last = models.DateTimeField()
 	last_js = models.BigIntegerField(default=0)
+	remember = models.BooleanField(default=False)
 
 	def __unicode__(self):
 		return u"Token %s for %s used at %s" % (

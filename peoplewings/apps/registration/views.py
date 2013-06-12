@@ -91,11 +91,12 @@ def api_token_is_authenticated(bundle, **kwargs):
 	#import pdb; pdb.set_trace()
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
+	#import pdb; pdb.set_trace()
 	try: 
 		apitoken = ApiToken.objects.get(token = token)
 		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
 			return False
-		elif not apitoken.remember and apitoken.last_js + 900< long(datetime.datetime.now().strftime('%s')):
+		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
 			return False
 
 		apitoken.last = datetime.datetime.now()

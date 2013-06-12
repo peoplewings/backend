@@ -1423,7 +1423,7 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):				
+	def get_list(self, request, **kwargs):			
 		errors = self.validate_search(request.GET)		
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
@@ -1469,13 +1469,12 @@ class UserProfileResource(ModelResource):
 				else:
 					search_list.objects.append(search_obj)
 		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
-
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)		
 		if not isinstance(request.user, User):
 			search_list.make_dirty()
 
 		data = self.paginate(search_list.jsonable(), request.GET)
-
+		#import pdb; pdb.set_trace()
 		if isinstance(data, HttpResponse): return data
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
 
