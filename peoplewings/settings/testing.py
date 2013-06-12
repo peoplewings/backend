@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'peoplewings.apps.search',
     'peoplewings.apps.locations',
     'peoplewings.apps.feedback',
+    'peoplewings.apps.dbcontrol',
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
     'peoplewings.apps.notifications',
