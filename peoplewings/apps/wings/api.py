@@ -740,7 +740,7 @@ class AccomodationsResource(ModelResource):
 												
 		return transports
 		
-	def post_list(self, request, **kwargs):
+	def post_list(self, request, **kwargs):		
 		POST = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
@@ -777,6 +777,7 @@ class AccomodationsResource(ModelResource):
 
 		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
 		if not POST.has_key('about'): POST['about'] = ""
+		#∫import pdb; pdb.set_trace()
 		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])
 		for i in transport:
 			acc.public_transport.add(i)
