@@ -42,228 +42,6 @@ from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
 
-class RelationshipResource(ModelResource):
-	class Meta:
-		object_class = UserProfile
-		list_allowed_methods = ['get', 'post']
-		detail_allowed_methods = ['put', 'delete']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		include_resource_uri = True
-		fields = ['avatar']
-
-	def post_list(self, request, **kwargs):
-		if 'profile_id' not in kwargs or kwargs['profile_id'] != 'me':
-			return self.create_response(request, {"status" : False, "errors": [{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
-		try:
-			super(RelationshipResource, self).post_list(request, **kwargs)
-		except IntegrityError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		except FriendYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)
-
-	@transaction.commit_on_success
-	def obj_create(self, bundle, request=None, **kwargs):
-		sender = UserProfile.objects.get(user=request.user)
-		receiver = UserProfile.objects.get(pk=int(bundle.data['receiver'].split('/')[-1]))
-		if sender.id == receiver.id: raise FriendYourselfError()
-		if Relationship.objects.filter((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver))).exists():
-			raise IntegrityError()
-		rel = Relationship.objects.create(sender=sender, receiver=receiver, relationship_type="Pending")     
-		return bundle
-
-	def put_detail(self, request, **kwargs):
-		try:
-			super(RelationshipResource, self).put_detail(request, **kwargs)
-		except CannotAcceptOrRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		except InvalidAcceptRejectError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["type"]}]}, response_class=HttpResponse)
-		
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		dic = {"status":True}
-		return self.create_response(request, dic)        
-
-	@transaction.commit_on_success
-	def obj_update(self, bundle, request=None, **kwargs):
-		receiver = UserProfile.objects.get(user=request.user)
-		sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		if not Relationship.objects.filter(sender=sender, receiver=receiver, relationship_type="Pending").exists(): 
-			raise CannotAcceptOrRejectError()
-		tipo = bundle.data['type']
-		if tipo == "Accepted":
-			rel = Relationship.objects.get(sender=sender, receiver=receiver)
-			rel.relationship_type = tipo
-			rel.save()
-		elif tipo == "Rejected":
-			Relationship.objects.get(sender=sender, receiver=receiver).delete()
-		else:
-			raise InvalidAcceptRejectError()
-		return bundle
-
-	def delete_detail(self, request, **kwargs):
-		try:
-			super(RelationshipResource, self).delete_detail(request, **kwargs)
-		except ObjectDoesNotExist, e:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)  
-
-	def obj_delete(self, request=None, **kwargs):
-		receiver = UserProfile.objects.get(user=request.user)
-		sender = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		Relationship.objects.get((Q(sender=sender) & Q(receiver=receiver)) | (Q(receiver=sender) & Q(sender=receiver)), relationship_type="Accepted").delete()
-
-	def get_list(self, request, **kwargs):
-		up = UserProfile.objects.get(user=request.user)
-		# miramos si el cliente quiere listar las invitaciones pendientes o los amigos
-		status = request.GET['status']
-		if status == 'friends':
-			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Accepted")
-		elif status == 'pendings':
-			rels = Relationship.objects.filter(Q(sender=up) | Q(receiver=up), relationship_type="Pending")
-		else:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"INVALID_FIELD", "extras":["status"]}]}, response_class=HttpResponse)
-		res = []
-		for r in rels:
-			if r.sender == up: bundle = self.build_bundle(obj=r.receiver, request=request)
-			else: bundle = self.build_bundle(obj=r.sender, request=request)
-			bundle = self.full_dehydrate(bundle)
-			res.append(bundle)
-
-		content = {}  
-		content['status'] = True
-		content['data'] = res
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def dehydrate(self, bundle):
-		bundle.data['first_name'] = bundle.obj.user.first_name
-		bundle.data['last_name'] = bundle.obj.user.last_name
-		bundle.data['resource_uri'] = bundle.data['resource_uri'].replace('relationship', 'profiles')
-		return bundle
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data['objects']
-
-class ReferenceResource(ModelResource):
-	author = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'author', full=True, null=True)
-
-	class Meta:
-		object_class = Reference
-		list_allowed_methods = ['get', 'post']
-		#detail_allowed_methods = ['get']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		include_resource_uri = True
-		excludes = ['id']
-		validation = FormValidation(form_class=ReferenceForm)
-		
-	def dehydrate_author(self, bundle):
-		return_fields = ['avatar', 'first_name', 'last_name']
-		res = {}
-		for i in return_fields:
-			res[i] = bundle.data['author'][i]
-		return res
-
-	def post_list(self, request, **kwargs):
-		deserialized = self.deserialize(request, request.raw_post_data, format = 'application/json')
-		deserialized = self.alter_deserialized_detail_data(request, deserialized)
-		bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized), request=request)
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
-
-		try:
-			super(ReferenceResource, self).post_list(request, **kwargs)
-		except CommentYourselfError:
-			return self.create_response(request, {"status" : False, "errors": [{"type":"BAD_REQUEST"}]}, response_class=HttpResponse)
-		
-		dic = {"status":True}
-		return self.create_response(request, dic)
-
-	@transaction.commit_on_success
-	def obj_create(self, bundle, request=None, **kwargs):
-		author = UserProfile.objects.get(user=request.user)
-		commented = UserProfile.objects.get(pk=int(kwargs['profile_id']))
-		if author.id == commented.id: raise CommentYourselfError()
-		ref = Reference.objects.create(author=author, commented=commented, title=bundle.data['title'], text=bundle.data['text'], punctuation=bundle.data['punctuation'])     
-		return bundle
-
-	def get_list(self, request, **kwargs):
-		up = UserProfile.objects.get(user=request.user)
-		refs = Reference.objects.filter(commented=up)
-		res = []
-		for r in refs:
-			bundle = self.build_bundle(obj=r, request=request)
-			bundle = self.full_dehydrate(bundle)
-			res.append(bundle)
-
-		content = {}  
-		content['status'] = True
-		content['data'] = res
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data['objects']
-
-class InstantMessageResource(ModelResource):
-	class Meta:
-		object_class = InstantMessage
-		queryset = InstantMessage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class UserInstantMessageResource(ModelResource):
-	instant_message = fields.ToOneField(InstantMessageResource, 'instant_message', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserInstantMessage
-		queryset = UserInstantMessage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class SocialNetworkResource(ModelResource):
-	class Meta:
-		object_class = SocialNetwork
-		queryset = SocialNetwork.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class UserSocialNetworkResource(ModelResource):
-	social_network = fields.ToOneField(SocialNetworkResource, 'social_network', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserSocialNetwork
-		queryset = UserSocialNetwork.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
 class UniversityResource(ModelResource):
 	class Meta:
 		object_class = University
@@ -303,77 +81,6 @@ class UniversityResource(ModelResource):
 		except Exception, e:
 				field_req = {"type": "INTERNAL_ERROR", "extras":[]}
 		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
-
-class UserUniversityResource(ModelResource):
-	university = fields.ToOneField(UniversityResource, 'university', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserProfileStudiedUniversity
-		queryset = UserProfileStudiedUniversity.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-
-class LanguageResource(ModelResource):
-	class Meta:
-		object_class = Language
-		resource_name = 'languages'
-		queryset = Language.objects.all()
-		list_allowed_methods = ['get']
-		include_resource_uri = False
-		fields = ['name']
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		#authentication = AnonymousApiTokenAuthentication()
-		authorization = ReadOnlyAuthorization()
-		always_return_data = True
-		filtering = {
-			"name": ['exact'],
-		}
-
-	def get_list(self, request, **kwargs):
-		response = super(LanguageResource, self).get_list(request, **kwargs)
-		data = json.loads(response.content)
-		content = {}  
-		content['status'] = True
-		content['data'] = []
-		for lang in data:
-			content['data'].append(lang['name'])
-		return self.create_response(request, content, response_class=HttpResponse)
-
-	def alter_list_data_to_serialize(self, request, data):
-		return data["objects"]
-
-
-class UserLanguageResource(ModelResource):
-	language = fields.ToOneField(LanguageResource, 'language', full=True)
-	user_profile = fields.ToOneField('peoplewings.apps.people.api.UserProfileResource', 'user_profile')
-
-	class Meta:
-		object_class = UserLanguage
-		queryset = UserLanguage.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-		validation = FormValidation(form_class=UserLanguageForm)
-
-class InterestsResource(ModelResource):
-	class Meta:
-		object_class = Interests
-		queryset = Interests.objects.all()
-		allowed_methods = []
-		include_resource_uri = False
-		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = ApiTokenAuthentication()
-		authorization = Authorization()
-		always_return_data = True
-		fields = ['gender']
 
 class UserProfileResource(ModelResource):    
 
@@ -417,16 +124,6 @@ class UserProfileResource(ModelResource):
 			# GET THE NAMES, TYPES AND IDS OF ALL WINGS OF A USER: /profiles/<profile_id>/wings
 			url(r"^(?P<resource_name>%s)/(?P<profile_id>\d[\d/-]*)/wings%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('wing_collection'), name="api_list_wings"),
-
-			# /profiles/<profile_id>|me/relationships/
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/relationships%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_collection'), name="api_list_relationships"),
-			# /profiles/me/relationships/<profile_id>
-			url(r"^(?P<resource_name>%s)/me/relationships/(?P<profile_id>\d[\d/-]*)%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('relationship_detail'), name="api_detail_relationships"),
-			# /profiles/<profile_id>|me/references
-			url(r"^(?P<resource_name>%s)/(?P<profile_id>\w[\w/-]*)/references%s$" % (self._meta.resource_name, trailing_slash()), 
-				self.wrap_view('reference_collection'), name="api_list_references"),
 			# PREVIEW PROFILE: GET /profiles/2/preview
 			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
 				self.wrap_view('preview_profile'), name="api_detail_preview"),
@@ -439,18 +136,6 @@ class UserProfileResource(ModelResource):
 	def accomodation_detail(self, request, **kwargs):
 		accomodation_resource = AccomodationsResource()
 		return accomodation_resource.dispatch_detail(request, **kwargs)
-
-	def relationship_collection(self, request, **kwargs):
-		rr = RelationshipResource()
-		return rr.dispatch_list(request, **kwargs)  
-
-	def relationship_detail(self, request, **kwargs):
-		rr = RelationshipResource()
-		return rr.dispatch_detail(request, **kwargs)
-
-	def reference_collection(self, request, **kwargs):
-		rr = ReferenceResource()
-		return rr.dispatch_list(request, **kwargs)
 
 	def preview_profile(self, request, **kwargs):
 		return self.dispatch_detail(request, **kwargs)
@@ -500,7 +185,7 @@ class UserProfileResource(ModelResource):
 						prof_obj.last_login_date = "ON"					
 					education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 					for i in education:
-						prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
+						prof_obj.education.append(i.university.name)
 					
 					prof_obj.id = prof.pk
 					prof_obj.occupation = prof.occupation
@@ -618,7 +303,7 @@ class UserProfileResource(ModelResource):
 
 						education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 						for i in education:
-							prof_obj.education.append({"institution":i.university.name, "degree":i.degree})
+							prof_obj.education.append(i.university.name)
 						
 						prof_obj.id = prof.pk
 						prof_obj.occupation = prof.occupation
@@ -860,23 +545,11 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('education')
 			else:
 				for i in POST['education']:
-					if not isinstance(i, dict):
+					if not isinstance(i, unicode):
 						if 'education' not in invalid['extras']:
 							invalid['extras'].append('education')
-					else:
-						if not i.has_key('institution'):
-							if 'education' not in invalid['extras']:
-								invalid['extras'].append('education')
-						else:
-							if len(i['institution']) > 100:
-								too_long['extras'].append('education')
-						if not i.has_key('degree'):
-							if 'education' not in invalid['extras']:
-								invalid['extras'].append('education')
-						else:
-							if len(i['degree']) > 100:
-								too_long['extras'].append('education')
-
+					elif len(i) > 100:
+							too_long['extras'].append('education')
 
 		if POST.has_key('politicalOpinion'):
 			if len(POST['politicalOpinion']) > 500:
@@ -1160,11 +833,11 @@ class UserProfileResource(ModelResource):
 
 		[i.delete() for i in UserProfileStudiedUniversity.objects.filter(user_profile=prof)]
 		for i in POST['education']:
-			if len(University.objects.filter(name=i['institution'])) > 0:
-				univ = University.objects.get(name=i['institution'])
+			if len(University.objects.filter(name=i)) > 0:
+				univ = University.objects.get(name=i)
 			else:
-				univ = University.objects.create(name=i['institution'])
-			UserProfileStudiedUniversity.objects.create(user_profile=prof, university=univ, degree=i['degree'])
+				univ = University.objects.create(name=i)
+			UserProfileStudiedUniversity.objects.create(user_profile=prof, university=univ, )
 
 		prof.personal_philosophy = POST['personalPhilosophy']
 		prof.political_opinion = POST['politicalOpinion']

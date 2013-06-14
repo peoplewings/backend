@@ -48,7 +48,6 @@ class University(models.Model):
 class UserProfileStudiedUniversity(models.Model):
 	user_profile = models.ForeignKey('UserProfile')
 	university = models.ForeignKey('University')
-	degree = models.CharField(max_length=max_medium_len, blank=True)
 
 class Interests(models.Model):
 	gender = models.CharField(max_length = 6, choices = PREFERRED_GENDER_CHOICES, unique = True)
