@@ -168,8 +168,13 @@ class NotificationsManager(models.Manager):
 				email_notifs = EmailNotifications.objects.filter(user=user)
 				if len(email_notifs) == 0:
 					send_notification_email(settings.SITE, user)
-					#EmailNotifications.objects.create(user=user, last_notificated = time.time())
-				elif email_notifs.last_notificated < time.time() - 93600:
+					EmailNotifications.objects.create(user=UserProfile.objects.get(user=user), last_notificated = time.time())
+					#93600 sec = 26h
+				elif email_notifs.last_notificated < time.time() - 93600 and NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user), created__gte=time.time()-93600).count():
+					send_notification_email(settings.SITE, user)
+					email_notifs.last_notificated = time.time()
+					email_notifs.save()
+				elif email_notifs.last_notificated < time.time() - 604800:
 					send_notification_email(settings.SITE, user)
 					email_notifs.last_notificated = time.time()
 					email_notifs.save()

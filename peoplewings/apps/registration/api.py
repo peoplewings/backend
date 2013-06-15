@@ -741,21 +741,21 @@ class AccountResource(ModelResource):
 		field_req = {"type":"FIELD_REQUIRED", "extras": []}
 		too_long = {"type":"TOO_LONG", "extras": []}
 		invalid = {"type":"INVALID_FIELD", "extras": []}
-
+	
 		if 'resource' in PUT.keys():
-			if 'firstName' in PUT.keys():
+			if 'firstName' in PUT['resource'].keys():
 				if len(PUT['resource']['firstName']) > 14 or len(PUT['resource']['firstName']) < 1:
 					invalid['extras'].append('firstName')
 
-			if 'lastName' in PUT.keys():
+			if 'lastName' in PUT['resource'].keys():
 				if len(PUT['resource']['lastName']) > 30 or len(PUT['resource']['lastName']) < 1:
 					invalid['extras'].append('lastName')
 
-			if 'password' in PUT.keys():
+			if 'password' in PUT['resource'].keys():
 				if len(PUT['resource']['password']) > 20 or len(PUT['resource']['password']) < 8:
 					invalid['extras'].append('password')
 
-			if 'email' in PUT.keys():
+			if 'email' in PUT['resource'].keys():
 				if len(PUT['resource']['email']) > 50 or len(PUT['resource']['email']) < 7:
 					invalid['extras'].append('email')
 
