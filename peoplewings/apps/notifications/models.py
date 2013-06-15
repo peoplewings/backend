@@ -291,15 +291,11 @@ class NotificationsAlarm(models.Model):
 	created = models.BigIntegerField(default=0)
 
 def put_alarm(sender, instance, signal, *args, **kwargs):
-	notif = NotificationsAlarm()
 	notif_aux= Notifications.objects.get(pk=instance.notifications_ptr.pk)
 	filters = Q(reference= notif_aux.reference)&Q(receiver=notif_aux.receiver)
 	if NotificationsAlarm.objects.filter(filters).count() == 0:
-		notif.receiver = notif_aux.receiver
-		notif.notificated = False
-		notif.reference = notif_aux.reference
-		notif.created = time.time()
-		notif.save()
+		NotificationsAlarm.objects.create(receiver= notif_aux.receiver, reference= notif_aux.reference, created=time.time())
+
 def del_alarm(sender, instance, signal, *args, **kwargs):
 	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
 	NotificationsAlarm.objects.filter(filters).delete()

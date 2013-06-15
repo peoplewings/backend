@@ -771,9 +771,7 @@ class NotificationsThreadResource(ModelResource):
 
 
 	def delete_alarms(self, ref, me):
-		to_delete= NotificationsAlarm.objects.filter(reference = ref, receiver=me)
-		for i in to_delete:
-			i.delete()
+		NotificationsAlarm.objects.filter(reference=ref, receiver=me).delete()
 
 	def connected(self, user):
 		state = 'OFF'

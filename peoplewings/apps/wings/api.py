@@ -91,7 +91,7 @@ class WingResource(ModelResource):
 			if len(errors) > 0:
 					return self.create_response(request, {"status" : False, "errors": errors}, response_class = HttpResponse)
 
-			prof = UserProfile.objects.get(pk=request.GET['profile'])			
+			prof = UserProfile.objects.get(pk=request.GET['profile'])		
 			w = Wing.objects.filter(Q(author=prof)&Q(active=True))		
 			objects = []
 			for i in w:
