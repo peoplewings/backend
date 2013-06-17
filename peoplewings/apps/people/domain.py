@@ -4,6 +4,10 @@ import json
 from notifications.models import Notifications
 from django.db.models import Q
 from people.models import UserProfile
+from notifications.models import Requests, Invites
+import time
+
+from operator import attrgetter
 
 class Contacts(object):
 	
@@ -44,6 +48,12 @@ class SearchObject(object):
 		self.ctrl_user = None
 		self.ctrl_online = None
 
+		self._experience_score= None
+		self._responsive_score= None
+		self._reqinv_score= None
+		self._final_score= None
+
+
 	def jsonable(self):
 		res = dict()			
 		for key, value in self.__dict__.items():   
@@ -68,12 +78,12 @@ class SearchObjectManager(object):
 			res.append(self.jsonable_item(i))
 		return res
 
-	def score_experience(self, data):
+	def score_experience(self, data):		
 		photo_score = getattr(settings, 'PHOTO_SCORE', 0)
 		max_photos = getattr(settings, 'MAX_UPLOADED_PHOTOS', 0)
 		for i in data:
 			#To be done
-			i['_experience_score'] = 0
+			i._experience_score = 0
 		return data
 
 	def score_responsive(self, data):
@@ -95,22 +105,22 @@ class SearchObjectManager(object):
 
 		for i in data:
 			score = 0
-			if self.reply_rate == 100: score = rr_100
-			elif self.reply_rate >= 90: score = rr_90
-			elif self.reply_rate >= 80: score = rr_80
-			elif self.reply_rate >= 70: score = rr_70
-			elif self.reply_rate >= 60: score = rr_60
-			elif self.reply_rate >= 50: score = rr_50
+			if i.reply_rate == 100: score = rr_100
+			elif i.reply_rate >= 90: score = rr_90
+			elif i.reply_rate >= 80: score = rr_80
+			elif i.reply_rate >= 70: score = rr_70
+			elif i.reply_rate >= 60: score = rr_60
+			elif i.reply_rate >= 50: score = rr_50
 			else: score = rr_sub50
 
-			if self.reply_time <= 3600: score = score + rt_1
-			elif self.reply_time <= 3600 * 4: score = score + rt_4
-			elif self.reply_time <= 3600 * 12: score = score + rt_12
-			elif self.reply_time <= 3600 * 24: score = score + rt_24
-			elif self.reply_time <= 3600 * 48: score = score + rt_48
-			elif self.reply_time <= 3600 * 24 * 7: score = score + rt_1w
+			if i.reply_time <= 3600: score = score + rt_1
+			elif i.reply_time <= 3600 * 4: score = score + rt_4
+			elif i.reply_time <= 3600 * 12: score = score + rt_12
+			elif i.reply_time <= 3600 * 24: score = score + rt_24
+			elif i.reply_time <= 3600 * 48: score = score + rt_48
+			elif i.reply_time <= 3600 * 24 * 7: score = score + rt_1w
 			else: score = score + rt_super1w
-			i['_responsive_score'] = score
+			i._responsive_score= score
 		return data
 
 	def score_reqinv(self, data):
@@ -136,7 +146,7 @@ class SearchObjectManager(object):
 			score = 0
 			n24 = 0
 			prof = UserProfile.objects.get(pk=i.profile_id)
-			notifs = Request.objects.filter(Q(receiver= prof)&Q(created__gte= (time.time() - 3600*24)))
+			notifs = Requests.objects.filter(Q(receiver= prof)&Q(created__gte= (time.time() - 3600*24)))
 			for n in notifs:
 				if n.state == 'P':
 					n24 = n24 + 1
@@ -145,7 +155,7 @@ class SearchObjectManager(object):
 				if n.state == 'P':
 					n24 = n24 + 1
 			n1w = 0
-			notifs = Request.objects.filter(Q(receiver= prof)&Q(created__gte= (time.time() - 3600*24*7)))
+			notifs = Requests.objects.filter(Q(receiver= prof)&Q(created__gte= (time.time() - 3600*24*7)))
 			for n in notifs:
 				if n.state == 'P':
 					n1w = n1w + 1
@@ -163,7 +173,6 @@ class SearchObjectManager(object):
 			else: score = pop_24_super20
 
 			if n1w == 0: score = score + pop_1w_0
-			elif n1w < 5: score = score + pop_1w_1
 			elif n1w < 10: score = score + pop_1w_5
 			elif n1w < 15: score = score + pop_1w_10
 			elif n1w < 20: score = score + pop_1w_15
@@ -173,11 +182,11 @@ class SearchObjectManager(object):
 			elif n1w < 70: score = score + pop_1w_50
 			else: score = score + pop_1w_70
 
-			i['_reqinv_score'] = score
+			i._reqinv_score = score
 		return data
 
 	def sum_score(self, obj):
-		obj['final_score'] = obj['_reqinv_score'] + obj['_responsive_score'] + obj['_experience_score']
+		obj._final_score = obj._reqinv_score + obj._responsive_score + obj._experience_score
 		return obj
 
 	def order_by_relevance_score(self, data):
@@ -185,7 +194,7 @@ class SearchObjectManager(object):
 		data = self.score_responsive(data)
 		data = self.score_reqinv(data)
 		data = [self.sum_score(i) for i in data]
-		return sorted(data, key=attrgetter('final_score'), reverse=True)
+		return sorted(data, key=attrgetter('_final_score'), reverse=True)
 
 	def order_by_relevance_plus_news(self, data):
 		old = list(data)
@@ -219,21 +228,23 @@ class SearchObjectManager(object):
 		while idx_old < length:
 			if old[idx_old] not in final:
 				final.append(old[idx_old])
+			idx_old = idx_old + 1
 
 		while idx_new < length:
 			if new[idx_new] not in final:
 				final.append(new[idx_new])
+			idx_new = idx_new + 1
 		return final
 
-	def order_by_relevance(self):
+	def order_by_relevance(self):		
 		#Split onlines and offlines
-		online = [i for i in self.objects if i._online == True]
-		offline = [i for i in self.objects if i._online == False]
-
+		online = [i for i in self.objects if i.online == True]
+		offline = [i for i in self.objects if i.online == False]
+		
 		online = self.order_by_relevance_plus_news(online)
 		offline = self.order_by_relevance_plus_news(offline)
 
-		return online + offline
+		self.objects= online + offline
 
 	def make_dirty(self):
 		import string, random

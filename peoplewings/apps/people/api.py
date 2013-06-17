@@ -1125,7 +1125,7 @@ class UserProfileResource(ModelResource):
 				search_obj.languages = self.parse_languages(i)
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-				search_obj.ctrl_online =  self.connected(i.user) in ['ON', 'AFK']
+				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
 				if request.GET['type'] == 'Applicant':										
 					filters = self.make_publicreq_search_filters(request.GET, i)
@@ -1142,7 +1142,10 @@ class UserProfileResource(ModelResource):
 				else:
 					search_list.objects.append(search_obj)
 		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)		
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
+
+		search_list.order_by_relevance()
+
 		if not isinstance(request.user, User):
 			search_list.make_dirty()
 
@@ -1150,89 +1153,6 @@ class UserProfileResource(ModelResource):
 		#import pdb; pdb.set_trace()
 		if isinstance(data, HttpResponse): return data
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
-
-	def full_dehydrate(self, bundle):				
-		bundle = super(UserProfileResource, self).full_dehydrate(bundle)
-		bundle.data['first_name'] = bundle.obj.user.first_name
-		bundle.data['last_name'] = bundle.obj.user.last_name
-		bundle.data['verified'] = 'XXX'
-		#bundle.data['num_friends'] = Relationship.objects.filter(Q(sender=bundle.obj) | Q(receiver=bundle.obj), relationship_type='Accepted').count()
-		bundle.data['num_friends'] = 'XXX'
-		bundle.data['num_references'] = Reference.objects.filter(commented=bundle.obj).count()
-		bundle.data['reply_rate'] = int(bundle.data['reply_rate'])
-		bundle.data['reply_time'] = int(bundle.data['reply_time'])
-		bundle.data['num_photos'] = 'XXX'
-		bundle.data['age'] = bundle.obj.get_age()
-		bundle.data['online'] = self.connected(bundle.obj.user)
-		from datetime import timedelta
-		d = timedelta(hours=1)
-		online = ApiToken.objects.filter(user=bundle.obj.user, last__gte=date.today()-d).exists()
-		if online: bundle.data['last_login_date'] = "ON"
-		else: bundle.data['last_login_date'] = bundle.obj.user.last_login.strftime("%a %b %d %H:%M:%S %Y")
-
-		if bundle.request.path not in (self.get_resource_uri(bundle), self.get_resource_uri(bundle)+"/preview"):
-			# venimos de get_list => solamente devolver los campos requeridos
-			bundle.data['pending'] = 'XXX'
-			permitted_fields = ['first_name', 'last_name' , 'medium_avatar', 'blur_avatar', 'age', 'languages', 'occupation', 'all_about_you', 'current', 'verified', 'num_friends', 'num_references', 'pending', 'reply_rate', 'reply_time', 'resource_uri', 'online']
-			
-			for key, value in bundle.data.items():
-				if key not in permitted_fields: del bundle.data[key]
-			
-			if 'lat' in bundle.data['current']: del bundle.data['current']['lat']
-			if 'lon' in bundle.data['current']: del bundle.data['current']['lon']            
-
-			if bundle.request.user.is_anonymous():
-				# borroneo del nombre y el avatar
-				"""
-				from django.conf import settings as django_settings
-				bundle.data['avatar'] = django_settings.ANONYMOUS_AVATAR
-				"""
-				bundle.data['avatar'] = bundle.data['blur_avatar']
-				long_first = len(bundle.obj.user.first_name)
-				long_last = len(bundle.obj.user.last_name)
-				import string, random
-				ran_name = [random.choice(string.ascii_lowercase) for n in xrange(long_first)]
-				ran_last = [random.choice(string.ascii_lowercase) for n in xrange(long_last)]
-				ran_name = "".join(ran_name)
-				ran_last = "".join(ran_last)
-				ran_name = ran_name.capitalize()
-				ran_last = ran_last.capitalize()
-				bundle.data['first_name'] = ran_name
-				bundle.data['last_name'] = ran_last
-			else:
-				bundle.data['avatar'] = bundle.data['medium_avatar']
-			del bundle.data['blur_avatar']
-			del bundle.data['medium_avatar']
-		else:
-
-			# venimos de get_detail y ademas el usuario esta logueado
-			del bundle.data['blur_avatar']
-			del bundle.data['medium_avatar']
-			del bundle.data['thumb_avatar']
-			is_preview = bundle.request.path == self.get_resource_uri(bundle)+"/preview"
-			if is_preview:
-				del bundle.data['emails']
-				del bundle.data['social_networks']
-				del bundle.data['instant_messages']
-				del bundle.data['phone']
-				bundle.data['resource_uri'] += '/preview'
-
-				if bundle.data['show_birthday'] == 'N':
-					bundle.data['birthday'] = ""
-				elif bundle.data['show_birthday'] == 'P':
-					bday = str.split(str(bundle.data['birthday']),'-')
-					bundle.data['birthday'] = bday[1] + "-" + bday[2]
-				del bundle.data['show_birthday']
-			else:
-				bundle.data['birth_day'] = str(bundle.obj.birthday.day)
-				bundle.data['birth_month'] = str(bundle.obj.birthday.month)
-				bundle.data['birth_year'] = str(bundle.obj.birthday.year)
-				del bundle.data['birthday']
-
-		return bundle.data
-	
-	def alter_list_data_to_serialize(self, request, data):
-		return data["objects"]
 
 	def wrap_view(self, view):
 		@csrf_exempt
