@@ -61,7 +61,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #SITE
-SITE = 'http://alpha.peoplewings.com/'
+SITE = 'https://alpha.peoplewings.com/'
 BACKEND_SITE = 'https://peoplewings-be-alpha.herokuapp.com/api/v1/'
 
 # SMTP settings
@@ -78,7 +78,7 @@ FORGOT_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
 FORGOT_DEFAULT_FROM_EMAIL = 'accounts-noreply@peoplewings.com'
 FORGOT_SERVER_EMAIL = 'PEOPLEWINGS Account Recovery'
 
-NOTIF_EMAIL_HOST_USER = 'noreply@peoplewings.com'
+NOTIF_EMAIL_HOST_USER = 'accounts-noreply@peoplewings.com'
 NOTIF_DEFAULT_FROM_EMAIL = 'noreply@peoplewings.com'
 NOTIF_SERVER_EMAIL = 'PEOPLEWINGS'
 

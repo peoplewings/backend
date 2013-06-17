@@ -1,7 +1,7 @@
 Hi {{ username }},
 
-Somebody has sent you a new message!
-To check it out, visit our page at {{ site }} and try to reply as soon as possible.
+You have unread messages in your PEOPLEWINGS inbox!
+To check them out, visit our page at {{ site }} and try to reply as soon as possible.
 
 
 Have fun!

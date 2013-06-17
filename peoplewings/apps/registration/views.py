@@ -20,9 +20,7 @@ from peoplewings.apps.registration.models import *
 from django.conf import settings
 
 
-def activate(request, backend,
-			 template_name='registration/activate.html',
-			 success_url=None, extra_context=None, **kwargs):
+def activate(request, backend, template_name='registration/activate.html', success_url=None, extra_context=None, **kwargs):
 	backend = get_backend(backend)
 	account = backend.activate(request, **kwargs)
 	if account:
@@ -57,7 +55,10 @@ def register(request, POST, backend, success_url=None, form_class=None,
 	return form
 
 def do_login(request, username, password):
-	user = authenticate(username=username, password=password)
+	try:
+		user = authenticate(username=username, password=password)
+	except:
+		user = None
 	if user:
 		if user.is_active:
 			# Update last login
@@ -74,9 +75,9 @@ def login(bundle):
 	user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
 	## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
 	if 'remember' in bundle.data and bundle.data['remember'] == 'on':
-		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.strptime('01-01-2200 00:00', '%d-%m-%Y %H:%M'), last_js = time.time())
+		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')), remember=True)
 	else:
-		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js = time.time())
+		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js =int(datetime.datetime.now().strftime('%s')))
 	## Links the user to the token
 	api_token.save()
 	try:
@@ -87,15 +88,19 @@ def login(bundle):
 	return ret
 
 def api_token_is_authenticated(bundle, **kwargs):
+	#import pdb; pdb.set_trace()
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
+	#import pdb; pdb.set_trace()
 	try: 
-		if (settings.LOGIN_TIME == 0):
-			apitoken = ApiToken.objects.get(token = token)
-		else:
-			apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))
-		if apitoken.last < datetime.datetime.utcnow().replace(tzinfo=utc): 
-			apitoken.last = datetime.datetime.utcnow().replace(tzinfo=utc)   
+		apitoken = ApiToken.objects.get(token = token)
+		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
+			return False
+		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
+			return False
+
+		apitoken.last = datetime.datetime.now()
+		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
 		user = User.objects.get(pk=apitoken.user_id)
 		return user        
@@ -106,10 +111,13 @@ def control_is_authenticated(bundle, **kwargs):
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
 	try: 
-		if (settings.LOGIN_TIME == 0):
-			apitoken = ApiToken.objects.get(token = token)
-		else:
-			apitoken = ApiToken.objects.get(token = token, last__gt = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(seconds=settings.LOGIN_TIME)))				
+		apitoken = ApiToken.objects.get(token = token)
+		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
+			return False
+		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
+			return False
+
+		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
 		user = User.objects.get(pk=apitoken.user_id)
 		return user        

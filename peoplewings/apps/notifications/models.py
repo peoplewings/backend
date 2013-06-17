@@ -158,30 +158,35 @@ class NotificationsManager(models.Manager):
 		except:
 			pass
 
-	def send_notification_email(self, site, user):
-		ctx_dict = {'username': user.first_name, 'site': site}
-		subject = render_to_string('notifications/sent_notifications_subject.txt', ctx_dict)
-
-		subject = ''.join(subject.splitlines())
-		message = render_to_string('notifications/sent_notifications_email.txt', ctx_dict)
-		send_mail(subject, message, settings.NOTIF_SERVER_EMAIL, [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
-		return True
-
 	@staticmethod
 	def cron_send_notif_emails():
 		users = User.objects.filter(is_superuser=False)
-		import pdb; pdb.set_trace()			
+		#import pdb; pdb.set_trace()			
 		for user in users:		
 			alarms = NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user)).count()
 			if alarms > 0:
 				email_notifs = EmailNotifications.objects.filter(user=user)
 				if len(email_notifs) == 0:
-					self.send_notification_email(settings.SITE, user)
-					EmailNotifications.objects.create(user=user, last_notificated = time.time())
-				elif email_notifs.last_notificated < time.time() - 93600:
-					self.send_notification_email(settings.SITE, user)
+					send_notification_email(settings.SITE, user)
+					EmailNotifications.objects.create(user=UserProfile.objects.get(user=user), last_notificated = time.time())
+					#93600 sec = 26h
+				elif email_notifs.last_notificated < time.time() - 93600 and NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user), created__gte=time.time()-93600).count():
+					send_notification_email(settings.SITE, user)
 					email_notifs.last_notificated = time.time()
 					email_notifs.save()
+				elif email_notifs.last_notificated < time.time() - 604800:
+					send_notification_email(settings.SITE, user)
+					email_notifs.last_notificated = time.time()
+					email_notifs.save()
+
+def send_notification_email(site, user):
+		ctx_dict = {'username': user.first_name, 'site': site}
+		subject = render_to_string('notifications/sent_notifications_subject.txt', ctx_dict)
+
+		subject = ''.join(subject.splitlines())
+		message = render_to_string('notifications/sent_notifications_email.txt', ctx_dict)
+		send_mail(subject, message, '%s <%s>' % (settings.NOTIF_SERVER_EMAIL, settings.NOTIF_DEFAULT_FROM_EMAIL), [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
+		return True
 
 			
 
@@ -291,15 +296,11 @@ class NotificationsAlarm(models.Model):
 	created = models.BigIntegerField(default=0)
 
 def put_alarm(sender, instance, signal, *args, **kwargs):
-	notif = NotificationsAlarm()
 	notif_aux= Notifications.objects.get(pk=instance.notifications_ptr.pk)
 	filters = Q(reference= notif_aux.reference)&Q(receiver=notif_aux.receiver)
 	if NotificationsAlarm.objects.filter(filters).count() == 0:
-		notif.receiver = notif_aux.receiver
-		notif.notificated = False
-		notif.reference = notif_aux.reference
-		notif.created = time.time()
-		notif.save()
+		NotificationsAlarm.objects.create(receiver= notif_aux.receiver, reference= notif_aux.reference, created=time.time())
+
 def del_alarm(sender, instance, signal, *args, **kwargs):
 	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
 	NotificationsAlarm.objects.filter(filters).delete()

@@ -91,7 +91,7 @@ class WingResource(ModelResource):
 			if len(errors) > 0:
 					return self.create_response(request, {"status" : False, "errors": errors}, response_class = HttpResponse)
 
-			prof = UserProfile.objects.get(pk=request.GET['profile'])			
+			prof = UserProfile.objects.get(pk=request.GET['profile'])		
 			w = Wing.objects.filter(Q(author=prof)&Q(active=True))		
 			objects = []
 			for i in w:
@@ -584,7 +584,7 @@ class AccomodationsResource(ModelResource):
 		if POST.has_key('capacity'):
 			if POST['capacity'] == "":
 				not_empty['extras'].append('capacity')
-			elif int(POST['capacity']) not in range(10):
+			elif int(POST['capacity']) not in range(11):
 				invalid['extras'].append('capacity')
 		else:
 			field_req['extras'].append('capacity')
@@ -655,7 +655,7 @@ class AccomodationsResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_start = datetime.datetime.strptime(POST['dateStart'], '%Y-%m-%d')
-						if date_start < date.today():
+						if date_start < datetime.datetime.today():
 							invalid['extras'].append('dateStart')
 					except:
 						invalid['extras'].append('dateStart')					
@@ -671,7 +671,7 @@ class AccomodationsResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_end = datetime.datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
-						if date_end < date.today():
+						if date_end < datetime.datetime.today():
 							invalid['extras'].append('dateEnd')
 					except:
 						invalid['extras'].append('dateEnd')					
@@ -708,39 +708,61 @@ class AccomodationsResource(ModelResource):
 	def build_transports(self, POST):
 		#Metro, Bus, Taxi, Train, Car, Motorbike, Bicycle, Boat, Plane, Other
 		transports = []
-		if POST['metro'] is True:
-			transports.append(PublicTransport.objects.get(name='metro'))
-
-		if POST['bus'] is True:
-			transports.append(PublicTransport.objects.get(name='bus'))
-
-		if POST['taxi'] is True:
-			transports.append(PublicTransport.objects.get(name='taxi'))
-
-		if POST['train'] is True:
-			transports.append(PublicTransport.objects.get(name='train'))
-		
-		if POST['car'] is True:
-			transports.append(PublicTransport.objects.get(name='car'))
-		
-		if POST['motorbike'] is True:
-			transports.append(PublicTransport.objects.get(name='motorbike'))
-
-		if POST['bicycle'] is True:
-			transports.append(PublicTransport.objects.get(name='bicycle'))
-
-		if POST['boat'] is True:
-			transports.append(PublicTransport.objects.get(name='boat'))
-
-		if POST['plane'] is True:
-			transports.append(PublicTransport.objects.get(name='plane'))
-
-		if POST['other'] is True:
-			transports.append(PublicTransport.objects.get(name='other'))
+		try:
+			if POST['metro'] is True:
+				transports.append(PublicTransport.objects.get(name='metro'))
+		except:
+			pass
+		try:
+			if POST['bus'] is True:
+				transports.append(PublicTransport.objects.get(name='bus'))
+		except:
+			pass			
+		try:
+			if POST['taxi'] is True:
+				transports.append(PublicTransport.objects.get(name='taxi'))
+		except:
+			pass			
+		try:
+			if POST['train'] is True:
+				transports.append(PublicTransport.objects.get(name='train'))
+		except:
+			pass			
+		try:
+			if POST['car'] is True:
+				transports.append(PublicTransport.objects.get(name='car'))
+		except:
+			pass			
+		try:		
+			if POST['motorbike'] is True:
+				transports.append(PublicTransport.objects.get(name='motorbike'))
+		except:
+			pass			
+		try:
+			if POST['bicycle'] is True:
+				transports.append(PublicTransport.objects.get(name='bicycle'))
+		except:
+			pass			
+		try:
+			if POST['boat'] is True:
+				transports.append(PublicTransport.objects.get(name='boat'))
+		except:
+			pass			
+		try:
+			if POST['plane'] is True:
+				transports.append(PublicTransport.objects.get(name='plane'))
+		except:
+			pass			
+		try:
+			if POST['other'] is True:
+				transports.append(PublicTransport.objects.get(name='other'))
+		except:
+			pass			
 												
 		return transports
 		
-	def post_list(self, request, **kwargs):
+	def post_list(self, request, **kwargs):		
+
 		POST = json.loads(request.raw_post_data)	
 		try:
 			prof = UserProfile.objects.get(user=request.user)
@@ -777,6 +799,7 @@ class AccomodationsResource(ModelResource):
 
 		if not POST.has_key('additionalInformation'): POST['additionalInformation'] = ""
 		if not POST.has_key('about'): POST['about'] = ""
+
 		acc= Accomodation.objects.create(author=prof, name=POST['name'], status=POST['status'], date_start=getattr(POST, 'dateStart', None), date_end=getattr(POST, 'dateEnd', None), best_days=POST['bestDays'], is_request=False, city=city, active=True, sharing_once=POST['sharingOnce'], capacity=POST['capacity'], preferred_male=pref_male, preferred_female=pref_female, wheelchair=POST['wheelchair'], where_sleeping_type=POST['whereSleepingType'], smoking=POST['smoking'], i_have_pet=POST['iHavePet'], pets_allowed=POST['petsAllowed'], blankets=POST['blankets'], live_center=POST['liveCenter'], about=POST['about'], address=POST['address'], number=POST['number'], additional_information=POST['additionalInformation'], postal_code=POST['postalCode'])
 		for i in transport:
 			acc.public_transport.add(i)
