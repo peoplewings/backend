@@ -51,7 +51,7 @@ INSTALLED_APPS = (
     'peoplewings.libs.customauth',
     'peoplewings.libs.S3Custom',
     'peoplewings.apps.notifications',
-
+    'peoplewings.apps.dbcontrol',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
