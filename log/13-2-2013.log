@@ -1,6 +1,0 @@
-2013-02-13 16:11:31,766  ERROR  POST /api/v1/auth/ NO_TOKEN INVALID_USER_OR_PASS
-2013-02-13 16:11:38,000  ERROR  POST /api/v1/auth/ NO_TOKEN INVALID_USER_OR_PASS
-2013-02-13 16:11:45,563  INFO  POST /api/v1/auth/ NO_TOKEN OK
-2013-02-13 16:17:26,585  ERROR  POST /api/v1/auth/1 NO_TOKEN JSON_ERROR
-2013-02-13 16:19:47,976  ERROR  POST /api/v1/auth/1 NO_TOKEN JSON_ERROR {"ola": "adeu"} {"username":"joan@peoplewings.com", "password":"asdf"}
-2013-02-13 16:20:56,647  ERROR  POST /api/v1/auth/1 NO_TOKEN JSON_ERROR {"ola": "adeu"} {"username":"joan@peoplewings.com", "password":"asdf"}
