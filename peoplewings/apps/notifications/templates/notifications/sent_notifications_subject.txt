@@ -1,1 +1,1 @@
-{{ username }}, you have pending notifications pending to be read
+{{ username }}, you have pending notifications to be read
