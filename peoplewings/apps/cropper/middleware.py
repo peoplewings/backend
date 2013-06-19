@@ -12,7 +12,8 @@ class Crop(object):
 
 	def process_response(self, request, response):	
 		#import pdb; pdb.set_trace()	
-		if request.user and not isinstance(request.user, AnonymousUser):
+		compiled_regexp = re.compile("/admin/")
+		if request.user and not isinstance(request.user, AnonymousUser) and not compiled_regexp.match(str(request.path_info)):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
 				try:

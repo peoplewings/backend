@@ -28,6 +28,15 @@ if 'APP_ENV' in os.environ:
 elif HOSTNAME in LOCAL_HOSTNAMES:
     branch = subprocess.check_output(
         ['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip('\n')
+    if branch == 'local':
+        branch = 'development'
+    elif branch == 'development':
+        branch = 'testing'
+    elif branch == 'stable':
+        branch = 'production'
+    elif branch == 'alpha':
+        branch = 'alpha'
+
     if os.path.isfile(get_environment_file_path(branch)):
         ENV = branch
     else:

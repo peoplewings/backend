@@ -96,7 +96,6 @@ class RegistrationManager(models.Manager):
 					user.delete()
 
 	def create_forgot_user(self, user, site):
-
 		registration_profile = self.update_profile(user)
 		sent = registration_profile.send_forgot_email(site, user)
 
@@ -141,11 +140,11 @@ class RegistrationProfile(models.Model):
 		ctx_dict = {'reset_token': self.activation_key,
 					'email_user': user.email,
 					'site': site}
-		subject = render_to_string('notifications/sent_notification_subject', ctx_dict)
+		subject = render_to_string('registration/forgot_password_email_subject.txt', ctx_dict)
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
 		
-		message = render_to_string('registration/sent_notification_email.txt', ctx_dict)
+		message = render_to_string('registration/forgot_email.txt', ctx_dict)
 		
 		send_mail(subject, message, settings.FORGOT_SERVER_EMAIL, [self.user.email], fail_silently=False, auth_user=settings.FORGOT_EMAIL_HOST_USER)
 		return True
