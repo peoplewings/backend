@@ -370,7 +370,7 @@ class CropbigResource(ModelResource):
 		try:
 			#string.replace(s, old, new[, maxreplace])
 			url = POST["results"]["images"][0]['s3_url']
-			url = str.replace(url, 'http', '', 1)
+			url = str.replace(url, 'http://', '//', 1)
 			img_id = POST["results"]["images"][0]['image_identifier']
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
@@ -469,7 +469,7 @@ class CropsmallResource(ModelResource):
 
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
-			url = str.replace(url, 'http', '', 1)
+			url = str.replace(url, 'http://', '//', 1)
 			prof.thumb_avatar = url
 			prof.avatar_updated=True
 			prof.save()
