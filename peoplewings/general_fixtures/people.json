@@ -4714,8 +4714,7 @@
     "pk": 1,
     "fields": {
         "user_profile" : 1,
-        "university" : 1,
-        "degree" : "Licensed"
+        "university" : 1
     }
   },
 {
@@ -4723,8 +4722,7 @@
     "pk": 2,
     "fields": {
         "user_profile" : 2,
-        "university" : 1,
-        "degree" : "Licensed"
+        "university" : 1
     }
   },
 {
@@ -4732,8 +4730,7 @@
     "pk": 3,
     "fields": {
         "user_profile" : 3,
-        "university" : 1,
-        "degree" : "Licensed"
+        "university" : 1
     }
   },
 {
@@ -4741,8 +4738,7 @@
     "pk": 4,
     "fields": {
         "user_profile" : 4,
-        "university" : 2,
-        "degree" : "Diplomat"
+        "university" : 2
     }
   },
 {
@@ -4750,8 +4746,7 @@
     "pk": 5,
     "fields": {
         "user_profile" : 4,
-        "university" : 3,
-        "degree" : "Master"
+        "university" : 3
     }
   },
 {
@@ -4759,8 +4754,7 @@
     "pk": 6,
     "fields": {
         "user_profile" : 5,
-        "university" : 2,
-        "degree" : "Diplomat"
+        "university" : 2
     }
   },
 {
@@ -4768,8 +4762,7 @@
     "pk": 7,
     "fields": {
         "user_profile" : 5,
-        "university" : 4,
-        "degree" : "Master"
+        "university" : 4
     }
   },
 {
@@ -4777,8 +4770,7 @@
     "pk": 8,
     "fields": {
         "user_profile" : 5,
-        "university" : 5,
-        "degree" : "Diplomat"
+        "university" : 5
     }
   }
 ]
