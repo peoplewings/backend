@@ -11,7 +11,10 @@ class UserInLine(admin.StackedInline):
 """
 class UserProfileAdmin(admin.ModelAdmin):
     model = UserProfile
-    list_display = ('user', 'emails', 'current_city')
-    list_filter = ('user', 'emails', 'current_city')
+    list_display = ('user_email', 'current_city')
+    list_filter = ('current_city',)
+
+    def user_email(self, obj):
+       	return obj.user.email
 
 admin.site.register(UserProfile, UserProfileAdmin)

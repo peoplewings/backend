@@ -4,8 +4,13 @@ from models import *
 
 class CityAdmin(admin.ModelAdmin):
     model = City
-    list_display = ('name', 'region')
-    list_filter = ('name', 'region')
+    list_display = ('name', 'country')
+    list_filter = ('name',)
+
+    def country(self, obj):
+    	return '%s'%(obj.region.country.name)
+
+    	country.short_description = 'Country'
 
 class RegionAdmin(admin.ModelAdmin):
     model = Region
