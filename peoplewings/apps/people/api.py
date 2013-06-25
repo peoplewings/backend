@@ -1002,7 +1002,7 @@ class UserProfileResource(ModelResource):
 			if GET['gender'] != 'Both':
 				result = result & Q(gender=GET['gender'])		
 			if 'wings' in GET:
-				result = result & Q(wing__city__name__icontains=GET['wings'])
+				result = result & (Q(wing__city__name__icontains=GET['wings'])|Q(wing__city__region__name__icontains=GET['wings'])|Q(wing__city__region__country__name__icontains=GET['wings']))
 			if 'startDate' in GET:
 				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & (Q(wing__date_start__lte=date_start)|Q(wing__date_start__isnull=True))
