@@ -19,10 +19,15 @@ class Wing(models.Model):
 	active = models.BooleanField(default = True)
 	def get_class_name(self):
 		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
-	
+
+	def __unicode__(self):
+		return self.name
 	
 class PublicTransport(models.Model):
 	name = models.CharField(max_length=50, blank = False, null = False, default = 'Not specified')
+
+	def __unicode__(self):
+		return self.name
 
 # Accomodation wing class
 class Accomodation(Wing):
