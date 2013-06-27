@@ -305,7 +305,7 @@ class CropbigResource(ModelResource):
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
-
+		print POST
 		try:
 			#string.replace(s, old, new[, maxreplace])
 			url = str(POST["results"]['images'][0]['s3_url'])
