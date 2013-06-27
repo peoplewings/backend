@@ -251,7 +251,6 @@ class CropcompletedResource(ModelResource):
 
 	def post_list(self, request, **kwargs):
 		#print '%s  %s' % ("POST", request.raw_post_data)
-		import pdb; pdb.set_trace()
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
