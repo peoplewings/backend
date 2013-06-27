@@ -305,11 +305,12 @@ class CropbigResource(ModelResource):
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
 		url = ""
+
 		try:
 			#string.replace(s, old, new[, maxreplace])
-			url = str(POST["results"][0]['images'][0]['s3_url'])
+			url = str(POST["results"]['images'][0]['s3_url'])
 			url = str.replace(url, 'http://', '//', 1)
-			img_id = str(POST["results"][0]['images'][0]['image_identifier'])
+			img_id = str(POST["results"]['images'][0]['image_identifier'])
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.avatar = url
@@ -341,9 +342,9 @@ class CropsmallResource(ModelResource):
 		POST= json.loads(encoded)
 		url = ""
 		try:
-			url = str(POST["results"][0]['images'][0]['s3_url'])
+			url = str(POST["results"]['images'][0]['s3_url'])
 			url = str.replace(url, 'http://', '//', 1)
-			img_id = str(POST["results"][0]['images'][0]['image_identifier'])
+			img_id = str(POST["results"]['images'][0]['image_identifier'])
 			user_id = img_id.split("-")[0]
 			prof = UserProfile.objects.get(user__pk = int(user_id))
 			prof.thumb_avatar = url
