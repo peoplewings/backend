@@ -158,6 +158,69 @@ class UserSignUpResource(ModelResource):
 		result = {}
 		result['email'] = data
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
+
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)
+				return response
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
+			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)                               
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				else: 
+					content = {}
+					errors = [{"type": "VALIDATION_ERROR"}]
+					errors['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+			except BadParameters, e:
+				# This exception occurs when the provided key has expired
+				content = {}
+				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ExistingUser, e:
+				# This exception occurs when the provided key has expired
+				content = {}
+				errors = [{"type": "EMAIL_IN_USE"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)       
+			except Exception, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)  
+
+		return wrapper
 		
 class FacebookLoginResource(ModelResource):
 
