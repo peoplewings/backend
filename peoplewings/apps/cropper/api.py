@@ -253,6 +253,7 @@ class CropcompletedResource(ModelResource):
 		#print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
+		print POST
 		url = ""
 		try:
 			url = POST["results"]["images"][0]['s3_url']
@@ -316,8 +317,8 @@ class CropbigResource(ModelResource):
 			prof.medium_avatar = url
 			prof.avatar_updated=True
 			prof.save()
-		except:
-			#print POST["results"]["images"][0]['error']
+		except Exception, e:
+			print e
 			return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
