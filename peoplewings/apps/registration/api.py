@@ -237,10 +237,11 @@ class FacebookLoginResource(ModelResource):
 
 	def post_list(self, request, **kwargs):	
 		#import pdb; pdb.set_trace()
-		try:			
+		try:		
+			#import pdb; pdb.set_trace()	
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
