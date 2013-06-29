@@ -241,7 +241,7 @@ class FacebookLoginResource(ModelResource):
 			#import pdb; pdb.set_trace()	
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
@@ -270,7 +270,7 @@ class FacebookLoginResource(ModelResource):
 						if prof.avatar not in pic_path_big:
 							self.set_facebook_photo(pic_path_big, pic_path_small, prof)
 
-					elif django_settings.ANONYMOUS_BIG in prof.avatar:
+					elif settings.ANONYMOUS_BIG in prof.avatar:
 						self.set_facebook_photo(pic_path_big, pic_path_small, prof)
 				except:
 					pass
