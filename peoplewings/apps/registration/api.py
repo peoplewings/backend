@@ -279,7 +279,7 @@ class FacebookLoginResource(ModelResource):
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": "fuck"}}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": e}}, response_class = HttpResponse)
 
 	def set_facebook_photo(self, path_big, path_small, prof):
 		prof.avatar = path_big
