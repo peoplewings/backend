@@ -3,6 +3,7 @@ import json
 import re
 import random, string
 from datetime import date
+import datetime
 
 from django.utils.hashcompat import sha_constructor
 from django.db import transaction
@@ -275,7 +276,7 @@ class FacebookLoginResource(ModelResource):
 				except:
 					pass
 
-			api_token = ApiToken.objects.create(user=fb_obj[0].user, last= datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')))
+			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')))
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
