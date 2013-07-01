@@ -131,6 +131,9 @@ class UserProfile(models.Model):
 		age = today.year - self.birthday.year
 		if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
 		return age
+
+	def __unicode__(self):
+		return unicode(self.user.email)
 	
 	@staticmethod
 	@transaction.commit_manually
@@ -140,7 +143,6 @@ class UserProfile(models.Model):
 		cur.close()
 		transaction.commit()
 
-
 class Relationship(models.Model):    
 	sender = models.ForeignKey('UserProfile', related_name='sender')
 	receiver = models.ForeignKey('UserProfile', related_name='receiver')
@@ -149,6 +151,7 @@ class Relationship(models.Model):
 
 	class Meta:
 		unique_together = ("sender", "receiver")
+
 
 class Reference(models.Model):    
 	author = models.ForeignKey('UserProfile', related_name='author')

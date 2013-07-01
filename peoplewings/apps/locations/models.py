@@ -17,6 +17,9 @@ class Country(models.Model):
     name = models.CharField(max_length=max_short_len, unique=True)
     objects = CountryManager()
 
+    def __unicode__(self):
+        return self.name
+
 # REGION + MANAGER
 class RegionManager(models.Manager):
     def create(self, **kwargs):
@@ -31,6 +34,9 @@ class Region(models.Model):
     name = models.CharField(max_length=max_short_len, unique=False, default='NoName')
     country = models.ForeignKey('Country')
     objects = RegionManager()
+
+    def __unicode__(self):
+        return '%s, %s' % (self.name, self.country) 
 
 # CITY + MANAGER
 class CityManager(models.Manager):
@@ -80,3 +86,6 @@ class City(models.Model):
 
     def stringify(self):
         return '%s, %s, %s' % (self.name, self.region.name, self.region.country.name)
+
+    def __unicode__(self):
+        return '%s, %s' % (self.name, self.region.country)

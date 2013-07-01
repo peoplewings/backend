@@ -82,9 +82,10 @@ def login(bundle):
 	api_token.save()
 	try:
 		pf = UserProfile.objects.get(user=user)
+		ret = dict(token=api_token.token, idUser=user.pk, idProfile=pf.pk)
 	except:
-	   pass 
-	ret = dict(token=api_token.token, idUser=user.pk, idProfile=pf.pk)
+	   raise AuthFail() 
+	
 	return ret
 
 def api_token_is_authenticated(bundle, **kwargs):

@@ -1002,7 +1002,7 @@ class UserProfileResource(ModelResource):
 			if GET['gender'] != 'Both':
 				result = result & Q(gender=GET['gender'])		
 			if 'wings' in GET:
-				result = result & Q(wing__city__name__icontains=GET['wings'])
+				result = result & (Q(wing__city__name__icontains=GET['wings'])|Q(wing__city__region__name__icontains=GET['wings'])|Q(wing__city__region__country__name__icontains=GET['wings']))
 			if 'startDate' in GET:
 				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & (Q(wing__date_start__lte=date_start)|Q(wing__date_start__isnull=True))
@@ -1016,7 +1016,7 @@ class UserProfileResource(ModelResource):
 			if GET['gender'] != 'Both':
 				result = result & Q(gender=GET['gender'])		
 			if 'wings' in GET:
-				result = result & Q(publicrequestwing__city__name__icontains=GET['wings'])
+				result = result & (Q(publicrequestwing__city__name__icontains=GET['wings'])|Q(publicrequestwing__city__region__name__icontains=GET['wings'])|Q(publicrequestwing__city__region__country__name__icontains=GET['wings']))
 			if 'startDate' in GET:
 				date_start = datetime.strptime('%s 00:00:00' % GET['startDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & Q(publicrequestwing__date_end__gte=date_start)
@@ -1101,46 +1101,48 @@ class UserProfileResource(ModelResource):
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
 		#We have no problem with the given filters
-		filters = self.make_search_filters(request.GET)	
+		filters = self.make_search_filters(request.GET)
+
 		try:			
 			search_list = SearchObjectManager()
 			profiles = UserProfile.objects.filter(filters).distinct()		
 			
 			for i in profiles:
-				search_obj = SearchObject()
-				search_obj.profile_id = i.pk
-				search_obj.ctrl_user = i.user
-				search_obj.first_name = i.user.first_name
-				search_obj.last_name = i.user.last_name
-				if i.current_city:
-					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-				else: 
-					search_obj.current= {}
+				if i.user != request.user:
+					search_obj = SearchObject()
+					search_obj.profile_id = i.pk
+					search_obj.ctrl_user = i.user
+					search_obj.first_name = i.user.first_name
+					search_obj.last_name = i.user.last_name
+					if i.current_city:
+						search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+					else: 
+						search_obj.current= {}
 
-				search_obj.avatar = i.medium_avatar
-				search_obj.age = i.get_age()
-				search_obj.online = self.connected(i.user)
-				search_obj.reply_rate = i.reply_rate
-				search_obj.reply_time = i.reply_time
-				search_obj.languages = self.parse_languages(i)
-				search_obj.all_about_you = i.all_about_you
-				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
+					search_obj.avatar = i.medium_avatar
+					search_obj.age = i.get_age()
+					search_obj.online = self.connected(i.user)
+					search_obj.reply_rate = i.reply_rate
+					search_obj.reply_time = i.reply_time
+					search_obj.languages = self.parse_languages(i)
+					search_obj.all_about_you = i.all_about_you
+					search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+					search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
-				if request.GET['type'] == 'Applicant':										
-					filters = self.make_publicreq_search_filters(request.GET, i)
-					prw = PublicRequestWing.objects.filter(filters)
-					for pw in prw:
-						cpy = copy.deepcopy(search_obj)
-						cpy.wing_introduction = pw.introduction
-						cpy.wing_type = pw.wing_type
-						cpy.wing_city = pw.city.name
-						cpy.wing_start_date = pw.date_start
-						cpy.wing_end_date = pw.date_end
-						cpy.wing_capacity = pw.capacity
-						search_list.objects.append(cpy)
-				else:
-					search_list.objects.append(search_obj)
+					if request.GET['type'] == 'Applicant':										
+						filters = self.make_publicreq_search_filters(request.GET, i)
+						prw = PublicRequestWing.objects.filter(filters)
+						for pw in prw:
+							cpy = copy.deepcopy(search_obj)
+							cpy.wing_introduction = pw.introduction
+							cpy.wing_type = pw.wing_type
+							cpy.wing_city = pw.city.name
+							cpy.wing_start_date = pw.date_start
+							cpy.wing_end_date = pw.date_end
+							cpy.wing_capacity = pw.capacity
+							search_list.objects.append(cpy)
+					else:
+						search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
 

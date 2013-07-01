@@ -3,6 +3,7 @@ import json
 import re
 import random, string
 from datetime import date
+import datetime
 
 from django.utils.hashcompat import sha_constructor
 from django.db import transaction
@@ -158,6 +159,69 @@ class UserSignUpResource(ModelResource):
 		result = {}
 		result['email'] = data
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
+
+	def wrap_view(self, view):
+		@csrf_exempt
+		def wrapper(request, *args, **kwargs):
+			try:
+				callback = getattr(self, view)
+				response = callback(request, *args, **kwargs)
+				return response
+			except BadRequest, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]
+				content['errors'] = errors               
+				content['status'] = False
+				return self.create_response(request, content, response_class = HttpResponse) 
+			except ValidationError, e:
+				# Or do some JSON wrapping around the standard 500
+				content = {}
+				errors = [{"type": "VALIDATION_ERROR"}]
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)                               
+			except ImmediateHttpResponse, e:
+				if (isinstance(e.response, HttpMethodNotAllowed)):
+					content = {}
+					errors = [{"type": "METHOD_NOT_ALLOWED"}]
+					content['errors'] = errors	                           
+					content['status'] = False                    
+					return self.create_response(request, content, response_class = HttpResponse)
+				else: 
+					content = {}
+					errors = [{"type": "VALIDATION_ERROR"}]
+					errors['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
+			except BadParameters, e:
+				# This exception occurs when the provided key has expired
+				content = {}
+				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ValueError, e:
+				# This exception occurs when the JSON is not a JSON...
+				content = {}
+				errors = [{"type": "JSON_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)
+			except ExistingUser, e:
+				# This exception occurs when the provided key has expired
+				content = {}
+				errors = [{"type": "EMAIL_IN_USE"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)       
+			except Exception, e:
+				content = {}
+				errors = [{"type": "INTERNAL_ERROR"}]          
+				content['status'] = False
+				content['errors'] = errors
+				return self.create_response(request, content, response_class = HttpResponse)  
+
+		return wrapper
 		
 class FacebookLoginResource(ModelResource):
 
@@ -174,10 +238,11 @@ class FacebookLoginResource(ModelResource):
 
 	def post_list(self, request, **kwargs):	
 		#import pdb; pdb.set_trace()
-		try:			
+		try:		
+			#import pdb; pdb.set_trace()	
 			POST = json.loads(request.raw_post_data)
-			POST['cookie'] = {str.split(str(POST['cookie']), '=')[0] : str.split(str(POST['cookie']), '=')[1]}
-			facebook = get_user_from_cookie(POST['cookie'], settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			cookie = {POST['appid'] : POST['token']}
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
@@ -202,20 +267,21 @@ class FacebookLoginResource(ModelResource):
 			if pic_path_big is not None:
 				try:
 					prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
-					if 'https://peoplewings-test-media.s3.amazonaws.com/' not in prof.avatar:
+					#Si no la he cropeado yo...
+					if '//s3-eu-west-1.amazonaws.com/peoplewings-test-media/avatar-big/' not in prof.avatar:
 						if prof.avatar not in pic_path_big:
 							self.set_facebook_photo(pic_path_big, pic_path_small, prof)
 
-					elif django_settings.ANONYMOUS_BIG in prof.avatar:
+					elif settings.ANONYMOUS_BIG in prof.avatar:
 						self.set_facebook_photo(pic_path_big, pic_path_small, prof)
 				except:
 					pass
 
-			api_token = ApiToken.objects.create(user=fb_obj[0].user, last= datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')))
+			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = int(datetime.now().strftime('%s')))
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": "fuck"}}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": e}}, response_class = HttpResponse)
 
 	def set_facebook_photo(self, path_big, path_small, prof):
 		prof.avatar = path_big
@@ -226,6 +292,7 @@ class FacebookLoginResource(ModelResource):
 
 	def register_with_fb(self, user, graph):		
 		try:
+			#import pdb; pdb.set_trace()
 			print user['email']
 			cur_user = User.objects.filter(email=user['email'])
 			if len(cur_user) == 0:
@@ -233,6 +300,7 @@ class FacebookLoginResource(ModelResource):
 				new_user = User.objects.create(username=user['email'], first_name= user['first_name'], last_name=user['last_name'], email=user['email'], password=sha_constructor(str(random.random())).hexdigest()[:128], is_staff=False, is_active=True, is_superuser=False, last_login=datetime.now(), date_joined=datetime.now())
 
 				kwarg = {}
+				kwarg['active']= True
 				kwarg['user_id'] = new_user.pk
 				if user.has_key('gender'):
 					if str(user['gender']) == 'male':
@@ -664,6 +732,7 @@ class AccountResource(ModelResource):
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
+		user.is_active=False
 		user.save()
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
@@ -701,6 +770,10 @@ class AccountResource(ModelResource):
 			i.active = False
 			i.save()
 		#Invalidate his notifications
+		#Delete FB auth
+		fb= FacebookUser.objects.filter(user=user)
+		for i in fb:
+			i.delete()
 		contents = {}
 		contents['status'] = True
 		return self.create_response(request, contents, response_class = HttpResponse)
