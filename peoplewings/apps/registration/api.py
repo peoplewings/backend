@@ -267,7 +267,8 @@ class FacebookLoginResource(ModelResource):
 			if pic_path_big is not None:
 				try:
 					prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
-					if '//peoplewings-test-media.s3.amazonaws.com/' not in prof.avatar:
+					#Si no la he cropeado yo...
+					if '//s3-eu-west-1.amazonaws.com/peoplewings-test-media/avatar-big/' not in prof.avatar:
 						if prof.avatar not in pic_path_big:
 							self.set_facebook_photo(pic_path_big, pic_path_small, prof)
 
