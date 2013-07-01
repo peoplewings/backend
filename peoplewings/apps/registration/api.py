@@ -300,6 +300,7 @@ class FacebookLoginResource(ModelResource):
 				new_user = User.objects.create(username=user['email'], first_name= user['first_name'], last_name=user['last_name'], email=user['email'], password=sha_constructor(str(random.random())).hexdigest()[:128], is_staff=False, is_active=True, is_superuser=False, last_login=datetime.now(), date_joined=datetime.now())
 
 				kwarg = {}
+				kwarg['active']= True
 				kwarg['user_id'] = new_user.pk
 				if user.has_key('gender'):
 					if str(user['gender']) == 'male':
