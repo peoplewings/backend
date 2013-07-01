@@ -732,6 +732,7 @@ class AccountResource(ModelResource):
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
+		user.is_active=False
 		user.save()
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
@@ -769,6 +770,10 @@ class AccountResource(ModelResource):
 			i.active = False
 			i.save()
 		#Invalidate his notifications
+		#Delete FB auth
+		fb= FacebookUser.objects.filter(user=user)
+		for i in fb:
+			i.delete()
 		contents = {}
 		contents['status'] = True
 		return self.create_response(request, contents, response_class = HttpResponse)
