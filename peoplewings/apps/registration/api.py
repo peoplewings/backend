@@ -242,7 +242,7 @@ class FacebookLoginResource(ModelResource):
 			#import pdb; pdb.set_trace()	
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False}, response_class = HttpResponse)
 
@@ -276,7 +276,7 @@ class FacebookLoginResource(ModelResource):
 				except:
 					pass
 
-			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')))
+			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = int(datetime.now().strftime('%s')))
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
