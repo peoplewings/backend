@@ -1347,7 +1347,7 @@ class PhotoCompletedResource(ModelResource):
 				else:
 					final_photo.thumb_url = url
 				i = i + 1
-			final_photo.save()
+			final_photo.save()			
 			self.reorder_album(album, final_photo)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
@@ -1369,7 +1369,7 @@ class PhotosResource(ModelResource):
 	class Meta:
 		object_class = Photos
 		queryset = Photos.objects.all()
-		detail_allowed_methods = ['delete']
+		detail_allowed_methods = ['delete, get']
 		list_allowed_methods = []
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -1386,5 +1386,13 @@ class PhotosResource(ModelResource):
 				return self.create_response(request, {"status":True}, response_class=HttpResponse)
 			else:
 				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
+
+	def get_detail(self, request, **kwargs):
+		id_photo = kwargs['pk']
+		try:
+			photo = Photos.objects.get(pk=id_photo)
+			return self.create_response(request, {"status":True, "data":{"id":photo.pk, "big_url": photo.big_url, "thumb_url": photo.thumb_url}}, response_class=HttpResponse) 
 		except:
 			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
