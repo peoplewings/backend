@@ -1,7 +1,7 @@
 import re
 import json
 
-from people.models import Photos, UserProfile
+from people.models import Photos as PhotosModel, UserProfile
 from django.contrib.auth.models import AnonymousUser
 
 class Photos(object):
@@ -16,7 +16,7 @@ class Photos(object):
 			if response.status_code == 200:		
 				resp = json.loads(response.content)
 				try:
-					photos = Photos.objects.filter(author=UserProfile.objects.get(user=request.user))					
+					photos = PhotosModel.objects.filter(author=UserProfile.objects.get(user=request.user)).filter(add_notificated=False)				
 					if not resp.has_key('updates'):
 						resp['updates'] = {}
 					resp['updates']['photos'] = []

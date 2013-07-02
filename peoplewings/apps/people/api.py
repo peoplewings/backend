@@ -1333,7 +1333,7 @@ class PhotoCompletedResource(ModelResource):
 			album_id = request.GET['album']
 			for results in POST["results"]["images"]:
 				url = results['s3_url']
-				url = str.replace(url, 'http://', '//', 1)
+				url = str.replace(str(url), 'http://', '//', 1)
 				size = results['image_identifier']			  	
 				album = PhotoAlbums.objects.get(pk=album_id)
 				apit = ApiToken.objects.get(token=auth_token)
