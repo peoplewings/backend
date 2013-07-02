@@ -10,7 +10,7 @@ from django.db import transaction
 
 from django.conf import settings
 from dateutil import parser
-from datetime import datetime
+from datetime import datetime, date
 from tastypie import fields
 from tastypie.authentication import *
 from tastypie.resources import ModelResource
@@ -313,6 +313,11 @@ class FacebookLoginResource(ModelResource):
 
 				#pic_path = graph.get_profile_picture()				
 				new_profile = UserProfile.objects.create(**kwarg)
+				today = date.today()
+				age = today.year - new_profile.birthday.year
+				if today.month < new_profile.birthday.month or (today.month == new_profile.birthday.month and today.day < new_profile.birthday.day): age -= 1
+				new_profile.age = age
+				PhotoAlbums.objects.create(name='default', author=new_profile)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:
 				print '2'
