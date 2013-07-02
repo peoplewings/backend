@@ -41,6 +41,7 @@ from peoplewings.apps.wings.api import AccomodationsResource, WingResource
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
+from peoplewings.apps.registration.views import blitline_token_is_authenticated
 
 class UniversityResource(ModelResource):
 	class Meta:
@@ -260,10 +261,9 @@ class UserProfileResource(ModelResource):
 						photos = Photos.objects.filter(album=album).order_by('ordering')
 						for photo in photos:
 							photo_obj = {}
-							photo_obj.id = photo.pk
-							photo_obj.big_url = photo.big_url
-							photo_obj.thumb_url = photo.thumb_url
-							photo_obj.ordering = photo.ordering
+							photo_obj['id'] = photo.pk
+							photo_obj['big_url'] = photo.big_url
+							photo_obj['thumb_url'] = photo.thumb_url
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)
 		   
@@ -395,10 +395,9 @@ class UserProfileResource(ModelResource):
 							photos = Photos.objects.filter(album=album).order_by('ordering')
 							for photo in photos:
 								photo_obj = {}
-								photo_obj.id = photo.pk
-								photo_obj.big_url = photo.big_url
-								photo_obj.thumb_url = photo.thumb_url
-								photo_obj.ordering = photo.ordering
+								photo_obj['id'] = photo.pk
+								photo_obj['big_url'] = photo.big_url
+								photo_obj['thumb_url'] = photo.thumb_url
 								album_obj['photos'].append(photo_obj)
 							prof_obj.albums.append(album_obj)
 
@@ -1326,15 +1325,66 @@ class PhotoCompletedResource(ModelResource):
 		#print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
-		print POST
-		url = ""
-		"""
+		if len(POST["results"]["images"]) != 2:
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse) 
 		try:
-		  url = POST["results"]["images"][0]['s3_url']
-		  img_id = POST["results"]["images"][0]['image_identifier']
-		except:
-		  #print POST["results"]["images"][0]['error']
-		  return self.create_response(request, {"status":False}, response_class = HttpResponse)
-		"""
+			i = 0;
+			auth_token = request.GET['authToken']
+			album_id = request.GET['album']
+			for results in POST["results"]["images"]:
+				url = results['s3_url']
+				url = str.replace(url, 'http://', '//', 1)
+				size = results['image_identifier']			  	
+				album = PhotoAlbums.objects.get(pk=album_id)
+				apit = ApiToken.objects.get(token=auth_token)
+				if (not blitline_token_is_authenticated(apit) or not (apit.user == album.author.user)):
+					return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+
+				if i == 0:
+					final_photo= Photos.objects.create(author=UserProfile.objects.get(user=apit.user), album=album)
+				if size == 'big':
+					final_photo.big_url = url
+				else:
+					final_photo.thumb_url = url
+				i = i + 1
+			final_photo.save()
+			self.reorder_album(album, final_photo)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
+	def reorder_album(self, album, first):
+		photos = Photos.objects.filter(album=album).order_by('ordering')
+		first.ordering = 1;
+		first.save();
+		aux = 2;
+		for i in photos:
+			i.ordering = aux;
+			aux = aux + 1
+			i.save();
+
+class PhotosResource(ModelResource):
+
+	class Meta:
+		object_class = Photos
+		queryset = Photos.objects.all()
+		detail_allowed_methods = ['delete']
+		list_allowed_methods = []
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def delete_detail(self, request, **kwargs):
+		id_photo = kwargs['pk']
+		try:
+			photo = Photos.objects.get(pk=id_photo)
+			if photo.author == UserProfile.objects.get(user=request.user):
+				photo.delete()
+				return self.create_response(request, {"status":True}, response_class=HttpResponse)
+			else:
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)

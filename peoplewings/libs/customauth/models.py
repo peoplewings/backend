@@ -52,7 +52,7 @@ class ApiToken(models.Model):
 		" now is the current time with the current locale"
 		# Get valid period.
 		valid_time = getattr(settings, 'TOKEN_VALID_TIME', 3600)
-		if (now - self.last) < datetime.timedelta(seconds=valid_time):			
+		if (now - self.last_js) < datetime.timedelta(seconds=valid_time):			
 			self.save()
 			return True
 		return False
