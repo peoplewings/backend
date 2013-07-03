@@ -1369,7 +1369,7 @@ class PhotosResource(ModelResource):
 	class Meta:
 		object_class = Photos
 		queryset = Photos.objects.all()
-		detail_allowed_methods = ['delete, get']
+		detail_allowed_methods = ['delete', 'get']
 		list_allowed_methods = []
 		include_resource_uri = False
 		serializer = CamelCaseJSONSerializer(formats=['json'])
@@ -1396,3 +1396,61 @@ class PhotosResource(ModelResource):
 			return self.create_response(request, {"status":True, "data":{"id":photo.pk, "big_url": photo.big_url, "thumb_url": photo.thumb_url}}, response_class=HttpResponse) 
 		except:
 			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
+
+class AlbumsResource(ModelResource):
+
+	class Meta:
+		object_class = PhotoAlbums
+		queryset = Photos.objects.all()
+		detail_allowed_methods = ['put', 'get']
+		list_allowed_methods = []
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def get_detail(self, request, **kwargs):
+		id_album= kwargs['pk']
+		try:
+			album = PhotoAlbums.objects.get(pk=id_album)
+			resp = {"id":album.pk, "name":album.name, "photos":[]}
+			photos = Photos.objects.filter(album=album)
+			for i in photos:
+				cur_photo = {}
+				cur_photo['id'] = i.pk
+				cur_photo['big_url'] = i.big_url
+				cur_photo['thumb_url'] = i.thumb_url
+				resp['photos'].append(cur_photo)
+			return self.create_response(request, {"status":True, "data":resp}, response_class=HttpResponse) 
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
+
+	def put_detail(self, request, **kwargs):
+		id_album= kwargs['pk']
+		PUT = json.loads(request.raw_post_data)
+		if not self.validate_PUT(PUT):
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photos']}]}, response_class=HttpResponse)
+		try:
+			album = PhotoAlbums.objects.get(pk=id_album)
+			photos = Photos.objects.filter(album=album)
+			idx = 1
+			for i in PUT['photos']:
+				if i in [j.pk for j in photos]:
+					cur_photo = Photos.objects.get(pk=i)
+					cur_photo.ordering = idx
+					cur_photo.save()
+					idx = idx + 1
+			return self.create_response(request, {"status":True}, response_class=HttpResponse) 
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
+
+	def validate_PUT(self, PUT):
+		if PUT.has_key('photos') and isinstance(PUT['photos'], list):
+			return True
+		return False
+
+
+
+
+
