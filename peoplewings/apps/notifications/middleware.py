@@ -21,7 +21,8 @@ class Notification(object):
 				try:
 					prof = UserProfile.objects.get(user=request.user)
 					resp['updates']['notifs'] = NotificationsAlarm.objects.filter(receiver=prof).count()
-				except:
+				except Exception, e:
+					print 'EXCEPTION NOTIFS HEADER: %s', e
 					resp['updates']['notifs'] = -1
 				response.content = json.dumps(resp)					
 		return response
