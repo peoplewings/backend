@@ -324,8 +324,7 @@ class FacebookLoginResource(ModelResource):
 				print '2'
 				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
 		except Exception, e:
-			print 'EXCEPTION'
-			print e
+			print 'EXCEPTION %s', str(e)
 			return False
 		print 'Register COMPLETED'
 		return True
