@@ -258,7 +258,7 @@ class FacebookLoginResource(ModelResource):
 				res = self.register_with_fb(user, graph)
 				if res is False:
 					print 'Register failed'
-					return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
+					return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "extras":["Register failed"]}}, response_class = HttpResponse)
 				fb_obj = []
 				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
 
@@ -317,12 +317,14 @@ class FacebookLoginResource(ModelResource):
 				age = today.year - new_profile.birthday.year
 				if today.month < new_profile.birthday.month or (today.month == new_profile.birthday.month and today.day < new_profile.birthday.day): age -= 1
 				new_profile.age = age
+				new_profile.save()
 				PhotoAlbums.objects.create(name='default', author=new_profile)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:
 				print '2'
 				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
-		except:
+		except Exception, e:
+			print e
 			return False
 		return True
 
