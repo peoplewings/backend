@@ -1329,6 +1329,7 @@ class PhotoCompletedResource(ModelResource):
 	def post_list(self, request, **kwargs):
 		#print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
+		print 'ENCODED PHOTO %s' % encoded
 		POST= json.loads(encoded)
 		if len(POST["results"]["images"]) != 2:
 			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse) 
