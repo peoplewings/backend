@@ -108,6 +108,23 @@ def api_token_is_authenticated(bundle, **kwargs):
 	except:
 		return False
 
+def blitline_token_is_authenticated(apitoken):
+	#import pdb; pdb.set_trace()
+	##Check if the user exists
+	try: 
+		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
+			return False
+		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
+			return False
+
+		apitoken.last = datetime.datetime.now()
+		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
+		apitoken.save()
+		user = User.objects.get(pk=apitoken.user_id)
+		return user        
+	except:
+		return False
+
 def control_is_authenticated(bundle, **kwargs):
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")

@@ -38,9 +38,11 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication,
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
+from peoplewings.apps.wings.models import Wing
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
+from peoplewings.apps.registration.views import blitline_token_is_authenticated
 
 class UniversityResource(ModelResource):
 	class Meta:
@@ -260,10 +262,9 @@ class UserProfileResource(ModelResource):
 						photos = Photos.objects.filter(album=album).order_by('ordering')
 						for photo in photos:
 							photo_obj = {}
-							photo_obj.id = photo.pk
-							photo_obj.big_url = photo.big_url
-							photo_obj.thumb_url = photo.thumb_url
-							photo_obj.ordering = photo.ordering
+							photo_obj['id'] = photo.pk
+							photo_obj['big_url'] = photo.big_url
+							photo_obj['thumb_url'] = photo.thumb_url
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)
 		   
@@ -395,10 +396,9 @@ class UserProfileResource(ModelResource):
 							photos = Photos.objects.filter(album=album).order_by('ordering')
 							for photo in photos:
 								photo_obj = {}
-								photo_obj.id = photo.pk
-								photo_obj.big_url = photo.big_url
-								photo_obj.thumb_url = photo.thumb_url
-								photo_obj.ordering = photo.ordering
+								photo_obj['id'] = photo.pk
+								photo_obj['big_url'] = photo.big_url
+								photo_obj['thumb_url'] = photo.thumb_url
 								album_obj['photos'].append(photo_obj)
 							prof_obj.albums.append(album_obj)
 
@@ -1129,6 +1129,10 @@ class UserProfileResource(ModelResource):
 					search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 					search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
+					for j in Wing.objects.filter(author=i):							
+							if j.get_class_name() not in search_obj.wings:
+								search_obj.wings.append(j.get_class_name())
+
 					if request.GET['type'] == 'Applicant':										
 						filters = self.make_publicreq_search_filters(request.GET, i)
 						prw = PublicRequestWing.objects.filter(filters)
@@ -1141,7 +1145,7 @@ class UserProfileResource(ModelResource):
 							cpy.wing_end_date = pw.date_end
 							cpy.wing_capacity = pw.capacity
 							search_list.objects.append(cpy)
-					else:
+					else:						
 						search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
@@ -1326,15 +1330,132 @@ class PhotoCompletedResource(ModelResource):
 		#print '%s  %s' % ("POST", request.raw_post_data)
 		encoded = request.raw_post_data
 		POST= json.loads(encoded)
-		print POST
-		url = ""
-		"""
+		if len(POST["results"]["images"]) != 2:
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse) 
 		try:
-		  url = POST["results"]["images"][0]['s3_url']
-		  img_id = POST["results"]["images"][0]['image_identifier']
-		except:
-		  #print POST["results"]["images"][0]['error']
-		  return self.create_response(request, {"status":False}, response_class = HttpResponse)
-		"""
+			i = 0;
+			auth_token = request.GET['authToken']
+			album_id = request.GET['album']
+			for results in POST["results"]["images"]:
+				url = results['s3_url']
+				url = str.replace(str(url), 'http://', '//', 1)
+				size = results['image_identifier']			  	
+				album = PhotoAlbums.objects.get(pk=album_id)
+				apit = ApiToken.objects.get(token=auth_token)
+				if (not blitline_token_is_authenticated(apit) or not (apit.user == album.author.user)):
+					return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+
+				if i == 0:
+					final_photo= Photos.objects.create(author=UserProfile.objects.get(user=apit.user), album=album)
+				if size == 'big':
+					final_photo.big_url = url
+				else:
+					final_photo.thumb_url = url
+				i = i + 1
+			final_photo.save()			
+			self.reorder_album(album, final_photo)
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
+	def reorder_album(self, album, first):
+		photos = Photos.objects.filter(album=album).order_by('ordering')
+		first.ordering = 1;
+		first.save();
+		aux = 2;
+		for i in photos:
+			i.ordering = aux;
+			aux = aux + 1
+			i.save();
+
+class PhotosResource(ModelResource):
+
+	class Meta:
+		object_class = Photos
+		queryset = Photos.objects.all()
+		detail_allowed_methods = ['delete', 'get']
+		list_allowed_methods = []
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def delete_detail(self, request, **kwargs):
+		id_photo = kwargs['pk']
+		try:
+			photo = Photos.objects.get(pk=id_photo)
+			if photo.author == UserProfile.objects.get(user=request.user):
+				photo.delete()
+				return self.create_response(request, {"status":True}, response_class=HttpResponse)
+			else:
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
+
+	def get_detail(self, request, **kwargs):
+		id_photo = kwargs['pk']
+		try:
+			photo = Photos.objects.get(pk=id_photo)
+			return self.create_response(request, {"status":True, "data":{"id":photo.pk, "big_url": photo.big_url, "thumb_url": photo.thumb_url}}, response_class=HttpResponse) 
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
+
+class AlbumsResource(ModelResource):
+
+	class Meta:
+		object_class = PhotoAlbums
+		queryset = Photos.objects.all()
+		detail_allowed_methods = ['put', 'get']
+		list_allowed_methods = []
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def get_detail(self, request, **kwargs):
+		id_album= kwargs['pk']
+		try:
+			album = PhotoAlbums.objects.get(pk=id_album)
+			resp = {"id":album.pk, "name":album.name, "photos":[]}
+			photos = Photos.objects.filter(album=album)
+			for i in photos:
+				cur_photo = {}
+				cur_photo['id'] = i.pk
+				cur_photo['big_url'] = i.big_url
+				cur_photo['thumb_url'] = i.thumb_url
+				resp['photos'].append(cur_photo)
+			return self.create_response(request, {"status":True, "data":resp}, response_class=HttpResponse) 
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
+
+	def put_detail(self, request, **kwargs):
+		id_album= kwargs['pk']
+		PUT = json.loads(request.raw_post_data)
+		if not self.validate_PUT(PUT):
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photos']}]}, response_class=HttpResponse)
+		try:
+			album = PhotoAlbums.objects.get(pk=id_album)
+			photos = Photos.objects.filter(album=album)
+			idx = 1
+			for i in PUT['photos']:
+				if i in [j.pk for j in photos]:
+					cur_photo = Photos.objects.get(pk=i)
+					cur_photo.ordering = idx
+					cur_photo.save()
+					idx = idx + 1
+			return self.create_response(request, {"status":True}, response_class=HttpResponse) 
+		except:
+			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
+
+	def validate_PUT(self, PUT):
+		if PUT.has_key('photos') and isinstance(PUT['photos'], list):
+			return True
+		return False
+
+
+
+
+
