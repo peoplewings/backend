@@ -312,12 +312,7 @@ class FacebookLoginResource(ModelResource):
 					kwarg['birthday'] = date(int(str.split(str(user['birthday']), '/')[2]), int(str.split(str(user['birthday']), '/')[0]), int(str.split(str(user['birthday']), '/')[1]))
 
 				#pic_path = graph.get_profile_picture()				
-				new_profile = UserProfile.objects.create(**kwarg)
-				today = date.today()
-				age = today.year - new_profile.birthday.year
-				if today.month < new_profile.birthday.month or (today.month == new_profile.birthday.month and today.day < new_profile.birthday.day): age -= 1
-				new_profile.age = age
-				new_profile.save()
+				new_profile = UserProfile.objects.create(**kwarg)				
 				PhotoAlbums.objects.create(name='default', author=new_profile)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:

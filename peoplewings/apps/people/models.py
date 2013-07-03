@@ -175,7 +175,6 @@ def createUserProfile(sender, user, request, **kwargs):
 		today = date.today()
 		age = today.year - data.birthday.year
 		if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1
-		data.age = age
 		PhotoAlbums.objects.create(name='default', author=data)
 		data.save()
 
