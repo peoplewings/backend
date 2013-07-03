@@ -1169,7 +1169,7 @@ class UserProfileResource(ModelResource):
 				return response
 			except BadRequest, e:
 				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
+				errors = [{"type": "INTERNAL_ERROR", "msg": e}]
 				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse) 
@@ -1202,19 +1202,19 @@ class UserProfileResource(ModelResource):
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
+					errors = [{"type": "INTERNAL_ERROR", "msg": e}]
 					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				else:               
 					ccontent = {}
-					errors = [{"type": "INTERNAL_ERROR"}]
+					errors = [{"type": "INTERNAL_ERROR", "msg": e}]
 					content['errors'] = errors               
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:				
 				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]
+				errors = [{"type": "INTERNAL_ERROR", "msg": e}]
 				content['errors'] = errors               
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
