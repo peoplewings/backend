@@ -196,6 +196,7 @@ class Photos(models.Model):
 	big_url = models.CharField(max_length=500, default='')
 	thumb_url = models.CharField(max_length=500, default='')
 	ordering = models.IntegerField(default=1000)
+	add_notificated = models.BooleanField(default=False)
 
 user_registered.connect(createUserProfile)
 user_deleted.connect(deleteUserProfile)

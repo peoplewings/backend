@@ -1,6 +1,5 @@
 Django==1.4.3
 Fabric==1.4.3
-http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz
 South==0.7.5
 boto==2.6.0
 distribute==0.6.27

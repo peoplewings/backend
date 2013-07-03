@@ -37,6 +37,7 @@ class SearchObject(object):
 		self.languages = None
 		self.all_about_you = None
 		self.date_joined = None
+		self.wings = []
 
 		self.wing_introduction = None
 		self.wing_type = None

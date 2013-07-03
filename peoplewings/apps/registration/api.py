@@ -43,6 +43,7 @@ from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
+from peoplewings.apps.people.models import PhotoAlbums
 from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
@@ -239,7 +240,6 @@ class FacebookLoginResource(ModelResource):
 	def post_list(self, request, **kwargs):	
 		#import pdb; pdb.set_trace()
 		try:		
-			import pdb; pdb.set_trace()	
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
 			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)

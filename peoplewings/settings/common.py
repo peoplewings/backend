@@ -115,7 +115,8 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'peoplewings.apps.cropper.middleware.Crop',
-    'peoplewings.apps.notifications.middleware.Notification',    
+    'peoplewings.apps.notifications.middleware.Notification',
+    'peoplewings.apps.people.middleware.Photos',    
     #'peoplewings.libs.middlewares.debug-middleware.DebugMiddleware',
     'peoplewings.libs.middlewares.django-crossdomainxhr-middleware.XsSharing',    
 )
