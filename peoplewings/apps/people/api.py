@@ -38,6 +38,7 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication,
 from peoplewings.apps.locations.api import CityResource
 from peoplewings.apps.locations.models import Country, Region, City
 from peoplewings.apps.wings.api import AccomodationsResource, WingResource
+from peoplewings.apps.wings.models import Wing
 from peoplewings.libs.customauth.models import ApiToken
 from peoplewings.apps.wings.models import Accomodation, PublicRequestWing
 from django.contrib.auth.models import User
@@ -1128,6 +1129,10 @@ class UserProfileResource(ModelResource):
 					search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 					search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
+					for j in Wing.objects.filter(author=i):							
+							if j.get_class_name() not in search_obj.wings:
+								search_obj.wings.append(j.get_class_name())
+
 					if request.GET['type'] == 'Applicant':										
 						filters = self.make_publicreq_search_filters(request.GET, i)
 						prw = PublicRequestWing.objects.filter(filters)
@@ -1140,7 +1145,7 @@ class UserProfileResource(ModelResource):
 							cpy.wing_end_date = pw.date_end
 							cpy.wing_capacity = pw.capacity
 							search_list.objects.append(cpy)
-					else:
+					else:						
 						search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
