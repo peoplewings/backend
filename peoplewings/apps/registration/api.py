@@ -293,7 +293,7 @@ class FacebookLoginResource(ModelResource):
 	def register_with_fb(self, user, graph):		
 		try:
 			#import pdb; pdb.set_trace()
-			print user['email']
+			print 'Starting REGISTRATION'
 			cur_user = User.objects.filter(email=user['email'])
 			if len(cur_user) == 0:
 				print '1'
@@ -324,6 +324,7 @@ class FacebookLoginResource(ModelResource):
 				print '2'
 				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
 		except Exception, e:
+			print 'EXCEPTION'
 			print e
 			return False
 		return True
