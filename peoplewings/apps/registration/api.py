@@ -327,6 +327,7 @@ class FacebookLoginResource(ModelResource):
 			print 'EXCEPTION'
 			print e
 			return False
+		print 'Register COMPLETED'
 		return True
 
 	
