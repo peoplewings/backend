@@ -20,8 +20,14 @@ class Photos(object):
 					if not resp.has_key('updates'):
 						resp['updates'] = {}
 					resp['updates']['photos'] = []
-					for i in photos:				
-						resp['updates']['photos'].append(i.pk)
+					for i in photos:	
+						aux = {}
+						aux['id'] = i.pk
+						aux['hash'] = i.photo_hash
+						aux['bigUrl'] = i.big_url
+						aux['thumbUrl'] = i.thumb_url	
+						aux['albumId'] = i.album.pk		
+						resp['updates']['photos'].append(aux)
 						i.add_notificated = True
 						i.save()
 

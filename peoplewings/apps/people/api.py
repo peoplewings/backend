@@ -1337,17 +1337,18 @@ class PhotoCompletedResource(ModelResource):
 			i = 0;
 			auth_token = request.GET['authToken']
 			album_id = request.GET['album']
+			photo_hash = request.GET['hash']
 			for results in POST["results"]["images"]:
 				url = results['s3_url']
 				url = str.replace(str(url), 'http://', '//', 1)
-				size = results['image_identifier']			  	
+				size = results['image_identifier']
 				album = PhotoAlbums.objects.get(pk=album_id)
 				apit = ApiToken.objects.get(token=auth_token)
 				if (not blitline_token_is_authenticated(apit) or not (apit.user == album.author.user)):
 					return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
 
 				if i == 0:
-					final_photo= Photos.objects.create(author=UserProfile.objects.get(user=apit.user), album=album)
+					final_photo= Photos.objects.create(author=UserProfile.objects.get(user=apit.user), album=album, photo_hash=photo_hash)
 				if size == 'big':
 					final_photo.big_url = url
 				else:
