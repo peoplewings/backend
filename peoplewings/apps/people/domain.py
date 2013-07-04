@@ -58,9 +58,9 @@ class SearchObject(object):
 		self._final_score= 0
 
 		self.n_photos = None
-		self._photos = None
-		self._prof_complete = None
-		self._recent = None
+		self._photos = 0
+		self._prof_complete = 0
+		self._recent = 0
 
 
 	def jsonable(self):
