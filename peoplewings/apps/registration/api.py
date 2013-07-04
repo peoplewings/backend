@@ -47,6 +47,7 @@ from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
 
+
 class UserSignUpResource(ModelResource):
 
 	class Meta:

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import UserProfile
+from models import UserProfile, Interests
 from django.contrib.auth.models import User
 """
 class UserInLine(admin.StackedInline):
@@ -11,10 +11,18 @@ class UserInLine(admin.StackedInline):
 """
 class UserProfileAdmin(admin.ModelAdmin):
     model = UserProfile
-    list_display = ('user_email', 'current_city')
+    list_display = ('user', 'current_city')
     list_filter = ('current_city',)
 
-    def user_email(self, obj):
+    '''def user_email(self, obj):
        	return obj.user.email
+    '''
+
+class InterestsAdmin(admin.ModelAdmin):
+    model = Interests
+    list_display = ('gender',)
+    list_filter = ('gender',)
+
 
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Interests, InterestsAdmin)

@@ -1,6 +1,6 @@
 from django.db import models, connection, transaction
 from django.contrib.auth.models import User
-from signals import user_deleted
+from signals import user_deleted, profile_registered
 from django.utils import timezone
 from datetime import date, datetime
 from peoplewings.apps.registration.signals import user_registered
@@ -10,6 +10,8 @@ from peoplewings.apps.locations.models import City
 from peoplewings.global_vars import *
 from django.conf import settings as django_settings
 from django_extensions.db.fields import UUIDField
+from django.db.models import signals
+
 
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
@@ -160,7 +162,7 @@ class Reference(models.Model):
 	text = models.TextField(max_length=max_500_char)
 	punctuation = models.CharField(max_length=8, choices=PUNCTUATION_CHOICES)
 
-def createUserProfile(sender, user, request, **kwargs):    
+def createUserProfile(sender, user, request, **kwargs):
 	if UserProfile.objects.filter(user= user).count() == 0:
 		form = RegistrationForm(request.POST)
 		registered_user = User.objects.get(username=user.username)
@@ -178,6 +180,7 @@ def createUserProfile(sender, user, request, **kwargs):
 		data.age = age
 		PhotoAlbums.objects.create(name='default', author=data)
 		data.save()
+		profile_registered.send(sender = UserProfile, user = data)
 
 def deleteUserProfile(sender, request, **kwargs):
 	prof = request.user.get_profile()

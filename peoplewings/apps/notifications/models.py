@@ -14,6 +14,7 @@ from django.template.loader import render_to_string
 from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
+from peoplewings.apps.people.signals import profile_registered
 
 TYPE_CHOICES = (
 		('A', 'Accepted'),
@@ -187,13 +188,29 @@ def send_notification_email(site, user):
 		message = render_to_string('notifications/sent_notifications_email.txt', ctx_dict)
 		send_mail(subject, message, '%s <%s>' % (settings.NOTIF_SERVER_EMAIL, settings.NOTIF_DEFAULT_FROM_EMAIL), [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
 		return True
+'''
+def welcome_message(sender, **kwards):
+	user = kwards['user']
+	Notifications.objects.create_message(receiver = user.pk, sender = UserProfile.objects.get(user__username = 'peoplewings'), content = 'hey')
+'''
 
-			
+def welcome_message(sender, **kwargs):
+	#import pdb; pdb.set_trace()
+	try:
+		rec = UserProfile.objects.get(user = kwargs['user'])
+	except Exception, e:
+		raise e	
+	try:
+		sen = UserProfile.objects.get(user = UserProfile.objects.get(id = 87))
+	except Exception, e:
+		raise e
+	Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'message', read = False, first_sender =  sen, private_message = 'Hey')
 
 
 class EmailNotifications(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	last_notificated = models.BigIntegerField(default=0)
+
 
 # Notifications class
 class Notifications(models.Model):
@@ -306,9 +323,13 @@ def del_alarm(sender, instance, signal, *args, **kwargs):
 	NotificationsAlarm.objects.filter(filters).delete()
 
 
+
+
 post_save.connect(put_alarm, sender=Messages)
 post_save.connect(put_alarm, sender=Requests)
 post_save.connect(put_alarm, sender=Invites)
+
+profile_registered.connect(welcome_message)
 #post_delete.connect(del_alarm, sender=Notifications)
 
 
