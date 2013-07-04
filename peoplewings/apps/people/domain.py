@@ -4,8 +4,11 @@ import json
 from notifications.models import Notifications
 from django.db.models import Q
 from people.models import UserProfile
+from django.contrib.auth.models import User
 from notifications.models import Requests, Invites
 import time
+from datetime import datetime, timedelta
+from django.utils.timezone import utc
 
 from operator import attrgetter
 
@@ -52,7 +55,12 @@ class SearchObject(object):
 		self._experience_score= None
 		self._responsive_score= None
 		self._reqinv_score= None
-		self._final_score= None
+		self._final_score= 0
+
+		self.n_photos = None
+		self._photos = None
+		self._prof_complete = None
+		self._recent = None
 
 
 	def jsonable(self):
@@ -246,6 +254,105 @@ class SearchObjectManager(object):
 		offline = self.order_by_relevance_plus_news(offline)
 
 		self.objects= online + offline
+
+	################
+
+	def order_by_avatar(self, people):
+		avatar = []
+		no_avatar = []
+
+		for i in people:
+			if 'blank_avatar' in i.avatar:
+				no_avatar.append(i)
+			else:
+				avatar.append(i)
+		return avatar, no_avatar
+
+	def order_by_album(self, people):
+		for i in people:
+			i._photos = min(i.n_photos, settings.MAX_UPLOADED_PHOTOS) * settings.PHOTO_SCORE
+
+		return people
+
+	def order_by_profile(self, people):
+		for i in people:
+			completeness = 0
+			prof = UserProfile.objects.get(pk=i.profile_id)
+			#import pdb; pdb.set_trace()
+			if len(prof.interested_in.all()) > 0: completeness = completeness + 1
+			if prof.civil_state != '': completeness = completeness + 1
+			if prof.all_about_you != '': completeness = completeness + 1
+			if prof.main_mission != '': completeness = completeness + 1
+			if prof.occupation != '': completeness = completeness + 1
+			if len(prof.universities.all()) > 0: completeness = completeness + 1
+			if prof.personal_philosophy != '': completeness = completeness + 1
+			if prof.political_opinion != '': completeness = completeness + 1
+			if prof.religion != '': completeness = completeness + 1
+			if prof.enjoy_people != '': completeness = completeness + 1
+			if prof.movies != '': completeness = completeness + 1
+			if prof.sports != '': completeness = completeness + 1
+			if prof.other_pages != '': completeness = completeness + 1
+			if prof.sharing != '': completeness = completeness + 1
+			if prof.incredible != '': completeness = completeness + 1
+			if prof.inspired_by != '': completeness = completeness + 1
+			if prof.quotes != '': completeness = completeness + 1
+			if prof.current_city is None: completeness = completeness + 1
+			if prof.hometown is None: completeness = completeness + 1
+
+			if completeness >= 16: 
+				i._prof_complete = settings.PROFILE_75
+			elif completeness >= 10: 
+				i._prof_complete = settings.PROFILE_50
+			elif completeness >= 5: 
+				i._prof_complete = settings.PROFILE_25
+			else: 
+				i._prof_complete = 0
+		return people
+
+	def order_by_recent(self, people):
+		#import pdb; pdb.set_trace()
+		now = datetime.now()		
+		for i in people:
+			usr = User.objects.get(pk=i.profile_id)
+			if (now - timedelta(hours=12)).replace(tzinfo=utc) <= usr.last_login: 
+				i._recent = settings.RECENT_12H
+			elif (now - timedelta(days=2)).replace(tzinfo=utc) <= usr.last_login:  
+				i._recent = settings.RECENT_2D
+			elif (now - timedelta(weeks=1)).replace(tzinfo=utc) <= usr.last_login:  
+				i._recent = settings.RECENT_1W
+			else:
+				i._recent = 0
+		return people
+
+	def sum_people_score(self, people):		
+		for i in people:			
+			i._final_score = i._photos + i._prof_complete + i._recent
+
+		if len(people) > 0: return sorted(people, key=lambda x: x._final_score, reverse=False)
+		#import pdb; pdb.set_trace()
+		return []
+
+	def order_by_people_relevance(self):
+		online = [i for i in self.objects if i.online == True]
+		offline = [i for i in self.objects if i.online == False]
+
+		on_avatar, on_noavatar = self.order_by_avatar(online)
+		off_avatar, off_noavatar = self.order_by_avatar(offline)
+
+		on_avatar = self.order_by_album(on_avatar)
+		on_noavatar = self.order_by_album(on_noavatar)
+		off_avatar = self.order_by_album(off_avatar)
+		off_noavatar = self.order_by_album(off_noavatar)
+
+		on_avatar = self.order_by_profile(on_avatar)
+		on_noavatar = self.order_by_profile(on_noavatar)
+		off_avatar = self.order_by_profile(off_avatar)
+		off_noavatar = self.order_by_profile(off_noavatar)
+
+		off_avatar = self.order_by_recent(off_avatar)
+		off_noavatar = self.order_by_recent(off_noavatar)
+
+		return self.sum_people_score(on_avatar) + self.sum_people_score(on_noavatar) + self.sum_people_score(off_avatar) + self.sum_people_score(off_noavatar)
 
 	def make_dirty(self):
 		import string, random
