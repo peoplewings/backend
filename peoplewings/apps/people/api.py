@@ -879,7 +879,72 @@ class UserProfileResource(ModelResource):
 			result = None
 		return result
 
-	def validate_search(self, GET):
+	def validate_people_search(self, GET):
+		errors = []
+		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
+		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
+		invalid_field = {"type": 'INVALID_FIELD', "extras":[]}
+
+		#Mandatory params
+		if GET.has_key('startAge'):
+			if GET['startAge'] == "":
+				not_empty['extras'].append('startAge')
+		else:
+			field_req['extras'].append('startAge')
+
+		if GET.has_key('endAge'):
+			if GET['endAge'] == "":
+				not_empty['extras'].append('endAge')
+		else:
+			field_req['extras'].append('endAge')
+
+		if GET.has_key('language'):
+			if GET['language'] == "":
+				not_empty['extras'].append('language')
+		else:
+			field_req['extras'].append('language')
+
+		if GET.has_key('page'):
+			if GET['page'] == "":
+				not_empty['extras'].append('page')
+		else:
+			field_req['extras'].append('page')
+
+		if GET.has_key('gender'):
+			if GET['gender'] == "":
+				not_empty['extras'].append('gender')
+		else:
+			field_req['extras'].append('gender')
+
+		#Optional params
+		if GET.has_key('location'):
+			if GET['location'] == "":
+				not_empty['extras'].append('location')
+
+		#Other checks		
+		#startAge >=18
+		if GET.has_key('startAge') and GET['startAge'] < 1:
+			invalid_field['extras'].append('startAge')
+		#endAge >= 18
+		if GET.has_key('endAge') and GET['endAge'] < 1:
+			invalid_field['extras'].append('endAge')
+		#startAge >= endAge
+		if GET.has_key('startAge') and GET.has_key('endAge') and GET['endAge'] < GET['startAge']:
+			invalid_field['extras'].append('age')
+		#gender in male, female both
+		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
+			invalid_field['extras'].append('gender')
+
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(invalid_field['extras']) > 0:
+			errors.append(invalid_field)
+
+		return errors
+	def validate_accomodation_search(self, GET):
 		errors = []
 		field_req = {"type": 'FIELD_REQUIRED', "extras":[]}
 		not_empty = {"type": 'NOT_EMPTY', "extras":[]}
@@ -983,7 +1048,29 @@ class UserProfileResource(ModelResource):
 
 		return errors
 
-	def make_search_filters(self, GET):
+	def make_people_search_filters(self, GET):
+		#We have to filter by: birthday (UP)*-OK, language (up)*-OK, gender( up)*-OK, capacity (w)*-OK, wings (w)-OK, start_date & end_date (w)-OK, type*
+		min_year = datetime.today().year
+		min_month = datetime.today().month
+		min_day = datetime.today().day
+		min_year = min_year - int(GET['startAge'])
+		max_year = datetime.today().year
+		max_month = datetime.today().month
+		max_day = datetime.today().day
+		max_year = max_year - int(GET['endAge'])
+		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
+		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
+		
+		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(active=True)
+		if GET['language'] != 'all':
+			result = result &Q(languages__name= GET['language'])
+		if GET['gender'] != 'Both':
+			result = result & Q(gender=GET['gender'])		
+		if 'location' in GET:
+			result = result & (Q(current_city__name=GET['location'])|Q(current_city__region__name__icontains=GET['location'])|Q(current_city__region__country__name__icontains=GET['location']))
+		return result
+
+	def make_accomodation_search_filters(self, GET):
 		#We have to filter by: birthday (UP)*-OK, language (up)*-OK, gender( up)*-OK, capacity (w)*-OK, wings (w)-OK, start_date & end_date (w)-OK, type*
 		min_year = datetime.today().year
 		min_month = datetime.today().month
@@ -1032,7 +1119,7 @@ class UserProfileResource(ModelResource):
 				result = result & Q(publicrequestwing__date_start__lte=date_end)
 		return result
 
-	def make_publicreq_search_filters(self, GET, prof):
+	def make_accomodation_publicreq_search_filters(self, GET, prof):
 		result = Q(capacity__gte= GET['capacity']) & Q(author=prof)
 		if 'wings' in GET:
 			result = result & Q(city__name__icontains=GET['wings'])
@@ -1096,57 +1183,120 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):			
-		errors = self.validate_search(request.GET)		
+	def get_list(self, request, **kwargs):	
+		if request.GET.has_key('wingType'):
+			if request.GET['wingType'] == 'people':
+				return self.search_people(request, **kwargs)
+			else:
+				return self.create_response(request, {"errors": {"type":"INVALID", "extras":["wingType"]}, "status":False}, response_class=HttpForbidden)	
+		else:
+			return self.search_accomodation(request, **kwargs)
+
+	def search_people(self, request, **kwargs):		
+		errors = self.validate_people_search(request.GET)
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
 		#We have no problem with the given filters
-		filters = self.make_search_filters(request.GET)
+		filters = self.make_people_search_filters(request.GET)
+		try:			
+			search_list = SearchObjectManager()
+			profiles = UserProfile.objects.filter(filters).distinct()		
+			
+			for i in profiles:				
+				search_obj = SearchObject()
+				search_obj.profile_id = i.pk
+				search_obj.ctrl_user = i.user
+				search_obj.first_name = i.user.first_name
+				search_obj.last_name = i.user.last_name
+				if i.current_city:
+					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				else: 
+					search_obj.current= {}
+
+				search_obj.avatar = i.medium_avatar
+				search_obj.age = i.get_age()
+				search_obj.online = self.connected(i.user)
+				search_obj.reply_rate = i.reply_rate
+				search_obj.reply_time = i.reply_time
+				search_obj.languages = self.parse_languages(i)
+				search_obj.all_about_you = i.all_about_you
+				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
+
+				for j in Wing.objects.filter(author=i):							
+						if j.get_class_name() not in search_obj.wings:
+							search_obj.wings.append(j.get_class_name())
+
+				n_photos = 0
+				for k in Photos.objects.filter(author=i):
+					n_photos = n_photos + 1
+
+				search_obj.n_photos = n_photos
+
+				search_list.objects.append(search_obj)
+		except Exception, e:
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
+		
+		search_list.order_by_people_relevance()
+
+		if not isinstance(request.user, User):
+			search_list.make_dirty()
+
+		data = self.paginate(search_list.jsonable(), request.GET)
+		#import pdb; pdb.set_trace()
+		if isinstance(data, HttpResponse): return data
+		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)
+
+	def search_accomodation(self, request, **kwargs):
+		errors = self.validate_accomodation_search(request.GET)		
+		if len(errors) > 0:
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
+		#We have no problem with the given filters
+		filters = self.make_accomodation_search_filters(request.GET)
 
 		try:			
 			search_list = SearchObjectManager()
 			profiles = UserProfile.objects.filter(filters).distinct()		
 			
-			for i in profiles:
-				if i.user != request.user:
-					search_obj = SearchObject()
-					search_obj.profile_id = i.pk
-					search_obj.ctrl_user = i.user
-					search_obj.first_name = i.user.first_name
-					search_obj.last_name = i.user.last_name
-					if i.current_city:
-						search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-					else: 
-						search_obj.current= {}
+			for i in profiles:				
+				search_obj = SearchObject()
+				search_obj.profile_id = i.pk
+				search_obj.ctrl_user = i.user
+				search_obj.first_name = i.user.first_name
+				search_obj.last_name = i.user.last_name
+				if i.current_city:
+					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
+				else: 
+					search_obj.current= {}
 
-					search_obj.avatar = i.medium_avatar
-					search_obj.age = i.get_age()
-					search_obj.online = self.connected(i.user)
-					search_obj.reply_rate = i.reply_rate
-					search_obj.reply_time = i.reply_time
-					search_obj.languages = self.parse_languages(i)
-					search_obj.all_about_you = i.all_about_you
-					search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-					search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
+				search_obj.avatar = i.medium_avatar
+				search_obj.age = i.get_age()
+				search_obj.online = self.connected(i.user)
+				search_obj.reply_rate = i.reply_rate
+				search_obj.reply_time = i.reply_time
+				search_obj.languages = self.parse_languages(i)
+				search_obj.all_about_you = i.all_about_you
+				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
+				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
-					for j in Wing.objects.filter(author=i):							
-							if j.get_class_name() not in search_obj.wings:
-								search_obj.wings.append(j.get_class_name())
+				for j in Wing.objects.filter(author=i):							
+						if j.get_class_name() not in search_obj.wings:
+							search_obj.wings.append(j.get_class_name())
 
-					if request.GET['type'] == 'Applicant':										
-						filters = self.make_publicreq_search_filters(request.GET, i)
-						prw = PublicRequestWing.objects.filter(filters)
-						for pw in prw:
-							cpy = copy.deepcopy(search_obj)
-							cpy.wing_introduction = pw.introduction
-							cpy.wing_type = pw.wing_type
-							cpy.wing_city = pw.city.name
-							cpy.wing_start_date = pw.date_start
-							cpy.wing_end_date = pw.date_end
-							cpy.wing_capacity = pw.capacity
-							search_list.objects.append(cpy)
-					else:						
-						search_list.objects.append(search_obj)
+				if request.GET['type'] == 'Applicant':										
+					filters = self.make_accomodation_publicreq_search_filters(request.GET, i)
+					prw = PublicRequestWing.objects.filter(filters)
+					for pw in prw:
+						cpy = copy.deepcopy(search_obj)
+						cpy.wing_introduction = pw.introduction
+						cpy.wing_type = pw.wing_type
+						cpy.wing_city = pw.city.name
+						cpy.wing_start_date = pw.date_start
+						cpy.wing_end_date = pw.date_end
+						cpy.wing_capacity = pw.capacity
+						search_list.objects.append(cpy)
+				else:						
+					search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
 
