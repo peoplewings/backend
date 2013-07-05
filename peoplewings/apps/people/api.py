@@ -1503,7 +1503,7 @@ class PhotoCompletedResource(ModelResource):
 				else:
 					final_photo.thumb_url = url
 				i = i + 1
-			final_photo.save()			
+			final_photo.save()
 			self.reorder_album(album, final_photo)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
@@ -1511,14 +1511,16 @@ class PhotoCompletedResource(ModelResource):
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
 	def reorder_album(self, album, first):
+		import pdb; pdb.set_trace()
 		photos = Photos.objects.filter(album=album).order_by('ordering')
 		first.ordering = 1;
 		first.save();
 		aux = 2;
 		for i in photos:
-			i.ordering = aux;
-			aux = aux + 1
-			i.save();
+			if i != fist:
+				i.ordering = aux;
+				aux = aux + 1
+				i.save();
 
 class PhotosResource(ModelResource):
 
