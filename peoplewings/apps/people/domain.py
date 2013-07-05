@@ -329,7 +329,7 @@ class SearchObjectManager(object):
 		for i in people:			
 			i._final_score = i._photos + i._prof_complete + i._recent
 
-		if len(people) > 0: return sorted(people, key=lambda x: x._final_score, reverse=False)
+		if len(people) > 0: return sorted(people, key=lambda x: x._final_score, reverse=True)
 		#import pdb; pdb.set_trace()
 		return []
 
