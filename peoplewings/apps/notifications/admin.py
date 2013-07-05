@@ -1,15 +1,17 @@
 from django.contrib import admin
 from models import *
+from peoplewings.apps.wings.models import Wing
+
 
 class RequestsAdmin(admin.ModelAdmin):
     model = Requests
-    list_display = ('receiver', 'sender', 'created', 'reference', 'read')
-    list_filter = ('receiver', 'sender', 'created', 'reference', 'read')
+    list_display = ('receiver', 'sender', 'created', 'reference', 'read', 'wing')
+    list_filter = ('receiver', 'sender', 'created', 'reference', 'read', 'wing')
 
 class InvitesAdmin(admin.ModelAdmin):
     model = Invites
-    list_display = ('receiver', 'sender', 'created', 'reference', 'read')
-    list_filter = ('receiver', 'sender', 'created', 'reference', 'read')
+    list_display = ('receiver', 'sender', 'created', 'reference', 'read', 'wing')
+    list_filter = ('receiver', 'sender', 'created', 'reference', 'read', 'wing')
     
 class MessagesAdmin(admin.ModelAdmin):
     model = Messages

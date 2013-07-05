@@ -5,17 +5,19 @@ from models import *
 class CityAdmin(admin.ModelAdmin):
     model = City
     list_display = ('name', 'country')
-    list_filter = ('name',)
+    list_filter = ('name', 'region__country__name')
 
     def country(self, obj):
     	return '%s'%(obj.region.country.name)
 
     	country.short_description = 'Country'
 
+
 class RegionAdmin(admin.ModelAdmin):
     model = Region
     list_display = ('name', 'country')
-    list_filter = ('name', 'country')
+    list_filter = ('name', 'country__name')
+
 
 class CountryAdmin(admin.ModelAdmin):
     model = Country
