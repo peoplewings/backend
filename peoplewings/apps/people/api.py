@@ -1238,7 +1238,6 @@ class UserProfileResource(ModelResource):
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
 		
 		search_list.order_by_people_relevance()
-
 		if not isinstance(request.user, User):
 			search_list.make_dirty()
 

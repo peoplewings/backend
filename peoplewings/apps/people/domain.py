@@ -254,6 +254,7 @@ class SearchObjectManager(object):
 		offline = self.order_by_relevance_plus_news(offline)
 
 		self.objects= online + offline
+		return
 
 	################
 
@@ -350,9 +351,9 @@ class SearchObjectManager(object):
 		off_noavatar = self.order_by_profile(off_noavatar)
 
 		off_avatar = self.order_by_recent(off_avatar)
-		off_noavatar = self.order_by_recent(off_noavatar)
-
-		return self.sum_people_score(on_avatar) + self.sum_people_score(on_noavatar) + self.sum_people_score(off_avatar) + self.sum_people_score(off_noavatar)
+		off_noavatar = self.order_by_recent(off_noavatar)		
+		self.objects = self.sum_people_score(on_avatar) + self.sum_people_score(on_noavatar) + self.sum_people_score(off_avatar) + self.sum_people_score(off_noavatar)
+		return
 
 	def make_dirty(self):
 		import string, random
