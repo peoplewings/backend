@@ -717,7 +717,7 @@ class UserProfileResource(ModelResource):
 						elif isinstance(item['photos'], list):
 							for item2 in item['photos']:
 								if isinstance(item2, dict):
-										if item2.has_key('id') and item2.has_key('thumb_url') and item2.has_key('big_url'):
+										if item2.has_key('id') and item2.has_key('thumbUrl') and item2.has_key('bigUrl'):
 											pass
 										else:
 											invalid['extras'].append('photos')
