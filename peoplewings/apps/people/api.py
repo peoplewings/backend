@@ -1511,16 +1511,15 @@ class PhotoCompletedResource(ModelResource):
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
 	def reorder_album(self, album, first):
-		import pdb; pdb.set_trace()
 		photos = Photos.objects.filter(album=album).order_by('ordering')
-		first.ordering = 1;
-		first.save();
 		aux = 2;
 		for i in photos:
 			if i != fist:
 				i.ordering = aux;
 				aux = aux + 1
-				i.save();
+			else:
+				i.ordering = 1
+			i.save();
 
 class PhotosResource(ModelResource):
 
