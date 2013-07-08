@@ -238,7 +238,7 @@ class FacebookLoginResource(ModelResource):
 		always_return_data = True
 
 	def post_list(self, request, **kwargs):	
-		import pdb; pdb.set_trace()
+		#import pdb; pdb.set_trace()
 		try:		
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
