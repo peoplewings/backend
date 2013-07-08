@@ -290,6 +290,7 @@ class FacebookLoginResource(ModelResource):
 		prof.avatar_updated = True
 		prof.save()
 
+	@transaction.commit_manually()
 	def register_with_fb(self, user, graph):		
 		try:
 			#import pdb; pdb.set_trace()
@@ -302,6 +303,7 @@ class FacebookLoginResource(ModelResource):
 				kwarg = {}
 				kwarg['active']= True
 				kwarg['user_id'] = new_user.pk
+				kwarg['id'] = newuser.pk
 				if user.has_key('gender'):
 					if str(user['gender']) == 'male':
 						kwarg['gender'] = 'Male'
@@ -320,8 +322,10 @@ class FacebookLoginResource(ModelResource):
 				FacebookUser.objects.create(user=cur_user[0], fbid=user['id'])
 		except Exception, e:
 			print 'EXCEPTION %s', str(e)
+			transaction.rollback()
 			return False
 		print 'Register COMPLETED'
+		transaction.commit()
 		return True
 
 	
