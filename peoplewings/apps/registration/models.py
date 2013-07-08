@@ -44,7 +44,6 @@ class RegistrationManager(models.Manager):
 		return False
 	
 	def create_inactive_user(self, username, email, password, site, send_email=True):
-		import pdb; pdb.set_trace()
 		try:
 			user = User.objects.filter(email=email)
 		except Exception:

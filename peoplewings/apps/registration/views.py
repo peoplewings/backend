@@ -47,12 +47,6 @@ def register(request, POST, backend, success_url=None, form_class=None,
 	
 	new_user = backend.register(request, **bundle_data)
 	return new_user.email
-	if extra_context is None:
-		extra_context = {}
-	context = RequestContext(request)
-	for key, value in extra_context.items():
-		context[key] = callable(value) and value() or value
-	return form
 
 def do_login(request, username, password):
 	try:
