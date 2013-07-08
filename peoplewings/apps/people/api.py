@@ -1514,7 +1514,7 @@ class PhotoCompletedResource(ModelResource):
 		photos = Photos.objects.filter(album=album).order_by('ordering')
 		aux = 2;
 		for i in photos:
-			if i != fist:
+			if i != first:
 				i.ordering = aux;
 				aux = aux + 1
 			else:
