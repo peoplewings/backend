@@ -244,7 +244,7 @@ class FacebookLoginResource(ModelResource):
 			cookie = {POST['appid'] : POST['token']}
 			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
-				return self.create_response(request, {"status":False}, response_class = HttpResponse)
+				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
 
 			#See if the user is already registered in PPW...
 			fbid = facebook['uid']
