@@ -328,7 +328,7 @@ class FacebookLoginResource(ModelResource):
 			return False
 		print 'Register COMPLETED'
 		transaction.commit()
-		profile_created.send_robust(sender=self, profile=new_profile, first_name=user['first_name'])
+		profile_created.send_robust(sender=self.__class__, profile=new_profile, first_name=user['first_name'])
 		return True
 
 	
