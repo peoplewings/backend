@@ -1,6 +1,6 @@
 Greetings {{ username }}, welcome to PEOPLEWINGS!
 
-This is the notification tool that users use in PEOPLEWINGS. All messages, requests and invites that other users send you will end up here. Also, the notifications you send will be here as well!
+This is the notification tool that people use in PEOPLEWINGS. All messages, requests and invites that other users send you, will end up here. Also, the notifications you send will be here as well!
 
 Every now and then, The PEOPLEWINGS Team will send you a message like this one, to inform you about updates and new cool features. 
 
