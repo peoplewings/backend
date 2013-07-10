@@ -15,6 +15,8 @@ from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
 
+from peoplewings.apps.people.signals import profile_created
+
 TYPE_CHOICES = (
 		('A', 'Accepted'),
 		('P', 'Pending'),
@@ -305,10 +307,16 @@ def del_alarm(sender, instance, signal, *args, **kwargs):
 	filters = Q(reference= instance.reference)&Q(receiver=instance.receiver)
 	NotificationsAlarm.objects.filter(filters).delete()
 
+def welcome_message(**kwargs):
+	#import pdb; pdb.set_trace()
+	ctx_dict = {'username': kwargs['first_name']}
+	message = render_to_string('notifications/welcome_message.txt', ctx_dict)
+	Notifications.objects.create_message(receiver=kwargs['profile'].pk, sender=UserProfile.objects.get(user__email='accounts-noreply@peoplewings.com').pk, content=message)
 
 post_save.connect(put_alarm, sender=Messages)
 post_save.connect(put_alarm, sender=Requests)
 post_save.connect(put_alarm, sender=Invites)
+profile_created.connect(welcome_message, sender=UserProfile, dispatch_uid="welcome")
 #post_delete.connect(del_alarm, sender=Notifications)
 
 

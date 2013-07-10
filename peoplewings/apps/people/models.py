@@ -4,6 +4,7 @@ from signals import user_deleted
 from django.utils import timezone
 from datetime import date, datetime
 from peoplewings.apps.registration.signals import user_registered
+from peoplewings.apps.people.signals import profile_created
 from peoplewings.apps.registration.forms import RegistrationForm
 from peoplewings.apps.cropper.models import Cropped
 from peoplewings.apps.locations.models import City
@@ -177,6 +178,13 @@ def createUserProfile(sender, user, request, **kwargs):
 		if today.month < data.birthday.month or (today.month == data.birthday.month and today.day < data.birthday.day): age -= 1
 		PhotoAlbums.objects.create(name='default', author=data)
 		data.save()
+
+		#Create the welcome notification....
+		try:
+			profile_created.send_robust(sender=data.__class__, profile=data, first_name=kwargs['firstname'])
+		except Exception, e:
+			print 'WELCOME MSG CREATION ERROR ', e
+
 
 def deleteUserProfile(sender, request, **kwargs):
 	prof = request.user.get_profile()

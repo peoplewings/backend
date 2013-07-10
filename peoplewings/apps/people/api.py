@@ -942,7 +942,6 @@ class UserProfileResource(ModelResource):
 			errors.append(not_empty)
 		if len(invalid_field['extras']) > 0:
 			errors.append(invalid_field)
-
 		return errors
 	def validate_accomodation_search(self, GET):
 		errors = []
@@ -1061,7 +1060,7 @@ class UserProfileResource(ModelResource):
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
 		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
 		
-		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(active=True)
+		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(active=True)&Q(user__is_active=True)
 		if GET['language'] != 'all':
 			result = result &Q(languages__name= GET['language'])
 		if GET['gender'] != 'Both':
@@ -1236,7 +1235,7 @@ class UserProfileResource(ModelResource):
 				search_list.objects.append(search_obj)
 		except Exception, e:
 			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
-		
+
 		search_list.order_by_people_relevance()
 		if not isinstance(request.user, User):
 			search_list.make_dirty()

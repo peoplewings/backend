@@ -314,7 +314,7 @@ class SearchObjectManager(object):
 		#import pdb; pdb.set_trace()
 		now = datetime.now()		
 		for i in people:
-			usr = User.objects.get(pk=i.profile_id)
+			usr = UserProfile.objects.get(pk=i.profile_id).user
 			if (now - timedelta(hours=12)).replace(tzinfo=utc) <= usr.last_login: 
 				i._recent = settings.RECENT_12H
 			elif (now - timedelta(days=2)).replace(tzinfo=utc) <= usr.last_login:  
@@ -333,7 +333,8 @@ class SearchObjectManager(object):
 		#import pdb; pdb.set_trace()
 		return []
 
-	def order_by_people_relevance(self):
+	def order_by_people_relevance(self):		
+
 		online = [i for i in self.objects if i.online == True]
 		offline = [i for i in self.objects if i.online == False]
 

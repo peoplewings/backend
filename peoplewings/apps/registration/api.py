@@ -44,6 +44,8 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication,
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
 from peoplewings.apps.people.models import PhotoAlbums
+from peoplewings.apps.people.signals import profile_created
+
 from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
@@ -326,6 +328,7 @@ class FacebookLoginResource(ModelResource):
 			return False
 		print 'Register COMPLETED'
 		transaction.commit()
+		profile_created.send_robust(sender=self, profile=new_profile, first_name=user['first_name'])
 		return True
 
 	
