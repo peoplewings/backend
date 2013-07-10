@@ -326,13 +326,13 @@ class FacebookLoginResource(ModelResource):
 			print 'EXCEPTION ', str(e)
 			transaction.rollback()
 			return False
-		print 'Register COMPLETED'
-		transaction.commit()
+		print 'Register COMPLETED'		
 		print 'SEND SIGNAL'
 		try:
 			profile_created.send_robust(sender=new_profile.__class__, profile=new_profile, first_name=user['first_name'])
 		except Exception, e:
 			print 'WELCOME MSG FROM FB CREATION ERROR ', e
+		transaction.commit()
 		return True
 
 	
