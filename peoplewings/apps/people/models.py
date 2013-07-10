@@ -183,7 +183,7 @@ def createUserProfile(sender, user, request, **kwargs):
 		try:
 			profile_created.send_robust(sender=data.__class__, profile=data, first_name=kwargs['firstname'])
 		except Exception, e:
-			print 'WELCOME MSG CREATION ERROR ', e
+			print 'WELCOME MSG FROM NORMAL CREATION ERROR ', e
 
 
 def deleteUserProfile(sender, request, **kwargs):
