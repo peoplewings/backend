@@ -309,6 +309,7 @@ def del_alarm(sender, instance, signal, *args, **kwargs):
 
 def welcome_message(**kwargs):
 	#import pdb; pdb.set_trace()
+	print 'SIGNAL RECEIVED'
 	ctx_dict = {'username': kwargs['first_name']}
 	message = render_to_string('notifications/welcome_message.txt', ctx_dict)
 	Notifications.objects.create_message(receiver=kwargs['profile'].pk, sender=UserProfile.objects.get(user__email='accounts-noreply@peoplewings.com').pk, content=message)
