@@ -514,11 +514,13 @@ class LoginResource(ModelResource):
 	def full_dehydrate(self, bundle):
 		token = bundle.data['token']
 		user = bundle.data['idUser']
+		tutorial = bundle.data['tutorial']
 		bundle.data = {}
 		bundle.data['status'] = True
 		bundle.data['code'] = 201 
 		bundle.data['token'] = token
 		bundle.data['account'] = user  
+		bundle.data['tutorial'] = tutorial
 		return bundle
 
 	def wrap_view(self, view):
@@ -531,6 +533,7 @@ class LoginResource(ModelResource):
 				data = {}
 				data['xAuthToken'] = json.loads(response.content)['token']
 				data['idAccount'] = json.loads(response.content)['account']
+				data['tutorial'] = json.loads(response.content)['tutorial']
 				content['status'] = True
 				content['data'] = data                
 				return self.create_response(request, content, response_class = HttpResponse)
