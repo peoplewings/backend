@@ -126,6 +126,7 @@ class UserProfile(models.Model):
 
 	active = models.BooleanField(default=True)
 
+	tutorial = models.BooleanField(default=False)
 
 	def get_age(self):			
 		today = date.today()

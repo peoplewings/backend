@@ -76,7 +76,11 @@ def login(bundle):
 	api_token.save()
 	try:
 		pf = UserProfile.objects.get(user=user)
-		ret = dict(token=api_token.token, idUser=user.pk, idProfile=pf.pk)
+		ret = dict(token=api_token.token, idUser=user.pk)
+		if pf.tutorial:
+			ret["tutorial"] = False
+		else:
+			ret["tutorial"] = True
 	except:
 	   raise AuthFail() 
 	

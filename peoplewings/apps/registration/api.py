@@ -43,7 +43,7 @@ from peoplewings.apps.registration.forms import UserSignUpForm, ActivationForm, 
 from peoplewings.apps.registration.authentication import ApiTokenAuthentication, ControlAuthentication
 from peoplewings.apps.registration.validation import ForgotValidation, AccountValidation
 from peoplewings.apps.registration.signals import user_deleted
-from peoplewings.apps.people.models import PhotoAlbums
+from peoplewings.apps.people.models import PhotoAlbums, UserProfile
 from peoplewings.apps.people.signals import profile_created
 
 from peoplewings.libs.S3Custom import *
@@ -281,6 +281,10 @@ class FacebookLoginResource(ModelResource):
 
 			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = int(datetime.now().strftime('%s')))
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
+			if UserProfile.objects.get(user=fb_obj[0].user).tutorial:
+				res["tutorial"] = False
+			else:
+				res["tutorial"] = True
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": e}}, response_class = HttpResponse)
