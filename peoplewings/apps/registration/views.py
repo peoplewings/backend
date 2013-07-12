@@ -81,6 +81,9 @@ def login(bundle):
 			ret["tutorial"] = False
 		else:
 			ret["tutorial"] = True
+		if ret['tutorial']:
+				pf.tutorial = True
+				pf.save()
 	except:
 	   raise AuthFail() 
 	

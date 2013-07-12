@@ -281,10 +281,14 @@ class FacebookLoginResource(ModelResource):
 
 			api_token = ApiToken.objects.create(user=fb_obj[0].user, last = datetime.now(), last_js = int(datetime.now().strftime('%s')))
 			ret = dict(xAuthToken=api_token.token, idAccount=fb_obj[0].user.pk)
-			if UserProfile.objects.get(user=fb_obj[0].user).tutorial:
+			tutop = UserProfile.objects.get(user=fb_obj[0].user)
+			if tutop.tutorial:
 				res["tutorial"] = False
 			else:
 				res["tutorial"] = True
+			if res['tutorial']:
+				tutop.tutorial = True
+				tutop.save()
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": e}}, response_class = HttpResponse)
