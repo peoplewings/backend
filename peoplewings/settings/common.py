@@ -17,7 +17,7 @@ sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'apps')))
 
 
 # IMPORT CORRECT SETTINGS BASED IN GIT BRANCHES
-LOCAL_HOSTNAMES= ('MacBook-Pro-de-Joan.local', 'Dans-MacBook-Pro.local')
+LOCAL_HOSTNAMES= ('MacBook-Pro-de-Joan.local', 'Dans-MacBook-Pro.local', 'MacBook-Pro-de-Ezequiel.local')
 HOSTNAME = socket.gethostname()
 
 def get_environment_file_path(env):
