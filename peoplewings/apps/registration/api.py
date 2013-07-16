@@ -819,6 +819,8 @@ class AccountResource(ModelResource):
 		except:
 			pass
 		data['avatar'] = pf.thumb_avatar
+		has_pass = 'pbkdf2_sha256$' in request.user.password
+		data['hasPass'] = False
 		content = {}    
 		content['status'] = True
 		del(data['password'])
@@ -839,7 +841,7 @@ class AccountResource(ModelResource):
 		field_req = {"type":"FIELD_REQUIRED", "extras": []}
 		too_long = {"type":"TOO_LONG", "extras": []}
 		invalid = {"type":"INVALID_FIELD", "extras": []}
-	
+
 		if 'resource' in PUT.keys():
 			if 'firstName' in PUT['resource'].keys():
 				if len(PUT['resource']['firstName']) > 14 or len(PUT['resource']['firstName']) < 1:
@@ -857,12 +859,18 @@ class AccountResource(ModelResource):
 				if len(PUT['resource']['email']) > 50 or len(PUT['resource']['email']) < 7:
 					invalid['extras'].append('email')
 
+			if 'createPassword' in PUT['resource'].keys():
+				if len(PUT['resource']['createPassword']) > 20 or len(PUT['resource']['createPassword']) < 8:
+					invalid['extras'].append('createPassword')
+
 		else:
 			field_req['extras'].append('resouce')
 
 		if 'currentPassword' in PUT.keys():
-			if len(PUT['currentPassword']) < 8 or len(PUT['currentPassword']) > 20:
+			if len(PUT['currentPassword']) > 20:
 				invalid['extras'].append('currentPassword')
+		elif 'resource' in PUT.keys() and 'createPassword' in PUT['resource']:
+			pass
 		else:
 			field_req['extras'].append('currentPassword')
 
@@ -889,7 +897,13 @@ class AccountResource(ModelResource):
 		if errors is not None:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
 
-		if not self.is_valid_password(PUT['currentPassword'], request):
+		if PUT['resource'].has_key('createPassword'):
+			if 'pbkdf2_sha256$10000$' in request.user.password: return self.create_response(request, {"status":False, "errors": [{'type':'FORBIDDEN'}]}, response_class = HttpResponse)
+			request.user.set_password(PUT['resource']['createPassword'])
+			request.user.save()
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
+		elif not self.is_valid_password(PUT['currentPassword'], request):
 			errors = [{"type": "INCORRECT_PASSWORD"}]
 			content = {} 
 			content['status'] = False
