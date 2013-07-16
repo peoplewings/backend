@@ -244,14 +244,15 @@ class FacebookLoginResource(ModelResource):
 		try:		
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
 
 			#See if the user is already registered in PPW...
 			fbid = facebook['uid']
 			graph = GraphAPI(access_token= facebook['access_token'])
-			user = graph.get_object("me")	
+			user = graph.get_object("me")
+			import pdb; pdb.set_trace()	
 			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
 			if len(fb_obj) == 0:						
 				if user is None:
