@@ -820,7 +820,7 @@ class AccountResource(ModelResource):
 			pass
 		data['avatar'] = pf.thumb_avatar
 		has_pass = 'pbkdf2_sha256$' in request.user.password
-		data['hasPass'] = False
+		data['hasPass'] = has_pass
 		content = {}    
 		content['status'] = True
 		del(data['password'])
