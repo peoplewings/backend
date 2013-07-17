@@ -703,7 +703,7 @@ class UserProfileResource(ModelResource):
 				too_long['extras'].append('occupation')				
 		else:
 			field_req['extras'].append('occupation')
-
+		"""
 		if POST.has_key('albums'):
 			if isinstance(POST['albums'], list):
 				for item in POST['albums']:
@@ -735,7 +735,7 @@ class UserProfileResource(ModelResource):
 				invalid['extras'].append('albums')
 		else:
 		  field_req['extras'].append('albums')
-	
+		"""
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
 		if len(not_empty['extras']) > 0:
@@ -853,6 +853,7 @@ class UserProfileResource(ModelResource):
 		prof.pw_opinion = POST['pwOpinion']
 
 		#Photo albums
+		"""
 		prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
 		album_ordering = 1
 		for album in POST['albums']:
@@ -862,6 +863,7 @@ class UserProfileResource(ModelResource):
 				Photos.objects.create(thumb_url=photo['thumb_url'],big_url=photo['big_url'], photo_id=photo['id'],author=prof, album=album_obj, ordering=photo_ordering)
 				photo_ordering = photo_ordering + 1
 				album_ordering = album_ordering + 1
+		"""
 
 		prof.save()
 		return self.create_response(request, {"status":True}, response_class=HttpResponse)
