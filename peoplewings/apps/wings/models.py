@@ -4,8 +4,6 @@ from peoplewings.apps.locations.models import City
 
 from peoplewings.global_vars import *
 
-from pprint import pprint
-
 # Wing class
 class Wing(models.Model):
 	author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -17,9 +15,11 @@ class Wing(models.Model):
 	is_request = models.BooleanField(default=False, verbose_name='Are you requesting a wing?') # True => Applicant, False => Host
 	city = models.ForeignKey(City, on_delete=models.PROTECT)
 	active = models.BooleanField(default = True)
+	wing_type = models.CharField(default='', blank=True, null=False, max_length=100)
+
 	def get_class_name(self):
 		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
-
+	
 	def __unicode__(self):
 		return self.name
 	
