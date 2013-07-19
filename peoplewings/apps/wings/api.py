@@ -470,29 +470,23 @@ class WingResource(ModelResource):
 				not_empty['extras'].append('name')
 			elif len(PUT['name']) > 100:
 				too_long['extras'].append('name')
-		else:
-			field_req['extras'].append('name')
 
 		if PUT.has_key('status'):
 			if PUT['status'] == "":
 				not_empty['extras'].append('status')
 			elif PUT['status'] not in ['Y', 'M', 'T', 'N', 'C', 'W']:
 				invalid['extras'].append('status')
-		else:
-			field_req['extras'].append('status')
 
 		if PUT.has_key('bestDays'):
 			if PUT['bestDays'] == "":
 				not_empty['extras'].append('bestDays')
 			elif PUT['bestDays'] not in ['A', 'F', 'T', 'W']:
 				invalid['extras'].append('bestDays')
-		else:
-			field_req['extras'].append('bestDays')
 
 		if PUT.has_key('dateStart'):
 			if PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True:
 				if PUT['dateStart'] == "":
-					not_empty['extras'].append('dateStart')
+					pass
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
@@ -502,13 +496,11 @@ class WingResource(ModelResource):
 					except:
 						invalid['extras'].append('dateStart')					
 
-			else:
-				invalid['extras'].append('dateStart')
 
 		if PUT.has_key('dateEnd'):
 			if PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True:
 				if PUT['dateEnd'] == "":
-					not_empty['extras'].append('dateEnd')
+					pass
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
@@ -518,8 +510,6 @@ class WingResource(ModelResource):
 					except:
 						invalid['extras'].append('dateEnd')					
 
-			else:
-				invalid['extras'].append('dateEnd')
 
 		if date_start is not None and date_end is not None and date_start > date_end:
 			invalid['extras'].append('dates')
@@ -532,8 +522,6 @@ class WingResource(ModelResource):
 					not_empty['extras'].append('city')
 				elif not PUT['city'].has_key('lat') and PUT['city'].has_key('lon') and PUT['city'].has_key('country') and PUT['city'].has_key('name'):
 					invalid['extras'].append('city')
-		else:
-			field_req['extras'].append('city')
 
 		if PUT.has_key('type'):
 			if PUT['type'] not in ['Accomodation']:
@@ -621,19 +609,12 @@ class WingResource(ModelResource):
 		return errors
 
 	def update_generic(self, PUT, wing):
-		wing.name = PUT['name']
-		wing.status = PUT['status']
-		wing.best_days = PUT['bestDays']
-		wing.city = City.objects.saveLocation(**PUT['city'])
-
-		if PUT.has_key('dateStart'):
-			wing.date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
-		else:
-			wing.date_start = None
-		if PUT.has_key('dateEnd'):
-			wing.end_date = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
-		else:
-			wing.end_date = None
+		if PUT.has_key('name'): wing.name = PUT['name']		
+		if PUT.has_key('status'): wing.status = PUT['status']
+		if PUT.has_key('bestDays'): wing.best_days = PUT['bestDays']
+		if PUT.has_key('city'): wing.city = City.objects.saveLocation(**PUT['city'])
+		if PUT.has_key('dateStart'): wing.date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
+		if PUT.has_key('dateEnd'): wing.end_date = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
 		wing.save()
 
 	def update_accomodation(self, PUT, w):
