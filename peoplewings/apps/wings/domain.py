@@ -17,7 +17,7 @@ class ShortWings(object):
 
 class WingObj(object):
 	def __init__(self):
-		self.idWing=None
+		self.id=None
 		self.author = None
 		self.name=None
 		self.status=None

@@ -80,7 +80,7 @@ class WingResource(ModelResource):
 	class Meta:
 		object_class = Wing
 		queryset = Wing.objects.all()
-		detail_allowed_methods = ['put', 'delete']
+		detail_allowed_methods = ['put', 'delete', 'get']
 		list_allowed_methods = ['get', 'post']
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
@@ -89,11 +89,25 @@ class WingResource(ModelResource):
 		include_resource_uri = False
 		resource_name='wings'
 
+	def get_detail(self, request, **kwargs):
+		wing_id = kwargs['pk']
+		try:
+			w = Wing.objects.get(pk = str(wing_id))
+			wing_obj = self.get_generic_fields(w)
+			if w.author.user == request.user:
+				if w.wing_type == 'Accommodation':
+					wing_obj.extraFields= self.get_own_accomodation_fields(w.pk)
+			else:
+				if w.wing_type == 'Accommodation':
+					wing_obj.extraFields= self.get_other_accomodation_fields(w.pk)
+			return self.create_response(request, {"status" : True, "data": [wing_obj.jsonable()]}, response_class=HttpResponse)
+		except:
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID", "extras":["id"]}]}, response_class=HttpResponse) 
 	def validate_GET(self, GET):
 		errors = []
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
-		if not GET.has_key('profileId'): 
-			field_req['extras'].append('profileId')
+		if not GET.has_key('author'): 
+			field_req['extras'].append('author')
 			errors.append(field_req)
 		return errors
 
@@ -105,13 +119,13 @@ class WingResource(ModelResource):
 		errors = self.validate_GET(GET)
 		if len(errors): return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 
-		if str(request.user.pk) == str(GET['profileId']):
+		if str(request.user.pk) == str(GET['author']):
 			#We have to list our own wings
 			data = []
-			wings = Wing.objects.filter(author__pk=str(GET['profileId']))			
+			wings = Wing.objects.filter(author__pk=str(GET['author']))			
 			for w in wings:
 				wing_obj = self.get_generic_fields(w)				
-				if w.wing_type == 'Accomodation':
+				if w.wing_type == 'Accommodation':
 					wing_obj.extraFields= self.get_own_accomodation_fields(w.pk)
 				if w.wing_type == 'Meetup':
 					pass
@@ -121,10 +135,10 @@ class WingResource(ModelResource):
 		else:
 			#We have to list another user wings
 			data = []
-			wings = Wing.objects.filter(author__pk=str(GET['profileId']))
+			wings = Wing.objects.filter(author__pk=str(GET['author']))
 			for w in wings:
 				wing_obj = self.get_generic_fields(w)
-				if w.wing_type == 'Accomodation':
+				if w.wing_type == 'Accommodation':
 					wing_obj.extraFields= self.get_other_accomodation_fields(w.pk)
 				data.append(wing_obj)
 
@@ -135,13 +149,14 @@ class WingResource(ModelResource):
 
 	def get_generic_fields(self, w):
 		wing_obj = WingObj()
-		wing_obj.idWing = w.pk
+		wing_obj.id = w.pk
 		wing_obj.author = w.author.pk
 		wing_obj.name = w.name
 		wing_obj.status = w.status
 		wing_obj.type = w.wing_type
 		wing_obj.dateStart = w.date_start
 		wing_obj.dateEnd = w.date_end
+		wing_obj.sharingOnce = w.sharing_once
 		wing_obj.bestDays = w.best_days
 		wing_obj.city = w.city.jsonify()
 		return wing_obj
@@ -149,8 +164,7 @@ class WingResource(ModelResource):
 	def get_own_accomodation_fields(self, id_wing):		
 		fields = {}
 		#import pdb; pdb.set_trace()
-		acc = Accomodation.objects.get(pk=id_wing)
-		fields.update({'sharingOnce': acc.sharing_once})
+		acc = Accomodation.objects.get(pk=id_wing)		
 		fields.update({'capacity': acc.capacity})
 		fields.update({'wheelchair': acc.wheelchair})
 		fields.update({'whereSleepingType': acc.where_sleeping_type})
@@ -166,7 +180,7 @@ class WingResource(ModelResource):
 		fields.update({'additionalInformation': acc.additional_information})
 		fields.update({'postalCode': acc.postal_code})
 
-		fields.update({'PublicTransport': [i.name for i in acc.public_transport.all()]})
+		fields.update({'publicTransports': [i.name for i in acc.public_transport.all()]})
 		if acc.preferred_female is True and acc.preferred_male is True:
 			fields.update({'preferredGender': 'Both'})
 		elif acc.preferred_male is True:
@@ -178,7 +192,6 @@ class WingResource(ModelResource):
 	def get_other_accomodation_fields(self, id_wing):
 		fields = []
 		acc = Accomodation.objects.get(pk=id_wing)
-		fields.append({'sharingOnce': acc.sharing_once})
 		fields.append({'capacity': acc.capacity})
 		fields.append({'wheelchair': acc.wheelchair})
 		fields.append({'whereSleepingType': acc.where_sleeping_type})
@@ -203,9 +216,10 @@ class WingResource(ModelResource):
 		result['name'] = POST['name']
 		result['author'] = UserProfile.objects.get(user=request.user)
 		result['status'] = POST['status']
-		if (POST.has_key('dateStart')):
+		result['sharing_once'] = POST['sharingOnce']
+		if (POST.has_key('dateStart') and POST['dateStart'] is not None):
 			result['date_start'] = datetime.datetime.strptime(POST['dateStart'], '%Y-%m-%d')
-		if (POST.has_key('dateEnd')):
+		if (POST.has_key('dateEnd') and POST['dateEnd'] is not None):
 			result['date_end'] = datetime.datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
 		result['best_days'] = POST['bestDays']
 		result['is_request'] = True
@@ -215,8 +229,6 @@ class WingResource(ModelResource):
 		return result
 
 	def construct_accomodation_post_params(self, params, POST):
-		if POST['extraFields'].has_key('sharingOnce'):
-			params['sharing_once'] = POST['extraFields']['sharingOnce']
 		if POST['extraFields'].has_key('capacity'):
 			params['capacity'] = POST['extraFields']['capacity']
 		if POST['extraFields'].has_key('preferredGender'):
@@ -283,6 +295,14 @@ class WingResource(ModelResource):
 		else:
 			field_req['extras'].append('bestDays')
 
+		if POST.has_key('sharingOnce'):
+			if POST['sharingOnce'] == "":
+				not_empty['extras'].append('sharingOnce')
+			elif POST['sharingOnce'] not in [True, False]:
+				invalid['extras'].append('sharingOnce')
+		else:
+			field_req['extras'].append('sharingOnce')
+
 		if POST.has_key('dateStart'):
 			if POST.has_key('sharingOnce') and POST['sharingOnce'] is True:
 				if POST['dateStart'] == "":
@@ -295,9 +315,6 @@ class WingResource(ModelResource):
 							invalid['extras'].append('dateStart')
 					except:
 						invalid['extras'].append('dateStart')					
-
-			else:
-				invalid['extras'].append('dateStart')
 
 		if POST.has_key('dateEnd'):
 			if POST.has_key('sharingOnce') and POST['sharingOnce'] is True:
@@ -312,8 +329,6 @@ class WingResource(ModelResource):
 					except:
 						invalid['extras'].append('dateEnd')					
 
-			else:
-				invalid['extras'].append('dateEnd')
 
 		if date_start is not None and date_end is not None and date_start > date_end:
 			invalid['extras'].append('dates')
@@ -330,10 +345,10 @@ class WingResource(ModelResource):
 			field_req['extras'].append('city')
 
 		if POST.has_key('type'):
-			if POST['type'] not in ['Accomodation']:
+			if POST['type'] not in ['Accommodation']:
 				invalid['extras'].append('type')
 			else:
-				if POST['type'] == 'Accomodation':
+				if POST['type'] == 'Accommodation':
 					#Validate Accomodation specific fields					
 					if POST['extraFields'].has_key('liveCenter'):
 						if POST['extraFields']['liveCenter'] == "":
@@ -351,13 +366,7 @@ class WingResource(ModelResource):
 						if POST['extraFields']['wheelchair'] == "":
 							not_empty['extras'].append('wheelchair')
 						elif POST['extraFields']['wheelchair'] not in [True, False]:
-							invalid['extras'].append('wheelchair')
-
-					if POST['extraFields'].has_key('sharingOnce'):
-						if POST['extraFields']['sharingOnce'] == "":
-							not_empty['extras'].append('sharingOnce')
-						elif POST['extraFields']['sharingOnce'] not in [True, False]:
-							invalid['extras'].append('sharingOnce')
+							invalid['extras'].append('wheelchair')					
 
 					if POST['extraFields'].has_key('iHavePet'):
 						if POST['extraFields']['iHavePet'] == "":
@@ -416,7 +425,11 @@ class WingResource(ModelResource):
 							too_long['extras'].append('additionalInformation')
 
 					if POST['extraFields'].has_key('postalCode'):
-						if POST['extraFields']['postalCode'] == "":
+						if len(POST['extraFields']['postalCode']) > 50:
+							too_long['extras'].append('postalCode')
+
+					if POST['extraFields'].has_key('publicTransports'):
+						if POST['extraFields']['publicTransports'] == "":
 							not_empty['extras'].append('postalCode')
 						elif len(POST['extraFields']['postalCode']) > 50:
 							too_long['extras'].append('postalCode')
@@ -443,12 +456,12 @@ class WingResource(ModelResource):
 		
 		#Create the wing, and also create the wing_type
 		params = self.construct_generic_post_params(request, POST)
-		if (POST['type'] == 'Accomodation'):
+		if (POST['type'] == 'Accommodation'):
 			params = self.construct_accomodation_post_params(params, POST)
 			acc = Accomodation.objects.create(**params)
 			#import pdb; pdb.set_trace()
-			if POST.has_key('publicTransports'):
-				for i in POST['publicTransports']:
+			if POST.has_key('publicTransport'):
+				for i in POST['publicTransport']:
 					if len(PublicTransport.objects.filter(name=i)) == 1:
 						acc.public_transport.add(PublicTransport.objects.get(name=i))
 				acc.save()
@@ -483,15 +496,19 @@ class WingResource(ModelResource):
 			elif PUT['bestDays'] not in ['A', 'F', 'T', 'W']:
 				invalid['extras'].append('bestDays')
 
+		if PUT.has_key('sharingOnce'):
+			if not isinstance(PUT['sharingOnce'], bool):
+				invalid['extras'].append('sharingOnce')
+
 		if PUT.has_key('dateStart'):
 			if PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True:
 				if PUT['dateStart'] == "":
-					pass
+					invalid['extras'].append('dateStart')
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
-						if date_start < date.today():
+						if date_start < datetime.datetime.today():
 							invalid['extras'].append('dateStart')
 					except:
 						invalid['extras'].append('dateStart')					
@@ -500,12 +517,12 @@ class WingResource(ModelResource):
 		if PUT.has_key('dateEnd'):
 			if PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True:
 				if PUT['dateEnd'] == "":
-					pass
+					invalid['extras'].append('dateEnd')
 				else:
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_end = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
-						if date_end < date.today():
+						if date_end < datetime.datetime.today():
 							invalid['extras'].append('dateEnd')
 					except:
 						invalid['extras'].append('dateEnd')					
@@ -524,10 +541,10 @@ class WingResource(ModelResource):
 					invalid['extras'].append('city')
 
 		if PUT.has_key('type'):
-			if PUT['type'] not in ['Accomodation']:
+			if PUT['type'] not in ['Accommodation']:
 				invalid['extras'].append('type')
 			else:
-				if PUT['type'] == 'Accomodation':
+				if PUT['type'] == 'Accommodation':
 					#Validate Accomodation specific fields
 					if PUT.has_key('liveCenter'):
 						if PUT['liveCenter'] not in [True, False]:
@@ -540,10 +557,6 @@ class WingResource(ModelResource):
 					if PUT.has_key('wheelchair'):
 						if PUT['wheelchair'] not in [True, False]:
 							invalid['extras'].append('wheelchair')
-
-					if PUT.has_key('sharingOnce'):
-						if PUT['sharingOnce'] not in [True, False]:
-							invalid['extras'].append('sharingOnce')
 
 					if PUT.has_key('iHavePet'):
 						if PUT['iHavePet'] not in [True, False]:
@@ -613,84 +626,93 @@ class WingResource(ModelResource):
 		if PUT.has_key('status'): wing.status = PUT['status']
 		if PUT.has_key('bestDays'): wing.best_days = PUT['bestDays']
 		if PUT.has_key('city'): wing.city = City.objects.saveLocation(**PUT['city'])
-		if PUT.has_key('dateStart'): wing.date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
-		if PUT.has_key('dateEnd'): wing.end_date = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
+		if (PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True):
+			if not PUT.has_key('dateStart') or not PUT.has_key('dateEnd'): 
+				return {"type":"FIELD_REQUIRED", "extras":['dates']}
+			else: 
+				wing.sharing_once = True
+				if PUT.has_key('dateStart'): wing.date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
+				if PUT.has_key('dateEnd'): wing.date_end = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
+		elif PUT.has_key('sharingOnce'): 
+			wing.sharing_once = False
+			wing.date_start = None
+			wing.date_end = None
+
 		wing.save()
 
 	def update_accomodation(self, PUT, w):
 		wing = Accomodation.objects.get(pk=w.pk)
-		if PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True:
-			wing.sharing_once = True
-		else: wing.sharing_once = False
 
-		if PUT.has_key('capacity'):
-			wing.capacity = PUT['capacity']
+		if PUT['extraFields'].has_key('capacity'):
+			wing.capacity = PUT['extraFields']['capacity']
 
-		if PUT.has_key('preferredGender'):
-			if PUT['preferredGender'] == 'Both':
+		if PUT['extraFields'].has_key('preferredGender'):
+			if PUT['extraFields']['preferredGender'] == 'Both':
 				wing.preferred_female = True
 				wing.preferred_male = True
-			elif PUT['preferredGender'] == 'Male':
+			elif PUT['extraFields']['preferredGender'] == 'Male':
 				wing.preferred_male = True
-			elif PUT['preferredGender'] == 'Female':
+				wing.preferred_female = False
+			elif PUT['extraFields']['preferredGender'] == 'Female':
 				wing.preferred_female = True
-		else: 
-			wing.preferred_female = False
-			wing.preferred_male = False
+				wing.preferred_male = False
 
-		if PUT.has_key('wheelchair') and PUT['wheelchair'] is True:
-			wing.wheelchair = True
-		else: wing.wheelchair = False
+		if PUT['extraFields'].has_key('wheelchair'):
+			if PUT['extraFields']['wheelchair'] is True:
+				wing.wheelchair = True
+			else: 
+				wing.wheelchair = False
 
-		if PUT.has_key('whereSleepingType'):
-			wing.where_sleeping_type = PUT['whereSleepingType']
+		if PUT['extraFields'].has_key('whereSleepingType'):
+			wing.where_sleeping_type = PUT['extraFields']['whereSleepingType']
 		
-		if PUT.has_key('smoking'):
-			wing.smoking = PUT['smoking']
+		if PUT['extraFields'].has_key('smoking'):
+			wing.smoking = PUT['extraFields']['smoking']
 
-		if PUT.has_key('iHavePet') and PUT['iHavePet'] is True:
-			wing.i_have_pet = True
-		else: wing.i_have_pet = False
+		if PUT['extraFields'].has_key('iHavePet'):
+			if PUT['extraFields']['iHavePet'] is True:
+				wing.i_have_pet = True
+			else: 
+				wing.i_have_pet = False
 
-		if PUT.has_key('petsAllowed') and PUT['petsAllowed'] is True:
-			wing.pets_allowed = True
-		else: wing.pets_allowed = False
+		if PUT['extraFields'].has_key('petsAllowed'):
+			if PUT['extraFields']['petsAllowed'] is True:
+				wing.pets_allowed = True
+			else: 
+				wing.pets_allowed = False
 
-		if PUT.has_key('blankets') and PUT['blankets'] is True:
-			wing.blankets = True
-		else: wing.blankets = False
+		if PUT['extraFields'].has_key('blankets'):
+			if PUT['extraFields']['blankets'] is True:
+				wing.blankets = True
+			else: 
+				wing.blankets = False
 
-		if PUT.has_key('liveCenter') and PUT['liveCenter'] is True:
-			wing.live_center = True
-		else: wing.live_center = False
+		if PUT['extraFields'].has_key('liveCenter'):
+			if PUT['extraFields']['liveCenter'] is True:
+				wing.live_center = True
+			else: 
+				wing.live_center = False
 
-		if PUT.has_key('publicTransports'):
-			#import pdb; pdb.set_trace()
+		if PUT['extraFields'].has_key('publicTransport'):			
 			wing.public_transport.clear()
-			for pb in PUT['publicTransports']:
+			for pb in PUT['extraFields']['publicTransport']:
 				aux = PublicTransport.objects.filter(name=pb)
 				if len(aux) == 1: wing.public_transport.add(aux[0])
-		else: wing.public_transport.clear()
 
-		if PUT.has_key('about'):
-			wing.about = PUT['about']
-		else: wing.about = ""
+		if PUT['extraFields'].has_key('about'):
+			wing.about = PUT['extraFields']['about']
 
-		if PUT.has_key('address'):
-			wing.address = PUT['address']
-		else: wing.address = ""
+		if PUT['extraFields'].has_key('address'):
+			wing.address = PUT['extraFields']['address']
 
-		if PUT.has_key('number'):
-			wing.number = PUT['number']
-		else: wing.number = ""
+		if PUT['extraFields'].has_key('number'):
+			wing.number = PUT['extraFields']['number']
 
-		if PUT.has_key('additionalInformation'):
-			wing.additional_information = PUT['additionalInformation']
-		else: wing.additional_information = ""
+		if PUT['extraFields'].has_key('additionalInformation'):
+			wing.additional_information = PUT['extraFields']['additionalInformation']
 
-		if PUT.has_key('postalCode'):
-			wing.postal_code = PUT['postalCode']
-		else: wing.postal_code = ""
+		if PUT['extraFields'].has_key('postalCode'):
+			wing.postal_code = PUT['extraFields']['postalCode']
 
 		wing.save()
 
@@ -708,8 +730,11 @@ class WingResource(ModelResource):
 		if len(errors) != 0:
 			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
 
-		self.update_generic(PUT, wing)
-		if PUT['type'] == 'Accomodation':
+		errors = self.update_generic(PUT, wing)
+		if errors:
+			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
+
+		if PUT['type'] == 'Accommodation':
 			self.update_accomodation(PUT, wing)
 
 		return self.create_response(request, {"status" : True}, response_class=HttpResponse)
@@ -722,9 +747,10 @@ class WingResource(ModelResource):
 		wing = w_list[0]
 
 		wtype = wing.wing_type
-		if wtype == 'Accomodation':
+		if wtype == 'Accommodation':
 			awing = Accomodation.objects.get(pk=wing.pk)
 			awing.delete()
 
 		wing.delete()
 		return self.create_response(request, {"status" : True}, response_class=HttpResponse)
+

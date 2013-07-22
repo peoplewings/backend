@@ -16,6 +16,7 @@ class Wing(models.Model):
 	city = models.ForeignKey(City, on_delete=models.PROTECT)
 	active = models.BooleanField(default = True)
 	wing_type = models.CharField(default='', blank=True, null=False, max_length=100)
+	sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
 
 	def get_class_name(self):
 		if Accomodation.objects.filter(pk=self.pk).exists(): return 'Accomodation'
@@ -30,8 +31,7 @@ class PublicTransport(models.Model):
 		return self.name
 
 # Accomodation wing class
-class Accomodation(Wing):
-	sharing_once = models.BooleanField(default=False, verbose_name='Are you sharing for one time?')
+class Accomodation(Wing):	
 	capacity = models.CharField(max_length=1, choices=CAPACITY_OPTIONS, default=1)
 	preferred_male = models.BooleanField(default=False)
 	preferred_female = models.BooleanField(default=False)
