@@ -50,6 +50,8 @@ from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
 
+from geopy import geocoders  
+
 class UserSignUpResource(ModelResource):
 
 	class Meta:
@@ -266,6 +268,23 @@ class FacebookLoginResource(ModelResource):
 
 			pic_path_big = graph.get_profile_picture_big()
 			pic_path_small = graph.get_profile_picture_small()
+
+			#FB current city
+			if user.has_key('location') and user['location'].has_key('name'):
+				user_location = user['location']['name']
+				fbcity = str(user_location)
+				citylist = fbcity.split(', ')
+				cityname = citylist[0]
+				countryname = citylist[1]
+
+				g = geocoders.GoogleV3()
+				place, (lat, lng) = g.geocode(fbcity)  
+				
+				prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
+				prof.current_city = City.objects.saveLocation(country = countryname, name = cityname, lat = lat, lon = lng)
+
+				prof.save()
+
 			if pic_path_big is not None:
 				try:
 					prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
