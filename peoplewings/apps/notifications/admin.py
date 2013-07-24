@@ -16,6 +16,12 @@ class MessagesAdmin(admin.ModelAdmin):
     list_display = ('receiver', 'sender', 'created', 'reference', 'read')
     list_filter = ('receiver', 'sender', 'created', 'reference', 'read')
 
+class EmailNotificationsAdmin(admin.ModelAdmin):
+	model = EmailNotifications
+	list_display = ('user', 'last_notificated')
+	list_filter = ('user', 'last_notificated')
+
 admin.site.register(Requests, RequestsAdmin)
 admin.site.register(Invites, InvitesAdmin)
 admin.site.register(Messages, MessagesAdmin)
+admin.site.register(EmailNotifications, EmailNotificationsAdmin)
