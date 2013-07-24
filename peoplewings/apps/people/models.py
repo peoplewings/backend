@@ -130,9 +130,12 @@ class UserProfile(models.Model):
 
 	def get_age(self):			
 		today = date.today()
-		age = today.year - self.birthday.year
-		if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
-		return age
+		try:
+			age = today.year - self.birthday.year
+			if today.month < self.birthday.month or (today.month == self.birthday.month and today.day < self.birthday.day): age -= 1
+			return age
+		except Exception, e:
+			return ""
 
 	def __unicode__(self):
 		return unicode(self.user.email)
