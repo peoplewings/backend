@@ -1182,7 +1182,7 @@ class UserProfileResource(ModelResource):
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
-				for j in Wing.objects.filter(author=i, status__in['Y', 'M']):							
+				for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):							
 						if j.get_class_name() not in search_obj.wings:
 							search_obj.wings.append(j.get_class_name())
 
