@@ -97,6 +97,15 @@ class UserProfileResource(ModelResource):
 		always_return_data = True
 		validation = FormValidation(form_class=UserProfileForm)
 
+	def prepend_urls(self):
+		return [
+			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+				self.wrap_view('preview_profile'), name="api_detail_preview"),
+		]
+
+	def preview_profile(self, request, **kwargs):
+		return self.get_detail(request, **kwargs)
+
 	def connected(self, user):
 		state = 'OFF'
 		token = ApiToken.objects.filter(user=user).order_by('-last_js')
