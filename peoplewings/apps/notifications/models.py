@@ -167,19 +167,19 @@ class NotificationsManager(models.Manager):
 		for user in users:		
 			alarms = NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user)).count()
 			if alarms > 0:
-				email_notifs = EmailNotifications.objects.get(user=user)
-				if len(email_notifs) == 0:
+				try:
+					email_notifs = EmailNotifications.objects.get(user=user)
+					if email_notifs.last_notificated < time.time() - 93600 and NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user), created__gte=time.time()-93600).count():
+						send_notification_email(settings.SITE, user)
+						email_notifs.last_notificated = time.time()
+						email_notifs.save()
+					elif email_notifs.last_notificated < time.time() - 604800:
+						send_notification_email(settings.SITE, user)
+						email_notifs.last_notificated = time.time()
+						email_notifs.save()
+				except Exception, e:
 					send_notification_email(settings.SITE, user)
 					EmailNotifications.objects.create(user=UserProfile.objects.get(user=user), last_notificated = time.time())
-					#93600 sec = 26h
-				elif email_notifs.last_notificated < time.time() - 93600 and NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user), created__gte=time.time()-93600).count():
-					send_notification_email(settings.SITE, user)
-					email_notifs.last_notificated = time.time()
-					email_notifs.save()
-				elif email_notifs.last_notificated < time.time() - 604800:
-					send_notification_email(settings.SITE, user)
-					email_notifs.last_notificated = time.time()
-					email_notifs.save()
 
 def send_notification_email(site, user):
 		ctx_dict = {'username': user.first_name, 'site': site}

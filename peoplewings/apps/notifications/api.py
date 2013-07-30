@@ -361,7 +361,7 @@ class NotificationsListResource(ModelResource):
 				## Add the result                                                                     
 				result_dict.append(aux)                
 		except Exception, e:
-			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR", "extras":str(e)}]}, response_class = HttpResponse)
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
 		result = {}
 		result_idx = []
