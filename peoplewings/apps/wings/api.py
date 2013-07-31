@@ -89,6 +89,7 @@ class WingResource(ModelResource):
 		include_resource_uri = False
 		resource_name='wings'
 
+
 	def get_detail(self, request, **kwargs):
 		wing_id = kwargs['pk']
 		try:

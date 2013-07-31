@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import UserProfile
+from models import UserProfile, PhotoAlbums
 from django.contrib.auth.models import User
 """
 class UserInLine(admin.StackedInline):
@@ -17,4 +17,10 @@ class UserProfileAdmin(admin.ModelAdmin):
     def user_email(self, obj):
        	return obj.user.email
 
+class PhotoAlbumsAdmin(admin.ModelAdmin):
+	model = PhotoAlbums
+	list_display = ('album_id', 'author', 'name')
+	list_filter = ('album_id', 'author', 'name')
+
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(PhotoAlbums, PhotoAlbumsAdmin)
