@@ -252,7 +252,6 @@ class FacebookLoginResource(ModelResource):
 			fbid = facebook['uid']
 			graph = GraphAPI(access_token= facebook['access_token'])
 			user = graph.get_object("me")
-			import pdb; pdb.set_trace()
 			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
 			if len(fb_obj) == 0:
 				if user is None:
