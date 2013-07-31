@@ -104,7 +104,7 @@ class UserProfileResource(ModelResource):
 		]
 
 	def preview_profile(self, request, **kwargs):
-		return self.get_detail(request, **kwargs)
+		return self.dispatch_detail(request, **kwargs)
 
 	def connected(self, user):
 		state = 'OFF'
@@ -114,7 +114,7 @@ class UserProfileResource(ModelResource):
 		return state
 
 	def get_detail(self, request, **kwargs):
-		#Check if the user is valid		
+		#Check if the user is valid
 		is_preview = request.path.split('/')[-1] == 'preview'
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
@@ -132,7 +132,6 @@ class UserProfileResource(ModelResource):
 
 					hometown = prof.hometown
 					if hometown is not None:
-						#import pdb; pdb.set_trace()
 						prof_obj.hometown['lat'] = hometown.lat
 						prof_obj.hometown['lon'] = hometown.lon
 						prof_obj.hometown['name'] = hometown.name
