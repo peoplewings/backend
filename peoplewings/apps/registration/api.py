@@ -76,23 +76,23 @@ class UserSignUpResource(ModelResource):
 		too_long = {"type":"TOO_LONG", "extras": []}
 		invalid = {"type":"INVALID_FIELD", "extras": []}
 		young = {"type":"UNDERAGE"}
-			
+
 		if POST.has_key("birthdayDay"):
 			if int(POST['birthdayDay']) < 1 or int(POST['birthdayDay']) > 31:
 				invalid['extras'].append('birthdayDay')
-		else: 
+		else:
 			field_req['extras'].append('birthdayDay')
 
 		if POST.has_key("birthdayMonth"):
 			if int(POST['birthdayMonth']) < 1 or int(POST['birthdayMonth']) > 12:
 				invalid['extras'].append('birthdayMonth')
-		else: 
+		else:
 			field_req['extras'].append('birthdayMonth')
 
 		if POST.has_key("birthdayYear"):
 			if int(POST['birthdayYear']) < 1900 or int(POST['birthdayYear']) > 2100:
 				invalid['extras'].append('birthdayYear')
-		else: 
+		else:
 			field_req['extras'].append('birthdayYear')
 
 		try:
@@ -105,37 +105,37 @@ class UserSignUpResource(ModelResource):
 		if POST.has_key("email"):
 			if not self.email_validation(POST['email']):
 				invalid['extras'].append('email')
-		else: 
+		else:
 			field_req['extras'].append('email')
 
 		if POST.has_key("repeatEmail"):
 			if POST.has_key("email") and not POST['repeatEmail'] == POST['email']:
 				invalid['extras'].append('repeatEmail')
-		else: 
+		else:
 			field_req['extras'].append('repeatEmail')
 
 		if POST.has_key("firstName"):
 			if len(POST['firstName']) < 1 or len(POST['firstName']) > 14:
 				too_long['extras'].append('firstName')
-		else: 
+		else:
 			field_req['extras'].append('firstName')
 
 		if POST.has_key("lastName"):
 			if len(POST['lastName']) < 1 or len(POST['lastName']) > 30:
 				too_long['extras'].append('lastName')
-		else: 
+		else:
 			field_req['extras'].append('lastName')
 
 		if POST.has_key("gender"):
 			if POST['gender'] not in ['Male', 'Female']:
 				invalid['extras'].append('gender')
-		else: 
+		else:
 			field_req['extras'].append('gender')
 
 		if POST.has_key("password"):
 			if len(POST['password']) < 8 or len(POST['password']) > 20 or re.match("^.*(?=.*\d)(?=.*[a-zA-Z]).*$"	, POST['password']) == None:
 				invalid['extras'].append('password')
-		else: 
+		else:
 			field_req['extras'].append('password')
 
 		if len(field_req['extras']) > 0:
@@ -151,13 +151,13 @@ class UserSignUpResource(ModelResource):
 			return None
 		return errors
 
-	def post_list(self, request, **kwargs):		
+	def post_list(self, request, **kwargs):
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
 		errors = None
-		errors = self.is_valid(POST)		
+		errors = self.is_valid(POST)
 		if errors is not None:
-			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
 		data = register(request, POST, 'peoplewings.apps.registration.backends.custom.CustomBackend')
 		result = {}
 		result['email'] = data
@@ -173,24 +173,24 @@ class UserSignUpResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
 				errors = [{"type": "VALIDATION_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)                               
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ImmediateHttpResponse, e:
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else: 
+				else:
 					content = {}
 					errors = [{"type": "VALIDATION_ERROR"}]
 					errors['errors'] = errors
@@ -199,33 +199,33 @@ class UserSignUpResource(ModelResource):
 			except BadParameters, e:
 				# This exception occurs when the provided key has expired
 				content = {}
-				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]          
+				errors = [{"type": "INVALID_FIELD", "extras": ["email"]}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ExistingUser, e:
 				# This exception occurs when the provided key has expired
 				content = {}
-				errors = [{"type": "EMAIL_IN_USE"}]          
+				errors = [{"type": "EMAIL_IN_USE"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)       
+				return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
-				errors = [{"type": "INTERNAL_ERROR"}]          
+				errors = [{"type": "INTERNAL_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)  
+				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
-		
+
 class FacebookLoginResource(ModelResource):
 
 	class Meta:
@@ -239,12 +239,12 @@ class FacebookLoginResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 
-	def post_list(self, request, **kwargs):	
+	def post_list(self, request, **kwargs):
 		#import pdb; pdb.set_trace()
-		try:		
+		try:
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
 
@@ -252,9 +252,9 @@ class FacebookLoginResource(ModelResource):
 			fbid = facebook['uid']
 			graph = GraphAPI(access_token= facebook['access_token'])
 			user = graph.get_object("me")
-			import pdb; pdb.set_trace()	
+			import pdb; pdb.set_trace()
 			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
-			if len(fb_obj) == 0:						
+			if len(fb_obj) == 0:
 				if user is None:
 					print 'None user'
 					return self.create_response(request, {"status":False, "errors": {"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
@@ -302,7 +302,7 @@ class FacebookLoginResource(ModelResource):
 		prof.save()
 
 	@transaction.commit_manually()
-	def register_with_fb(self, user, graph):		
+	def register_with_fb(self, user, graph):
 		try:
 			#import pdb; pdb.set_trace()
 			print 'Starting REGISTRATION'
@@ -324,8 +324,8 @@ class FacebookLoginResource(ModelResource):
 				if user.has_key('birthday'):
 					kwarg['birthday'] = date(int(str.split(str(user['birthday']), '/')[2]), int(str.split(str(user['birthday']), '/')[0]), int(str.split(str(user['birthday']), '/')[1]))
 
-				#pic_path = graph.get_profile_picture()				
-				new_profile = UserProfile.objects.create(**kwarg)				
+				#pic_path = graph.get_profile_picture()
+				new_profile = UserProfile.objects.create(**kwarg)
 				PhotoAlbums.objects.create(name='default', author=new_profile)
 				FacebookUser.objects.create(user=new_user, fbid=user['id'])
 			else:
@@ -335,7 +335,7 @@ class FacebookLoginResource(ModelResource):
 			print 'EXCEPTION ', str(e)
 			transaction.rollback()
 			return False
-		print 'Register COMPLETED'		
+		print 'Register COMPLETED'
 		print 'SEND SIGNAL'
 		try:
 			profile_created.send_robust(sender=new_profile.__class__, profile=new_profile, first_name=user['first_name'])
@@ -344,10 +344,10 @@ class FacebookLoginResource(ModelResource):
 		transaction.commit()
 		return True
 
-	
+
 
 class ActivationResource(ModelResource):
-	form_data = None    
+	form_data = None
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -372,7 +372,7 @@ class ActivationResource(ModelResource):
 		self.is_valid(bundle)
 		if bundle.errors:
 			self.error_response(bundle.errors, request)
-		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])        
+		bundle.obj = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = bundle.data['activation_key'])
 		return bundle
 
 	def is_valid(self, POST):
@@ -389,25 +389,25 @@ class ActivationResource(ModelResource):
 		POST = json.loads(request.raw_post_data)
 		request.POST = POST
 		errors = None
-		errors = self.is_valid(POST)		
+		errors = self.is_valid(POST)
 		if errors is not None:
-			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)		
-		data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])        
+			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
+		data = activate(request, 'peoplewings.apps.registration.backends.custom.CustomBackend', activation_key = request.POST['activationKey'])
 		result = {}
 		result['email'] = data.email
 		return self.create_response(request, {"status":True, "data": result}, response_class = HttpResponse)
-		
+
 	def dehydrate(self, bundle):
 		bundle.data = {}
 		bundle.data['status'] = True
 		bundle.data['code'] = 201
-		bundle.data['data'] = 'Activation complete'        
+		bundle.data['data'] = 'Activation complete'
 		return bundle
 
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
-			try:				
+			try:
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				content = {}
@@ -417,9 +417,9 @@ class ActivationResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -430,21 +430,21 @@ class ActivationResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ActivationCompleted:
 				# This exception occurs when the account has already been activated
 				content = {}
-				errors = [{"type": "USED_KEY"}]          
+				errors = [{"type": "USED_KEY"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except NotAKey:
 				# This exception occurs when the provided key has not a valid format
 				content = {}
-				errors = [{"type": "INVALID_FIELD", "extras": ["activationKey"]}]          
+				errors = [{"type": "INVALID_FIELD", "extras": ["activationKey"]}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -452,10 +452,10 @@ class ActivationResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else: 
+				else:
 					content = {}
 					errors = [{"type": "VALIDATION_ERROR"}]
 					errors['errors'] = errors
@@ -464,27 +464,27 @@ class ActivationResource(ModelResource):
 			except IntegrityError, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse)               
+				return self.create_response(request, content, response_class = HttpResponse)
 			except KeyExpired:
 				# This exception occurs when the provided key has expired
 				content = {}
-				errors = [{"type": "EXPIRED_KEY"}]          
+				errors = [{"type": "EXPIRED_KEY"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
 class LoginResource(ModelResource):
-	form_data = None    
+	form_data = None
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -507,13 +507,13 @@ class LoginResource(ModelResource):
 	def obj_create(self, bundle, request=None, **kwargs):
 		self.is_valid(bundle)
 		if bundle.errors:
-			self.error_response(bundle.errors, request)        
+			self.error_response(bundle.errors, request)
 		bundle.data = login(bundle)
 		return bundle
-		
+
 	def dehydrate(self, bundle):
 		bundle.data['status'] = True
-		bundle.data['code'] = 201       
+		bundle.data['code'] = 201
 		return bundle
 
 	def full_dehydrate(self, bundle):
@@ -522,9 +522,9 @@ class LoginResource(ModelResource):
 		tutorial = bundle.data['tutorial']
 		bundle.data = {}
 		bundle.data['status'] = True
-		bundle.data['code'] = 201 
+		bundle.data['code'] = 201
 		bundle.data['token'] = token
-		bundle.data['account'] = user  
+		bundle.data['account'] = user
 		bundle.data['tutorial'] = tutorial
 		return bundle
 
@@ -540,14 +540,14 @@ class LoginResource(ModelResource):
 				data['idAccount'] = json.loads(response.content)['account']
 				data['tutorial'] = json.loads(response.content)['tutorial']
 				content['status'] = True
-				content['data'] = data                
+				content['data'] = data
 				return self.create_response(request, content, response_class = HttpResponse)
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -558,7 +558,7 @@ class LoginResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -566,10 +566,10 @@ class LoginResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else: 
+				else:
 					content = {}
 					errors = [{"type": "VALIDATION_ERROR"}]
 					errors['errors'] = errors
@@ -577,27 +577,27 @@ class LoginResource(ModelResource):
 					return self.create_response(request, content, response_class = HttpResponse)
 			except AuthFail, e:
 				content = {}
-				errors = [{"type": "INVALID_USER_OR_PASS"}]          
+				errors = [{"type": "INVALID_USER_OR_PASS"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)               
+				return self.create_response(request, content, response_class = HttpResponse)
 			except NotActive, e:
 				content = {}
-				errors = [{"type": "INACTIVE_USER"}]          
+				errors = [{"type": "INACTIVE_USER"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)                
+				return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 
-		return wrapper     
+		return wrapper
 
 class LogoutResource(ModelResource):
-	form_data = None    
+	form_data = None
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -629,9 +629,9 @@ class LogoutResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -642,7 +642,7 @@ class LogoutResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -650,37 +650,37 @@ class LogoutResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
-		return wrapper     
-	
-class AccountResource(ModelResource):       
-	method = None    
+		return wrapper
+
+class AccountResource(ModelResource):
+	method = None
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -692,8 +692,8 @@ class AccountResource(ModelResource):
 		authorization = Authorization()
 		always_return_data = True
 		excludes = ['is_active', 'is_staff', 'is_superuser', 'username', 'date_joined', 'last_login']
-		validation = AccountValidation()     
-	   
+		validation = AccountValidation()
+
 	def apply_authorization_limits(self, request, object_list=None):
 		if request and request.method in ('GET', 'PUT', 'DELETE'):  # 1.
 			return object_list.filter(id = request.user.id)
@@ -705,7 +705,7 @@ class AccountResource(ModelResource):
 	def get_list(self, request, **kwargs):
 		##DO NOTHING
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
-	
+
 	def is_valid_post(self, POST):
 		errors = []
 		field_req = {"type":"FIELD_REQUIRED", "extras": []}
@@ -742,7 +742,7 @@ class AccountResource(ModelResource):
 		if not self.is_valid_password(POST['currentPassword'], request):
 
 			errors = [{"type": "INCORRECT_PASSWORD"}]
-			content = {} 
+			content = {}
 			content['status'] = False
 			content['errors'] = errors
 			return self.create_response(request, content, response_class=HttpResponse)
@@ -754,7 +754,7 @@ class AccountResource(ModelResource):
 		tokens = ApiToken.objects.filter(user=user)
 		for i in tokens:
 			i.delete()
-		##Delete email		
+		##Delete email
 		user.email = '%s-deleted@peoplewings.com' % user.username
 		##Delete pass
 		user.password = [random.choice(string.ascii_lowercase) for n in xrange(20)]
@@ -763,8 +763,8 @@ class AccountResource(ModelResource):
 		#Invalidate his profile,
 		##Put inactive = True (modify code so it does not appear)
 		pf = UserProfile.objects.get(user=user)
-		pf.active = False		
-		#Delete the photos		
+		pf.active = False
+		#Delete the photos
 		s3 = S3Custom()
 		route_list = []
 		route_list.append(getattr(settings, "ANONYMOUS_BIG"))
@@ -803,7 +803,7 @@ class AccountResource(ModelResource):
 		contents = {}
 		contents['status'] = True
 		return self.create_response(request, contents, response_class = HttpResponse)
-	
+
 	def post_detail(self, request, **kwargs):
 		##DO NOTHING
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
@@ -813,7 +813,7 @@ class AccountResource(ModelResource):
 		return self.create_response(request, {"status":False, "errors":[{"type": "METHOD_NOT_ALLOWED"}]}, response_class = HttpResponse)
 
 	def get_detail(self, request, **kwargs):
-		response = super(AccountResource, self).get_detail(request, **kwargs)    
+		response = super(AccountResource, self).get_detail(request, **kwargs)
 		data = json.loads(response.content)
 		try:
 			pf = UserProfile.objects.get(user = request.user)
@@ -822,7 +822,7 @@ class AccountResource(ModelResource):
 		data['avatar'] = pf.thumb_avatar
 		has_pass = 'pbkdf2_sha256$' in request.user.password
 		data['hasPass'] = has_pass
-		content = {}    
+		content = {}
 		content['status'] = True
 		del(data['password'])
 		content['data'] = data
@@ -834,8 +834,8 @@ class AccountResource(ModelResource):
 		else:
 			for key, value in json.loads(bundle.request.raw_post_data)['resource'].items():
 				if key in bundle.data:
-					bundle.data[key] = value       
-		return bundle  
+					bundle.data[key] = value
+		return bundle
 
 	def is_valid_put(self, PUT):
 		errors = []
@@ -906,14 +906,14 @@ class AccountResource(ModelResource):
 
 		elif not self.is_valid_password(PUT['currentPassword'], request):
 			errors = [{"type": "INCORRECT_PASSWORD"}]
-			content = {} 
+			content = {}
 			content['status'] = False
 			content['errors'] = errors
 			return self.create_response(request, content, response_class=HttpResponse)
 
-		response = self.patch_detail(request, **kwargs)  
-		content = {} 
-		content['msg'] = 'Account updated'       
+		response = self.patch_detail(request, **kwargs)
+		content = {}
+		content['msg'] = 'Account updated'
 		content['status'] = True
 		return self.create_response(request, content, response_class=HttpResponse)
 
@@ -954,9 +954,9 @@ class AccountResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -967,7 +967,7 @@ class AccountResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -975,43 +975,43 @@ class AccountResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except DupplicateEmailException, e:
 					ccontent = {}
 					errors = [{"type": "EMAIL_IN_USE"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:				
+			except Exception, e:
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-		return wrapper    
-	
-class ForgotResource(ModelResource):       
-	
+		return wrapper
+
+class ForgotResource(ModelResource):
+
 	method = None
 	class Meta:
 		object_class = User
@@ -1035,7 +1035,7 @@ class ForgotResource(ModelResource):
 	def build_filters(self, filters=None):
 		if 'forgotToken' not in filters:
 			bundle = '{"forgotToken":["This field is required"]}'
-			raise BadRequest(bundle) 
+			raise BadRequest(bundle)
 		return super(ForgotResource, self).build_filters(filters)
 
 	def get_list(self, request=None, **kwargs):
@@ -1044,11 +1044,11 @@ class ForgotResource(ModelResource):
 			# Grab a mutable copy.
 			filters = request.GET.copy()
 			self.build_filters(filters=filters)
-		if check_forgot_token(filters, 'peoplewings.apps.registration.backends.custom.CustomBackend'):                             
-			bundle = {"status":True}                      
-		else:            
+		if check_forgot_token(filters, 'peoplewings.apps.registration.backends.custom.CustomBackend'):
+			bundle = {"status":True}
+		else:
 			raise KeyExpired()
-		return self.create_response(request, bundle)           
+		return self.create_response(request, bundle)
 
 	def is_valid_post(self, POST):
 		errors = []
@@ -1056,7 +1056,7 @@ class ForgotResource(ModelResource):
 		field_req = {"type": "FIELD_REQUIRED", "extras": []}
 
 		if POST.has_key('email'):
-			if len(POST['email']) < 7 or len(POST['email']) > 50 or len(User.objects.filter(email=POST['email'])) != 1: 
+			if len(POST['email']) < 7 or len(POST['email']) > 50 or len(User.objects.filter(email=POST['email'])) != 1:
 				invalid['extras'].append("email")
 		elif not POST.has_key('newPassword'):
 			field_req['extras'].append('email')
@@ -1080,7 +1080,7 @@ class ForgotResource(ModelResource):
 		errors = self.is_valid_post(POST)
 		if len(errors) > 0:
 			pass
-		else:			
+		else:
 			if POST.has_key("email"):
 				user = User.objects.get(email=json.loads(request.raw_post_data)['email'])
 				res = forgot_password(user, 'peoplewings.apps.registration.backends.custom.CustomBackend')
@@ -1108,9 +1108,9 @@ class ForgotResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -1121,7 +1121,7 @@ class ForgotResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -1129,25 +1129,25 @@ class ForgotResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except DeletedAccount, e:
@@ -1173,18 +1173,18 @@ class ForgotResource(ModelResource):
 				errors = [{"type": "EXPIRED_KEY"}]
 				content['status'] = False
 				content['errors'] = errors
-				return self.create_response(request, content, response_class = HttpResponse)                         
+				return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
-		return wrapper     
+		return wrapper
 
 
-class ControlResource(ModelResource):       
-	
+class ControlResource(ModelResource):
+
 	class Meta:
 		object_class = User
 		queryset = User.objects.all()
@@ -1198,14 +1198,14 @@ class ControlResource(ModelResource):
 		always_return_data = True
 
 	def get_list(self, request, **kwargs):
-		return self.create_response(request, {"status":True, "code":200}, response_class = HttpResponse) 
-   
+		return self.create_response(request, {"status":True, "code":200}, response_class = HttpResponse)
+
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)     
+				response = callback(request, *args, **kwargs)
 				return response
 			except (BadRequest, fields.ApiFieldError), e:
 				content = {}
