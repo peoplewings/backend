@@ -59,7 +59,7 @@ class WingNamesResource(ModelResource):
 	def validate_GET(self, GET):
 		errors = []
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
-		if not GET.has_key('profileId'): 
+		if not GET.has_key('profileId'):
 			field_req['extras'].append('profileId')
 			errors.append(field_req)
 		return errors
@@ -103,18 +103,18 @@ class WingResource(ModelResource):
 					wing_obj.extraFields= self.get_other_accomodation_fields(w.pk)
 			return self.create_response(request, {"status" : True, "data": [wing_obj.jsonable()]}, response_class=HttpResponse)
 		except:
-			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID", "extras":["id"]}]}, response_class=HttpResponse) 
+			return self.create_response(request, {"status" : False, "errors": [{"type": "INVALID", "extras":["id"]}]}, response_class=HttpResponse)
 	def validate_GET(self, GET):
 		errors = []
 		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
-		if not GET.has_key('author'): 
+		if not GET.has_key('author'):
 			field_req['extras'].append('author')
 			errors.append(field_req)
 		return errors
 
 	def get_list(self, request, **kwargs):
-		#Check authentication	
-		#print kwargs		
+		#Check authentication
+		#print kwargs
 		data = None
 		GET = request.GET
 		errors = self.validate_GET(GET)
@@ -123,9 +123,9 @@ class WingResource(ModelResource):
 		if str(request.user.pk) == str(GET['author']):
 			#We have to list our own wings
 			data = []
-			wings = Wing.objects.filter(author__pk=str(GET['author']))			
+			wings = Wing.objects.filter(author__pk=str(GET['author']))
 			for w in wings:
-				wing_obj = self.get_generic_fields(w)				
+				wing_obj = self.get_generic_fields(w)
 				if w.wing_type == 'Accommodation':
 					wing_obj.extraFields= self.get_own_accomodation_fields(w.pk)
 				if w.wing_type == 'Meetup':
@@ -162,10 +162,10 @@ class WingResource(ModelResource):
 		wing_obj.city = w.city.jsonify()
 		return wing_obj
 
-	def get_own_accomodation_fields(self, id_wing):		
+	def get_own_accomodation_fields(self, id_wing):
 		fields = {}
 		#import pdb; pdb.set_trace()
-		acc = Accomodation.objects.get(pk=id_wing)		
+		acc = Accomodation.objects.get(pk=id_wing)
 		fields.update({'capacity': acc.capacity})
 		fields.update({'wheelchair': acc.wheelchair})
 		fields.update({'whereSleepingType': acc.where_sleeping_type})
@@ -173,7 +173,7 @@ class WingResource(ModelResource):
 		fields.update({'iHavePet':acc.i_have_pet})
 		fields.update({'petsAllowed': acc.pets_allowed})
 		fields.update({'blankets': acc.blankets})
-		fields.update({'liveCenter': acc.live_center})		
+		fields.update({'liveCenter': acc.live_center})
 		fields.update({'about': acc.about})
 
 		fields.update({'address':acc.address})
@@ -200,7 +200,7 @@ class WingResource(ModelResource):
 		fields.append({'iHavePet':acc.i_have_pet})
 		fields.append({'petsAllowed': acc.pets_allowed})
 		fields.append({'blankets': acc.blankets})
-		fields.append({'liveCenter': acc.live_center})		
+		fields.append({'liveCenter': acc.live_center})
 		fields.append({'about': acc.about})
 
 		fields.append({'publicTransports': [i.name for i in acc.public_transport.all()]})
@@ -315,7 +315,7 @@ class WingResource(ModelResource):
 						if date_start < datetime.datetime.today():
 							invalid['extras'].append('dateStart')
 					except:
-						invalid['extras'].append('dateStart')					
+						invalid['extras'].append('dateStart')
 
 		if POST.has_key('dateEnd'):
 			if POST.has_key('sharingOnce') and POST['sharingOnce'] is True:
@@ -328,7 +328,7 @@ class WingResource(ModelResource):
 						if date_end < datetime.datetime.today():
 							invalid['extras'].append('dateEnd')
 					except:
-						invalid['extras'].append('dateEnd')					
+						invalid['extras'].append('dateEnd')
 
 
 		if date_start is not None and date_end is not None and date_start > date_end:
@@ -350,7 +350,7 @@ class WingResource(ModelResource):
 				invalid['extras'].append('type')
 			else:
 				if POST['type'] == 'Accommodation':
-					#Validate Accomodation specific fields					
+					#Validate Accomodation specific fields
 					if POST['extraFields'].has_key('liveCenter'):
 						if POST['extraFields']['liveCenter'] == "":
 							not_empty['extras'].append('liveCenter')
@@ -367,7 +367,7 @@ class WingResource(ModelResource):
 						if POST['extraFields']['wheelchair'] == "":
 							not_empty['extras'].append('wheelchair')
 						elif POST['extraFields']['wheelchair'] not in [True, False]:
-							invalid['extras'].append('wheelchair')					
+							invalid['extras'].append('wheelchair')
 
 					if POST['extraFields'].has_key('iHavePet'):
 						if POST['extraFields']['iHavePet'] == "":
@@ -380,7 +380,7 @@ class WingResource(ModelResource):
 							not_empty['extras'].append('blankets')
 						elif POST['extraFields']['blankets'] not in [True, False]:
 							invalid['extras'].append('blankets')
-					
+
 					if POST['extraFields'].has_key('capacity'):
 						if POST['extraFields']['capacity'] == "":
 							not_empty['extras'].append('capacity')
@@ -453,8 +453,8 @@ class WingResource(ModelResource):
 		errors = []
 		errors = self.validate_POST(POST)
 		if len(errors) != 0:
-			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)	
-		
+			return self.create_response(request, {"status" : False, "errors": errors}, response_class=HttpResponse)
+
 		#Create the wing, and also create the wing_type
 		params = self.construct_generic_post_params(request, POST)
 		if (POST['type'] == 'Accommodation'):
@@ -512,7 +512,7 @@ class WingResource(ModelResource):
 						if date_start < datetime.datetime.today():
 							invalid['extras'].append('dateStart')
 					except:
-						invalid['extras'].append('dateStart')					
+						invalid['extras'].append('dateStart')
 
 
 		if PUT.has_key('dateEnd'):
@@ -526,7 +526,7 @@ class WingResource(ModelResource):
 						if date_end < datetime.datetime.today():
 							invalid['extras'].append('dateEnd')
 					except:
-						invalid['extras'].append('dateEnd')					
+						invalid['extras'].append('dateEnd')
 
 
 		if date_start is not None and date_end is not None and date_start > date_end:
@@ -566,7 +566,7 @@ class WingResource(ModelResource):
 					if PUT.has_key('blankets'):
 						if PUT['blankets'] not in [True, False]:
 							invalid['extras'].append('blankets')
-					
+
 					if PUT.has_key('capacity'):
 						if int(PUT['capacity']) not in range(10):
 							invalid['extras'].append('capacity')
@@ -623,18 +623,18 @@ class WingResource(ModelResource):
 		return errors
 
 	def update_generic(self, PUT, wing):
-		if PUT.has_key('name'): wing.name = PUT['name']		
+		if PUT.has_key('name'): wing.name = PUT['name']
 		if PUT.has_key('status'): wing.status = PUT['status']
 		if PUT.has_key('bestDays'): wing.best_days = PUT['bestDays']
 		if PUT.has_key('city'): wing.city = City.objects.saveLocation(**PUT['city'])
 		if (PUT.has_key('sharingOnce') and PUT['sharingOnce'] is True):
-			if not PUT.has_key('dateStart') or not PUT.has_key('dateEnd'): 
+			if not PUT.has_key('dateStart') or not PUT.has_key('dateEnd'):
 				return {"type":"FIELD_REQUIRED", "extras":['dates']}
-			else: 
+			else:
 				wing.sharing_once = True
 				if PUT.has_key('dateStart'): wing.date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
 				if PUT.has_key('dateEnd'): wing.date_end = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
-		elif PUT.has_key('sharingOnce'): 
+		elif PUT.has_key('sharingOnce'):
 			wing.sharing_once = False
 			wing.date_start = None
 			wing.date_end = None
@@ -661,40 +661,40 @@ class WingResource(ModelResource):
 		if PUT['extraFields'].has_key('wheelchair'):
 			if PUT['extraFields']['wheelchair'] is True:
 				wing.wheelchair = True
-			else: 
+			else:
 				wing.wheelchair = False
 
 		if PUT['extraFields'].has_key('whereSleepingType'):
 			wing.where_sleeping_type = PUT['extraFields']['whereSleepingType']
-		
+
 		if PUT['extraFields'].has_key('smoking'):
 			wing.smoking = PUT['extraFields']['smoking']
 
 		if PUT['extraFields'].has_key('iHavePet'):
 			if PUT['extraFields']['iHavePet'] is True:
 				wing.i_have_pet = True
-			else: 
+			else:
 				wing.i_have_pet = False
 
 		if PUT['extraFields'].has_key('petsAllowed'):
 			if PUT['extraFields']['petsAllowed'] is True:
 				wing.pets_allowed = True
-			else: 
+			else:
 				wing.pets_allowed = False
 
 		if PUT['extraFields'].has_key('blankets'):
 			if PUT['extraFields']['blankets'] is True:
 				wing.blankets = True
-			else: 
+			else:
 				wing.blankets = False
 
 		if PUT['extraFields'].has_key('liveCenter'):
 			if PUT['extraFields']['liveCenter'] is True:
 				wing.live_center = True
-			else: 
+			else:
 				wing.live_center = False
 
-		if PUT['extraFields'].has_key('publicTransport'):			
+		if PUT['extraFields'].has_key('publicTransport'):
 			wing.public_transport.clear()
 			for pb in PUT['extraFields']['publicTransport']:
 				aux = PublicTransport.objects.filter(name=pb)
@@ -718,8 +718,8 @@ class WingResource(ModelResource):
 		wing.save()
 
 
-	def put_detail(self, request, **kwargs):		
-		
+	def put_detail(self, request, **kwargs):
+
 		w_list = Wing.objects.filter(pk=str(kwargs['pk']), author=UserProfile.objects.get(user=request.user))
 		if len(w_list) != 1:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
@@ -741,7 +741,7 @@ class WingResource(ModelResource):
 		return self.create_response(request, {"status" : True}, response_class=HttpResponse)
 
 	def delete_detail(self, request, **kwargs):
-
+		kwargs['pk'] = str(kwargs['pk']).replace('/', '')
 		w_list = Wing.objects.filter(pk=str(kwargs['pk']), author=UserProfile.objects.get(user=request.user))
 		if len(w_list) != 1:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
