@@ -91,6 +91,7 @@ class WingResource(ModelResource):
 
 
 	def get_detail(self, request, **kwargs):
+		kwargs['pk'] = str(kwargs['pk']).replace('/', '')
 		wing_id = kwargs['pk']
 		try:
 			w = Wing.objects.get(pk = str(wing_id))
@@ -449,6 +450,7 @@ class WingResource(ModelResource):
 		return errors
 
 	def post_list(self, request, **kwargs):
+		kwargs['pk'] = str(kwargs['pk']).replace('/', '')
 		POST = json.loads(request.raw_post_data)
 		errors = []
 		errors = self.validate_POST(POST)
@@ -719,7 +721,7 @@ class WingResource(ModelResource):
 
 
 	def put_detail(self, request, **kwargs):
-
+		kwargs['pk'] = str(kwargs['pk']).replace('/', '')
 		w_list = Wing.objects.filter(pk=str(kwargs['pk']), author=UserProfile.objects.get(user=request.user))
 		if len(w_list) != 1:
 			return self.create_response(request, {"status" : False, "errors": [{"type": "FORBIDDEN"}]}, response_class=HttpResponse)
