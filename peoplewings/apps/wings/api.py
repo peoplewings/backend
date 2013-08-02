@@ -450,7 +450,6 @@ class WingResource(ModelResource):
 		return errors
 
 	def post_list(self, request, **kwargs):
-		kwargs['pk'] = str(kwargs['pk']).replace('/', '')
 		POST = json.loads(request.raw_post_data)
 		errors = []
 		errors = self.validate_POST(POST)
