@@ -313,7 +313,7 @@ class WingResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_start = datetime.datetime.strptime(POST['dateStart'], '%Y-%m-%d')
-						if date_start < datetime.datetime.today():
+						if date_start.date() < datetime.date.today():
 							invalid['extras'].append('dateStart')
 					except:
 						invalid['extras'].append('dateStart')
@@ -326,7 +326,7 @@ class WingResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_end = datetime.datetime.strptime(POST['dateEnd'], '%Y-%m-%d')
-						if date_end < datetime.datetime.today():
+						if date_end.date() < datetime.date.today():
 							invalid['extras'].append('dateEnd')
 					except:
 						invalid['extras'].append('dateEnd')
@@ -510,7 +510,7 @@ class WingResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_start = datetime.datetime.strptime(PUT['dateStart'], '%Y-%m-%d')
-						if date_start < datetime.datetime.today():
+						if date_start.date() < datetime.date.today():
 							invalid['extras'].append('dateStart')
 					except:
 						invalid['extras'].append('dateStart')
@@ -524,7 +524,7 @@ class WingResource(ModelResource):
 					#we need to check if date start its a valid date and >= today
 					try:
 						date_end = datetime.datetime.strptime(PUT['dateEnd'], '%Y-%m-%d')
-						if date_end < datetime.datetime.today():
+						if date_end.date() < datetime.date.today():
 							invalid['extras'].append('dateEnd')
 					except:
 						invalid['extras'].append('dateEnd')
