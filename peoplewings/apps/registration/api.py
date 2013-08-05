@@ -46,11 +46,13 @@ from peoplewings.apps.registration.signals import user_deleted
 from peoplewings.apps.people.models import PhotoAlbums, UserProfile
 from peoplewings.apps.people.signals import profile_created
 
+from peoplewings.apps.locations.models import City
+
 from peoplewings.libs.S3Custom import *
 from peoplewings.libs.customauth.models import ApiToken
 from registration import *
 
-from geopy import geocoders  
+from geopy import geocoders
 
 class UserSignUpResource(ModelResource):
 
@@ -278,8 +280,8 @@ class FacebookLoginResource(ModelResource):
 				countryname = citylist[1]
 
 				g = geocoders.GoogleV3()
-				place, (lat, lng) = g.geocode(fbcity)  
-				
+				place, (lat, lng) = g.geocode(fbcity)
+
 				prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
 				prof.current_city = City.objects.saveLocation(country = countryname, name = cityname, lat = lat, lon = lng)
 
