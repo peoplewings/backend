@@ -37,14 +37,14 @@ def register(request, POST, backend, success_url=None, form_class=None,
 
 	POST['username'] = POST['email']
 	POST['password2'] = POST['password']
-	if POST['email'] != POST['repeatEmail']: 
-		bundle = {"email": ["Emails don't match"]}    
+	if POST['email'] != POST['repeatEmail']:
+		bundle = {"email": ["Emails don't match"]}
 		raise BadParameters(bundle)
 	bundle_data = POST
 	backend = get_backend(backend)
 	if not backend.registration_allowed(request):
 		return redirect(disallowed_url)
-	
+
 	new_user = backend.register(request, **bundle_data)
 	return new_user.email
 
@@ -57,7 +57,7 @@ def do_login(request, username, password):
 		if user.is_active:
 			# Update last login
 			user.last_login = datetime.datetime.utcnow().replace(tzinfo=utc)
-			user.save() 
+			user.save()
 			return user
 		else:
 			raise NotActive()
@@ -65,7 +65,7 @@ def do_login(request, username, password):
 		raise AuthFail()
 
 def login(bundle):
-	## Checks if the user/pass is valid    
+	## Checks if the user/pass is valid
 	user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
 	## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
 	if 'remember' in bundle.data and bundle.data['remember'] == 'on':
@@ -85,8 +85,8 @@ def login(bundle):
 				pf.tutorial = True
 				pf.save()
 	except:
-	   raise AuthFail() 
-	
+	   raise AuthFail()
+
 	return ret
 
 def api_token_is_authenticated(bundle, **kwargs):
@@ -94,58 +94,64 @@ def api_token_is_authenticated(bundle, **kwargs):
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
 	#import pdb; pdb.set_trace()
-	try: 
+	try:
 		apitoken = ApiToken.objects.get(token = token)
+		"""
 		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
 			return False
 		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
 			return False
-
+		"""
 		apitoken.last = datetime.datetime.now()
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
 		user = User.objects.get(pk=apitoken.user_id)
-		return user        
+		return user
 	except:
 		return False
 
 def blitline_token_is_authenticated(apitoken):
 	#import pdb; pdb.set_trace()
 	##Check if the user exists
-	try: 
+	try:
+		"""
 		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
 			return False
 		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
 			return False
-
+		"""
 		apitoken.last = datetime.datetime.now()
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
 		user = User.objects.get(pk=apitoken.user_id)
-		return user        
+		return user
 	except:
 		return False
 
 def control_is_authenticated(bundle, **kwargs):
 	##Check if the user exists
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
-	try: 
+	try:
 		apitoken = ApiToken.objects.get(token = token)
+		"""
 		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
 			return False
 		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
 			return False
-
+		"""
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
 		user = User.objects.get(pk=apitoken.user_id)
-		return user        
+		return user
 	except:
 		return False
 
 def logout(bundle):
-	try:    
-		apitoken = ApiToken.objects.get(token = bundle.META.get("HTTP_X_AUTH_TOKEN"), user_id = bundle.user.pk)    
+	try:
+		apitoken = ApiToken.objects.get(token = bundle.META.get("HTTP_X_AUTH_TOKEN"), user_id = bundle.user.pk)
 		apitoken.delete()
 		return True
 	except:
@@ -189,5 +195,5 @@ def change_password(new_password, forgot_token):
 		user.save()
 	except:
 		raise NotAKey()
-	
-	
+
+
