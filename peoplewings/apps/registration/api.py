@@ -248,7 +248,7 @@ class FacebookLoginResource(ModelResource):
 		try:
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				print "FB register FAIL FB_ACC_NOT_VALID"
 				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
