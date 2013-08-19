@@ -248,7 +248,7 @@ class FacebookLoginResource(ModelResource):
 		try:
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
 				print "FB register FAIL FB_ACC_NOT_VALID"
 				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
@@ -281,7 +281,7 @@ class FacebookLoginResource(ModelResource):
 				countryname = citylist[1]
 
 				g = geocoders.GoogleV3()
-				place, (lat, lng) = g.geocode(fbcity)[0]
+				place, (lat, lng) = g.geocode(fbcity, exactly_one=False)[0]
 
 				prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
 				prof.current_city = City.objects.saveLocation(country = countryname, name = cityname, lat = lat, lon = lng)
