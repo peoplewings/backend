@@ -281,7 +281,7 @@ class FacebookLoginResource(ModelResource):
 				countryname = citylist[1]
 
 				g = geocoders.GoogleV3()
-				place, (lat, lng) = g.geocode(fbcity)
+				place, (lat, lng) = g.geocode(fbcity)[0]
 
 				prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
 				prof.current_city = City.objects.saveLocation(country = countryname, name = cityname, lat = lat, lon = lng)
