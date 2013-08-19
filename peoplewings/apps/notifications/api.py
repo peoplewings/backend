@@ -44,7 +44,7 @@ from peoplewings.apps.registration.authentication import ApiTokenAuthentication
 from domain import *
 
 class NotificationsListResource(ModelResource):
-	
+
 	class Meta:
 		object_class = Notifications
 		queryset = Notifications.objects.all()
@@ -54,8 +54,8 @@ class NotificationsListResource(ModelResource):
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
-		always_return_data = True     
-		resource_name = 'notificationslist'               
+		always_return_data = True
+		resource_name = 'notificationslist'
 
 	def validate(self, kind, POST):
 		errors = []
@@ -123,10 +123,10 @@ class NotificationsListResource(ModelResource):
 			except KeyError:
 				field_req['extras'].append('privateText')
 			try:
-				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors.append({"type":"START_DATE_GT_END_DATE"})	
+				if POST['data']['wingParameters']['startDate'] > POST['data']['wingParameters']['endDate']: errors.append({"type":"START_DATE_GT_END_DATE"})
 			except:
 				field_req['extras'].append('startdate')
-				field_req['extras'].append('endDate')	
+				field_req['extras'].append('endDate')
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
 		if len(invalid['extras']) > 0:
@@ -135,14 +135,14 @@ class NotificationsListResource(ModelResource):
 			errors.append(not_empty)
 		if len(too_long['extras']) > 0:
 			errors.append(too_long)
-		return errors		
+		return errors
 
 	def put_list_validate(self, PUT, user):
 		errors = []
 		if not PUT.has_key('threads'):
 			errors.append({"type": "FIELD_REQUIRED", "extra":["threads"]})
 			return errors
-		else:		
+		else:
 			#We check, for each thread, if they are owned by the user
 			err = {"type":"FORBIDDEN", "extras":[]}
 			for i in PUT['threads']:
@@ -158,8 +158,8 @@ class NotificationsListResource(ModelResource):
 		return errors
 
 	def filter_get(self, request, filters, prof):
-		target = None	
-		state = None	
+		target = None
+		state = None
 		if 'kind' in request.GET.keys():
 			if request.GET['kind'] == 'msg':
 				filters = filters & Q(kind='message')
@@ -186,7 +186,7 @@ class NotificationsListResource(ModelResource):
 
 		return (filters, target, state)
 
-	def search(self, request, initial_dict):		
+	def search(self, request, initial_dict):
 		result_dict = []
 		result_dict.extend(initial_dict)
 		for key, value in request.GET.items():
@@ -205,11 +205,11 @@ class NotificationsListResource(ModelResource):
 	def order_by(self, request, initial_dict):
 		result_dict = []
 		result_dict.extend(initial_dict)
-		for key, value in request.GET.items():			
+		for key, value in request.GET.items():
 			if key == 'order':
 				if  value == 'date':
 					 result_dict = sorted(result_dict, key=attrgetter('created'), reverse=True)
-				elif value == 'interlocutor':                                        
+				elif value == 'interlocutor':
 					result_dict = sorted(result_dict, key=attrgetter('name'), reverse=False)
 				elif value == 'read':
 					result_dict = sorted(result_dict, key=attrgetter('read'), reverse=False)
@@ -231,7 +231,7 @@ class NotificationsListResource(ModelResource):
 
 	def make_difs(self, thread, me):
 		mod = []
-		for idx, i in enumerate(thread):			
+		for idx, i in enumerate(thread):
 			if i._sender == me:
 				break
 			else:
@@ -245,16 +245,16 @@ class NotificationsListResource(ModelResource):
 		state = 'OFF'
 		token = ApiToken.objects.filter(user=user).order_by('-last_js')
 		if len(token) > 0:
-			state = token[0].is_user_connected()	
+			state = token[0].is_user_connected()
 		return state
 
-	def get_list(self, request, **kwargs):		
+	def get_list(self, request, **kwargs):
 		## We are doin it the hard way
 		try:
 			prof = UserProfile.objects.get(user = request.user)
 		except:
 			return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['user']}]}, response_class = HttpResponse)
-		result_dict = []     
+		result_dict = []
 		filters = (Q(receiver=prof)|Q(sender=prof))&((Q(first_sender=prof)&Q(first_sender_visible=True))|(~Q(first_sender=prof)&Q(second_sender_visible=True)))
 		order_by = '-created'
 		target = None
@@ -262,7 +262,7 @@ class NotificationsListResource(ModelResource):
 		filters, target, state = self.filter_get(request, filters, prof)
 		try:
 			my_notifications = Notifications.objects.filter(filters).order_by('-created')
-			for i in my_notifications:				
+			for i in my_notifications:
 				aux = NotificationsList()
 				aux.id = i.pk
 				aux.created = i.created
@@ -275,50 +275,50 @@ class NotificationsListResource(ModelResource):
 				## Request specific
 				if aux.kind == 'request':
 					req = Requests.objects.get(pk = i.pk)
-					additional_list = i.get_subclass().all()		
+					additional_list = i.get_subclass().all()
 					for additional in additional_list:
 						aux.wing_parameters['start_date'] = additional.start_date
 						aux.wing_parameters['end_date'] = additional.end_date
-						aux.wing_parameters['num_people'] = additional.num_people 
-						add_class = additional.get_class_name() 
+						aux.wing_parameters['num_people'] = additional.num_people
+						add_class = additional.get_class_name()
 						aux.wing_parameters['wing_type'] = add_class
-						aux.wing_parameters['wing_city'] = req.wing.city.name     
+						aux.wing_parameters['wing_city'] = req.wing.city.name
 					if req.wing.active is False:
 						aux.wing_parameters['message'] = "Deleted Wing"
-					else:                      
+					else:
 						aux.wing_parameters['message'] = req.wing.name
 					aux.state = req.state
-					if i.first_sender == prof:                           
+					if i.first_sender == prof:
 						aux.flag_direction = True
 					else:
-						aux.flag_direction =   False           					                            
-				## Invite specific               
+						aux.flag_direction =   False
+				## Invite specific
 				elif aux.kind == 'invite':
-					inv = Invites.objects.get(pk = i.pk) 
-					additional_list = i.get_subclass().all()		
+					inv = Invites.objects.get(pk = i.pk)
+					additional_list = i.get_subclass().all()
 					for additional in additional_list:
 						aux.wing_parameters['start_date'] = additional.start_date
 						aux.wing_parameters['end_date'] = additional.end_date
-						aux.wing_parameters['num_people'] = additional.num_people 
-						add_class = additional.get_class_name() 
+						aux.wing_parameters['num_people'] = additional.num_people
+						add_class = additional.get_class_name()
 						aux.wing_parameters['wing_type'] = add_class
-						aux.wing_parameters['wing_city'] = inv.wing.city.name                           
+						aux.wing_parameters['wing_city'] = inv.wing.city.name
 					if inv.wing.active is False:
 						aux.wing_parameters['message'] = "Deleted Wing"
-					else:                      
+					else:
 						aux.wing_parameters['message'] = inv.wing.name
-					aux.state = inv.state   
+					aux.state = inv.state
 					if i.first_sender == prof:
 						 aux.flag_direction = True
 					else:
-						aux.flag_direction =   False          
-				## Message specific                         
-				elif aux.kind == 'message':					
+						aux.flag_direction =   False
+				## Message specific
+				elif aux.kind == 'message':
 					msg = Messages.objects.get(pk = i.pk)
 					if len(msg.private_message) > 180:
 						aux.content = msg.private_message[:177] + '...'
 					else:
-						aux.content = msg.private_message	
+						aux.content = msg.private_message
 					#import pdb; pdb.set_trace()
 					cur_thread = Messages.objects.filter(reference= i.reference).order_by('-created')
 					if cur_thread[0].pk == i.pk:
@@ -329,20 +329,20 @@ class NotificationsListResource(ModelResource):
 						else:
 							#I'm the receiver of the last message. The flag direction should be --> (False)
 							aux.flag_direction = False
-				## Friendship specific                         
+				## Friendship specific
 				elif aux.kind == 'friendship':
 					friend = Friendship.objects.get(pk = i.pk)
 					aux.content = friend.message
 				#Profile specific
 				if (i.sender == prof):
 					## YOU are the sender. Need receiver info
-					prof_aux = UserProfile.objects.get(pk = i.receiver.pk)                   
+					prof_aux = UserProfile.objects.get(pk = i.receiver.pk)
 				else:
-					## YOU are the receiver. Need the sender info  
-					prof_aux = UserProfile.objects.get(pk = i.sender.pk)    
+					## YOU are the receiver. Need the sender info
+					prof_aux = UserProfile.objects.get(pk = i.sender.pk)
 				aux._sender = i.sender
 				if prof_aux.active is False:
-					aux.interlocutor_id = ""          
+					aux.interlocutor_id = ""
 					aux.avatar =  getattr(settings, "ANONYMOUS_AVATAR")
 					aux.age = " - "
 					aux.verified = ""
@@ -350,26 +350,26 @@ class NotificationsListResource(ModelResource):
 					aux.name = "Unknown User"
 					aux.online = "F"
 				else:
-					aux.interlocutor_id = prof_aux.pk          
+					aux.interlocutor_id = prof_aux.pk
 					aux.avatar =  prof_aux.thumb_avatar
 					aux.age = prof_aux.get_age()
-					aux.verified = False         
+					aux.verified = False
 					if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 					else: aux.location = "Not specified"
 					aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
 					aux.online = self.connected(prof_aux.user)
-				## Add the result                                                                     
-				result_dict.append(aux)                
+				## Add the result
+				result_dict.append(aux)
 		except Exception, e:
 			return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR", "extras":str(e)}]}, response_class = HttpResponse)
 			#return self.create_response(request, {"status":False, "msg":e, "code":"403"}, response_class = HttpResponse)
 		result = {}
 		result_idx = []
-		#Here we will apply search filter and order_by		
+		#Here we will apply search filter and order_by
 		result_dict = self.search(request, result_dict)
 		result_dict = self.order_by(request, result_dict)
 		for o in result_dict:
-			if o.reference not in result.keys():				
+			if o.reference not in result.keys():
 				result[o.reference] = [o]
 				result_idx.append(o.reference)
 			else:
@@ -381,7 +381,7 @@ class NotificationsListResource(ModelResource):
 		final_result = []
 		#import pdb; pdb.set_trace()
 		for i in result_idx:
-			if result[i][0].kind== 'message':			
+			if result[i][0].kind== 'message':
 				if target and target == 'received':
 					if result[i][0]._sender != prof:
 						final_result.append(result[i][0])
@@ -402,7 +402,7 @@ class NotificationsListResource(ModelResource):
 		endResult = min(num_page * page_size, count)
 		startResult = min((num_page - 1) * page_size + 1, endResult)
 		paginator = Paginator(final_result, page_size)
-		
+
 		try:
 			page = paginator.page(num_page)
 		except InvalidPage:
@@ -413,10 +413,10 @@ class NotificationsListResource(ModelResource):
 		data["startResult"] = startResult
 		data["endResult"] = endResult
 		return self.create_response(request, {"status":True, "data" : data}, response_class = HttpResponse)
-					  	
+
 
 	def post_list(self, request, **kwargs):
-		##check if the request has the mandatory parameters		
+		##check if the request has the mandatory parameters
 		POST = json.loads(request.raw_post_data)
 		if 'kind' not in POST: return self.create_response(request, {"status":False, "errors":[{"type":"FIELD_REQUIRED", "extras":["kind"]}]}, response_class = HttpResponse)
 
@@ -424,14 +424,14 @@ class NotificationsListResource(ModelResource):
 		if len(errors) > 0:
 			return self.create_response(request, {"status":False, "errors": errors}, response_class = HttpResponse)
 		# Create the notification
-		
+
 		if POST['kind'] == 'message':
 			try:
 				Notifications.objects.create_message(receiver = POST['idReceiver'], sender = request.user, content = POST['data']['content'])
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['receiver']}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
-		elif POST['kind'] == 'request':						
+		elif POST['kind'] == 'request':
 			#Check that the receiver exists
 			try:
 				check_receiver = UserProfile.objects.get(pk = POST['idReceiver'])
@@ -442,22 +442,22 @@ class NotificationsListResource(ModelResource):
 				check_wing = Wing.objects.get(pk = POST['data']['wingParameters']['wingId'])
 				if check_wing.author.pk != POST['idReceiver']:
 					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
-			except:	
-				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
+			except:
+				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)
 			try:
-				notif = Notifications.objects.create_request(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], 
-										private_message = POST['data']['privateText'], public_message = POST['data']['publicText'], 
+				notif = Notifications.objects.create_request(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'],
+										private_message = POST['data']['privateText'], public_message = POST['data']['publicText'],
 										make_public = POST['data']['makePublic'])
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			#create the additional info related with the request
 			if (POST['data']['wingType'] == 'Accomodation'):
-				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'], 
+				AccomodationInformation.objects.create_request(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'],
+											num_people = POST['data']['wingParameters']['capacity'], transport = POST['data']['wingParameters']['arrivingVia'],
 											flexible_start = POST['data']['wingParameters']['flexibleStart'], flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
 			if POST['data']['makePublic'] is True:
-				#we have to create a new PublicRequestWing	
+				#we have to create a new PublicRequestWing
 				date_start_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['startDate'])
 				date_start_year = date_start_mod.year
 				date_start_month = date_start_mod.month
@@ -465,9 +465,9 @@ class NotificationsListResource(ModelResource):
 				date_end_mod = datetime.datetime.fromtimestamp(POST['data']['wingParameters']['endDate'])
 				date_end_year = date_end_mod.year
 				date_end_month = date_end_mod.month
-				date_end_day = date_end_mod.day		
-				date_start = datetime.datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')			
-				date_end = datetime.datetime.strptime('%s/%s/%s 23:59:59' % (date_end_year, date_end_month, date_end_day), '%Y/%m/%d %H:%M:%S')			
+				date_end_day = date_end_mod.day
+				date_start = datetime.datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
+				date_end = datetime.datetime.strptime('%s/%s/%s 23:59:59' % (date_end_year, date_end_month, date_end_day), '%Y/%m/%d %H:%M:%S')
 				pw= PublicRequestWing.objects.create(author=UserProfile.objects.get(user=request.user), wing_type=POST['data']['wingType'], city=check_wing.city, date_start=date_start, date_end=date_end, capacity=POST['data']['wingParameters']['capacity'], introduction= POST['data']['publicText'])
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		elif POST['kind'] == 'invite':
@@ -482,15 +482,15 @@ class NotificationsListResource(ModelResource):
 				if check_wing.author.pk != request.user.pk:
 					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras":['wing']}]}, response_class = HttpResponse)
 			except:
-				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)								
+				return self.create_response(request, {"status":False, "errors": [{"type":"FIELD_REQUIRED", "extras":["wingId"]}]}, response_class = HttpResponse)
 			try:
 				notif = Notifications.objects.create_invite(receiver = POST['idReceiver'], sender = request.user, wing = POST['data']['wingParameters']['wingId'], private_message = POST['data']['privateText'])
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			#create the additional info related with the request
 			if (POST['data']['wingType'] == 'Accomodation'):
-				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'], 
+				AccomodationInformation.objects.create_invite(notification = notif, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'],
+											num_people = POST['data']['wingParameters']['capacity'], flexible_start = POST['data']['wingParameters']['flexibleStart'],
 											flexible_end = POST['data']['wingParameters']['flexibleEnd'])
 
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
@@ -504,26 +504,26 @@ class NotificationsListResource(ModelResource):
 		errors = self.put_list_validate(PUT, profile)
 		if len(errors) > 0:
 			return self.create_response(request, {"status":False, "errors":errors}, response_class = HttpResponse)
-		#We have this shit validated, let's move on		
+		#We have this shit validated, let's move on
 		refs = PUT["threads"]
 		for i in refs:
 			Notifications.objects.invisible_notification(i, profile)
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
-	
+
 	def wrap_view(self, view):
 		@csrf_exempt
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
+				response = callback(request, *args, **kwargs)
 				return response
-			
+
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -534,7 +534,7 @@ class NotificationsListResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -542,38 +542,38 @@ class NotificationsListResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
 class NotificationsThreadResource(ModelResource):
-	
+
 	class Meta:
 		object_class = Notifications
 		queryset = Notifications.objects.all()
@@ -585,7 +585,7 @@ class NotificationsThreadResource(ModelResource):
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
-		always_return_data = True     
+		always_return_data = True
 		resource_name = 'notificationsthread'
 
 	def make_options(self, me, thread):
@@ -645,14 +645,14 @@ class NotificationsThreadResource(ModelResource):
 		too_long = {"type":"TOO_LONG", "extras":[]}
 		not_empty = {"type":"NOT_EMPTY", "extras":[]}
 		invalid = {"type":'INVALID', 'extras':[]}
-		kind = None	
+		kind = None
 		if not POST.has_key('reference'):
 			field_req['extras'].append('reference')
 		else:
 			notif = Notifications.objects.filter(reference=POST['reference'])
 			if(len(notif) > 0):
 				kind = notif[0].kind
-			else: 
+			else:
 				invalid['extras'].append('reference')
 
 		if not POST.has_key('data'):
@@ -677,7 +677,7 @@ class NotificationsThreadResource(ModelResource):
 					too_long['extras'].append('content')
 				if data.has_key('content') and len(data['content']) == 0:
 					not_empty['extras'].append('content')
-			if data.has_key('state'): 
+			if data.has_key('state'):
 				if data['state'] not in ['P', 'A', 'M', 'D']:
 					invalid['extras'].append('kind')
 			else:
@@ -718,7 +718,7 @@ class NotificationsThreadResource(ModelResource):
 	def get_last_state_mod(self, thread, thread_len):
 		curr = thread[thread_len-1].state
 		cursor = 0
-		thread_rev = [i for i in thread[::-1]]		
+		thread_rev = [i for i in thread[::-1]]
 		for i in thread_rev:
 			if not i.state == curr:
 				return thread_rev[cursor-1].sender
@@ -738,14 +738,14 @@ class NotificationsThreadResource(ModelResource):
 			mod.append('capacity')
 		return mod
 
-	def make_difs(self, me, req, kind):		
+	def make_difs(self, me, req, kind):
 		if kind == 'request':
 			thread = Requests.objects.filter(reference = req.reference).order_by('-created')
 		elif kind == 'invite':
 			thread = Invites.objects.filter(reference = req.reference).order_by('-created')
 
 		mod = []
-		for idx, i in enumerate(thread):			
+		for idx, i in enumerate(thread):
 			if i.sender == me:
 				break
 			else:
@@ -753,7 +753,7 @@ class NotificationsThreadResource(ModelResource):
 					mod = mod + self.make_difs_individual(i, thread[idx+1])
 		return mod
 
-	def make_difs_single(self, me, req, kind):		
+	def make_difs_single(self, me, req, kind):
 		if kind == 'request':
 			thread = Requests.objects.filter(reference = req.reference).order_by('created')
 		elif kind == 'invite':
@@ -780,7 +780,7 @@ class NotificationsThreadResource(ModelResource):
 			state = token[0].is_user_connected()
 		return state
 
-	def get_detail(self, request, **kwargs):	
+	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
 		filters = Q(reference= ref)
 		aux_list = []
@@ -795,7 +795,7 @@ class NotificationsThreadResource(ModelResource):
 
 		for i in notifs:
 			if (i.sender.pk != me.pk and i.receiver.pk != me.pk):
-				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN", "extras":[ref]}]}, response_class = HttpResponse)			
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN", "extras":[ref]}]}, response_class = HttpResponse)
 			if i.kind == 'message':
 				kind = 'message'
 				aux = MessageThread()
@@ -835,12 +835,12 @@ class NotificationsThreadResource(ModelResource):
 				#message info
 				msg = Messages.objects.get(pk = i.pk)
 				aux.content['message'] = msg.private_message
-				#generic info				
+				#generic info
 				aux.created = i.created
-			elif i.kind == 'request' or i.kind == 'invite':				
+			elif i.kind == 'request' or i.kind == 'invite':
 				if i.kind == 'request':
 					kind = 'request'
-					req = Requests.objects.get(pk=i.pk)					
+					req = Requests.objects.get(pk=i.pk)
 				else:
 					kind = 'invite'
 					req = Invites.objects.get(pk=i.pk)
@@ -882,10 +882,10 @@ class NotificationsThreadResource(ModelResource):
 				#Contents info
 				aux.content= {}
 				if i.kind == 'request':
-					aux.content['message'] = req.public_message + '\n' + req.private_message 
+					aux.content['message'] = req.public_message + '\n' + req.private_message
 				else:
-					aux.content['message'] = req.private_message 		
-				#Generic info				
+					aux.content['message'] = req.private_message
+				#Generic info
 				aux.created= i.created
 
 				#Individual wing info...
@@ -918,11 +918,11 @@ class NotificationsThreadResource(ModelResource):
 			data = RequestThread()
 			data.reference = ref
 			data.kind= kind
-			data.firstSender= req.first_sender.pk	
+			data.firstSender= req.first_sender.pk
 			data.wing['type'] = req.wing.get_class_name()
 			if req.state == 'X':
 				state = 'D'
-			else: 
+			else:
 				state = req.state
 			data.wing['state'] = state
 			data.wing['parameters']['wingId']= req.wing.pk
@@ -934,7 +934,7 @@ class NotificationsThreadResource(ModelResource):
 				data.wing['parameters']['capacity']= req.accomodationinformation_notification.get().num_people
 				data.wing['parameters']['arrivingVia']= req.accomodationinformation_notification.get().transport
 				data.wing['parameters']['flexibleStartDate']= req.accomodationinformation_notification.get().flexible_start
-				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end			
+				data.wing['parameters']['flexibleEndDate']= req.accomodationinformation_notification.get().flexible_end
 			data.wing['parameters']['modified'] = self.make_difs(me, req, data.kind)
 			last_state_mod = self.get_last_state_mod(thread, len(thread))
 			options = self.make_options(me, thread)
@@ -964,7 +964,7 @@ class NotificationsThreadResource(ModelResource):
 		return self.create_response(request, {"status":True, "data": data}, response_class = HttpResponse)
 
 	def post_list(self, request, **kwargs):
-		a = Automata()		
+		a = Automata()
 		POST = json.loads(request.raw_post_data)
 		errors = self.validate_post_list(POST)
 		arriving_via = None
@@ -988,14 +988,14 @@ class NotificationsThreadResource(ModelResource):
 			receiver = aux.receiver
 		# Respond the notification
 		if kind == 'message':
-			try:				
+			try:
 				Notifications.objects.respond_message(receiver = receiver.pk, sender = request.user, content = POST['data']['content'], reference= POST['reference'])
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 
-			return self.create_response(request, {"status":True}, response_class = HttpResponse) 
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		if kind == 'request':
-			try:	
+			try:
 				thread = Requests.objects.filter(reference= POST['reference']).order_by('created')
 				if a.check_new_state(me.pk, thread, POST['data']['state']):
 					request_result = Notifications.objects.respond_request(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
@@ -1004,12 +1004,12 @@ class NotificationsThreadResource(ModelResource):
 					if request_result.wing.get_class_name() == 'Accomodation':
 						additional = AccomodationInformation.objects.get(notification = notif.pk)
 						if (POST['data']['state']=='D'):
-							AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date, 
-														num_people = additional.num_people, transport = additional.transport, 
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = additional.start_date, end_date = additional.end_date,
+														num_people = additional.num_people, transport = additional.transport,
 														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-						else:				
-							AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+						else:
+							AccomodationInformation.objects.create_request(notification = request_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'],
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport,
 														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
 				else:
 					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
@@ -1018,7 +1018,7 @@ class NotificationsThreadResource(ModelResource):
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
 			return self.create_response(request, {"status":True}, response_class = HttpResponse)
 		if kind == 'invite':
-			try:				
+			try:
 				thread = Invites.objects.filter(reference= POST['reference']).order_by('created')
 				if a.check_new_state(me.pk, thread, POST['data']['state']):
 					invite_result = Notifications.objects.respond_invite(reference = POST['reference'], receiver = receiver.pk, sender =me.pk, content = POST['data']['content'], state = POST['data']['state'], start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end= POST['data']['wingParameters']['flexibleEndDate'])
@@ -1027,15 +1027,15 @@ class NotificationsThreadResource(ModelResource):
 					if invite_result.wing.get_class_name() == 'Accomodation':
 						additional = AccomodationInformation.objects.get(notification = notif.pk)
 						if (POST['data']['state']=='D'):
-							AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date, 
-														num_people = additional.num_people, transport = additional.transport, 
+							AccomodationInformation.objects.create_request(notification = invite_result, start_date = additional.start_date, end_date = additional.end_date,
+														num_people = additional.num_people, transport = additional.transport,
 														flexible_start = additional.flexible_start, flexible_end = additional.flexible_end)
-						else:						
-							AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'], 
-														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport, 
+						else:
+							AccomodationInformation.objects.create_invite(notification = invite_result, start_date = POST['data']['wingParameters']['startDate'], end_date = POST['data']['wingParameters']['endDate'],
+														num_people = POST['data']['wingParameters']['capacity'], transport = additional.transport,
 														flexible_start = POST['data']['wingParameters']['flexibleStartDate'], flexible_end = POST['data']['wingParameters']['flexibleEndDate'])
 				else:
-					
+
 					return self.create_response(request, {"status":False, "errors": [{"type":"INVALID", "extras": ["state"]}]}, response_class = HttpResponse)
 			except Exception, e:
 				return self.create_response(request, {"status":False, "errors": [{"type":"INTERNAL_ERROR"}]}, response_class = HttpResponse)
@@ -1049,13 +1049,14 @@ class NotificationsThreadResource(ModelResource):
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
 				return response
-			
+
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				print "PPWERROR %s" % e
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -1066,7 +1067,7 @@ class NotificationsThreadResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -1074,32 +1075,35 @@ class NotificationsThreadResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
+					print "PPWERROR %s" % e
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
+					print "PPWERROR %s" % e
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
+				print "PPWERROR %s" % e
 				return self.create_response(request, content, response_class = HttpResponse)
 		return wrapper
 
