@@ -248,8 +248,9 @@ class FacebookLoginResource(ModelResource):
 		try:
 			POST = json.loads(request.raw_post_data)
 			cookie = {POST['appid'] : POST['token']}
-			#facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
+			facebook = get_user_from_cookie(cookie, settings.FB_APP_KEY, settings.FB_APP_SECRET)
 			if facebook is None:
+				print "FB register FAIL FB_ACC_NOT_VALID"
 				return self.create_response(request, {"status":False, "errors": {"type": "FB_ACC_NOT_VALID"}}, response_class = HttpResponse)
 
 			#See if the user is already registered in PPW...
@@ -259,11 +260,11 @@ class FacebookLoginResource(ModelResource):
 			fb_obj = FacebookUser.objects.filter(fbid=str(fbid))
 			if len(fb_obj) == 0:
 				if user is None:
-					print 'None user'
+					print "FB register FAIL None user"
 					return self.create_response(request, {"status":False, "errors": {"type": "INTERNAL_ERROR"}}, response_class = HttpResponse)
 				res = self.register_with_fb(user, graph)
 				if res is False:
-					print 'Register failed'
+					print "FB register FAIL Register failed"
 					return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "extras":["Register failed"]}}, response_class = HttpResponse)
 				fb_obj = []
 				fb_obj.append(FacebookUser.objects.get(fbid=user['id']))
@@ -281,8 +282,6 @@ class FacebookLoginResource(ModelResource):
 
 				g = geocoders.GoogleV3()
 				place, (lat, lng) = g.geocode(fbcity)
-
-				import pdb; pdb.set_trace()
 
 				prof = UserProfile.objects.get(user=fb_obj[0].user.pk)
 				prof.current_city = City.objects.saveLocation(country = countryname, name = cityname, lat = lat, lon = lng)
@@ -314,6 +313,7 @@ class FacebookLoginResource(ModelResource):
 				tutop.save()
 			return self.create_response(request, {"status":True,  "data": ret}, response_class = HttpResponse)
 		except Exception, e:
+			print "FB register FAIL %s" % e
 			return self.create_response(request, {"status":False, "errors":{"type": "INTERNAL_ERROR", "msg": e}}, response_class = HttpResponse)
 
 	def set_facebook_photo(self, path_big, path_small, prof):
