@@ -1055,7 +1055,6 @@ class NotificationsThreadResource(ModelResource):
 				errors = [{"type": "INTERNAL_ERROR"}]
 				content['errors'] = errors
 				content['status'] = False
-				print "PPWERROR %s" % e
 				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
@@ -1089,14 +1088,12 @@ class NotificationsThreadResource(ModelResource):
 					errors = [{"type": "INTERNAL_ERROR"}]
 					content['errors'] = errors
 					content['status'] = False
-					print "PPWERROR %s" % e
 					return self.create_response(request, content, response_class = HttpResponse)
 				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
 					content['errors'] = errors
 					content['status'] = False
-					print "PPWERROR %s" % e
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
