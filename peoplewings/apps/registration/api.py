@@ -274,7 +274,7 @@ class FacebookLoginResource(ModelResource):
 
 			#FB current city
 			if user.has_key('location') and user['location'].has_key('name'):
-				print 'User %s has location %s' % (user.email, user['location'])
+				print 'User %s has location %s' % (fb_obj[0].user.email, user['location'])
 				user_location = user['location']['name']
 				fbcity = str(user_location)
 				citylist = fbcity.split(', ')
@@ -289,7 +289,7 @@ class FacebookLoginResource(ModelResource):
 
 				prof.save()
 			else:
-				print 'User %s has no location' % user.email
+				print 'User %s has no location' % fb_obj[0].user.email
 
 			if pic_path_big is not None:
 				try:
