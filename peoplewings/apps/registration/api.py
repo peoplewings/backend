@@ -274,7 +274,7 @@ class FacebookLoginResource(ModelResource):
 
 			#FB current city
 			if user.has_key('location') and user['location'].has_key('name'):
-				print 'User %s has location %s' % (user.email, user['location']
+				print 'User %s has location %s' % (user.email, user['location'])
 				user_location = user['location']['name']
 				fbcity = str(user_location)
 				citylist = fbcity.split(', ')
