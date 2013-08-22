@@ -38,8 +38,10 @@ class NotificationsManager(models.Manager):
 		try:
 			sen = UserProfile.objects.get(user = kwargs['sender'])
 		except Exception, e:
-			raise e			
+			raise e
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = uuid.uuid4(), kind = 'message', read = False, first_sender =  sen, private_message = kwargs['content'])
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 
 	def respond_message(self, **kwargs):
 		try:
@@ -50,22 +52,24 @@ class NotificationsManager(models.Manager):
 			sen = UserProfile.objects.get(user = kwargs['sender'])
 		except Exception, e:
 			raise e
-		try:			
+		try:
 			fs = Notifications.objects.filter(reference= kwargs['reference']).order_by('created')[0]
 		except Exception, e:
 			raise e
 		notif = Messages.objects.create(receiver = rec, sender = sen, created = time.time(), reference = kwargs['reference'], kind = 'message', read = False, first_sender =  fs.first_sender, private_message = kwargs['content'])
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 		thread = Notifications.objects.filter(reference = kwargs['reference'])
 		for i in thread:
 			i.first_sender_visible = True
 			i.second_sender_visible = True
 			i.save()
 
-	def respond_request(self, **kwargs):		
+	def respond_request(self, **kwargs):
 		reference = kwargs['reference']
 		receiver_id = kwargs['receiver']
 		sender_id = kwargs['sender']
-		content = kwargs['content'] 
+		content = kwargs['content']
 		state = kwargs['state']
 		receiver = UserProfile.objects.get(pk=receiver_id)
 		sender = UserProfile.objects.get(pk=sender_id)
@@ -77,6 +81,8 @@ class NotificationsManager(models.Manager):
 
 		created = time.time()
 		notif = Requests.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'request', read = False, first_sender =  first_sender, private_message = content, public_message = "", state = state, wing=wing)
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 		thread = Notifications.objects.filter(reference = kwargs['reference'])
 		for i in thread:
 			i.first_sender_visible = True
@@ -84,15 +90,15 @@ class NotificationsManager(models.Manager):
 			i.save()
 		return notif
 
-	def respond_invite(self, **kwargs):		
+	def respond_invite(self, **kwargs):
 		reference = kwargs['reference']
 		receiver_id = kwargs['receiver']
 		sender_id = kwargs['sender']
-		content = kwargs['content'] 
+		content = kwargs['content']
 		state = kwargs['state']
 		receiver = UserProfile.objects.get(pk=receiver_id)
 		sender = UserProfile.objects.get(pk=sender_id)
-		thread = Invites.objects.filter(reference= reference)		
+		thread = Invites.objects.filter(reference= reference)
 		thread_len = len(thread)
 		last_state = thread[thread_len-1].state
 		first_sender = thread[0].first_sender
@@ -100,6 +106,8 @@ class NotificationsManager(models.Manager):
 
 		created = time.time()
 		notif = Invites.objects.create(receiver= receiver, sender= sender, created = created, reference = reference, kind = 'invite', read = False, first_sender =  first_sender, private_message = content, state = state, wing=wing)
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 		thread = Notifications.objects.filter(reference = kwargs['reference'])
 		for i in thread:
 			i.first_sender_visible = True
@@ -120,9 +128,11 @@ class NotificationsManager(models.Manager):
 			wing = Wing.objects.get(pk= kwargs['wing'])
 		except Exception, e:
 			raise e
-		notif = Requests.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'request', read = False, 
-						first_sender =  sender, private_message = kwargs['private_message'], public_message = kwargs['public_message'], 
+		notif = Requests.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'request', read = False,
+						first_sender =  sender, private_message = kwargs['private_message'], public_message = kwargs['public_message'],
 						state = 'P', make_public = kwargs['make_public'], wing = wing)
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 		return notif
 
 	def create_invite(self, **kwargs):
@@ -138,8 +148,10 @@ class NotificationsManager(models.Manager):
 			wing = Wing.objects.get(pk= kwargs['wing'])
 		except Exception, e:
 			raise e
-		notif = Invites.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'invite', read = False, 
+		notif = Invites.objects.create(receiver = receiver, sender = sender, created = time.time(), reference = uuid.uuid4(), kind = 'invite', read = False,
 						first_sender =  sender, private_message = kwargs['private_message'], state = 'P',  wing = wing)
+		send_notification_email(settings.SITE, rec.user)
+		update_or_create_email_notif(rec.user)
 		return notif
 
 	def invisible_notification(self, ref, user):
@@ -163,23 +175,32 @@ class NotificationsManager(models.Manager):
 	@staticmethod
 	def cron_send_notif_emails():
 		users = User.objects.filter(is_superuser=False)
-		#import pdb; pdb.set_trace()			
-		for user in users:		
+		#import pdb; pdb.set_trace()
+		for user in users:
 			alarms = NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user)).count()
 			if alarms > 0:
 				try:
 					email_notifs = EmailNotifications.objects.get(user=user)
+					#93600 == 26h. Si hace mas de 26h que se ha notificado y existe alguna notificacion no leida mas reciente q la ultima vez que se envio el msg...
 					if email_notifs.last_notificated < time.time() - 93600 and NotificationsAlarm.objects.filter(receiver=UserProfile.objects.get(user=user), created__gte=time.time()-93600).count():
 						send_notification_email(settings.SITE, user)
 						email_notifs.last_notificated = time.time()
 						email_notifs.save()
-					elif email_notifs.last_notificated < time.time() - 604800:
+					#612000 == 7d 2h Si hace mas de 7d 2h que se ha notificado...
+					elif email_notifs.last_notificated < time.time() - 612000:
 						send_notification_email(settings.SITE, user)
 						email_notifs.last_notificated = time.time()
 						email_notifs.save()
 				except Exception, e:
-					send_notification_email(settings.SITE, user)
-					EmailNotifications.objects.create(user=UserProfile.objects.get(user=user), last_notificated = time.time())
+					print 'PPWERROR Email Notifs error in user %s' % user.pk
+
+def update_or_create_email_notif(user):
+	try:
+		email_notifs = EmailNotifications.objects.get(user=user)
+		email_notifs.last_notificated = time.time()
+		email_notifs.save()
+	except:
+		EmailNotifications.objects.create(user=UserProfile.objects.get(user=user), last_notificated = time.time())
 
 def send_notification_email(site, user):
 		ctx_dict = {'username': user.first_name, 'site': site}
@@ -190,9 +211,6 @@ def send_notification_email(site, user):
 		send_mail(subject, message, '%s <%s>' % (settings.NOTIF_SERVER_EMAIL, settings.NOTIF_DEFAULT_FROM_EMAIL), [user.email], fail_silently=False, auth_user=settings.NOTIF_EMAIL_HOST_USER)
 		return True
 
-			
-
-
 class EmailNotifications(models.Model):
 	user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	last_notificated = models.BigIntegerField(default=0)
@@ -201,7 +219,7 @@ class EmailNotifications(models.Model):
 class Notifications(models.Model):
 	objects = NotificationsManager()
 	receiver = models.ForeignKey(UserProfile, related_name='%(class)s_receiver', on_delete=models.CASCADE)
-	sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)   
+	sender = models.ForeignKey(UserProfile, related_name='%(class)s_sender', on_delete=models.CASCADE)
 	created = models.BigIntegerField(default=0)
 	reference = models.CharField(max_length=36, blank=False)
 	read = models.BooleanField(default=False)
@@ -217,7 +235,7 @@ class Notifications(models.Model):
 		except:
 			pass
 		return None
-				
+
 # Request class
 class Requests(Notifications):
 	state = models.CharField(max_length=1, choices=TYPE_CHOICES, default='P')
@@ -241,7 +259,7 @@ class Invites(Notifications):
 		super(Invites, self).save(*args, **kwargs)
 
 # Messages class
-class Messages(Notifications): 
+class Messages(Notifications):
 	private_message = models.TextField(blank=True)
 
 	def save(self, *args, **kwargs):
@@ -261,7 +279,7 @@ class AdditionalInformation(models.Model):
 	notification = models.ForeignKey(Notifications, related_name = '%(class)s_notification', on_delete=models.CASCADE)
 	modified = models.BooleanField(default=False)
 	class Meta:
-		abstract = True        
+		abstract = True
 
 #Accomodation info Manager
 class AccomodationInformationManager(models.Manager):
