@@ -83,7 +83,7 @@ class UniversityResource(ModelResource):
 				field_req = {"type": "INTERNAL_ERROR", "extras":[]}
 		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
 
-class UserProfileResource(ModelResource):    
+class UserProfileResource(ModelResource):
 
 	class Meta:
 		object_class = UserProfile
@@ -99,7 +99,7 @@ class UserProfileResource(ModelResource):
 
 	def prepend_urls(self):
 		return [
-			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()), 
+			url(r"^(?P<resource_name>%s)/(?P<pk>\d[\d/-]*)/preview%s$" % (self._meta.resource_name, trailing_slash()),
 				self.wrap_view('preview_profile'), name="api_detail_preview"),
 		]
 
@@ -119,16 +119,16 @@ class UserProfileResource(ModelResource):
 		if request.user.is_anonymous():
 			return self.create_response(request, {"status":False, "errors":[{"type":"AUTH_REQUIRED"}]}, response_class=HttpResponse)
 		else:
-			if is_preview:			
+			if is_preview:
 				prof = UserProfile.objects.filter(pk= kwargs['pk'])
 				if len(prof) > 0:
 					prof = prof[0]
 					if prof.active is False:
 						return self.create_response(request, {"status":False, "errors":[{"type":"UNKNOWN_USER"}]}, response_class=HttpResponse)
-					prof_obj = PreviewProfileObject()					
+					prof_obj = PreviewProfileObject()
 					interests = prof.interested_in.filter()
 					for i in interests:
-						prof_obj.interested_in.append({"gender":i.gender})	
+						prof_obj.interested_in.append({"gender":i.gender})
 
 					hometown = prof.hometown
 					if hometown is not None:
@@ -142,19 +142,19 @@ class UserProfileResource(ModelResource):
 					prof_obj.main_mission = prof.main_mission
 					prof_obj.civil_state = prof.civil_state
 					prof_obj.personal_philosophy = prof.personal_philosophy
-					
+
 					conn = self.connected(prof.user)
 					if conn == "OFF":
-						last = prof.user							
+						last = prof.user
 						prof_obj.last_login_date = str(last.last_login)
 					elif conn == "AFK":
 						prof_obj.last_login_date = "AFK"
 					else:
-						prof_obj.last_login_date = "ON"					
+						prof_obj.last_login_date = "ON"
 					education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 					for i in education:
 						prof_obj.education.append(i.university.name)
-					
+
 					prof_obj.id = prof.pk
 					prof_obj.occupation = prof.occupation
 
@@ -233,7 +233,7 @@ class UserProfileResource(ModelResource):
 							photo_obj['thumb_url'] = photo.thumb_url
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)
-		   
+
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 				else:
 					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
@@ -250,7 +250,7 @@ class UserProfileResource(ModelResource):
 
 						interests = prof.interested_in.filter()
 						for i in interests:
-							prof_obj.interested_in.append({"gender":i.gender})	
+							prof_obj.interested_in.append({"gender":i.gender})
 
 						hometown = prof.hometown
 						if hometown is not None:
@@ -271,7 +271,7 @@ class UserProfileResource(ModelResource):
 						education= UserProfileStudiedUniversity.objects.filter(user_profile= prof)
 						for i in education:
 							prof_obj.education.append(i.university.name)
-						
+
 						prof_obj.id = prof.pk
 						prof_obj.occupation = prof.occupation
 
@@ -296,7 +296,7 @@ class UserProfileResource(ModelResource):
 							aux['country'] = i.region.country.name
 							prof_obj.other_locations.append(aux)
 
-						prof_obj.sports = prof.sports						
+						prof_obj.sports = prof.sports
 						langs = UserLanguage.objects.filter(user_profile=prof)
 						for i in langs:
 							aux = {}
@@ -397,7 +397,7 @@ class UserProfileResource(ModelResource):
 		else:
 			field_req['extras'].append('gender')
 
-		if POST['socialNetworks']:			
+		if POST['socialNetworks']:
 			if not isinstance(POST['socialNetworks'], list):
 				invalid['extras'].append('socialNetworks')
 			else:
@@ -575,7 +575,7 @@ class UserProfileResource(ModelResource):
 			if len(POST['otherPages']) > 500:
 				too_long['extras'].append('otherPages')
 		else:
-			field_req['extras'].append('otherPages')	
+			field_req['extras'].append('otherPages')
 
 		if POST.has_key('emails'):
 			if len(POST['emails']) > 100:
@@ -585,19 +585,19 @@ class UserProfileResource(ModelResource):
 
 		if POST.has_key('phone'):
 			if len(POST['phone']) > 100:
-				too_long['extras'].append('phone')				
+				too_long['extras'].append('phone')
 		else:
 			field_req['extras'].append('phone')
 
 		if POST.has_key('inspiredBy'):
 			if len(POST['inspiredBy']) > 500:
-				too_long['extras'].append('inspiredBy')					
+				too_long['extras'].append('inspiredBy')
 		else:
 			field_req['extras'].append('inspiredBy')
 
 		if POST.has_key('enjoyPeople'):
 			if len(POST['enjoyPeople']) > 500:
-				too_long['extras'].append('enjoyPeople')					
+				too_long['extras'].append('enjoyPeople')
 		else:
 			field_req['extras'].append('enjoyPeople')
 
@@ -609,13 +609,13 @@ class UserProfileResource(ModelResource):
 
 		if POST.has_key('allAboutYou'):
 			if len(POST['allAboutYou']) > 500:
-				too_long['extras'].append('allAboutYou')				
+				too_long['extras'].append('allAboutYou')
 		else:
 			field_req['extras'].append('allAboutYou')
 
 		if POST.has_key('movies'):
 			if len(POST['movies']) > 500:
-				too_long['extras'].append('movies')				
+				too_long['extras'].append('movies')
 		else:
 			field_req['extras'].append('movies')
 
@@ -660,13 +660,13 @@ class UserProfileResource(ModelResource):
 
 		if POST.has_key('religion'):
 			if len(POST['religion']) > 500:
-				too_long['extras'].append('religion')				
+				too_long['extras'].append('religion')
 		else:
 			field_req['extras'].append('religion')
 
 		if POST.has_key('occupation'):
 			if len(POST['occupation']) > 100:
-				too_long['extras'].append('occupation')				
+				too_long['extras'].append('occupation')
 		else:
 			field_req['extras'].append('occupation')
 		"""
@@ -712,7 +712,7 @@ class UserProfileResource(ModelResource):
 			errors.append(invalid)
 		return errors
 
-	def put_detail(self, request, **kwargs):		
+	def put_detail(self, request, **kwargs):
 		#import pdb; pdb.set_trace()
 		POST = json.loads(request.raw_post_data)
 		#We need to check if the user thar requested the put is the same user that owns the profile
@@ -724,10 +724,10 @@ class UserProfileResource(ModelResource):
 
 		#We need to check that received data is valid
 		try:
-			errors = self.is_valid_put(request)			
+			errors = self.is_valid_put(request)
 			if len(errors) > 0:
 				return self.create_response(request, {"status":False, "errors":errors}, response_class=HttpResponse)
-		except: 
+		except:
 			return self.create_response(request, {"status":False, "errors":[{"type":"INTERNAL_ERROR"}]}, response_class=HttpResponse)
 
 		#We need to update the needed fields
@@ -758,7 +758,7 @@ class UserProfileResource(ModelResource):
 				lang = Language.objects.get(name=i['name'])
 			else:
 				lang = Language.objects.create(name=i['name'])
-			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])		
+			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])
 		# Locations
 		if  POST['current']:
 			if not POST['current'].has_key('region'):
@@ -774,7 +774,7 @@ class UserProfileResource(ModelResource):
 		else:
 			prof.hometown = None
 
-		prof.other_locations.clear()		
+		prof.other_locations.clear()
 		if POST['otherLocations']:
 			for i in POST['otherLocations']:
 				if not i.has_key('region'):
@@ -782,7 +782,7 @@ class UserProfileResource(ModelResource):
 				prof.other_locations.add(City.objects.saveLocation(country=i['country'], region=i['region'], name=i['name'], lat=i['lat'], lon=i['lon']))
 
 		prof.emails = POST['emails']
-		prof.phone = POST['phone']		
+		prof.phone = POST['phone']
 
 		[i.delete() for i in UserSocialNetwork.objects.filter(user_profile=prof)]
 		for i in POST['socialNetworks']:
@@ -838,7 +838,7 @@ class UserProfileResource(ModelResource):
 		return self.create_response(request, {"status":False, "errors":[{"type":"METHOD_NOT_ALLOWED"}]}, response_class=HttpResponse)
 
 	def parse_date(self, initial_date):
-		try:			
+		try:
 			year = initial_date[:4]
 			month = initial_date[5:7]
 			day = initial_date[8:10]
@@ -889,7 +889,7 @@ class UserProfileResource(ModelResource):
 			if GET['location'] == "":
 				not_empty['extras'].append('location')
 
-		#Other checks		
+		#Other checks
 		#startAge >=18
 		if GET.has_key('startAge') and GET['startAge'] < 1:
 			invalid_field['extras'].append('startAge')
@@ -902,7 +902,9 @@ class UserProfileResource(ModelResource):
 		#gender in male, female both
 		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
 			invalid_field['extras'].append('gender')
-
+		#people search
+		if GET.has_key('hero') and len(GET['hero']) == 0:
+			not_empty['extras'].append('hero')
 
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
@@ -945,7 +947,7 @@ class UserProfileResource(ModelResource):
 		if GET.has_key('type'):
 			if GET['type'] == "":
 				not_empty['extras'].append('type')
-			if GET['type'] not in ['Host', 'Applicant']: 
+			if GET['type'] not in ['Host', 'Applicant']:
 				invalid_field['extras'].append('type')
 		else:
 			field_req['extras'].append('type')
@@ -988,7 +990,7 @@ class UserProfileResource(ModelResource):
 		#startAge >= endAge
 		if GET.has_key('startAge') and GET.has_key('endAge') and GET['endAge'] < GET['startAge']:
 			invalid_field['extras'].append('age')
-		#startDate >=today		
+		#startDate >=today
 		if GET.has_key('startDate') and self.parse_date(GET['startDate']) is not None and self.parse_date(GET['startDate']) < time.time():
 			invalid_field['extras'].append('startDate')
 		#endDate >= today
@@ -1027,14 +1029,16 @@ class UserProfileResource(ModelResource):
 		max_year = max_year - int(GET['endAge'])
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
 		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
-		
+
 		result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(active=True)&Q(user__is_active=True)
 		if GET['language'] != 'all':
 			result = result &Q(languages__name= GET['language'])
 		if GET['gender'] != 'Both':
-			result = result & Q(gender=GET['gender'])		
+			result = result & Q(gender=GET['gender'])
 		if 'location' in GET:
 			result = result & (Q(current_city__name=GET['location'])|Q(current_city__region__name__icontains=GET['location'])|Q(current_city__region__country__name__icontains=GET['location']))
+		if 'hero' in GET:
+			result = result & (Q(full_name__icontains=GET['hero']))
 		return result
 
 	def make_accomodation_search_filters(self, GET):
@@ -1049,12 +1053,12 @@ class UserProfileResource(ModelResource):
 		max_year = max_year - int(GET['endAge'])
 		min_birthday = '%s-%s-%s' % (min_year, min_month, min_day)
 		max_birthday = '%s-%s-%s' % (max_year, max_month, max_day)
-		if GET['type'] == 'Host':		
+		if GET['type'] == 'Host':
 			result = Q(birthday__gte=max_birthday)&Q(birthday__lte=min_birthday)&Q(wing__accomodation__capacity__gte= GET['capacity'])&Q(active=True)&Q(wing__status__in=['Y', 'M'])
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
-				result = result & Q(gender=GET['gender'])		
+				result = result & Q(gender=GET['gender'])
 			if 'wings' in GET:
 				result = result & (Q(wing__city__name__icontains=GET['wings'])|Q(wing__city__region__name__icontains=GET['wings'])|Q(wing__city__region__country__name__icontains=GET['wings']))
 			if 'startDate' in GET:
@@ -1068,7 +1072,7 @@ class UserProfileResource(ModelResource):
 			if GET['language'] != 'all':
 				result = result &Q(languages__name= GET['language'])
 			if GET['gender'] != 'Both':
-				result = result & Q(gender=GET['gender'])		
+				result = result & Q(gender=GET['gender'])
 			if 'wings' in GET:
 				result = result & (Q(publicrequestwing__city__name__icontains=GET['wings'])|Q(publicrequestwing__city__region__name__icontains=GET['wings'])|Q(publicrequestwing__city__region__country__name__icontains=GET['wings']))
 			if 'startDate' in GET:
@@ -1078,7 +1082,7 @@ class UserProfileResource(ModelResource):
 				date_start_mod = datetime.today()
 				date_start_year = date_start_mod.year
 				date_start_month = date_start_mod.month
-				date_start_day = date_start_mod.day				
+				date_start_day = date_start_mod.day
 				date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
 				result = result & Q(publicrequestwing__date_end__gte=date_start)
 			if 'endDate' in GET:
@@ -1097,7 +1101,7 @@ class UserProfileResource(ModelResource):
 			date_start_mod = datetime.today()
 			date_start_year = date_start_mod.year
 			date_start_month = date_start_mod.month
-			date_start_day = date_start_mod.day				
+			date_start_day = date_start_mod.day
 			date_start = datetime.strptime('%s/%s/%s 00:00:00' % (date_start_year, date_start_month, date_start_day), '%Y/%m/%d %H:%M:%S')
 			result = result & Q(date_end__gte=date_start)
 		if 'endDate' in GET:
@@ -1150,26 +1154,26 @@ class UserProfileResource(ModelResource):
 
 		return data
 
-	def get_list(self, request, **kwargs):	
+	def get_list(self, request, **kwargs):
 		if request.GET.has_key('wingType'):
 			if request.GET['wingType'] == 'people':
 				return self.search_people(request, **kwargs)
 			else:
-				return self.create_response(request, {"errors": {"type":"INVALID", "extras":["wingType"]}, "status":False}, response_class=HttpForbidden)	
+				return self.create_response(request, {"errors": {"type":"INVALID", "extras":["wingType"]}, "status":False}, response_class=HttpForbidden)
 		else:
 			return self.search_accomodation(request, **kwargs)
 
-	def search_people(self, request, **kwargs):		
+	def search_people(self, request, **kwargs):
 		errors = self.validate_people_search(request.GET)
 		if len(errors) > 0:
-			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)
 		#We have no problem with the given filters
 		filters = self.make_people_search_filters(request.GET)
-		try:			
+		try:
 			search_list = SearchObjectManager()
-			profiles = UserProfile.objects.filter(filters).distinct()		
-			
-			for i in profiles:				
+			profiles = UserProfile.objects.filter(filters).distinct()
+
+			for i in profiles:
 				search_obj = SearchObject()
 				search_obj.profile_id = i.pk
 				search_obj.ctrl_user = i.user
@@ -1177,7 +1181,7 @@ class UserProfileResource(ModelResource):
 				search_obj.last_name = i.user.last_name
 				if i.current_city:
 					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-				else: 
+				else:
 					search_obj.current= {}
 
 				search_obj.avatar = i.medium_avatar
@@ -1190,7 +1194,7 @@ class UserProfileResource(ModelResource):
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
-				for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):							
+				for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):
 						if j.get_class_name() not in search_obj.wings:
 							search_obj.wings.append(j.get_class_name())
 
@@ -1202,7 +1206,7 @@ class UserProfileResource(ModelResource):
 
 				search_list.objects.append(search_obj)
 		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
 
 		search_list.order_by_people_relevance()
 		if not isinstance(request.user, User):
@@ -1214,17 +1218,17 @@ class UserProfileResource(ModelResource):
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)
 
 	def search_accomodation(self, request, **kwargs):
-		errors = self.validate_accomodation_search(request.GET)		
+		errors = self.validate_accomodation_search(request.GET)
 		if len(errors) > 0:
-			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)		
+			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)
 		#We have no problem with the given filters
 		filters = self.make_accomodation_search_filters(request.GET)
 
-		try:			
+		try:
 			search_list = SearchObjectManager()
-			profiles = UserProfile.objects.filter(filters).distinct()		
-			
-			for i in profiles:				
+			profiles = UserProfile.objects.filter(filters).distinct()
+
+			for i in profiles:
 				search_obj = SearchObject()
 				search_obj.profile_id = i.pk
 				search_obj.ctrl_user = i.user
@@ -1232,7 +1236,7 @@ class UserProfileResource(ModelResource):
 				search_obj.last_name = i.user.last_name
 				if i.current_city:
 					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-				else: 
+				else:
 					search_obj.current= {}
 
 				search_obj.avatar = i.medium_avatar
@@ -1245,11 +1249,11 @@ class UserProfileResource(ModelResource):
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
 
-				for j in Wing.objects.filter(author=i):							
+				for j in Wing.objects.filter(author=i):
 						if j.get_class_name() not in search_obj.wings:
 							search_obj.wings.append(j.get_class_name())
 
-				if request.GET['type'] == 'Applicant':										
+				if request.GET['type'] == 'Applicant':
 					filters = self.make_accomodation_publicreq_search_filters(request.GET, i)
 					prw = PublicRequestWing.objects.filter(filters)
 					for pw in prw:
@@ -1261,10 +1265,10 @@ class UserProfileResource(ModelResource):
 						cpy.wing_end_date = pw.date_end
 						cpy.wing_capacity = pw.capacity
 						search_list.objects.append(cpy)
-				else:						
+				else:
 					search_list.objects.append(search_obj)
 		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)	
+			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
 
 		search_list.order_by_relevance()
 
@@ -1274,11 +1278,11 @@ class UserProfileResource(ModelResource):
 		data = self.paginate(search_list.jsonable(), request.GET)
 		#import pdb; pdb.set_trace()
 		if isinstance(data, HttpResponse): return data
-		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)	
+		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
-		def wrapper(request, *args, **kwargs):    
+		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
@@ -1286,9 +1290,9 @@ class UserProfileResource(ModelResource):
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR", "msg": e}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -1299,7 +1303,7 @@ class UserProfileResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -1307,38 +1311,38 @@ class UserProfileResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR", "msg": e}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR", "msg": e}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-			except Exception, e:				
+			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR", "msg": e}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
 
 		return wrapper
 
 class ContactResource(ModelResource):
-	
+
 	class Meta:
 		object_class = UserProfile
 		queryset = UserProfile.objects.all()
@@ -1348,7 +1352,7 @@ class ContactResource(ModelResource):
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
-		always_return_data = True     
+		always_return_data = True
 		resource_name = 'contacts'
 
 
@@ -1373,14 +1377,14 @@ class ContactResource(ModelResource):
 		def wrapper(request, *args, **kwargs):
 			try:
 				callback = getattr(self, view)
-				response = callback(request, *args, **kwargs)              
+				response = callback(request, *args, **kwargs)
 				return response
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
-				return self.create_response(request, content, response_class = HttpResponse) 
+				return self.create_response(request, content, response_class = HttpResponse)
 			except ValidationError, e:
 				# Or do some JSON wrapping around the standard 500
 				content = {}
@@ -1391,7 +1395,7 @@ class ContactResource(ModelResource):
 			except ValueError, e:
 				# This exception occurs when the JSON is not a JSON...
 				content = {}
-				errors = [{"type": "JSON_ERROR"}]          
+				errors = [{"type": "JSON_ERROR"}]
 				content['status'] = False
 				content['errors'] = errors
 				return self.create_response(request, content, response_class = HttpResponse)
@@ -1399,31 +1403,31 @@ class ContactResource(ModelResource):
 				if (isinstance(e.response, HttpMethodNotAllowed)):
 					content = {}
 					errors = [{"type": "METHOD_NOT_ALLOWED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
-					return self.create_response(request, content, response_class = HttpResponse) 
+					content['errors'] = errors
+					content['status'] = False
+					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpUnauthorized)):
 					content = {}
 					errors = [{"type": "AUTH_REQUIRED"}]
-					content['errors'] = errors	                           
-					content['status'] = False                    
+					content['errors'] = errors
+					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 				elif (isinstance(e.response, HttpApplicationError)):
 					content = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
-				else:               
+				else:
 					ccontent = {}
 					errors = [{"type": "INTERNAL_ERROR"}]
-					content['errors'] = errors               
+					content['errors'] = errors
 					content['status'] = False
 					return self.create_response(request, content, response_class = HttpResponse)
 			except Exception, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]
-				content['errors'] = errors               
+				content['errors'] = errors
 				content['status'] = False
 				return self.create_response(request, content, response_class = HttpResponse)
 
@@ -1448,7 +1452,7 @@ class PhotoCompletedResource(ModelResource):
 		print 'ENCODED PHOTO %s' % encoded
 		POST= json.loads(encoded)
 		if len(POST["results"]["images"]) != 2:
-			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse) 
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse)
 		try:
 			i = 0;
 			auth_token = request.GET['authToken']
@@ -1517,7 +1521,7 @@ class PhotosResource(ModelResource):
 		id_photo = kwargs['pk']
 		try:
 			photo = Photos.objects.get(pk=id_photo)
-			return self.create_response(request, {"status":True, "data":{"id":photo.pk, "big_url": photo.big_url, "thumb_url": photo.thumb_url}}, response_class=HttpResponse) 
+			return self.create_response(request, {"status":True, "data":{"id":photo.pk, "big_url": photo.big_url, "thumb_url": photo.thumb_url}}, response_class=HttpResponse)
 		except:
 			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['photo']}]}, response_class=HttpResponse)
 
@@ -1546,7 +1550,7 @@ class AlbumsResource(ModelResource):
 				cur_photo['big_url'] = i.big_url
 				cur_photo['thumb_url'] = i.thumb_url
 				resp['photos'].append(cur_photo)
-			return self.create_response(request, {"status":True, "data":resp}, response_class=HttpResponse) 
+			return self.create_response(request, {"status":True, "data":resp}, response_class=HttpResponse)
 		except:
 			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
 
@@ -1565,7 +1569,7 @@ class AlbumsResource(ModelResource):
 					cur_photo.ordering = idx
 					cur_photo.save()
 					idx = idx + 1
-			return self.create_response(request, {"status":True}, response_class=HttpResponse) 
+			return self.create_response(request, {"status":True}, response_class=HttpResponse)
 		except:
 			return self.create_response(request, {"status":False, "errors":[{"type": 'INVALID_FIELD', "extras":['album']}]}, response_class=HttpResponse)
 

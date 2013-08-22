@@ -14,7 +14,7 @@ from django_extensions.db.fields import UUIDField
 
 # SOCIAL NETWORK
 class SocialNetwork(models.Model):
-	name = models.CharField(max_length=max_medium_len, unique=True)  
+	name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserSocialNetwork(models.Model):
 	user_profile = models.ForeignKey('UserProfile')
@@ -23,7 +23,7 @@ class UserSocialNetwork(models.Model):
 
 # INSTANT MESSAGE
 class InstantMessage(models.Model):
-	name = models.CharField(max_length=max_medium_len, unique=True)  
+	name = models.CharField(max_length=max_medium_len, unique=True)
 
 class UserInstantMessage(models.Model):
 	user_profile = models.ForeignKey('UserProfile')
@@ -65,7 +65,7 @@ class UserProfile(models.Model):
 	avatar_updated = models.BooleanField(default=False)
 	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')##not used
 	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")##not used
-	
+
 	# In Basic Information
 	birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
 	show_birthday = models.CharField(verbose_name='', max_length=100, choices=SHOW_BIRTHDAY_CHOICES, default='F')
@@ -102,7 +102,7 @@ class UserProfile(models.Model):
 	movies = models.TextField(verbose_name="Likes", max_length=500, blank=True)
 	# deportes y actividades favoritas
 	sports = models.TextField(max_length=500, blank=True)
-	other_pages = models.TextField(verbose_name="Likes", max_length=500, blank=True)    
+	other_pages = models.TextField(verbose_name="Likes", max_length=500, blank=True)
 	# que te gusta compartir o ensenyar
 	sharing = models.TextField(verbose_name="Show, learn, share...", max_length=1000, blank=True)
 	# cosas increibles que hayas hecho o visto
@@ -111,11 +111,11 @@ class UserProfile(models.Model):
 	# citas
 	quotes = models.TextField(verbose_name="Favorite quotations", max_length=500, blank=True)
 	# opinion sobre peoplewings
-	pw_opinion = models.TextField(verbose_name="Your opinion please", max_length=500, blank=True) 
+	pw_opinion = models.TextField(verbose_name="Your opinion please", max_length=500, blank=True)
 
 	# Trips
 	places_lived_in = models.TextField(max_length=max_long_len, blank=True)
-	places_visited = models.TextField(max_length=max_long_len, blank=True)    
+	places_visited = models.TextField(max_length=max_long_len, blank=True)
 	places_gonna_go = models.TextField(max_length=max_long_len, blank=True)
 	places_wanna_go = models.TextField(max_length=max_long_len, blank=True)
 
@@ -128,7 +128,9 @@ class UserProfile(models.Model):
 
 	tutorial = models.BooleanField(default=False)
 
-	def get_age(self):			
+	full_name = models.CharField(max_length=100, blank=True)
+
+	def get_age(self):
 		today = date.today()
 		try:
 			age = today.year - self.birthday.year
@@ -139,16 +141,16 @@ class UserProfile(models.Model):
 
 	def __unicode__(self):
 		return unicode(self.user.email)
-	
+
 	@staticmethod
 	@transaction.commit_manually
 	def cron_reply_rate():
 		cur = connection.cursor()
-		cur.callproc('batch_reply_rate', ())		
+		cur.callproc('batch_reply_rate', ())
 		cur.close()
 		transaction.commit()
 
-class Relationship(models.Model):    
+class Relationship(models.Model):
 	sender = models.ForeignKey('UserProfile', related_name='sender')
 	receiver = models.ForeignKey('UserProfile', related_name='receiver')
 	relationship_type = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES)
@@ -158,14 +160,14 @@ class Relationship(models.Model):
 		unique_together = ("sender", "receiver")
 
 
-class Reference(models.Model):    
+class Reference(models.Model):
 	author = models.ForeignKey('UserProfile', related_name='author')
 	commented = models.ForeignKey('UserProfile', related_name='commented')
 	title = models.CharField(max_length=max_medium_len)
 	text = models.TextField(max_length=max_500_char)
 	punctuation = models.CharField(max_length=8, choices=PUNCTUATION_CHOICES)
 
-def createUserProfile(sender, user, request, **kwargs):    
+def createUserProfile(sender, user, request, **kwargs):
 	if UserProfile.objects.filter(user= user).count() == 0:
 		form = RegistrationForm(request.POST)
 		registered_user = User.objects.get(username=user.username)
@@ -194,7 +196,7 @@ def deleteUserProfile(sender, request, **kwargs):
 	prof = request.user.get_profile()
 	prof.delete()
 
-class PhotoAlbums(models.Model):    
+class PhotoAlbums(models.Model):
 	album_id = UUIDField(auto=True, unique=True, primary_key=True, null = False)
 	author = models.ForeignKey('UserProfile', related_name='photoalbums_author')
 	name = models.CharField(max_length=300, default='default')
