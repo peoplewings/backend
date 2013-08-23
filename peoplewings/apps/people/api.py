@@ -2,6 +2,7 @@
 import json
 import re
 import copy
+import time
 from datetime import date, datetime
 from dateutil import parser
 from pprint import pprint
@@ -27,8 +28,7 @@ from django.conf.urls import url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, Relationship, Reference, Photos, PhotoAlbums
-from peoplewings.apps.people.forms import UserProfileForm, UserLanguageForm, ReferenceForm
+from peoplewings.apps.people.models import UserProfile, UserLanguage, Language, University, SocialNetwork, UserSocialNetwork, InstantMessage, UserInstantMessage, UserProfileStudiedUniversity, Interests, References, Photos, PhotoAlbums
 from people.domain import *
 from peoplewings.global_vars import *
 from peoplewings.apps.people.exceptions import *
@@ -83,6 +83,71 @@ class UniversityResource(ModelResource):
 				field_req = {"type": "INTERNAL_ERROR", "extras":[]}
 		return self.create_response(request, {"status":True, "data": data}, response_class=HttpResponse)
 
+class ReferencesResource(ModelResource):
+	class Meta:
+		object_class = References
+		queryset = References.objects.all()
+		list_allowed_methods = ['post']
+		detail_allowed_methods = []
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = ApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+		resource_name = "references"
+
+	def validate_POST(self, POST, user):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
+
+		if not POST.has_key('receiver'):
+			field_req['extras'].append('receiver')
+		elif POST['receiver'] == user.pk or UserProfile.objects.filter(pk = POST['receiver']).count() == 0:
+			invalid['extras'].append('receiver')
+
+		if not POST.has_key('rating'):
+			field_req['extras'].append('rating')
+		elif POST['rating'] not in ['Good', 'Neutral', 'Bad']:
+			invalid['extras'].append('rating')
+
+		if not POST.has_key('metInPerson'):
+			field_req['extras'].append('metInPerson')
+		elif not isinstance(POST['metInPerson'], bool):
+			invalid['extras'].append('metInPerson')
+
+		if not POST.has_key('text'):
+			field_req['extras'].append('text')
+		elif not isinstance(POST['text'], unicode):
+			invalid['extras'].append('text')
+		elif len(POST['text']) == 0:
+			not_empty['extras'].append('text')
+		elif len(POST['text']) > 1000:
+			too_long['extras'].append('text')
+
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		return errors
+
+	def post_list(self, request, **kwargs):
+		POST = json.loads(request.raw_post_data)
+		#Validate POST data....
+		errors = self.validate_POST(POST, request.user)
+		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
+		if References.objects.filter(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver'])).count():
+			return self.create_response(request, {"status":False}, response_class = HttpResponse)
+		References.objects.create(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver']), rating = POST['rating'], met_in_person = POST['metInPerson'], text = POST['text'])
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
 class UserProfileResource(ModelResource):
 
 	class Meta:
@@ -95,7 +160,6 @@ class UserProfileResource(ModelResource):
 		authentication = AnonymousApiTokenAuthentication()
 		authorization = Authorization()
 		always_return_data = True
-		validation = FormValidation(form_class=UserProfileForm)
 
 	def prepend_urls(self):
 		return [
@@ -234,6 +298,28 @@ class UserProfileResource(ModelResource):
 							album_obj['photos'].append(photo_obj)
 						prof_obj.albums.append(album_obj)
 
+					for reference in References.objects.filter(receiver = prof).order_by('-created'):
+						ref_obj = {}
+						sender = reference.sender
+						ref_obj['first_name'] = sender.user.first_name
+						ref_obj['last_name'] = sender.user.last_name
+						ref_obj['age'] = sender.get_age()
+						ref_obj['online'] = self.connected(sender.user)
+						ref_obj['avatar'] = sender.thumb_avatar
+						meet = True
+						if References.objects.filter(sender = prof, receiver = sender).count():
+							meet = False
+						ref_obj['meetInPerson'] = meet
+						epoch = int(time.mktime(reference.created.timetuple()))
+						ref_obj['date'] = epoch
+						ref_obj['rating'] = reference.rating
+						ref_obj['text'] = reference.text
+						if sender.current_city is not None:
+							ref_obj['city'] = sender.current_city.stringify()
+						else:
+							ref_obj['city'] = 'Unknown location'
+						prof_obj.references.append(ref_obj)
+
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 				else:
 					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
@@ -367,6 +453,28 @@ class UserProfileResource(ModelResource):
 								photo_obj['thumb_url'] = photo.thumb_url
 								album_obj['photos'].append(photo_obj)
 							prof_obj.albums.append(album_obj)
+
+						for reference in References.objects.filter(receiver = prof).order_by('-created'):
+							ref_obj = {}
+							sender = reference.sender
+							ref_obj['first_name'] = sender.user.first_name
+							ref_obj['last_name'] = sender.user.last_name
+							ref_obj['age'] = sender.get_age()
+							ref_obj['online'] = self.connected(sender.user)
+							ref_obj['avatar'] = sender.thumb_avatar
+							meet = True
+							if References.objects.filter(sender = prof, receiver = sender).count():
+								meet = False
+							ref_obj['meetInPerson'] = meet
+							epoch = int(time.mktime(reference.created.timetuple()))
+							ref_obj['date'] = epoch
+							ref_obj['rating'] = reference.rating
+							ref_obj['text'] = reference.text
+							if sender.current_city is not None:
+								ref_obj['city'] = sender.current_city.stringify()
+							else:
+								ref_obj['city'] = 'Unknown location'
+							prof_obj.references.append(ref_obj)
 
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 					else:

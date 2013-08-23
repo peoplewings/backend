@@ -48,7 +48,7 @@ def register(request, POST, backend, success_url=None, form_class=None,
 	new_user = backend.register(request, **bundle_data)
 	return new_user.email
 
-def do_login(request, username, password):
+def do_login(username, password):
 	try:
 		user = authenticate(username=username, password=password)
 	except:
@@ -64,11 +64,11 @@ def do_login(request, username, password):
 	else:
 		raise AuthFail()
 
-def login(bundle):
+def login(username, password, remember):
 	## Checks if the user/pass is valid
-	user = do_login(request=bundle, username = bundle.data['username'], password = bundle.data['password'])
+	user = do_login(username = username, password = password)
 	## Creates a new ApiToken to simulate a session. The ApiToken is totally empty
-	if 'remember' in bundle.data and bundle.data['remember'] == 'on':
+	if remember == 'on':
 		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js = int(datetime.datetime.now().strftime('%s')), remember=True)
 	else:
 		api_token = ApiToken.objects.create(user=user, last = datetime.datetime.now(), last_js =int(datetime.datetime.now().strftime('%s')))
@@ -76,7 +76,7 @@ def login(bundle):
 	api_token.save()
 	try:
 		pf = UserProfile.objects.get(user=user)
-		ret = dict(token=api_token.token, idUser=user.pk)
+		ret = dict(token=api_token.token, account=user.pk)
 		if pf.tutorial:
 			ret["tutorial"] = False
 		else:

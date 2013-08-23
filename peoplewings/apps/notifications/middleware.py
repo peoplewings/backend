@@ -10,11 +10,11 @@ class Notification(object):
 	def process_request(self, request):
 		return None
 
-	def process_response(self, request, response):	
+	def process_response(self, request, response):
 		#import pdb; pdb.set_trace()
 		compiled_regexp = re.compile("/admin/")
 		if request.user and not isinstance(request.user, AnonymousUser) and not compiled_regexp.match(str(request.path_info)):
-			if response.status_code == 200:		
+			if response.status_code == 200:
 				resp = json.loads(response.content)
 				if not resp.has_key('updates'):
 					resp['updates'] = {}
@@ -24,5 +24,5 @@ class Notification(object):
 				except Exception, e:
 					print 'EXCEPTION NOTIFS HEADER: ', e
 					resp['updates']['notifs'] = -1
-				response.content = json.dumps(resp)					
+				response.content = json.dumps(resp)
 		return response

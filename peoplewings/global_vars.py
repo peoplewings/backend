@@ -116,6 +116,12 @@ RELATIONSHIP_CHOICES = (
     ('Blocked', 'Blocked'),
 )
 
+REF_RATING_CHOICES = (
+    ('Good', 'Good'),
+    ('Neutral', 'Neutral'),
+    ('Bad', 'Bad'),
+)
+
 PUNCTUATION_CHOICES = (
     ('Positive', 'Positive'),
     ('Negative', 'Negative'),

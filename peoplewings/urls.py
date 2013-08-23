@@ -8,7 +8,7 @@ from tastypie.api import Api
 
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource, ControlResource, FacebookLoginResource
-from peoplewings.apps.people.api import UserProfileResource, UniversityResource, ContactResource, PhotoCompletedResource, PhotosResource, AlbumsResource
+from peoplewings.apps.people.api import UserProfileResource, UniversityResource, ContactResource, PhotoCompletedResource, PhotosResource, AlbumsResource, ReferencesResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import WingResource, WingNamesResource
 from peoplewings.apps.feedback.api import FeedbackResource
@@ -34,6 +34,7 @@ v1_api.register(ContactResource())
 v1_api.register(PhotoCompletedResource())
 v1_api.register(PhotosResource())
 v1_api.register(AlbumsResource())
+v1_api.register(ReferencesResource())
 #Wings
 v1_api.register(WingResource())
 v1_api.register(WingNamesResource())
@@ -60,7 +61,7 @@ urlpatterns = patterns('',
     url(r'^ajax/', include('peoplewings.apps.ajax.urls')),
     url(r'^cropper/', include('peoplewings.apps.cropper.urls')),
     # API resources here...
-    (r'^api/', include(v1_api.urls)),	
+    (r'^api/', include(v1_api.urls)),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Static files patterns for development:

@@ -522,36 +522,58 @@ class LoginResource(ModelResource):
 		always_return_data = True
 		validation = FormValidation(form_class=LoginForm)
 
-	def custom_serialize(self, errors):
-		return errors.get('auth')
+	def validate_POST(self, POST):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
 
-	def error_response(self, errors, request):
-		serialized = self.custom_serialize(errors)
-		raise ImmediateHttpResponse(response=self._meta.serializer.serialize(serialized, 'application/json', None))
+		if not POST.has_key('username'):
+			field_req['extras'].append('username')
+		elif len(POST['username']) == 0:
+			not_empty['extras'].append('username')
+		elif len(POST['username']) > 50:
+			too_long['extras'].append('username')
 
-	def obj_create(self, bundle, request=None, **kwargs):
-		self.is_valid(bundle)
-		if bundle.errors:
-			self.error_response(bundle.errors, request)
-		bundle.data = login(bundle)
-		return bundle
+		if not POST.has_key('password'):
+			field_req['extras'].append('password')
+		elif len(POST['password']) == 0:
+			not_empty['extras'].append('password')
+		elif len(POST['password']) > 20:
+			too_long['extras'].append('password')
 
-	def dehydrate(self, bundle):
-		bundle.data['status'] = True
-		bundle.data['code'] = 201
-		return bundle
+		if POST.has_key('remember') and POST['remember'] not in ['on', 'off']:
+			invalid['extras'].append('remember')
 
-	def full_dehydrate(self, bundle):
-		token = bundle.data['token']
-		user = bundle.data['idUser']
-		tutorial = bundle.data['tutorial']
-		bundle.data = {}
-		bundle.data['status'] = True
-		bundle.data['code'] = 201
-		bundle.data['token'] = token
-		bundle.data['account'] = user
-		bundle.data['tutorial'] = tutorial
-		return bundle
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
+
+		return errors
+
+	def post_list(self, request, **kwargs):
+		#import pdb; pdb.set_trace()
+		POST = json.loads(request.raw_post_data)
+		#Validate POST data....
+		errors = self.validate_POST(POST)
+		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
+
+		if POST.has_key('remember') and POST['remember'] == 'on':
+			remember = 'on'
+		else:
+			remember = 'off'
+		result = login(POST['username'], POST['password'], remember)
+		data = {}
+		data['xAuthToken'] = result['token']
+		data['idAccount'] = result['account']
+		data['tutorial'] = result['tutorial']
+		return self.create_response(request, {"status":True,  "data": data}, response_class = HttpResponse)
 
 	def wrap_view(self, view):
 		@csrf_exempt
@@ -559,14 +581,7 @@ class LoginResource(ModelResource):
 			try:
 				callback = getattr(self, view)
 				response = callback(request, *args, **kwargs)
-				content = {}
-				data = {}
-				data['xAuthToken'] = json.loads(response.content)['token']
-				data['idAccount'] = json.loads(response.content)['account']
-				data['tutorial'] = json.loads(response.content)['tutorial']
-				content['status'] = True
-				content['data'] = data
-				return self.create_response(request, content, response_class = HttpResponse)
+				return response
 			except BadRequest, e:
 				content = {}
 				errors = [{"type": "INTERNAL_ERROR"}]

@@ -13,7 +13,7 @@ from django.utils.timezone import utc
 from operator import attrgetter
 
 class Contacts(object):
-	
+
 	def __init__(self):
 		self.id = None
 		self.name = None
@@ -21,8 +21,8 @@ class Contacts(object):
 
 	def jsonable(self):
 		res = dict()
-		for key, value in self.__dict__.items():   
-			if value is not None:         
+		for key, value in self.__dict__.items():
+			if value is not None:
 				res[key] = value
 		return res
 
@@ -64,12 +64,12 @@ class SearchObject(object):
 
 
 	def jsonable(self):
-		res = dict()			
-		for key, value in self.__dict__.items():   
-			if value is not None and not key.startswith('ctrl_'):       
+		res = dict()
+		for key, value in self.__dict__.items():
+			if value is not None and not key.startswith('ctrl_'):
 				res[key] = value
 		return res
-		
+
 class SearchObjectManager(object):
 	def __init__(self):
 		self.objects = []
@@ -77,7 +77,7 @@ class SearchObjectManager(object):
 	def jsonable_item(self, obj):
 		res = dict()
 		for key, value in obj.__dict__.items():
-			if value is not None and not key.startswith('ctrl_'):         
+			if value is not None and not key.startswith('ctrl_'):
 				res[key] = value
 		return res
 
@@ -87,7 +87,7 @@ class SearchObjectManager(object):
 			res.append(self.jsonable_item(i))
 		return res
 
-	def score_experience(self, data):		
+	def score_experience(self, data):
 		photo_score = getattr(settings, 'PHOTO_SCORE', 0)
 		max_photos = getattr(settings, 'MAX_UPLOADED_PHOTOS', 0)
 		for i in data:
@@ -245,11 +245,11 @@ class SearchObjectManager(object):
 			idx_new = idx_new + 1
 		return final
 
-	def order_by_relevance(self):		
+	def order_by_relevance(self):
 		#Split onlines and offlines
 		online = [i for i in self.objects if i.online == True]
 		offline = [i for i in self.objects if i.online == False]
-		
+
 		online = self.order_by_relevance_plus_news(online)
 		offline = self.order_by_relevance_plus_news(offline)
 
@@ -300,40 +300,40 @@ class SearchObjectManager(object):
 			if prof.current_city is None: completeness = completeness + 1
 			if prof.hometown is None: completeness = completeness + 1
 
-			if completeness >= 16: 
+			if completeness >= 16:
 				i._prof_complete = settings.PROFILE_75
-			elif completeness >= 10: 
+			elif completeness >= 10:
 				i._prof_complete = settings.PROFILE_50
-			elif completeness >= 5: 
+			elif completeness >= 5:
 				i._prof_complete = settings.PROFILE_25
-			else: 
+			else:
 				i._prof_complete = 0
 		return people
 
 	def order_by_recent(self, people):
 		#import pdb; pdb.set_trace()
-		now = datetime.now()		
+		now = datetime.now()
 		for i in people:
 			usr = UserProfile.objects.get(pk=i.profile_id).user
-			if (now - timedelta(hours=12)).replace(tzinfo=utc) <= usr.last_login: 
+			if (now - timedelta(hours=12)).replace(tzinfo=utc) <= usr.last_login:
 				i._recent = settings.RECENT_12H
-			elif (now - timedelta(days=2)).replace(tzinfo=utc) <= usr.last_login:  
+			elif (now - timedelta(days=2)).replace(tzinfo=utc) <= usr.last_login:
 				i._recent = settings.RECENT_2D
-			elif (now - timedelta(weeks=1)).replace(tzinfo=utc) <= usr.last_login:  
+			elif (now - timedelta(weeks=1)).replace(tzinfo=utc) <= usr.last_login:
 				i._recent = settings.RECENT_1W
 			else:
 				i._recent = 0
 		return people
 
-	def sum_people_score(self, people):		
-		for i in people:			
+	def sum_people_score(self, people):
+		for i in people:
 			i._final_score = i._photos + i._prof_complete + i._recent
 
 		if len(people) > 0: return sorted(people, key=lambda x: x._final_score, reverse=True)
 		#import pdb; pdb.set_trace()
 		return []
 
-	def order_by_people_relevance(self):		
+	def order_by_people_relevance(self):
 
 		online = [i for i in self.objects if i.online == True]
 		offline = [i for i in self.objects if i.online == False]
@@ -352,7 +352,7 @@ class SearchObjectManager(object):
 		off_noavatar = self.order_by_profile(off_noavatar)
 
 		off_avatar = self.order_by_recent(off_avatar)
-		off_noavatar = self.order_by_recent(off_noavatar)		
+		off_noavatar = self.order_by_recent(off_noavatar)
 		self.objects = self.sum_people_score(on_avatar) + self.sum_people_score(on_noavatar) + self.sum_people_score(off_avatar) + self.sum_people_score(off_noavatar)
 		return
 
@@ -423,11 +423,12 @@ class EditProfileObject(object):
 		self.religion = None
 		self.show_birthday = None
 		self.albums = []
+		self.references = []
 
 	def jsonable(self):
-		res = dict()			
-		for key, value in self.__dict__.items():   
-			if value is not None and not key.startswith('ctrl_'):       
+		res = dict()
+		for key, value in self.__dict__.items():
+			if value is not None and not key.startswith('ctrl_'):
 				res[key] = value
 		return res
 
@@ -476,11 +477,12 @@ class PreviewProfileObject(object):
 		self.religion = None
 		self.show_birthday = None
 		self.albums = []
+		self.references = []
 
 	def jsonable(self):
-		res = dict()			
-		for key, value in self.__dict__.items():   
-			if value is not None and not key.startswith('ctrl_'):       
+		res = dict()
+		for key, value in self.__dict__.items():
+			if value is not None and not key.startswith('ctrl_'):
 				res[key] = value
 		return res
 

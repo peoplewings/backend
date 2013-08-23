@@ -63,8 +63,6 @@ class UserProfile(models.Model):
 	thumb_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_AVATAR, blank = True) # 65x65
 	blur_avatar = models.CharField(max_length=max_long_len, default= django_settings.ANONYMOUS_BLUR, blank = True) # Not used
 	avatar_updated = models.BooleanField(default=False)
-	relationships = models.ManyToManyField("self", symmetrical=False, through='Relationship')##not used
-	references = models.ManyToManyField("self", symmetrical=False, through='Reference', related_name="references+")##not used
 
 	# In Basic Information
 	birthday = models.DateField(verbose_name='birthday', null=True, blank=True)
@@ -150,22 +148,14 @@ class UserProfile(models.Model):
 		cur.close()
 		transaction.commit()
 
-class Relationship(models.Model):
-	sender = models.ForeignKey('UserProfile', related_name='sender')
-	receiver = models.ForeignKey('UserProfile', related_name='receiver')
-	relationship_type = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES)
-	fuck_you = models.CharField(max_length=8, choices=RELATIONSHIP_CHOICES, null=True)
 
-	class Meta:
-		unique_together = ("sender", "receiver")
-
-
-class Reference(models.Model):
-	author = models.ForeignKey('UserProfile', related_name='author')
-	commented = models.ForeignKey('UserProfile', related_name='commented')
-	title = models.CharField(max_length=max_medium_len)
-	text = models.TextField(max_length=max_500_char)
-	punctuation = models.CharField(max_length=8, choices=PUNCTUATION_CHOICES)
+class References(models.Model):
+	sender = models.ForeignKey('UserProfile', related_name='ref_sender')
+	receiver = models.ForeignKey('UserProfile', related_name='ref_receiver')
+	rating = models.CharField(max_length=8, choices=REF_RATING_CHOICES, null=False)
+	met_in_person = models.BooleanField(default=False)
+	created = models.DateField(verbose_name='created', null=False, blank=False, default=datetime.now())
+	text = models.TextField(max_length=1000, blank=True)
 
 def createUserProfile(sender, user, request, **kwargs):
 	if UserProfile.objects.filter(user= user).count() == 0:
