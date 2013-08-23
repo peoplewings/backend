@@ -117,9 +117,9 @@ RELATIONSHIP_CHOICES = (
 )
 
 REF_RATING_CHOICES = (
-    ('Good', 'Good'),
-    ('Neutral', 'Neutral'),
-    ('Bad', 'Bad'),
+    ('good', 'good'),
+    ('neutral', 'neutral'),
+    ('bad', 'bad'),
 )
 
 PUNCTUATION_CHOICES = (

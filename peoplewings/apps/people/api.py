@@ -110,7 +110,7 @@ class ReferencesResource(ModelResource):
 
 		if not POST.has_key('rating'):
 			field_req['extras'].append('rating')
-		elif POST['rating'] not in ['Good', 'Neutral', 'Bad']:
+		elif POST['rating'] not in ['good', 'neutral', 'bad']:
 			invalid['extras'].append('rating')
 
 		if not POST.has_key('metInPerson'):
