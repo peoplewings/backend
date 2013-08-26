@@ -144,7 +144,7 @@ class ReferencesResource(ModelResource):
 		errors = self.validate_POST(POST, request.user)
 		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
 		if References.objects.filter(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver'])).count():
-			return self.create_response(request, {"status":False}, response_class = HttpResponse)
+			return self.create_response(request, {"status":False, "errors":[{"type":"DUPLICATED_REFERENCE"}]}, response_class = HttpResponse)
 		References.objects.create(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver']), rating = POST['rating'], met_in_person = POST['metInPerson'], text = POST['text'])
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
