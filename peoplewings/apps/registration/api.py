@@ -543,7 +543,7 @@ class LoginResource(ModelResource):
 		elif len(POST['password']) > 20:
 			too_long['extras'].append('password')
 
-		if POST.has_key('remember') and POST['remember'] not in ['on', 'off']:
+		if POST.has_key('remember') and not isinstance(POST['remember'], bool):
 			invalid['extras'].append('remember')
 
 		if len(field_req['extras']) > 0:
@@ -564,7 +564,7 @@ class LoginResource(ModelResource):
 		errors = self.validate_POST(POST)
 		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
 
-		if POST.has_key('remember') and POST['remember'] == 'on':
+		if POST.has_key('remember') and POST['remember'] is True:
 			remember = 'on'
 		else:
 			remember = 'off'
