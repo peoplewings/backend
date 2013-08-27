@@ -148,6 +148,66 @@ class ReferencesResource(ModelResource):
 		References.objects.create(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver']), rating = POST['rating'], met_in_person = POST['metInPerson'], text = POST['text'])
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
+class GeoLocationResource(ModelResource):
+	class Meta:
+		object_class = UserProfile
+		queryset = UserProfile.objects.all()
+		list_allowed_methods = ['put']
+		include_resource_uri = True
+		resource_name = 'geolocation'
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = AnonymousApiTokenAuthentication()
+		authorization = Authorization()
+		always_return_data = True
+
+		def validate_PUT(self, PUT):
+			errors = []
+			field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+			not_empty = {"type":"NOT_EMPTY", "extras":[]}
+			too_long = {"type":"TOO_LONG", "extras":[]}
+			invalid = {"type":"INVALID", "extras":[]}
+
+			if not POST.has_key('city'):
+				field_req['extras'].append('city')
+
+			if not POST.has_key('country'):
+				field_req['extras'].append('country')
+
+			if not POST.has_key('lat'):
+				field_req['extras'].append('lat')
+
+			if not POST.has_key('lon'):
+				field_req['extras'].append('lon')
+
+			if len(field_req['extras']) > 0:
+				errors.append(field_req)
+			if len(not_empty['extras']) > 0:
+				errors.append(not_empty)
+			if len(too_long['extras']) > 0:
+				errors.append(too_long)
+			if len(invalid['extras']) > 0:
+				errors.append(invalid)
+
+			return errors
+
+		def put_list(self, request, **kwargs):
+			PUT = json.loads(request.raw_post_data)
+			#Validate PUT data....
+			errors = self.validate_PUT(PUT)
+			if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
+
+			now_city = City.objects.saveLocation(name = PUT['city'], country = PUT['country'], lat = PUT['lat'], lon = PUT['lon'])
+			profile = UserProfile.objects.get(user = request.user)
+			#Si no tiene current city le assignamos una
+			if profile.current_city is None:
+				profile.current_city = now_city
+
+			profile.last_login = now_city
+			profile.last_login_lat = PUT['lat']
+			profile.last_login_lon = PUT['lon']
+			profile.save()
+			return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
 class UserProfileResource(ModelResource):
 
 	class Meta:
@@ -210,6 +270,8 @@ class UserProfileResource(ModelResource):
 					conn = self.connected(prof.user)
 					if conn == "OFF":
 						last = prof.user
+						if prof.last_login is not None:
+							prof_obj.last_login = prof.last_login.stringify()
 						prof_obj.last_login_date = str(last.last_login)
 					elif conn == "AFK":
 						prof_obj.last_login_date = "AFK"
@@ -429,11 +491,7 @@ class UserProfileResource(ModelResource):
 
 						last_login = prof.last_login
 						if last_login is not None:
-							prof_obj.last_login['lat'] = last_login.lat
-							prof_obj.last_login['lon'] = last_login.lon
-							prof_obj.last_login['name'] = last_login.name
-							prof_obj.last_login['region'] = last_login.region.name
-							prof_obj.last_login['country'] = last_login.region.country.name
+							prof_obj.last_login = last_login.stringify()
 
 						prof_obj.last_name = prof.user.last_name
 						prof_obj.religion = prof.religion
@@ -1144,7 +1202,7 @@ class UserProfileResource(ModelResource):
 		if GET['gender'] != 'Both':
 			result = result & Q(gender=GET['gender'])
 		if 'location' in GET:
-			result = result & (Q(current_city__name=GET['location'])|Q(current_city__region__name__icontains=GET['location'])|Q(current_city__region__country__name__icontains=GET['location']))
+			result = result & (Q(current_city__name=GET['location'])|Q(current_city__region__name__icontains=GET['location'])|Q(current_city__region__country__name__icontains=GET['location'])|Q(last_login__name=GET['location'])|Q(last_login__region__name__icontains=GET['location'])|Q(last_login__region__country__name__icontains=GET['location']))
 		if 'hero' in GET:
 			result = result & (Q(full_name__icontains=GET['hero']))
 		return result

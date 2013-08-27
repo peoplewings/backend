@@ -77,6 +77,8 @@ class UserProfile(models.Model):
 	hometown = models.ForeignKey(City, related_name='ht+', null=True)
 	other_locations = models.ManyToManyField(City, related_name='ol+', null=True)
 	last_login = models.ForeignKey(City, related_name='ll+', null=True)
+	last_login_lat = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
+	last_login_lon = models.DecimalField(max_digits=11, decimal_places=9, default=0.0)
 
 	# Contact info
 	emails = models.EmailField(blank=True, max_length=100)
