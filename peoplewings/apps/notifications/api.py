@@ -31,7 +31,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.core.paginator import Paginator, InvalidPage
 
-from peoplewings.apps.people.models import UserProfile
+from peoplewings.apps.people.models import UserProfile, References
 from wings.models import Wing, PublicRequestWing
 from models import Notifications, Requests, Invites, Messages, NotificationsAlarm, AdditionalInformation, AccomodationInformation, Friendship
 
@@ -809,8 +809,8 @@ class NotificationsThreadResource(ModelResource):
 						aux.sender_location = i.sender.current_city.stringify()
 					else:
 						aux.sender_location = 'Not specified'
-					aux.sender_friends = i.sender.relationships.count()
-					aux.sender_references = i.sender.references.count()
+					aux.sender_friends = '-'
+					aux.sender_references = References.objects.filter(receiver = i.sender).count()
 					aux.sender_med_avatar = i.sender.medium_avatar
 					aux.sender_small_avatar = i.sender.thumb_avatar
 					aux.sender_online = self.connected(i.sender)
@@ -856,8 +856,8 @@ class NotificationsThreadResource(ModelResource):
 						aux.sender_location = i.sender.current_city.stringify()
 					else:
 						aux.sender_location = 'Not specified'
-					aux.sender_friends = i.sender.relationships.count()
-					aux.sender_references = i.sender.references.count()
+					aux.sender_friends = '-'
+					aux.sender_references = References.objects.filter(receiver = i.sender).count()
 					aux.sender_med_avatar = i.sender.medium_avatar
 					aux.sender_small_avatar = i.sender.thumb_avatar
 					aux.sender_online = self.connected(i.sender)
