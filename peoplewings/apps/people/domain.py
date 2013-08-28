@@ -40,6 +40,8 @@ class SearchObject(object):
 		self.languages = None
 		self.all_about_you = None
 		self.date_joined = None
+		self.last_login = {}
+		self.last_login_date = None
 		self.wings = []
 
 		self.wing_introduction = None
@@ -418,7 +420,7 @@ class EditProfileObject(object):
 		self.movies = None
 		self.birth_day = None
 		self.avatar = None
-		self.last_login = None
+		self.last_login = {}
 		self.last_name = None
 		self.religion = None
 		self.show_birthday = None
@@ -472,7 +474,7 @@ class PreviewProfileObject(object):
 		self.movies = None
 		self.birth_day = None
 		self.avatar = None
-		self.last_login = None
+		self.last_login = {}
 		self.last_name = None
 		self.religion = None
 		self.show_birthday = None

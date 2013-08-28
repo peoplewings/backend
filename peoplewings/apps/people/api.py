@@ -153,60 +153,62 @@ class GeoLocationResource(ModelResource):
 		object_class = UserProfile
 		queryset = UserProfile.objects.all()
 		list_allowed_methods = ['put']
-		include_resource_uri = True
+		detail_allowed_methods = []
+		include_resource_uri = False
+		always_return_data = True
 		resource_name = 'geolocation'
 		serializer = CamelCaseJSONSerializer(formats=['json'])
-		authentication = AnonymousApiTokenAuthentication()
+		authentication = ApiTokenAuthentication()
 		authorization = Authorization()
-		always_return_data = True
 
-		def validate_PUT(self, PUT):
-			errors = []
-			field_req = {"type":"FIELD_REQUIRED", "extras":[]}
-			not_empty = {"type":"NOT_EMPTY", "extras":[]}
-			too_long = {"type":"TOO_LONG", "extras":[]}
-			invalid = {"type":"INVALID", "extras":[]}
+	def validate_PUT(self, PUT):
+		errors = []
+		field_req = {"type":"FIELD_REQUIRED", "extras":[]}
+		not_empty = {"type":"NOT_EMPTY", "extras":[]}
+		too_long = {"type":"TOO_LONG", "extras":[]}
+		invalid = {"type":"INVALID", "extras":[]}
 
-			if not POST.has_key('city'):
-				field_req['extras'].append('city')
+		if not PUT.has_key('city'):
+			field_req['extras'].append('city')
 
-			if not POST.has_key('country'):
-				field_req['extras'].append('country')
+		if not PUT.has_key('country'):
+			field_req['extras'].append('country')
 
-			if not POST.has_key('lat'):
-				field_req['extras'].append('lat')
+		if not PUT.has_key('lat'):
+			field_req['extras'].append('lat')
 
-			if not POST.has_key('lon'):
-				field_req['extras'].append('lon')
+		if not PUT.has_key('lon'):
+			field_req['extras'].append('lon')
 
-			if len(field_req['extras']) > 0:
-				errors.append(field_req)
-			if len(not_empty['extras']) > 0:
-				errors.append(not_empty)
-			if len(too_long['extras']) > 0:
-				errors.append(too_long)
-			if len(invalid['extras']) > 0:
-				errors.append(invalid)
+		if len(field_req['extras']) > 0:
+			errors.append(field_req)
+		if len(not_empty['extras']) > 0:
+			errors.append(not_empty)
+		if len(too_long['extras']) > 0:
+			errors.append(too_long)
+		if len(invalid['extras']) > 0:
+			errors.append(invalid)
 
-			return errors
+		return errors
 
-		def put_list(self, request, **kwargs):
-			PUT = json.loads(request.raw_post_data)
-			#Validate PUT data....
-			errors = self.validate_PUT(PUT)
-			if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
+	def put_list(self, request, **kwargs):
+		PUT = json.loads(request.raw_post_data)
+		#Validate PUT data....
+		errors = self.validate_PUT(PUT)
+		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
 
-			now_city = City.objects.saveLocation(name = PUT['city'], country = PUT['country'], lat = PUT['lat'], lon = PUT['lon'])
-			profile = UserProfile.objects.get(user = request.user)
-			#Si no tiene current city le assignamos una
-			if profile.current_city is None:
-				profile.current_city = now_city
+		now_city = City.objects.saveLocation(name = PUT['city'], country = PUT['country'], lat = PUT['lat'], lon = PUT['lon'])
+		profile = UserProfile.objects.get(user = request.user)
+		#Si no tiene current city le assignamos una
+		if profile.current_city is None:
+			profile.current_city = now_city
 
-			profile.last_login = now_city
-			profile.last_login_lat = PUT['lat']
-			profile.last_login_lon = PUT['lon']
-			profile.save()
-			return self.create_response(request, {"status":True}, response_class = HttpResponse)
+		profile.last_login = now_city
+		profile.last_login_lat = PUT['lat']
+		profile.last_login_lon = PUT['lon']
+		profile.save()
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
+
 
 class UserProfileResource(ModelResource):
 
@@ -214,7 +216,7 @@ class UserProfileResource(ModelResource):
 		object_class = UserProfile
 		queryset = UserProfile.objects.all()
 		allowed_methods = ['get', 'put']
-		include_resource_uri = True
+		include_resource_uri = False
 		resource_name = 'profiles'
 		serializer = CamelCaseJSONSerializer(formats=['json'])
 		authentication = AnonymousApiTokenAuthentication()
@@ -271,7 +273,7 @@ class UserProfileResource(ModelResource):
 					if conn == "OFF":
 						last = prof.user
 						if prof.last_login is not None:
-							prof_obj.last_login = prof.last_login.stringify()
+							prof_obj.last_login = prof.last_login.jsonify()
 						prof_obj.last_login_date = str(last.last_login)
 					elif conn == "AFK":
 						prof_obj.last_login_date = "AFK"
@@ -363,6 +365,7 @@ class UserProfileResource(ModelResource):
 					for reference in References.objects.filter(receiver = prof).order_by('-created'):
 						ref_obj = {}
 						sender = reference.sender
+						ref_obj['sender_id'] = sender.pk
 						ref_obj['first_name'] = sender.user.first_name
 						ref_obj['last_name'] = sender.user.last_name
 						ref_obj['age'] = sender.get_age()
@@ -380,6 +383,11 @@ class UserProfileResource(ModelResource):
 							ref_obj['city'] = sender.current_city.stringify()
 						else:
 							ref_obj['city'] = 'Unknown location'
+						#si ya le he mandando una ref
+						if References.objects.filter(receiver = sender, sender = prof).count():
+							ref_obj['referenced'] = True
+						else:
+							ref_obj['referenced'] = False
 						prof_obj.references.append(ref_obj)
 
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
@@ -491,7 +499,7 @@ class UserProfileResource(ModelResource):
 
 						last_login = prof.last_login
 						if last_login is not None:
-							prof_obj.last_login = last_login.stringify()
+							prof_obj.last_login = last_login.jsonify()
 
 						prof_obj.last_name = prof.user.last_name
 						prof_obj.religion = prof.religion
@@ -515,6 +523,7 @@ class UserProfileResource(ModelResource):
 						for reference in References.objects.filter(receiver = prof).order_by('-created'):
 							ref_obj = {}
 							sender = reference.sender
+							ref_obj['sender_id'] = sender.pk
 							ref_obj['first_name'] = sender.user.first_name
 							ref_obj['last_name'] = sender.user.last_name
 							ref_obj['age'] = sender.get_age()
@@ -532,6 +541,10 @@ class UserProfileResource(ModelResource):
 								ref_obj['city'] = sender.current_city.stringify()
 							else:
 								ref_obj['city'] = 'Unknown location'
+							if References.objects.filter(receiver = sender, sender = prof).count():
+								ref_obj['referenced'] = True
+							else:
+								ref_obj['referenced'] = False
 							prof_obj.references.append(ref_obj)
 
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
@@ -1359,6 +1372,10 @@ class UserProfileResource(ModelResource):
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
+				if i.last_login:
+					search_obj.last_login = i.last_login.jsonify()
+				if not search_obj.online:
+					search_obj.last_login_date = i.user.last_login
 
 				for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):
 						if j.get_class_name() not in search_obj.wings:
@@ -1414,6 +1431,8 @@ class UserProfileResource(ModelResource):
 				search_obj.all_about_you = i.all_about_you
 				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
 				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
+				search_obj.last_login = i.last_login.jsonify()
+				if not search_obj.online: search_obj.last_login_date = i.user.last_login
 
 				for j in Wing.objects.filter(author=i):
 						if j.get_class_name() not in search_obj.wings:

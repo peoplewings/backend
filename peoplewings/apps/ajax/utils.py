@@ -51,6 +51,7 @@ class CamelCaseJSONSerializer(Serializer):
             return match.group()[0] + "_" + match.group()[1].lower()
 
         def underscorize(data):
+
             if isinstance(data, dict):
                 new_dict = {}
                 for key, value in data.items():
