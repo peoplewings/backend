@@ -1185,6 +1185,10 @@ class UserProfileResource(ModelResource):
 		if GET.has_key('gender') and GET['gender'] not in ['Male', 'Female', 'Both']:
 			invalid_field['extras'].append('gender')
 
+		#people search
+		if GET.has_key('hero') and len(GET['hero']) == 0:
+			not_empty['extras'].append('hero')
+
 
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
@@ -1266,6 +1270,8 @@ class UserProfileResource(ModelResource):
 			if 'endDate' in GET:
 				date_end = datetime.strptime('%s 23:59:59' % GET['endDate'], '%Y-%m-%d %H:%M:%S')
 				result = result & Q(publicrequestwing__date_start__lte=date_end)
+		if 'hero' in GET:
+			result = result & (Q(full_name__icontains=GET['hero']))
 		return result
 
 	def make_accomodation_publicreq_search_filters(self, GET, prof):
