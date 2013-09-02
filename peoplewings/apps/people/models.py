@@ -129,6 +129,9 @@ class UserProfile(models.Model):
 	tutorial = models.BooleanField(default=False)
 
 	full_name = models.CharField(max_length=100, blank=True)
+	search_score = models.IntegerField(null=False, default=0)
+	ambassator = models.BooleanField(default=False)
+	last_js = last_js = models.BigIntegerField(default=0)
 
 	def get_age(self):
 		today = date.today()
@@ -149,7 +152,6 @@ class UserProfile(models.Model):
 		cur.callproc('batch_reply_rate', ())
 		cur.close()
 		transaction.commit()
-
 
 class References(models.Model):
 	sender = models.ForeignKey('UserProfile', related_name='ref_sender')

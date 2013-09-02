@@ -232,12 +232,11 @@ class UserProfileResource(ModelResource):
 	def preview_profile(self, request, **kwargs):
 		return self.dispatch_detail(request, **kwargs)
 
-	def connected(self, user):
-		state = 'OFF'
-		token = ApiToken.objects.filter(user=user).order_by('-last_js')
-		if len(token) > 0:
-			state = token[0].is_user_connected()
-		return state
+	def connected(self, prof):
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
+		if time.time() - prof.last_js > valid_time:
+			return 'OFF'
+		return 'ON'
 
 	def get_detail(self, request, **kwargs):
 		#Check if the user is valid
@@ -1333,6 +1332,18 @@ class UserProfileResource(ModelResource):
 
 		return data
 
+	def try_to_fit(self, profiles, GET):
+		page_size=20
+		num_page = int(GET.get('page', 1))
+		count = len(profiles)
+		endResult = num_page * page_size
+		startResult = (num_page - 1) * page_size + 1
+		if count < startResult:
+			return False
+		elif count < endResult:
+			return False
+		return True
+
 	def get_list(self, request, **kwargs):
 		if request.GET.has_key('wingType'):
 			if request.GET['wingType'] == 'people':
@@ -1342,127 +1353,186 @@ class UserProfileResource(ModelResource):
 		else:
 			return self.search_accomodation(request, **kwargs)
 
+	def get_paginated_profiles(self, profiles, GET):
+		#This function receives a list, and has to return a sublist of the original list in a range.
+		#If the list consist on profiles from 1-60 and the pagination needs page 2 (profs 21-40, both included)
+		page_size=20
+		num_page = int(GET.get('page', 1))
+		count = len(profiles)
+		endResult = min(num_page * page_size, count)
+		startResult = min((num_page - 1) * page_size + 1, endResult)
+		if startResult < page_size * (num_page -1) + 1:
+			#import pdb; pdb.set_trace()
+			num_page = round(count/page_size)
+			if count%page_size != 0:
+				num_page = num_page + 1
+			endResult = count
+			startResult = ((num_page -1) * page_size) + 1
+		elif num_page < 0:
+			num_page=1
+			startResult = 1
+			endResult = min(num_page * page_size, count)
+		paginator = Paginator(profiles, page_size)
+		if count == 0:
+			return [], 0, 0, 0
+		else:
+			try:
+				page = paginator.page(num_page)
+			except InvalidPage:
+				[]
+			return [i for i in page.object_list], count, startResult, endResult
+
+	def fill_domain_search_people(self, all_profiles, GET):
+		profiles, count, start, end = self.get_paginated_profiles(all_profiles, GET)
+		search_list = SearchObjectManager()
+
+		for prof in profiles:
+			search_obj = SearchObject()
+			search_obj.profile_id = prof.pk
+			search_obj.ctrl_user = prof.user
+			search_obj.first_name = prof.user.first_name
+			search_obj.last_name = prof.user.last_name
+			if prof.current_city:
+				search_obj.current = {"name": prof.current_city.name, "region": prof.current_city.region.name, "country": prof.current_city.region.country.name}
+			else:
+				search_obj.current= {}
+
+			search_obj.avatar = prof.medium_avatar
+			search_obj.age = prof.get_age()
+			search_obj.online = self.connected(prof) == 'ON'
+			search_obj.reply_rate = prof.reply_rate
+			search_obj.reply_time = prof.reply_time
+			search_obj.languages = self.parse_languages(i)
+			search_obj.all_about_you = prof.all_about_you
+			search_obj.date_joined = self.parse_date(str(prof.user.date_joined))
+			if prof.last_login:
+				search_obj.last_login = prof.last_login.jsonify()
+			if not search_obj.online:
+				search_obj.last_login_date = prof.user.last_login
+
+			for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):
+					if j.get_class_name() not in search_obj.wings:
+						search_obj.wings.append(j.get_class_name())
+
+			n_photos = 0
+			for k in Photos.objects.filter(author=i):
+				n_photos = n_photos + 1
+
+			search_obj.n_photos = n_photos
+			search_obj.search_score = prof.search_score
+
+			search_list.objects.append(search_obj)
+
+		return search_list, count, start, end
+
+
 	def search_people(self, request, **kwargs):
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
 		errors = self.validate_people_search(request.GET)
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)
 		#We have no problem with the given filters
 		filters = self.make_people_search_filters(request.GET)
-		try:
-			search_list = SearchObjectManager()
-			profiles = UserProfile.objects.filter(filters).distinct()
 
-			for i in profiles:
-				search_obj = SearchObject()
-				search_obj.profile_id = i.pk
-				search_obj.ctrl_user = i.user
-				search_obj.first_name = i.user.first_name
-				search_obj.last_name = i.user.last_name
-				if i.current_city:
-					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-				else:
-					search_obj.current= {}
+		#Now, we have to search online user with the givern filters and ordering by score
+		profiles = UserProfile.objects.filter(filters & Q(last_js__gte=time.time() - valid_time)).distinct().order_by('-search_score')
+		#Now let's see if the profiles we got fit the sample, or we have to fill with offline
+		if self.try_to_fit(profiles, request.GET):
+			search_list, count, start, end = self.fill_domain_search_people(profiles, request.GET)
+		else:
+			profiles_off = UserProfile.objects.filter(filters & Q(last_js__lt=time.time() - valid_time)).distinct().order_by('-search_score')
+			search_list, count, start, end = self.fill_domain_search_people([i for i in profiles] + [i for i in profiles_off], request.GET)
 
-				search_obj.avatar = i.medium_avatar
-				search_obj.age = i.get_age()
-				search_obj.online = self.connected(i.user)
-				search_obj.reply_rate = i.reply_rate
-				search_obj.reply_time = i.reply_time
-				search_obj.languages = self.parse_languages(i)
-				search_obj.all_about_you = i.all_about_you
-				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
-				if i.last_login:
-					search_obj.last_login = i.last_login.jsonify()
-				if not search_obj.online:
-					search_obj.last_login_date = i.user.last_login
-
-				for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):
-						if j.get_class_name() not in search_obj.wings:
-							search_obj.wings.append(j.get_class_name())
-
-				n_photos = 0
-				for k in Photos.objects.filter(author=i):
-					n_photos = n_photos + 1
-
-				search_obj.n_photos = n_photos
-
-				search_list.objects.append(search_obj)
-		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
-
-		search_list.order_by_people_relevance()
 		if not isinstance(request.user, User):
 			search_list.make_dirty()
 
-		data = self.paginate(search_list.jsonable(), request.GET)
-		#import pdb; pdb.set_trace()
-		if isinstance(data, HttpResponse): return data
+		data = {}
+		data['profiles'] = search_list.jsonable()
+		data['count'] = count
+		data['startResult'] = start
+		data['endResult'] = end
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)
 
+	def fill_domain_search_accomodation(self, all_profiles, GET):
+		profiles, count, start, end = self.get_paginated_profiles(all_profiles, GET)
+		search_list = SearchObjectManager()
+
+		for prof in profiles:
+			search_obj = SearchObject()
+			search_obj.profile_id = prof.pk
+			search_obj.ctrl_user = prof.user
+			search_obj.first_name = prof.user.first_name
+			search_obj.last_name = prof.user.last_name
+			if prof.current_city:
+				search_obj.current = {"name": prof.current_city.name, "region": prof.current_city.region.name, "country": prof.current_city.region.country.name}
+			else:
+				search_obj.current= {}
+
+			search_obj.avatar = prof.medium_avatar
+			search_obj.age = prof.get_age()
+			search_obj.online = self.connected(prof) == 'ON'
+			search_obj.reply_rate = prof.reply_rate
+			search_obj.reply_time = prof.reply_time
+			search_obj.languages = self.parse_languages(i)
+			search_obj.all_about_you = prof.all_about_you
+			search_obj.date_joined = self.parse_date(str(prof.user.date_joined))
+			if prof.last_login:
+				search_obj.last_login = prof.last_login.jsonify()
+			if not search_obj.online:
+				search_obj.last_login_date = prof.user.last_login
+
+			for j in Wing.objects.filter(author=i, status__in=['Y', 'M']):
+					if j.get_class_name() not in search_obj.wings:
+						search_obj.wings.append(j.get_class_name())
+
+			n_photos = 0
+			for k in Photos.objects.filter(author=i):
+				n_photos = n_photos + 1
+
+			search_obj.n_photos = n_photos
+			search_obj.search_score = prof.search_score
+
+			if GET['type'] == 'Applicant':
+				filters = self.make_accomodation_publicreq_search_filters(GET, i)
+				prw = PublicRequestWing.objects.filter(filters)
+				for pw in prw:
+					cpy = copy.deepcopy(search_obj)
+					cpy.wing_introduction = pw.introduction
+					cpy.wing_type = pw.wing_type
+					cpy.wing_city = pw.city.name
+					cpy.wing_start_date = pw.date_start
+					cpy.wing_end_date = pw.date_end
+					cpy.wing_capacity = pw.capacity
+					search_list.objects.append(cpy)
+			else:
+				search_list.objects.append(search_obj)
+
+		return search_list, count, start, end
+
 	def search_accomodation(self, request, **kwargs):
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
 		errors = self.validate_accomodation_search(request.GET)
 		if len(errors) > 0:
 			return self.create_response(request, {"errors": errors, "status":False}, response_class=HttpForbidden)
 		#We have no problem with the given filters
 		filters = self.make_accomodation_search_filters(request.GET)
-
-		try:
-			search_list = SearchObjectManager()
-			profiles = UserProfile.objects.filter(filters).distinct()
-
-			for i in profiles:
-				search_obj = SearchObject()
-				search_obj.profile_id = i.pk
-				search_obj.ctrl_user = i.user
-				search_obj.first_name = i.user.first_name
-				search_obj.last_name = i.user.last_name
-				if i.current_city:
-					search_obj.current = {"name": i.current_city.name, "region": i.current_city.region.name, "country": i.current_city.region.country.name}
-				else:
-					search_obj.current= {}
-
-				search_obj.avatar = i.medium_avatar
-				search_obj.age = i.get_age()
-				search_obj.online = self.connected(i.user)
-				search_obj.reply_rate = i.reply_rate
-				search_obj.reply_time = i.reply_time
-				search_obj.languages = self.parse_languages(i)
-				search_obj.all_about_you = i.all_about_you
-				search_obj.date_joined = self.parse_date(str(i.user.date_joined))
-				search_obj.online =  self.connected(i.user) in ['ON', 'AFK']
-				search_obj.last_login = i.last_login.jsonify()
-				if not search_obj.online: search_obj.last_login_date = i.user.last_login
-
-				for j in Wing.objects.filter(author=i):
-						if j.get_class_name() not in search_obj.wings:
-							search_obj.wings.append(j.get_class_name())
-
-				if request.GET['type'] == 'Applicant':
-					filters = self.make_accomodation_publicreq_search_filters(request.GET, i)
-					prw = PublicRequestWing.objects.filter(filters)
-					for pw in prw:
-						cpy = copy.deepcopy(search_obj)
-						cpy.wing_introduction = pw.introduction
-						cpy.wing_type = pw.wing_type
-						cpy.wing_city = pw.city.name
-						cpy.wing_start_date = pw.date_start
-						cpy.wing_end_date = pw.date_end
-						cpy.wing_capacity = pw.capacity
-						search_list.objects.append(cpy)
-				else:
-					search_list.objects.append(search_obj)
-		except Exception, e:
-			return self.create_response(request, {"errors": [{"type": "INTERNAL_ERROR"}], "status":False}, response_class=HttpApplicationError)
-
-		search_list.order_by_relevance()
+		#Now, we have to search online user with the givern filters and ordering by score
+		profiles = UserProfile.objects.filter(filters & Q(last_js__gte=time.time() - valid_time)).distinct().order_by('-search_score')
+		#Now let's see if the profiles we got fit the sample, or we have to fill with offline
+		if self.try_to_fit(profiles, request.GET):
+			search_list, count, start, end = self.fill_domain_search_accomodation(profiles, request.GET)
+		else:
+			profiles_off = UserProfile.objects.filter(filters & Q(last_js__lt=time.time() - valid_time)).distinct().order_by('-search_score')
+			search_list, count, start, end = self.fill_domain_search_accomodation([i for i in profiles] + [i for i in profiles_off], request.GET)
 
 		if not isinstance(request.user, User):
 			search_list.make_dirty()
 
-		data = self.paginate(search_list.jsonable(), request.GET)
-		#import pdb; pdb.set_trace()
-		if isinstance(data, HttpResponse): return data
+		data = {}
+		data['profiles'] = search_list.jsonable()
+		data['count'] = count
+		data['startResult'] = start
+		data['endResult'] = end
 		return self.create_response(request, {"data": data, "status":True}, response_class=HttpResponse)
 
 	def wrap_view(self, view):

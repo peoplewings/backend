@@ -96,15 +96,14 @@ def api_token_is_authenticated(bundle, **kwargs):
 	#import pdb; pdb.set_trace()
 	try:
 		apitoken = ApiToken.objects.get(token = token)
-		"""
-		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		"""
+		pf = UserProfile.objects.get(user=apitoken.user)
+
 		apitoken.last = datetime.datetime.now()
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
+		pf.last_js = int(datetime.datetime.now().strftime('%s'))
+		pf.save()
 
 		user = User.objects.get(pk=apitoken.user_id)
 		return user
@@ -115,15 +114,14 @@ def blitline_token_is_authenticated(apitoken):
 	#import pdb; pdb.set_trace()
 	##Check if the user exists
 	try:
-		"""
-		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		"""
+		pf = UserProfile.objects.get(user=apitoken.user)
+
 		apitoken.last = datetime.datetime.now()
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
+		pf.last_js = int(datetime.datetime.now().strftime('%s'))
+		pf.save()
 
 		user = User.objects.get(pk=apitoken.user_id)
 		return user
@@ -135,14 +133,13 @@ def control_is_authenticated(bundle, **kwargs):
 	token = bundle.META.get("HTTP_X_AUTH_TOKEN")
 	try:
 		apitoken = ApiToken.objects.get(token = token)
-		"""
-		if apitoken.remember and apitoken.last_js + 7776000 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		elif not apitoken.remember and apitoken.last_js + 900 < long(datetime.datetime.now().strftime('%s')):
-			return False
-		"""
+		pf = UserProfile.objects.get(user=apitoken.user)
+
 		apitoken.last_js = int(datetime.datetime.now().strftime('%s'))
 		apitoken.save()
+
+		pf.last_js = int(datetime.datetime.now().strftime('%s'))
+		pf.save()
 
 		user = User.objects.get(pk=apitoken.user_id)
 		return user

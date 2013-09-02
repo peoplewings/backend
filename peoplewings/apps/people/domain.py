@@ -54,16 +54,8 @@ class SearchObject(object):
 		self.ctrl_user = None
 		self.ctrl_online = None
 
-		self._experience_score= None
-		self._responsive_score= None
-		self._reqinv_score= None
-		self._final_score= 0
-
 		self.n_photos = None
-		self._photos = 0
-		self._prof_complete = 0
-		self._recent = 0
-
+		self.search_score = 0
 
 	def jsonable(self):
 		res = dict()
