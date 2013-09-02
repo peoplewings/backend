@@ -241,12 +241,11 @@ class NotificationsListResource(ModelResource):
 		thread[0].wing_parameters['modified'] = mod
 		return thread
 
-	def connected(self, user):
-		state = 'OFF'
-		token = ApiToken.objects.filter(user=user).order_by('-last_js')
-		if len(token) > 0:
-			state = token[0].is_user_connected()
-		return state
+	def connected(self, prof):
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
+		if time.time() - prof.last_js > valid_time:
+			return 'OFF'
+		return 'ON'
 
 	def get_list(self, request, **kwargs):
 		## We are doin it the hard way
@@ -357,7 +356,7 @@ class NotificationsListResource(ModelResource):
 					if prof_aux.current_city: aux.location = prof_aux.current_city.stringify()
 					else: aux.location = "Not specified"
 					aux.name = '%s %s' % (prof_aux.user.first_name, prof_aux.user.last_name)
-					aux.online = self.connected(prof_aux.user)
+					aux.online = self.connected(prof_aux) == 'ON'
 				## Add the result
 				result_dict.append(aux)
 		except Exception, e:
@@ -773,12 +772,11 @@ class NotificationsThreadResource(ModelResource):
 	def delete_alarms(self, ref, me):
 		NotificationsAlarm.objects.filter(reference=ref, receiver=me).delete()
 
-	def connected(self, user):
-		state = 'OFF'
-		token = ApiToken.objects.filter(user=user).order_by('-last_js')
-		if len(token) > 0:
-			state = token[0].is_user_connected()
-		return state
+	def connected(self, prof):
+		valid_time = getattr(settings, 'TOKEN_DISCONNECTED', 60)
+		if time.time() - prof.last_js > valid_time:
+			return 'OFF'
+		return 'ON'
 
 	def get_detail(self, request, **kwargs):
 		ref = kwargs['pk']
@@ -813,7 +811,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.sender_references = References.objects.filter(receiver = i.sender).count()
 					aux.sender_med_avatar = i.sender.medium_avatar
 					aux.sender_small_avatar = i.sender.thumb_avatar
-					aux.sender_online = self.connected(i.sender)
+					aux.sender_online = self.connected(i.sender) == 'ON'
 				else:
 					aux.sender_id = ""
 					aux.sender_name = "Unknown User"
@@ -860,7 +858,7 @@ class NotificationsThreadResource(ModelResource):
 					aux.sender_references = References.objects.filter(receiver = i.sender).count()
 					aux.sender_med_avatar = i.sender.medium_avatar
 					aux.sender_small_avatar = i.sender.thumb_avatar
-					aux.sender_online = self.connected(i.sender)
+					aux.sender_online = self.connected(i.sender) == 'ON'
 				else:
 					aux.sender_id = ""
 					aux.sender_name = "Unknown User"

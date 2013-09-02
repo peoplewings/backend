@@ -268,7 +268,7 @@ class UserProfileResource(ModelResource):
 					prof_obj.civil_state = prof.civil_state
 					prof_obj.personal_philosophy = prof.personal_philosophy
 
-					conn = self.connected(prof.user)
+					conn = self.connected(prof)
 					if conn == "OFF":
 						last = prof.user
 						if prof.last_login is not None:
@@ -317,7 +317,7 @@ class UserProfileResource(ModelResource):
 
 					prof_obj.quotes = prof.quotes
 
-					prof_obj.online = self.connected(prof.user)
+					prof_obj.online = self.connected(prof)
 					prof_obj.sharing = prof.sharing
 					prof_obj.pw_opinion = prof.pw_opinion
 					prof_obj.political_opinion = prof.political_opinion
@@ -368,7 +368,7 @@ class UserProfileResource(ModelResource):
 						ref_obj['first_name'] = sender.user.first_name
 						ref_obj['last_name'] = sender.user.last_name
 						ref_obj['age'] = sender.get_age()
-						ref_obj['online'] = self.connected(sender.user)
+						ref_obj['online'] = self.connected(sender)
 						ref_obj['avatar'] = sender.thumb_avatar
 						meet = True
 						if References.objects.filter(sender = prof, receiver = sender).count():
@@ -526,7 +526,7 @@ class UserProfileResource(ModelResource):
 							ref_obj['first_name'] = sender.user.first_name
 							ref_obj['last_name'] = sender.user.last_name
 							ref_obj['age'] = sender.get_age()
-							ref_obj['online'] = self.connected(sender.user)
+							ref_obj['online'] = self.connected(sender)
 							ref_obj['avatar'] = sender.thumb_avatar
 							meet = True
 							if References.objects.filter(sender = prof, receiver = sender).count():
