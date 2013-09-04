@@ -389,6 +389,9 @@ class UserProfileResource(ModelResource):
 							ref_obj['referenced'] = False
 						prof_obj.references.append(ref_obj)
 
+					#Landscape photo
+					prof_obj.landscape_photo = prof.landscape_photo
+
 					return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 				else:
 					return self.create_response(request, {"status":True, "data":{}}, response_class=HttpResponse)
@@ -545,6 +548,9 @@ class UserProfileResource(ModelResource):
 							else:
 								ref_obj['referenced'] = False
 							prof_obj.references.append(ref_obj)
+
+						#Landscape photo
+						prof_obj.landscape_photo = prof.landscape_photo
 
 						return self.create_response(request, {"status":True, "data": prof_obj.jsonable()}, response_class=HttpResponse)
 					else:
@@ -1694,6 +1700,42 @@ class ContactResource(ModelResource):
 
 		return wrapper
 
+
+class LandscapeResource(ModelResource):
+
+	class Meta:
+		object_class = UserProfile
+		queryset = UserProfile.objects.all()
+		allowed_methods = ['post']
+		include_resource_uri = False
+		serializer = CamelCaseJSONSerializer(formats=['json'])
+		authentication = Authentication()
+		authorization = Authorization()
+		always_return_data = True
+
+	def post_list(self, request, **kwargs):
+		#print '%s  %s' % ("POST", request.raw_post_data)
+		encoded = request.raw_post_data
+		print 'ENCODED LANDSCAPE PHOTO %s' % encoded
+		POST= json.loads(encoded)
+		if len(POST["results"]["images"]) != 1:
+			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse)
+		try:
+			auth_token = request.GET['authToken']
+			landscape = POST["results"]["images"]
+			url = landscape['s3_url']
+			url = str.replace(str(url), 'http://', '//', 1)
+			size = landscape['image_identifier']
+			apit = ApiToken.objects.get(token=auth_token)
+			if not blitline_token_is_authenticated(apit):
+				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
+			prof = UserProfile.objects.get(apit.user)
+			prof.landscape_photo = url
+			prof.save()
+		except Exception, e:
+			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
+
+		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
 class PhotoCompletedResource(ModelResource):
 

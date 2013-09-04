@@ -102,6 +102,8 @@ ANONYMOUS_THUMB = S3_URL + "thumb-blank_avatar.jpg"
 ANONYMOUS_BLUR = S3_URL + "med-blank_avatar.jpg"
 ANONYMOUS_BIG = S3_URL + "blank_avatar.jpg"
 
+LANDSCAPE_PHOTO = S3_URL + "landscape-default.jpg"
+
 # Storages IMG
 AWS_QUERYSTRING_AUTH = False
 LOGIN_TIME = 3600

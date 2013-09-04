@@ -131,7 +131,8 @@ class UserProfile(models.Model):
 	full_name = models.CharField(max_length=100, blank=True)
 	search_score = models.IntegerField(null=False, default=0)
 	ambassator = models.BooleanField(default=False)
-	last_js = last_js = models.BigIntegerField(default=0)
+	last_js = models.BigIntegerField(default=0)
+	landscape_photo = models.CharField(max_length=max_long_len, default= django_settings.LANDSCAPE_PHOTO) #960x324
 
 	def get_age(self):
 		today = date.today()

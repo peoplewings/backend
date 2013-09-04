@@ -8,7 +8,7 @@ from tastypie.api import Api
 
 
 from peoplewings.apps.registration.api import UserSignUpResource, ActivationResource, LoginResource, LogoutResource, AccountResource, ForgotResource, ControlResource, FacebookLoginResource
-from peoplewings.apps.people.api import UserProfileResource, UniversityResource, ContactResource, PhotoCompletedResource, PhotosResource, AlbumsResource, ReferencesResource, GeoLocationResource
+from peoplewings.apps.people.api import UserProfileResource, UniversityResource, ContactResource, PhotoCompletedResource, PhotosResource, AlbumsResource, ReferencesResource, GeoLocationResource, LandscapeResource
 from peoplewings.apps.locations.api import CityResource, RegionResource, CountryResource
 from peoplewings.apps.wings.api import WingResource, WingNamesResource
 from peoplewings.apps.feedback.api import FeedbackResource
@@ -36,6 +36,7 @@ v1_api.register(PhotosResource())
 v1_api.register(AlbumsResource())
 v1_api.register(ReferencesResource())
 v1_api.register(GeoLocationResource())
+v1_api.register(LandscapeResource())
 #Wings
 v1_api.register(WingResource())
 v1_api.register(WingNamesResource())

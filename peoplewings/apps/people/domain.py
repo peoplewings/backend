@@ -418,6 +418,7 @@ class EditProfileObject(object):
 		self.show_birthday = None
 		self.albums = []
 		self.references = []
+		self.landscape_photo = None
 
 	def jsonable(self):
 		res = dict()
@@ -472,6 +473,7 @@ class PreviewProfileObject(object):
 		self.show_birthday = None
 		self.albums = []
 		self.references = []
+		self.landscape_photo = None
 
 	def jsonable(self):
 		res = dict()
