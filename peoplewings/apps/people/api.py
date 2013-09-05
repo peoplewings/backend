@@ -1735,6 +1735,7 @@ class LandscapeResource(ModelResource):
 			prof.landscape_photo = url
 			prof.save()
 		except Exception, e:
+			print e
 			return self.create_response(request, {"status":False, "errors": e}, response_class = HttpResponse)
 
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
