@@ -1718,6 +1718,7 @@ class LandscapeResource(ModelResource):
 		encoded = request.raw_post_data
 		print 'ENCODED LANDSCAPE PHOTO %s' % encoded
 		POST= json.loads(encoded)
+		print 'JSON LANDSCAPE PHOTO %s' % POST
 		if len(POST["results"]["images"]) != 1:
 			return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse)
 		try:
