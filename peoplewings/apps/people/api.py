@@ -1671,7 +1671,7 @@ class LandscapeResource(ModelResource):
 				return self.create_response(request, {"status":False, "errors":[{"type":"INVALID LENGTH"}]}, response_class=HttpResponse)
 
 			auth_token = request.GET['authToken']
-			landscape = POST["results"]["images"]
+			landscape = POST["results"]["images"][0]
 			url = landscape['s3_url']
 			url = str.replace(str(url), 'http://', '//', 1)
 			size = landscape['image_identifier']
