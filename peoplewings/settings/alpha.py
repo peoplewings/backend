@@ -61,7 +61,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 #SITE
-SITE = 'https://alpha.peoplewings.com/'
+SITE = 'https://www.peoplewings.com/'
 BACKEND_SITE = 'https://peoplewings-be-alpha.herokuapp.com/api/v1/'
 
 # SMTP settings
