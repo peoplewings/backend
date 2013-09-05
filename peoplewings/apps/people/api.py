@@ -1678,7 +1678,7 @@ class LandscapeResource(ModelResource):
 			apit = ApiToken.objects.get(token=auth_token)
 			if not blitline_token_is_authenticated(apit):
 				return self.create_response(request, {"status":False, "errors":[{"type":"FORBIDDEN"}]}, response_class=HttpResponse)
-			prof = UserProfile.objects.get(apit.user)
+			prof = UserProfile.objects.get(user = apit.user)
 			prof.landscape_photo = url
 			prof.save()
 		except Exception, e:
