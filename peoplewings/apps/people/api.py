@@ -145,6 +145,7 @@ class ReferencesResource(ModelResource):
 		if len(errors) > 0: return self.create_response(request, {"status":False, "errors": errors}, response_class=HttpResponse)
 		if References.objects.filter(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver'])).count():
 			return self.create_response(request, {"status":False, "errors":[{"type":"DUPLICATED_REFERENCE"}]}, response_class = HttpResponse)
+
 		References.objects.create(sender=UserProfile.objects.get(user = request.user), receiver = UserProfile.objects.get(pk = POST['receiver']), rating = POST['rating'], met_in_person = POST['metInPerson'], text = POST['text'])
 		return self.create_response(request, {"status":True}, response_class = HttpResponse)
 
@@ -370,10 +371,8 @@ class UserProfileResource(ModelResource):
 						ref_obj['age'] = sender.get_age()
 						ref_obj['online'] = self.connected(sender)
 						ref_obj['avatar'] = sender.thumb_avatar
-						meet = True
-						if References.objects.filter(sender = prof, receiver = sender).count():
-							meet = False
-						ref_obj['meetInPerson'] = meet
+						ref_obj['meetInPerson'] = reference.met_in_person
+
 						epoch = int(time.mktime(reference.created.timetuple()))
 						ref_obj['date'] = epoch
 						ref_obj['rating'] = reference.rating
@@ -531,10 +530,7 @@ class UserProfileResource(ModelResource):
 							ref_obj['age'] = sender.get_age()
 							ref_obj['online'] = self.connected(sender)
 							ref_obj['avatar'] = sender.thumb_avatar
-							meet = True
-							if References.objects.filter(sender = prof, receiver = sender).count():
-								meet = False
-							ref_obj['meetInPerson'] = meet
+							ref_obj['meetInPerson'] = reference.met_in_person
 							epoch = int(time.mktime(reference.created.timetuple()))
 							ref_obj['date'] = epoch
 							ref_obj['rating'] = reference.rating
@@ -853,39 +849,7 @@ class UserProfileResource(ModelResource):
 				too_long['extras'].append('occupation')
 		else:
 			field_req['extras'].append('occupation')
-		"""
-		if POST.has_key('albums'):
-			if isinstance(POST['albums'], list):
-				for item in POST['albums']:
-					if (isinstance(item, dict)):
-						if not item.has_key('name'):
-							invalid['extras'].append('albums')
-							break
-						if not item.has_key('photos'):
-							invalid['extras'].append('albums')
-							break
-						elif isinstance(item['photos'], list):
-							for item2 in item['photos']:
-								if isinstance(item2, dict):
-										if item2.has_key('id') and item2.has_key('thumbUrl') and item2.has_key('bigUrl'):
-											pass
-										else:
-											invalid['extras'].append('photos')
-											break
-								else:
-									invalid['extras'].append('photos')
-									break
-						else:
-							invalid['extras'].append('photos')
-							break
-					else:
-						invalid['extras'].append('albums')
-						break
-			else:
-				invalid['extras'].append('albums')
-		else:
-		  field_req['extras'].append('albums')
-		"""
+
 		if len(field_req['extras']) > 0:
 			errors.append(field_req)
 		if len(not_empty['extras']) > 0:
@@ -944,22 +908,18 @@ class UserProfileResource(ModelResource):
 				lang = Language.objects.create(name=i['name'])
 			UserLanguage.objects.create(user_profile=prof, language=lang, level=i['level'])
 		# Locations
-		if  POST['current']:
+		if  POST['current'] and len(POST['current'].keys()) != 0:
 			if not POST['current'].has_key('region'):
 				POST['current']['region'] = 'No region'
 			prof.current_city = City.objects.saveLocation(country=POST['current']['country'], region=POST['current']['region'], name=POST['current']['name'], lat=POST['current']['lat'], lon=POST['current']['lon'])
-		else:
-			prof.current_city = None
 
-		if POST['hometown']:
+		if POST['hometown'] and len(POST['hometown'].keys()) != 0:
 			if not POST['hometown'].has_key('region'):
 				POST['hometown']['region'] = 'No region'
 			prof.hometown = City.objects.saveLocation(country=POST['hometown']['country'], region=POST['hometown']['region'], name=POST['hometown']['name'], lat=POST['hometown']['lat'], lon=POST['hometown']['lon'])
-		else:
-			prof.hometown = None
 
-		prof.other_locations.clear()
-		if POST['otherLocations']:
+		if POST['otherLocations'] and len(POST['otherLocations']) > 0:
+			prof.other_locations.clear()
 			for i in POST['otherLocations']:
 				if not i.has_key('region'):
 					i['region'] = 'No region'
@@ -1001,19 +961,6 @@ class UserProfileResource(ModelResource):
 		prof.inspired_by = POST['inspiredBy']
 		prof.quotes = POST['quotes']
 		prof.pw_opinion = POST['pwOpinion']
-
-		#Photo albums
-		"""
-		prof_albums = PhotoAlbums.objects.filter(author=prof).delete()
-		album_ordering = 1
-		for album in POST['albums']:
-			album_obj = PhotoAlbums.objects.create(album_id=album['id'], name=album['name'], ordering=album_ordering, author=prof)
-			photo_ordering = 1
-			for photo in album['photos']:
-				Photos.objects.create(thumb_url=photo['thumb_url'],big_url=photo['big_url'], photo_id=photo['id'],author=prof, album=album_obj, ordering=photo_ordering)
-				photo_ordering = photo_ordering + 1
-				album_ordering = album_ordering + 1
-		"""
 
 		prof.save()
 		return self.create_response(request, {"status":True}, response_class=HttpResponse)
